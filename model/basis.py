@@ -59,7 +59,7 @@ class Basis(abc.ABC):
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
-        return 1/self.mode * torch.mm(self.coef, self.fn(self.mode, x).T)
+        return 1 / self.mode * torch.mm(self.coef, self.fn(self.mode, x).T)
 
     @abc.abstractmethod
     def transform(f: torch.Tensor) -> torch.Tensor:
@@ -123,12 +123,7 @@ class FourierBasis(Basis):
 
     @staticmethod
     def waveNumber(N: int):
-        span = (
-            (int((-N / 2) + 1), int(N / 2 + 1))
-            if N % 2 == 0
-            else (int(-(N - 1) / 2), int((N - 1) / 2))
-        )
-        k = torch.arange(*span).unsqueeze(-1)
+        k = torch.arange(N).unsqueeze(-1) - N // 2
         return k
 
 
@@ -194,4 +189,6 @@ if __name__ == "__main__":
 
     # Compare prediction with real function
     mse = torch.norm((f3_pred - f3), 2)
-    print(f"mse: {mse.item()}")
+    print(
+        f"mse: {mse.item()}, is_close: {torch.isclose(torch.tensor(0.0), mse, atol=1e-4)}"
+    )
