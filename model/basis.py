@@ -1,5 +1,6 @@
 import torch
 import abc
+from utils import to_real_coeff, to_complex_coeff
 
 
 # Basis functions
@@ -111,6 +112,8 @@ class FourierBasis(Basis):
         Returns:
             torch.Tensor -- m complex valued coefficients of f
         """
+        if not torch.is_complex(f):
+            f = f * (1 + 0j)
         # TODO: implement multidimensional version by composing the 1D transforms
         mode = f.shape[1]
         n = torch.arange(mode)
@@ -166,6 +169,28 @@ if __name__ == "__main__":
     coeff = FourierBasis.transform(f)
     basis = FourierBasis(coeff, ndim=1)
 
+    # Odd samples
+    # Generate Signal
+    ## sampling rate
+    sr = 9
+    ## sampling interval
+    ts = 1.0 / sr
+    t = torch.arange(0, 1, ts)
+    # function 1
+    freq = 1.0
+    f1 = 3 * torch.sin(2 * torch.pi * freq * t)
+    freq = 4
+    f1 += torch.sin(2 * torch.pi * freq * t)
+    freq = 7
+    f1 += 0.5 * torch.sin(2 * torch.pi * freq * t)
+
+    f1 = f1.unsqueeze(-1) * (1 + 0j)
+
+    coeff = FourierBasis.transform(f1)
+    coeff_real = to_real_coeff(coeff)
+    coeff_complex = to_complex_coeff(coeff_real)
+    invertible = torch.equal(coeff_complex, coeff)
+    assert invertible, f"coeff_complex with shape {coeff_complex.shape} and coeff with shape {coeff.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, coeff_real has shape {coeff_real.shape}"
     # Interpolate and and compare f2
     ## sampling rate
     sr = 150
@@ -190,5 +215,5 @@ if __name__ == "__main__":
     # Compare prediction with real function
     mse = torch.norm((f3_pred - f3), 2)
     print(
-        f"mse: {mse.item()}, is_close: {torch.isclose(torch.tensor(0.0), mse, atol=1e-4)}"
+        f"interpolation test:\nmse: {mse.item()}, is_close: {torch.isclose(torch.tensor(0.0), mse, atol=1e-4)}"
     )
