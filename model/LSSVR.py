@@ -192,11 +192,12 @@ class LSSVR:
         self.print("B")
         self.print(B)
 
-        A_cross = torch.t(torch.pinverse(A))
-        self.print("A_cross")
-        self.print(A_cross)
+        # A_cross = torch.t(torch.pinverse(A))
+        # self.print("A_cross")
+        # self.print(A_cross)
 
-        solution = torch.mm(A_cross, B)
+        solution = torch.linalg.lstsq(A,B).solution
+        # solution = torch.mm(A_cross, B)
         self.print("S")
         self.print(solution)
 
