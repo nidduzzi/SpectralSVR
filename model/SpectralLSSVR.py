@@ -93,9 +93,11 @@ class SpectralLSSVR:
             f = to_real_coeff(f)
         u_coeff_pred = self.lssvr.predict(f)
         u_coeff_pred = to_complex_coeff(u_coeff_pred)
-        print("TEST")
-        print(u_coeff_pred[0, :])
-        print(u_coeff[0, :])
+        if self.verbose:
+            print("TEST COEFF PRED:")
+            print(u_coeff_pred[0, :])
+            print("TEST COEFF:")
+            print(u_coeff[0, :])
         mse = torch.norm(u_coeff_pred - u_coeff, 2) / u_coeff.shape[0]
         print(f"test coeff mse: {mse}")
 
@@ -118,9 +120,9 @@ if __name__ == "__main__":
     f_coeff_fourier = u_coeff_fourier * 2j * torch.pi * k.T
     # f_coeff_ls https://jsteinhardt.stat.berkeley.edu/blog/least-squares-and-fourier-analysis
     # u_coeff_ls
-    print(k)
-    print(u_coeff_fourier[0, :])
-    print(f_coeff_fourier[0, :])
+    # print(k)
+    # print(u_coeff_fourier[0, :])
+    # print(f_coeff_fourier[0, :])
 
     # Interpolate f & u
     step = 0.01
