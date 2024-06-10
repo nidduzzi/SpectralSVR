@@ -13,35 +13,39 @@ class Basis(abc.ABC):
     Basis function for ndim dimensions
     """
 
-    coef: torch.Tensor
+    coeff: torch.Tensor
     ndim: int
-    mode: int
+    modes: int
 
-    def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
+    def __init__(self, coeff: torch.Tensor | None = None, ndim: int = 1) -> None:
         assert ndim > 0, f"ndim {ndim} is not allowed because it is less than 1"
-        assert (
-            coef.shape[0] > 0
-        ), f"coef of shape {coef.shape} is not allowed, make sure it has at least one entry"
         # assert (
         #     coef.shape[1] == 1
         # ), f"coef of shape {coef.shape} is not allowed, make sure it is one dimensional"
         self.ndim = ndim
-        self.coef = coef
-        self.mode = coef.shape[1]
+        if coeff is not None:
+            assert (
+                coeff.shape[0] > 0
+            ), f"coef of shape {coeff.shape} is not allowed, make sure it has at least one entry"
+            self.coeff = coeff
+            self.modes = coeff.shape[1]
 
     @abc.abstractmethod
-    def fn(self, mode: int, x: torch.Tensor) -> torch.Tensor:
+    def fn(x: torch.Tensor, ndim: int, modes: int) -> torch.Tensor:
         """
         fn
 
         evaluate the value of the basis functions
 
         Arguments:
-            mode {int} -- how many basis functions from the first one to evaluate
-            x {torch.Tensor} -- the m locations of ndim dimensions to evaluate the basis functions at
+            x {torch.Tensor} -- the m locations of ndim dimensions to evaluate the basis functions at.
+
+            ndim {int} -- dimensions of the basis functions.
+
+            modes {int} -- number of basis functions from the first one to evaluate.
 
         Returns:
-            torch.Tensor -- returns a vector using a tensor of the shape {m,n}
+            torch.Tensor -- returns a vector using a tensor of the shape {m,modes}
         """
         pass
 
@@ -52,15 +56,23 @@ class Basis(abc.ABC):
         evaluate approximated function at x
 
         Arguments:
-            x {torch.Tensor} -- m points to evaluate approximated function at
+            x {torch.Tensor} -- m points to evaluate approximated function at.
 
         Returns:
-            torch.Tensor -- _description_
+            torch.Tensor -- {m, n} evaluations where n is the number different functions (coeff first dimension)
         """
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
-        return 1 / self.mode * torch.mm(self.coef, self.fn(self.mode, x).T)
+        assert self.coeff is not None, "coeff is none, set it first with setCoeff"
+
+        return (
+            1 / self.modes * torch.mm(self.coeff, self.fn(x, self.ndim, self.modes).T)
+        )
+
+    def setCoeff(self, coeff: torch.Tensor):
+        self.coeff = coeff
+        self.modes = coeff.shape[1]
 
     @abc.abstractmethod
     def transform(f: torch.Tensor) -> torch.Tensor:
@@ -70,31 +82,45 @@ class Basis(abc.ABC):
         compute basis coefficients
 
         Arguments:
-            f {torch.Tensor} -- m vectors of descretized functions to compute the coefficients of
+            f {torch.Tensor} -- m vectors of descretized functions to compute the coefficients of.
 
         Returns:
             torch.Tensor -- m vectors of coefficients
         """
         pass
 
+    @abc.abstractmethod
+    def generateCoeff(n: int, modes: int) -> torch.Tensor:
+        """
+        generateCoeff
+
+        generate random coefficients
+
+        Arguments:
+            n {int} -- number of random functions to generate coefficients for.
+
+            modes {int} -- number of coefficients in a series.
+
+        Returns:
+            torch.Tensor -- n sets of coefficients with the shape (n, modes)
+        """
+
 
 ## Fourier basis
 class FourierBasis(Basis):
-    def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
-        super().__init__(coef, ndim)
-
-    def fn(self, mode: int, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def fn(x: torch.Tensor, ndim: int, modes: int) -> torch.Tensor:
         assert (
             len(x.shape) > 1
         ), "x must have at least 2 dimensions, the format needs to be row of points, the first dimension of the tensor being each row and the second being dimensions of the points"
         assert (
-            x.shape[1] == self.ndim
-        ), f"x has shape {x.shape}, but ndim is {self.ndim}"
+            x.shape[1] == ndim
+        ), f"x has shape {x.shape}, but ndim is {ndim}, make sure the second dimension of x is equal to ndim"
         assert (
             x.shape[0] > 0
         ), f"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples"
 
-        k = FourierBasis.waveNumber(mode).T
+        k = FourierBasis.waveNumber(modes).T
         return torch.exp(2j * torch.pi * k * x)  # TODO: add multidimensional support
 
     @staticmethod
@@ -125,13 +151,31 @@ class FourierBasis(Basis):
         return X
 
     @staticmethod
-    def waveNumber(N: int):
-        k = torch.arange(N).unsqueeze(-1) - N // 2
+    def waveNumber(modes: int):
+        k = torch.arange(modes).unsqueeze(-1) - (modes - 1) // 2
         return k
+
+    @staticmethod
+    def generateCoeff(
+        n: int,
+        modes: int,
+        domain: tuple[float, float] = (-1.0, 1.0),
+        generator: torch.Generator | None = None,
+        complex: bool = True,
+    ) -> torch.Tensor:
+        if complex:
+            modes = 2 * modes  # account for the imaginary part
+        a, b = domain
+        span = abs(b - a)
+        coeff_real = span * torch.randn((n, modes), generator=generator) + a
+        if complex:
+            return to_complex_coeff(coeff_real)
+        else:
+            return coeff_real
 
 
 ## Chebyshev basis
-# TODO: implement chebyshev basis
+# TODO: implement chebyshev basis https://en.wikipedia.org/wiki/Discrete_Chebyshev_transform
 class ChebyshevBasis(Basis):
     def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
         super().__init__(coef, ndim)
@@ -162,12 +206,17 @@ if __name__ == "__main__":
     freq = 10
     f2 += 0.3 * torch.sin(2 * torch.pi * freq * t)
 
-    f = torch.stack((f1, f2))
+    f = f1.unsqueeze(0)
+    # f = torch.stack((f1, f2))
     f = f * (1 + 0j)  # cast to complex
 
     # Get coefficients and create basis
     coeff = FourierBasis.transform(f)
-    basis = FourierBasis(coeff, ndim=1)
+    basis = FourierBasis(coeff, 1)
+    # derivative
+    k = FourierBasis.waveNumber(basis.modes)
+    f_coeff = coeff * 2j * torch.pi * k.T
+    f_basis = FourierBasis(f_coeff, 1)
 
     # Odd samples
     # Generate Signal
@@ -198,16 +247,22 @@ if __name__ == "__main__":
     ts = 1.0 / sr
     t = torch.arange(-1, 1, ts)
     freq = 1.0
-    f3 = 2 * torch.sin(2 * torch.pi * freq * t)
-    freq = 5
+    f3 = 3 * torch.sin(2 * torch.pi * freq * t)
+    freq = 4
     f3 += torch.sin(2 * torch.pi * freq * t)
-    freq = 10
-    f3 += 0.3 * torch.sin(2 * torch.pi * freq * t)
+    freq = 7
+    f3 += 0.5 * torch.sin(2 * torch.pi * freq * t)
 
     f3 = f3 * (1 + 0j)  # cast to complex
 
+    f_pred = f_basis.evaluate(t)
+    t.requires_grad_()
     pred = basis.evaluate(t)
-    f3_pred = pred[1]
+    pred.backward(gradient=torch.ones(pred.shape, dtype=pred.dtype))
+    t_grad = t.grad
+    print(f"derivative difference: {torch.norm(f_pred.real - t_grad,2)}")
+    # print(f_pred - t.grad)
+    f3_pred = pred[0]
     assert (
         f3_pred.shape == f3.shape
     ), f"f3_pred has shape {f3_pred.shape} and f3 has shape {f3.shape}, both need to have the same shape"
