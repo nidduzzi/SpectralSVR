@@ -11,9 +11,32 @@ import torch
 
 
 class SpectralLSSVR:
-    def __init__(self, basis: Basis, C=10.0, sigma=1.0) -> None:
+    def __init__(self, basis: Basis, C=10.0, sigma=1.0, verbose=False) -> None:
+        """
+        __init__
+
+
+        Arguments:
+            basis {Basis} -- Basis to use for evaluating the computed function
+
+        Keyword Arguments:
+            C {float} -- regularization term with smaller values meaning less complicated models (default: {10.0})
+            sigma {float} -- kernel bandwidth (default: {1.0})
+            verbose {False | "All" | "LSSVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
+        """
+        is_lssvr_verbose = False
+        self.verbose = False
+        match verbose:
+            case "All":
+                self.verbose = True
+                is_lssvr_verbose = True
+            case "LSSVR":
+                is_lssvr_verbose = True
+            case "lite":
+                self.verbose = True
+
         self.basis = basis
-        self.model = LSSVR(C, sigma)
+        self.lssvr = LSSVR(C=C, sigma=sigma, verbose=is_lssvr_verbose)
 
     def forward(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         """
@@ -37,11 +60,10 @@ class SpectralLSSVR:
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        coeff = self.model.predict(f)
+        coeff = self.lssvr.predict(f)
         coeff = to_complex_coeff(coeff)
 
         basis_values = self.basis.fn(x, x.shape[1], self.modes)
-        print(coeff[0, :])
         # compute approximated function
         return (
             1 / (self.modes) * torch.sum(coeff * basis_values, dim=-1).unsqueeze(-1)
@@ -63,13 +85,13 @@ class SpectralLSSVR:
             u_coeff = to_real_coeff(u_coeff)
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        self.model.fit(f, u_coeff)
+        self.lssvr.fit(f, u_coeff)
 
     def test(self, df: torch.utils.data.dataset.TensorDataset):
         f, u, u_coeff = df[:]
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        u_coeff_pred = self.model.predict(f)
+        u_coeff_pred = self.lssvr.predict(f)
         u_coeff_pred = to_complex_coeff(u_coeff_pred)
         print("TEST")
         print(u_coeff_pred[0, :])
@@ -86,15 +108,19 @@ if __name__ == "__main__":
     # TODO: Compute coefficients for both
     n_coeffs = 2000
     modes = 7
-    u_coeff_fourier = FourierBasis.generateCoeff(n_coeffs, modes, generator=generator) * 1/(n_coeffs**.5)
+    u_coeff_fourier = (
+        FourierBasis.generateCoeff(n_coeffs, modes, generator=generator)
+        * 1
+        / (n_coeffs**0.5)
+    )
     # derivative
     k = FourierBasis.waveNumber(modes)
     f_coeff_fourier = u_coeff_fourier * 2j * torch.pi * k.T
     # f_coeff_ls https://jsteinhardt.stat.berkeley.edu/blog/least-squares-and-fourier-analysis
     # u_coeff_ls
     print(k)
-    print(u_coeff_fourier[0,:])
-    print(f_coeff_fourier[0,:])
+    print(u_coeff_fourier[0, :])
+    print(f_coeff_fourier[0, :])
 
     # Interpolate f & u
     step = 0.01
@@ -118,7 +144,7 @@ if __name__ == "__main__":
     )
 
     # TODO: Train svm
-    model = SpectralLSSVR(FourierBasis(),0.0000001,.1)
+    model = SpectralLSSVR(FourierBasis(), 1., 1.)
 
     model.train(df_train)
 
