@@ -1,6 +1,6 @@
 import torch
 import abc
-from utils import to_real_coeff, to_complex_coeff
+from ..utils.fourier import to_real_coeff, to_complex_coeff
 
 
 # Basis functions
@@ -179,96 +179,3 @@ class FourierBasis(Basis):
 class ChebyshevBasis(Basis):
     def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
         super().__init__(coef, ndim)
-
-
-if __name__ == "__main__":
-    # TODO: implement tests
-    # Generate Signal
-    ## sampling rate
-    sr = 100
-    ## sampling interval
-    ts = 1.0 / sr
-    t = torch.arange(0, 1, ts)
-
-    # function 1
-    freq = 1.0
-    f1 = 3 * torch.sin(2 * torch.pi * freq * t)
-    freq = 4
-    f1 += torch.sin(2 * torch.pi * freq * t)
-    freq = 7
-    f1 += 0.5 * torch.sin(2 * torch.pi * freq * t)
-
-    # function 2
-    freq = 1.0
-    f2 = 2 * torch.sin(2 * torch.pi * freq * t)
-    freq = 5
-    f2 += torch.sin(2 * torch.pi * freq * t)
-    freq = 10
-    f2 += 0.3 * torch.sin(2 * torch.pi * freq * t)
-
-    f = f1.unsqueeze(0)
-    # f = torch.stack((f1, f2))
-    f = f * (1 + 0j)  # cast to complex
-
-    # Get coefficients and create basis
-    coeff = FourierBasis.transform(f)
-    basis = FourierBasis(coeff, 1)
-    # derivative
-    k = FourierBasis.waveNumber(basis.modes)
-    f_coeff = coeff * 2j * torch.pi * k.T
-    f_basis = FourierBasis(f_coeff, 1)
-
-    # Odd samples
-    # Generate Signal
-    ## sampling rate
-    sr = 9
-    ## sampling interval
-    ts = 1.0 / sr
-    t = torch.arange(0, 1, ts)
-    # function 1
-    freq = 1.0
-    f1 = 3 * torch.sin(2 * torch.pi * freq * t)
-    freq = 4
-    f1 += torch.sin(2 * torch.pi * freq * t)
-    freq = 7
-    f1 += 0.5 * torch.sin(2 * torch.pi * freq * t)
-
-    f1 = f1.unsqueeze(-1) * (1 + 0j)
-
-    coeff = FourierBasis.transform(f1)
-    coeff_real = to_real_coeff(coeff)
-    coeff_complex = to_complex_coeff(coeff_real)
-    invertible = torch.equal(coeff_complex, coeff)
-    assert invertible, f"coeff_complex with shape {coeff_complex.shape} and coeff with shape {coeff.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, coeff_real has shape {coeff_real.shape}"
-    # Interpolate and and compare f2
-    ## sampling rate
-    sr = 150
-    ## sampling interval
-    ts = 1.0 / sr
-    t = torch.arange(-1, 1, ts)
-    freq = 1.0
-    f3 = 3 * torch.sin(2 * torch.pi * freq * t)
-    freq = 4
-    f3 += torch.sin(2 * torch.pi * freq * t)
-    freq = 7
-    f3 += 0.5 * torch.sin(2 * torch.pi * freq * t)
-
-    f3 = f3 * (1 + 0j)  # cast to complex
-
-    f_pred = f_basis.evaluate(t)
-    t.requires_grad_()
-    pred = basis.evaluate(t)
-    pred.backward(gradient=torch.ones(pred.shape, dtype=pred.dtype))
-    t_grad = t.grad
-    print(f"derivative difference: {torch.norm(f_pred.real - t_grad,2)}")
-    # print(f_pred - t.grad)
-    f3_pred = pred[0]
-    assert (
-        f3_pred.shape == f3.shape
-    ), f"f3_pred has shape {f3_pred.shape} and f3 has shape {f3.shape}, both need to have the same shape"
-
-    # Compare prediction with real function
-    mse = torch.norm((f3_pred - f3), 2)
-    print(
-        f"interpolation test:\nmse: {mse.item()}, is_close: {torch.isclose(torch.tensor(0.0), mse, atol=1e-4)}"
-    )
