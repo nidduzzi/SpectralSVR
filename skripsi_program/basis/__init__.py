@@ -214,36 +214,38 @@ class FourierBasis(Basis):
             return coeff_real
 
     @staticmethod
-    def _raw_transform(f: torch.Tensor) -> torch.Tensor:
+    def _raw_transform(
+        x: torch.Tensor, func: Literal["forward", "inverse"]
+    ) -> torch.Tensor:
         assert torch.is_complex(
-            f
+            x
         ), "f is not complex, cast it to complex first eg. f * (1+0j)"
-        modes = f.shape[1]
+        modes = x.shape[1]
+        match func:
+            case "forward":
+                sign = -1
+            case "inverse":
+                sign = 1
 
         n = torch.arange(modes)
         k = FourierBasis.waveNumber(modes)
-        e = torch.exp(-2j * torch.pi * k * n / modes)
+        e = torch.exp(sign * 2j * torch.pi * k * n / modes)
 
-        X = torch.mm(f, e.T)
+        X = torch.mm(x, e.T)
 
         return X
 
     @staticmethod
     def _ndim_transform(
-        f: torch.Tensor, dim: int, func: Literal["forward", "inverse"] = "forward"
+        f: torch.Tensor, dim: int, func: Literal["forward", "inverse"]
     ) -> torch.Tensor:
-        match func:
-            case "forward":
-                _func = FourierBasis._raw_transform
-            case "inverse":
-                _func = FourierBasis._raw_inv_transform
         # flatten so that each extra dimension is treated as a separate "sample"
         # move dimension to transform to the end so that it can stay intact after f is flatened
         f_transposed = f.transpose(dim, -1)
         # flatten so that the last dimension is intact
         f_flatened = f_transposed.flatten(0, -2)
 
-        X_flattened = _func(f_flatened)
+        X_flattened = FourierBasis._raw_transform(f_flatened, func=func)
         # unflatten so that the correct shape is returned
         X_transposed = X_flattened.reshape(f_transposed.shape)
         X = X_transposed.transpose(-1, dim)
@@ -272,28 +274,12 @@ class FourierBasis(Basis):
         if not torch.is_complex(f):
             f = f * (1 + 0j)
         if ndims == 2:
-            X = FourierBasis._raw_transform(f)
+            X = FourierBasis._raw_transform(f, "forward")
         elif ndims > 2:
             # perform 1d transform over every dimension
-            X = FourierBasis._ndim_transform(f, dim=1)
+            X = FourierBasis._ndim_transform(f, dim=1, func="forward")
             for cdim in range(2, ndims):
-                X = FourierBasis._ndim_transform(X, dim=cdim)
-
-        return X
-
-    @staticmethod
-    def _raw_inv_transform(coeff: torch.Tensor):
-        assert torch.is_complex(
-            coeff
-        ), "f is not complex, cast it to complex first eg. f * (1+0j)"
-        modes = coeff.shape[1]
-
-        n = torch.arange(modes)
-        k = FourierBasis.waveNumber(modes)
-        e = torch.exp(2j * torch.pi * k * n / modes)
-        # e = torch.exp(2j * torch.pi * k * x)
-
-        X = torch.mm(coeff, e.T)
+                X = FourierBasis._ndim_transform(X, dim=cdim, func="forward")
 
         return X
 
@@ -319,7 +305,7 @@ class FourierBasis(Basis):
         if not torch.is_complex(coeff):
             coeff = coeff * (1 + 0j)
         if ndims == 2:
-            X = FourierBasis._raw_inv_transform(coeff)
+            X = FourierBasis._raw_transform(coeff, func="inverse")
         elif ndims > 2:
             # perform 1d transform over every dimension
             X = FourierBasis._ndim_transform(coeff, dim=1, func="inverse")
