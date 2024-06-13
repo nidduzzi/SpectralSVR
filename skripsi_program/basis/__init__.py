@@ -129,11 +129,22 @@ class Basis(abc.ABC):
 ## Fourier basis
 class FourierBasis(Basis):
     @staticmethod
-    def fn(x: torch.Tensor, modes: int | list[int]) -> torch.Tensor:
+    def fn(
+        x: torch.Tensor,
+        modes: int | list[int],
+        periods: int | float | list[float] | list[int] | None = None,
+        constant=2j * torch.pi,
+        transpose: bool = False,
+    ) -> torch.Tensor:
         if isinstance(modes, int):
-            modes = [
-                modes,
-            ]
+            modes = [modes]
+        if isinstance(periods, int):
+            periods = [periods]
+        if isinstance(periods, float):
+            periods = [periods]
+        if periods is None:
+            periods = [1.0 for i in range(len(modes))]
+
         assert (
             len(x.shape) > 1
         ), "x must have at least 2 dimensions, the format needs to be row of points, the first dimension of the tensor being each row and the second being dimensions of the points"
@@ -143,6 +154,9 @@ class FourierBasis(Basis):
         assert (
             x.shape[1] == len(modes)
         ), f"x has dimensions {x.shape[1]} and modes has dimensions {len(modes)}, both need to have the same dimensions (modes specify how many modes in each dimension of the fourier series)"
+        assert (
+            x.shape[1] == len(periods)
+        ), f"x has dimensions {x.shape[1]} and periods has dimensions {len(periods)}, both need to have the same dimensions (periods the function periodicity in each dimension)"
         ndims = x.shape[1]
 
         # Compute the Fourier basis functions
@@ -156,17 +170,21 @@ class FourierBasis(Basis):
         kx = torch.zeros((x.shape[0], modes[0])).reshape(dim_basis_shape)
 
         for dim, num_modes in enumerate(modes):
+            # for dim, num_modes in list(enumerate(modes))[::-1]:
             k = FourierBasis.waveNumber(num_modes).T
             dim_basis_shape = [1 for i in range(ndims + 1)]
             dim_basis_shape[0] = x.shape[0]
             dim_basis_shape[dim + 1] = num_modes
-            dim_kx = (k * x[:, dim : dim + 1]).reshape(dim_basis_shape)
+            dim_kx = k * x[:, dim : dim + 1] / periods[dim]
+            if transpose:
+                dim_kx = dim_kx.T
+            dim_kx = dim_kx.reshape(dim_basis_shape)
 
             kx = kx + dim_kx
 
-        basis = torch.exp(2j * torch.pi * kx)
+        basis = torch.exp(constant * kx)
 
-        return basis  # TODO: add multidimensional support
+        return basis
 
     @staticmethod
     def waveNumber(modes: int):
