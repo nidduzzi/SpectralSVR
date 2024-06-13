@@ -1,6 +1,7 @@
 import torch
 import abc
 from ..utils.fourier import to_real_coeff, to_complex_coeff
+from typing import Literal
 
 
 # Basis functions
@@ -30,6 +31,7 @@ class Basis(abc.ABC):
             self.coeff = coeff
             self.modes = coeff.shape[1]
 
+    @staticmethod
     @abc.abstractmethod
     def fn(x: torch.Tensor, ndim: int, modes: int) -> torch.Tensor:
         """
@@ -74,6 +76,7 @@ class Basis(abc.ABC):
         self.coeff = coeff
         self.modes = coeff.shape[1]
 
+    @staticmethod
     @abc.abstractmethod
     def transform(f: torch.Tensor) -> torch.Tensor:
         """
@@ -89,6 +92,23 @@ class Basis(abc.ABC):
         """
         pass
 
+    @staticmethod
+    @abc.abstractmethod
+    def inv_transform(f: torch.Tensor) -> torch.Tensor:
+        """
+        inv_transform
+
+        compute function values from dft coefficients
+
+        Arguments:
+            f {torch.Tensor} -- m vectors of coefficeints to compute the function values of.
+
+        Returns:
+            torch.Tensor -- m vectors of function values
+        """
+        pass
+
+    @staticmethod
     @abc.abstractmethod
     def generateCoeff(n: int, modes: int) -> torch.Tensor:
         """
@@ -109,50 +129,52 @@ class Basis(abc.ABC):
 ## Fourier basis
 class FourierBasis(Basis):
     @staticmethod
-    def fn(x: torch.Tensor, ndim: int, modes: int) -> torch.Tensor:
+    def fn(x: torch.Tensor, modes: int | list[int]) -> torch.Tensor:
+        if isinstance(modes, int):
+            modes = [
+                modes,
+            ]
         assert (
             len(x.shape) > 1
         ), "x must have at least 2 dimensions, the format needs to be row of points, the first dimension of the tensor being each row and the second being dimensions of the points"
         assert (
-            x.shape[1] == ndim
-        ), f"x has shape {x.shape}, but ndim is {ndim}, make sure the second dimension of x is equal to ndim"
-        assert (
             x.shape[0] > 0
         ), f"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples"
+        assert (
+            x.shape[1] == len(modes)
+        ), f"x has dimensions {x.shape[1]} and modes has dimensions {len(modes)}, both need to have the same dimensions (modes specify how many modes in each dimension of the fourier series)"
+        ndims = x.shape[1]
 
-        k = FourierBasis.waveNumber(modes).T
-        return torch.exp(2j * torch.pi * k * x)  # TODO: add multidimensional support
+        # Compute the Fourier basis functions
+        # one time for each dimension
 
-    @staticmethod
-    def transform(f: torch.Tensor) -> torch.Tensor:
-        """
-        transform
+        dim = 0
+        num_modes = modes[dim]
+        dim_basis_shape = [1 for i in range(ndims + 1)]
+        dim_basis_shape[0] = x.shape[0]
+        dim_basis_shape[dim + 1] = num_modes
+        kx = torch.zeros((x.shape[0], modes[0])).reshape(dim_basis_shape)
 
-        Function to calculate the
-        discrete Fourier Transform
-        of a real-valued signal f
+        for dim, num_modes in enumerate(modes):
+            k = FourierBasis.waveNumber(num_modes).T
+            dim_basis_shape = [1 for i in range(ndims + 1)]
+            dim_basis_shape[0] = x.shape[0]
+            dim_basis_shape[dim + 1] = num_modes
+            dim_kx = (k * x[:, dim : dim + 1]).reshape(dim_basis_shape)
 
-        Arguments:
-            f {torch.Tensor} -- m discretized real valued functions
+            kx = kx + dim_kx
 
-        Returns:
-            torch.Tensor -- m complex valued coefficients of f
-        """
-        if not torch.is_complex(f):
-            f = f * (1 + 0j)
-        # TODO: implement multidimensional version by composing the 1D transforms
-        mode = f.shape[1]
-        n = torch.arange(mode)
-        k = FourierBasis.waveNumber(mode)
-        e = torch.exp(-2j * torch.pi * k * n / mode)
+        basis = torch.exp(2j * torch.pi * kx)
 
-        X = torch.mm(f, e.T)
-
-        return X
+        return basis  # TODO: add multidimensional support
 
     @staticmethod
     def waveNumber(modes: int):
-        k = torch.arange(modes).unsqueeze(-1) - (modes - 1) // 2
+        N = (modes - 1) // 2 + 1
+        n = modes // 2
+        k1 = torch.arange(0, N)
+        k2 = torch.arange(-n, 0)
+        k = torch.concat([k1, k2], dim=0).unsqueeze(-1)
         return k
 
     @staticmethod
@@ -172,6 +194,121 @@ class FourierBasis(Basis):
             return to_complex_coeff(coeff_real)
         else:
             return coeff_real
+
+    @staticmethod
+    def _raw_transform(f: torch.Tensor) -> torch.Tensor:
+        assert torch.is_complex(
+            f
+        ), "f is not complex, cast it to complex first eg. f * (1+0j)"
+        modes = f.shape[1]
+
+        n = torch.arange(modes)
+        k = FourierBasis.waveNumber(modes)
+        e = torch.exp(-2j * torch.pi * k * n / modes)
+
+        X = torch.mm(f, e.T)
+
+        return X
+
+    @staticmethod
+    def _ndim_transform(
+        f: torch.Tensor, dim: int, func: Literal["forward", "inverse"] = "forward"
+    ) -> torch.Tensor:
+        match func:
+            case "forward":
+                _func = FourierBasis._raw_transform
+            case "inverse":
+                _func = FourierBasis._raw_inv_transform
+        # flatten so that each extra dimension is treated as a separate "sample"
+        # move dimension to transform to the end so that it can stay intact after f is flatened
+        f_transposed = f.transpose(dim, -1)
+        # flatten so that the last dimension is intact
+        f_flatened = f_transposed.flatten(0, -2)
+
+        X_flattened = _func(f_flatened)
+        # unflatten so that the correct shape is returned
+        X_transposed = X_flattened.reshape(f_transposed.shape)
+        X = X_transposed.transpose(-1, dim)
+
+        return X
+
+    @staticmethod
+    def transform(f: torch.Tensor) -> torch.Tensor:
+        """
+        transform
+
+        Function to calculate the
+        discrete Fourier Transform
+        of a real-valued signal f
+
+        Arguments:
+            f {torch.Tensor} -- m discretized real valued functions
+
+        Returns:
+            torch.Tensor -- m complex valued coefficients of f
+        """
+        ndims = len(f.shape)
+        assert (
+            ndims >= 2
+        ), f"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples"
+        if not torch.is_complex(f):
+            f = f * (1 + 0j)
+        if ndims == 2:
+            X = FourierBasis._raw_transform(f)
+        elif ndims > 2:
+            # perform 1d transform over every dimension
+            X = FourierBasis._ndim_transform(f, dim=1)
+            for cdim in range(2, ndims):
+                X = FourierBasis._ndim_transform(X, dim=cdim)
+
+        return X
+
+    @staticmethod
+    def _raw_inv_transform(coeff: torch.Tensor):
+        assert torch.is_complex(
+            coeff
+        ), "f is not complex, cast it to complex first eg. f * (1+0j)"
+        modes = coeff.shape[1]
+
+        n = torch.arange(modes)
+        k = FourierBasis.waveNumber(modes)
+        e = torch.exp(2j * torch.pi * k * n / modes)
+        # e = torch.exp(2j * torch.pi * k * x)
+
+        X = torch.mm(coeff, e.T)
+
+        return X
+
+    @staticmethod
+    def inv_transform(coeff: torch.Tensor):
+        """
+        transform
+
+        Function to calculate the
+        discrete Fourier Transform
+        of a real-valued signal f
+
+        Arguments:
+            f {torch.Tensor} -- m discretized real valued functions
+
+        Returns:
+            torch.Tensor -- m complex valued coefficients of f
+        """
+        ndims = len(coeff.shape)
+        assert (
+            ndims >= 2
+        ), f"f has shape {coeff.shape}, It needs to have at least two dimensions with the first being m samples"
+        if not torch.is_complex(coeff):
+            coeff = coeff * (1 + 0j)
+        if ndims == 2:
+            X = FourierBasis._raw_inv_transform(coeff)
+        elif ndims > 2:
+            # perform 1d transform over every dimension
+            X = FourierBasis._ndim_transform(coeff, dim=1, func="inverse")
+            for cdim in range(2, ndims):
+                X = FourierBasis._ndim_transform(X, dim=cdim, func="inverse")
+
+        return X
 
 
 ## Chebyshev basis
