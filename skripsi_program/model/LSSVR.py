@@ -159,6 +159,7 @@ class LSSVR:
         self.sv_x = None
         self.sv_y = None
         self.y_indicies = None
+        self.dtype = torch.float16
 
         self.K = torch_get_kernel(kernel, **kernel_params)
 
@@ -171,13 +172,13 @@ class LSSVR:
         self.print(KXX)
         KXX.diagonal().copy_(
             KXX.diagonal()
-            + torch.ones((KXX.shape[0],)).to(self.device, dtype=torch.float) / self.C
+            + torch.ones((KXX.shape[0],)).to(self.device, dtype=self.dtype) / self.C
         )
         self.print("H:")
         self.print(KXX)
 
-        A = torch.empty(list(np.array(KXX.shape) + 1)).to(
-            self.device, dtype=torch.float32
+        A = torch.empty(
+            list(np.array(KXX.shape) + 1), device=self.device, dtype=self.dtype
         )
         A[1:, 1:] = KXX
         A[0, 0] = 0
@@ -187,7 +188,7 @@ class LSSVR:
         self.print(A)
         shape = np.array(y_values.shape)
         shape[0] += 1
-        B = torch.empty(list(shape)).to(self.device, dtype=torch.float32)
+        B = torch.empty(list(shape), device=self.device, dtype=self.dtype)
         B[0] = 0
         B[1:] = y_values
         self.print("B")
@@ -197,7 +198,9 @@ class LSSVR:
         # self.print("A_cross")
         # self.print(A_cross)
 
-        solution = torch.linalg.lstsq(A, B).solution
+        solution: torch.Tensor = torch.linalg.lstsq(
+            A.to(dtype=torch.float), B.to(dtype=torch.float)
+        ).solution.to(dtype=self.dtype)
         # solution = torch.mm(A_cross, B)
         self.print("S")
         self.print(solution)
@@ -314,17 +317,17 @@ class LSSVR:
             parameter must have n_outputs columns.
         """
         # converting to tensors and passing to GPU
-        X_reshaped = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
-        if isinstance(X_reshaped, torch.Tensor):
-            X = X_reshaped.clone().to(self.device, dtype=torch.float32)
+        if isinstance(X_arr, torch.Tensor):
+            X = X_arr.to(self.device, dtype=self.dtype)
         else:
-            X = torch.from_numpy(X_reshaped).to(self.device, dtype=torch.float32)
+            X = torch.from_numpy(X_arr).to(self.device, dtype=self.dtype)
+        X = X.view(-1, 1) if X.ndim == 1 else X
 
-        y_reshaped = y_arr.reshape(-1, 1) if y_arr.ndim == 1 else y_arr
-        if isinstance(y_reshaped, torch.Tensor):
-            y = y_reshaped.clone().to(self.device, dtype=torch.float32)
+        if isinstance(y_arr, torch.Tensor):
+            y = y_arr.to(self.device, dtype=self.dtype)
         else:
-            y = torch.from_numpy(y_reshaped).to(self.device, dtype=torch.float32)
+            y = torch.from_numpy(y_arr).to(self.device, dtype=self.dtype)
+        y = y.view(-1, 1) if y.ndim == 1 else y
 
         assert (
             X.shape[0] == y.shape[0]
@@ -360,10 +363,10 @@ class LSSVR:
         ), "The model doesn't see to be fitted, try running .fit() method first"
         if isinstance(X_arr, torch.Tensor):
             X_reshaped_torch = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
-            X = X_reshaped_torch.clone().to(self.device, dtype=torch.float32)
+            X = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
         else:
             X_reshaped_np = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
-            X = torch.from_numpy(X_reshaped_np).to(self.device, dtype=torch.float32)
+            X = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
 
         self.print(f"X:{X.shape}")
         self.print(f"sv_x:{self.sv_x.shape}")
@@ -376,7 +379,7 @@ class LSSVR:
         y = KxX @ self.alpha + self.b
         self.print("v")
         self.print(y)
-        predictions = y
+        predictions = y.to(dtype=X_arr.dtype)
 
         # else:  # multiclass classification, ONE-VS-ALL APPROACH
         #     y = torch.empty((len(self.y_indicies), len(X)), dtype=X.dtype, device=self.device)

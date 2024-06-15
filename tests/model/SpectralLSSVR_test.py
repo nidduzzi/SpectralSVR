@@ -35,7 +35,7 @@ def test_SpectralLSSVR():
     t = torch.arange(0, 1, step)
     f_basis = FourierBasis(f_coeff_fourier)
     f = f_basis.evaluate(t)
-    f = f.real.to(dtype=torch.float16)
+    f = f.real
 
     s = torch.arange(-1, 1, step)
     u_basis = FourierBasis(u_coeff_fourier)
