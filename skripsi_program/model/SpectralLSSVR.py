@@ -17,6 +17,7 @@ class SpectralLSSVR:
         C=10.0,
         sigma=1.0,
         batch_size_func=lambda dims: 2**21 // dims + 7,
+        dtype=torch.float32,
         verbose=False,
         **kwargs,
     ) -> None:
@@ -47,8 +48,9 @@ class SpectralLSSVR:
         self.lssvr = LSSVR(
             C=C,
             sigma=sigma,
-            verbose=is_lssvr_verbose,
             batch_size_func=batch_size_func,
+            dtype=dtype,
+            verbose=is_lssvr_verbose,
             **kwargs,
         )
 

@@ -140,6 +140,7 @@ class LSSVR:
         max_error=0.8,
         verbose=False,
         batch_size_func=lambda dims: 2**21 // dims + 7,
+        dtype = torch.float32,
         **kernel_params,
     ):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -151,6 +152,8 @@ class LSSVR:
         self.kernel_ = kernel
         self.verbose = verbose
         self.kernel_params = kernel_params
+        self.dtype = dtype
+        self.batch_size_func = batch_size_func
 
         # Model parameters
         self.alpha = None
@@ -158,8 +161,6 @@ class LSSVR:
         self.sv_x = None
         self.sv_y = None
         self.y_indicies = None
-        self.dtype = torch.float16
-        self.batch_size_func = batch_size_func
 
         self.K = torch_get_kernel(kernel, **kernel_params)
 
