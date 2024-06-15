@@ -20,6 +20,7 @@ def test_SpectralLSSVR():
         * 1
         / (n_coeffs**0.5)
     )
+    # ).to(dtype=torch.complex32)
     # derivative
     k = FourierBasis.waveNumber(modes)
     f_coeff_fourier = u_coeff_fourier * 2j * torch.pi * k.T
@@ -34,7 +35,7 @@ def test_SpectralLSSVR():
     t = torch.arange(0, 1, step)
     f_basis = FourierBasis(f_coeff_fourier)
     f = f_basis.evaluate(t)
-    f = f.real
+    f = f.real.to(dtype=torch.float16)
 
     s = torch.arange(-1, 1, step)
     u_basis = FourierBasis(u_coeff_fourier)
@@ -51,11 +52,15 @@ def test_SpectralLSSVR():
     # Train svm
     model = SpectralLSSVR(FourierBasis(), 1.0, 1.0)
 
-    model.train(df_train)
+    f_train, u_train, u_coeff_train = df_train[:]
+    model.train(
+        f_train.flatten(1), u_coeff_train.flatten(1), list(u_coeff_train.shape[1:])
+    )
 
     # Test
     # model.test(df_test)
     f_test, u_test, u_coeff_test = df_test[:]
+    assert len(f_test.shape) == 2, "f_test is more than 2 dimensional"
     if torch.is_complex(f_test):
         f_test = to_real_coeff(f_test)
     u_coeff_pred = model.lssvr.predict(f_test)
@@ -66,9 +71,9 @@ def test_SpectralLSSVR():
         torch.tensor(0.0), mse, atol=1e-2
     ), f"coefficient evaluation mse too high ({mse})"
 
-    indecies = torch.randint(0, u_test.shape[1] - 1, (f_test.shape[0],))
-    s_sampled = s[indecies, None]
-    u_sampled = u_test[torch.arange(len(indecies)), indecies]
+    indices = torch.randint(0, u_test.shape[1] - 1, (f_test.shape[0],))
+    s_sampled = s[indices, None]
+    u_sampled = u_test[torch.arange(len(indices)), indices]
     u_pred = model.forward(f_test, s_sampled)
     # calculate mse
     mse = torch.norm(u_pred.ravel() - u_sampled.ravel(), 2) / len(u_pred.ravel())

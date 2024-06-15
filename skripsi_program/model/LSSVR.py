@@ -7,6 +7,7 @@ import numpy as np
 from typing_extensions import TypedDict
 
 
+Kernel_Type = typing.Literal["linear", "poly", "rbf"]
 Kernels = TypedDict(
     "Kernels",
     {
@@ -40,9 +41,7 @@ def load_model(filepath="model"):
 
 
 def torch_get_kernel(
-    name: typing.Union[
-        typing.Literal["linear"], typing.Literal["poly"], typing.Literal["rbf"]
-    ],
+    name: Kernel_Type,
     **params,
 ):
     """The method that returns the kernel function, given the 'kernel'
@@ -60,7 +59,9 @@ def torch_get_kernel(
     def rbf(
         x_i: torch.Tensor, x_j: torch.Tensor, sigma: float = params.get("sigma", 1)
     ) -> torch.Tensor:
-        return torch.exp(-(torch.norm(x_i[:, None] - x_j, dim=2, p=2) ** 2) / (2 * sigma**2))
+        return torch.exp(
+            -(torch.norm(x_i[:, None] - x_j, dim=2, p=2) ** 2) / (2 * sigma**2)
+        )
 
     kernels: Kernels = {
         "linear": linear,
@@ -138,7 +139,7 @@ class LSSVR:
         min_error=0.2,
         max_error=0.8,
         C=100.0,
-        kernel="rbf",
+        kernel: Kernel_Type = "rbf",
         verbose=False,
         **kernel_params,
     ):
@@ -170,7 +171,7 @@ class LSSVR:
         self.print(KXX)
         KXX.diagonal().copy_(
             KXX.diagonal()
-            + torch.ones((KXX.shape[0],)).to(self.device, dtype=torch.float32) / self.C
+            + torch.ones((KXX.shape[0],)).to(self.device, dtype=torch.float) / self.C
         )
         self.print("H:")
         self.print(KXX)
@@ -196,7 +197,7 @@ class LSSVR:
         # self.print("A_cross")
         # self.print(A_cross)
 
-        solution = torch.linalg.lstsq(A,B).solution
+        solution = torch.linalg.lstsq(A, B).solution
         # solution = torch.mm(A_cross, B)
         self.print("S")
         self.print(solution)
@@ -210,7 +211,9 @@ class LSSVR:
 
         return (b, alpha)
 
-    def _filter_simillar(self, X_new_data: torch.Tensor, y_new_data: torch.Tensor):
+    def _filter_simillar(
+        self, X_new_data: torch.Tensor, y_new_data: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         # source: https://doi.org/10.1007/s12652-022-03798-w
         if self.sv_x is None and self.sv_y is None:
             return X_new_data, y_new_data
@@ -323,14 +326,10 @@ class LSSVR:
         else:
             y = torch.from_numpy(y_reshaped).to(self.device, dtype=torch.float32)
 
-        if X.shape[0] != y.shape[0]:
-            raise ValueError(
-                "X_arr and y_arr does not have the same shape along the 0th dim: (X: "
-                + str(X.shape)
-                + ", y: "
-                + str(y.shape)
-                + ")"
-            )
+        assert (
+            X.shape[0] == y.shape[0]
+        ), f"X_arr and y_arr does not have the same shape along the 0th dim: (X: {X.shape}, y: {y.shape})"
+
         if update:
             X, y = self._filter_simillar(X, y)
 
@@ -356,10 +355,9 @@ class LSSVR:
         """Predicts the labels of data X given a trained model.
         - X: ndarray of shape (n_samples, n_attributes)
         """
-        if self.alpha is None:
-            raise Exception(
-                "The model doesn't see to be fitted, try running .fit() method first"
-            )
+        assert (
+            self.alpha is not None and self.sv_x is not None and self.sv_y is not None
+        ), "The model doesn't see to be fitted, try running .fit() method first"
         if isinstance(X_arr, torch.Tensor):
             X_reshaped_torch = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
             X = X_reshaped_torch.clone().to(self.device, dtype=torch.float32)

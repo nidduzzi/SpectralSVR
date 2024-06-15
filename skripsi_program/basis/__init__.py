@@ -14,26 +14,31 @@ class Basis(abc.ABC):
     Basis function for ndim dimensions
     """
 
-    coeff: torch.Tensor
+    coeff: torch.Tensor | None
     ndim: int
-    modes: int
+    modes: list[int]
 
-    def __init__(self, coeff: torch.Tensor | None = None, ndim: int = 1) -> None:
-        assert ndim > 0, f"ndim {ndim} is not allowed because it is less than 1"
+    def __init__(
+        self,
+        coeff: torch.Tensor | None = None,
+    ) -> None:
+        # assert ndim > 0, f"ndim {ndim} is not allowed because it is less than 1"
         # assert (
         #     coef.shape[1] == 1
         # ), f"coef of shape {coef.shape} is not allowed, make sure it is one dimensional"
-        self.ndim = ndim
+        # self.ndim = ndim
         if coeff is not None:
-            assert (
-                coeff.shape[0] > 0
-            ), f"coef of shape {coeff.shape} is not allowed, make sure it has at least one entry"
-            self.coeff = coeff
-            self.modes = coeff.shape[1]
+            self.setCoeff(coeff)
 
     @staticmethod
     @abc.abstractmethod
-    def fn(x: torch.Tensor, ndim: int, modes: int) -> torch.Tensor:
+    def fn(
+        x: torch.Tensor,
+        modes: int | list[int],
+        periods: int | float | list[float] | list[int] | None = None,
+        constant=None,
+        transpose: bool = False,
+    ) -> torch.Tensor:
         """
         fn
 
@@ -51,6 +56,7 @@ class Basis(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
     def evaluate(self, x: torch.Tensor) -> torch.Tensor:
         """
         evaluate
@@ -63,18 +69,17 @@ class Basis(abc.ABC):
         Returns:
             torch.Tensor -- {m, n} evaluations where n is the number different functions (coeff first dimension)
         """
-        if len(x.shape) == 1:
-            x = x.unsqueeze(-1)
-
-        assert self.coeff is not None, "coeff is none, set it first with setCoeff"
-
-        return (
-            1 / self.modes * torch.mm(self.coeff, self.fn(x, self.ndim, self.modes).T)
-        )
+        pass
 
     def setCoeff(self, coeff: torch.Tensor):
+        assert (
+            coeff.shape[0] > 0
+        ), f"coef of shape {coeff.shape} is not allowed, make sure it has at least one entry"
+        assert (
+            coeff.shape[1] > 0 and len(coeff.shape) == 2
+        ), "coeff needs to be a two dimensional tensor"
         self.coeff = coeff
-        self.modes = coeff.shape[1]
+        self.modes = list(coeff.shape[1:])
 
     @staticmethod
     @abc.abstractmethod
@@ -128,6 +133,46 @@ class Basis(abc.ABC):
 
 ## Fourier basis
 class FourierBasis(Basis):
+    def __init__(
+        self,
+        coeff: torch.Tensor | None = None,
+        periods: list[float] | None = None,
+    ) -> None:
+        super().__init__(coeff)
+        self.periods = periods
+
+    def evaluate(
+        self,
+        x: torch.Tensor,
+        coeff: torch.Tensor | None = None,
+        periods: list[float] | None = None,
+    ) -> torch.Tensor:
+        if len(x.shape) == 1:
+            x = x.unsqueeze(-1)
+
+        if coeff is None:
+            coeff = self.coeff
+        assert (
+            coeff is not None
+        ), "coeff is none, set it in the function parameters or with setCoeff"
+
+        if periods is None:
+            periods = (
+                [1.0 for i in range(len(coeff.shape[1:]))]
+                if self.periods is None
+                else self.periods
+            )
+        assert (
+            periods is not None
+        ), "periods is none, set it in the function parameters, at initialization of this basis, or via class properties"
+
+        coeff_x_basis = coeff.unsqueeze(1) * self.fn(
+            x, self.modes, periods=periods
+        ).unsqueeze(0)
+        sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
+        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
+        return scaling * sum_coeff_x_basis
+
     @staticmethod
     def fn(
         x: torch.Tensor,
@@ -319,4 +364,4 @@ class FourierBasis(Basis):
 # TODO: implement chebyshev basis https://en.wikipedia.org/wiki/Discrete_Chebyshev_transform
 class ChebyshevBasis(Basis):
     def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
-        super().__init__(coef, ndim)
+        super().__init__(coef)

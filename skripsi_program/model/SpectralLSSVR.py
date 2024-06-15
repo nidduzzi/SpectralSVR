@@ -38,7 +38,13 @@ class SpectralLSSVR:
         self.basis = basis
         self.lssvr = LSSVR(C=C, sigma=sigma, verbose=is_lssvr_verbose)
 
-    def forward(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        f: torch.Tensor,
+        x: torch.Tensor,
+        periods: list[int]
+        | None = None,  # TODO: use basis args like period etc to make it easier to change for different basis
+    ) -> torch.Tensor:
         """
         forward
 
@@ -63,23 +69,33 @@ class SpectralLSSVR:
         coeff = self.lssvr.predict(f)
         coeff = to_complex_coeff(coeff)
 
-        basis_values = self.basis.fn(x, x.shape[1], self.modes)
-        # compute approximated function
-        return (
-            1 / (self.modes) * torch.sum(coeff * basis_values, dim=-1).unsqueeze(-1)
-        )  # dot product
+        coeff_x_basis = coeff * self.basis.fn(x, self.modes, periods=periods).flatten(1)
+        sum_coeff_x_basis = coeff_x_basis.sum(1, keepdim=True)
+        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
+        return scaling * sum_coeff_x_basis
 
-    def train(self, df: torch.utils.data.dataset.TensorDataset):
+    def train(self, f: torch.Tensor, u_coeff: torch.Tensor, modes: list[int]):
         """
-        train
+        train _summary_
 
         fit the lssvr to predict the output function coefficients from the input function
 
+
         Arguments:
-            df {torch.utils.data.dataset.TensorDataset} -- Training dataset
+            f {torch.Tensor} -- n flattened input functions
+            u_coeff {torch.Tensor} -- n flattend output functions coefficients
+            modes {list[int]} -- list of modes
         """
-        f, u, u_coeff = df[:]
-        self.modes = u_coeff.shape[1]
+        assert (
+            len(f.shape) == 2
+        ), f"f needs to have only 2 dimensions, currently it has shape {f.shape}"
+        assert (
+            len(u_coeff.shape) == 2
+        ), f"u_coeff needs to have only 2 dimensions, currently it has shape {u_coeff.shape}"
+        assert (
+            torch.prod(torch.Tensor(modes)) == u_coeff.shape[1]
+        ), f"modes is {modes} and u_coeff has shape {u_coeff.shape}, the product of modes need to equal to the second dimension of u_coeff"
+        self.modes = modes
 
         if torch.is_complex(u_coeff):
             u_coeff = to_real_coeff(u_coeff)
@@ -87,8 +103,11 @@ class SpectralLSSVR:
             f = to_real_coeff(f)
         self.lssvr.fit(f, u_coeff)
 
-    def test(self, df: torch.utils.data.dataset.TensorDataset):
-        f, u, u_coeff = df[:]
+    def test(
+        self,
+        f: torch.Tensor,
+        u_coeff: torch.Tensor,
+    ):
         if torch.is_complex(f):
             f = to_real_coeff(f)
         u_coeff_pred = self.lssvr.predict(f)

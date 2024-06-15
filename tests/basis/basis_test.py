@@ -4,7 +4,7 @@ from skripsi_program.utils.fourier import to_complex_coeff, to_real_coeff
 import torch
 
 
-def test():
+def basis_test():
     # Generate Signal
     ## sampling rate
     sr = 100
@@ -34,11 +34,11 @@ def test():
 
     # Get coefficients and create basis
     coeff = FourierBasis.transform(f)
-    basis = FourierBasis(coeff, 1)
+    basis = FourierBasis(coeff)
     # derivative
-    k = FourierBasis.waveNumber(basis.modes)
+    k = FourierBasis.waveNumber(basis.modes[0])
     f_coeff = coeff * 2j * torch.pi * k.T
-    f_basis = FourierBasis(f_coeff, 1)
+    f_basis = FourierBasis(f_coeff)
 
     # Odd samples
     # Generate Signal
@@ -77,16 +77,16 @@ def test():
 
     f3 = f3 * (1 + 0j)  # cast to complex
 
-    f_pred = f_basis.evaluate(t)
-    t.requires_grad_()
-    pred = basis.evaluate(t)
-    pred.backward(gradient=torch.ones(pred.shape, dtype=pred.dtype))
-    t_grad = t.grad
+    # f_pred = f_basis.evaluate(t)
+    # t.requires_grad_()
+    # pred = basis.evaluate(t, f_coeff[0:1])
+    # pred.backward(gradient=torch.ones(pred.shape, dtype=pred.dtype))
+    # t_grad = t.grad
     # print(f"derivative difference: {torch.norm(f_pred.real - t_grad,2)}")
     # print(f_pred - t.grad)
     # TODO: implement assert for derivative error testing
 
-    f3_pred = pred[0]
+    f3_pred = basis.evaluate(t)[0]
     assert (
         f3_pred.shape == f3.shape
     ), f"f3_pred has shape {f3_pred.shape} and f3 has shape {f3.shape}, both need to have the same shape"
