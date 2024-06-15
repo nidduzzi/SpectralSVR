@@ -11,7 +11,15 @@ from ..utils.fourier import to_complex_coeff, to_real_coeff
 
 
 class SpectralLSSVR:
-    def __init__(self, basis: Basis, C=10.0, sigma=1.0, verbose=False) -> None:
+    def __init__(
+        self,
+        basis: Basis,
+        C=10.0,
+        sigma=1.0,
+        batch_size_func=lambda dims: 2**21 // dims + 7,
+        verbose=False,
+        **kwargs,
+    ) -> None:
         """
         __init__
 
@@ -36,7 +44,13 @@ class SpectralLSSVR:
                 self.verbose = True
 
         self.basis = basis
-        self.lssvr = LSSVR(C=C, sigma=sigma, verbose=is_lssvr_verbose)
+        self.lssvr = LSSVR(
+            C=C,
+            sigma=sigma,
+            verbose=is_lssvr_verbose,
+            batch_size_func=batch_size_func,
+            **kwargs,
+        )
 
     def forward(
         self,

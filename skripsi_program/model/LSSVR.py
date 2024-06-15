@@ -1,6 +1,7 @@
 import codecs
 import json
 import typing
+import functools
 
 import torch
 import numpy as np
@@ -12,8 +13,8 @@ Kernels = TypedDict(
     "Kernels",
     {
         "linear": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        "poly": typing.Callable[[torch.Tensor, torch.Tensor, float], torch.Tensor],
-        "rbf": typing.Callable[[torch.Tensor, torch.Tensor, float], torch.Tensor],
+        "poly": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        "rbf": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     },
 )
 
@@ -40,6 +41,18 @@ def load_model(filepath="model"):
     return model_json
 
 
+def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
+    return torch.mm(x_i, torch.t(x_j))
+
+
+def poly(x_i: torch.Tensor, x_j: torch.Tensor, d: float) -> torch.Tensor:
+    return (torch.mm(x_i, torch.t(x_j)) + 1) ** d
+
+
+def rbf(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
+    return torch.exp(-(((torch.norm(x_i - x_j, dim=2, p=2)) / (2 * sigma)) ** 2))
+
+
 def torch_get_kernel(
     name: Kernel_Type,
     **params,
@@ -48,25 +61,10 @@ def torch_get_kernel(
     parameter.
     """
 
-    def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
-        return torch.mm(x_i, torch.t(x_j))
-
-    def poly(
-        x_i: torch.Tensor, x_j: torch.Tensor, d: float = params.get("d", 3)
-    ) -> torch.Tensor:
-        return (torch.mm(x_i, torch.t(x_j)) + 1) ** d
-
-    def rbf(
-        x_i: torch.Tensor, x_j: torch.Tensor, sigma: float = params.get("sigma", 1)
-    ) -> torch.Tensor:
-        return torch.exp(
-            -(torch.norm(x_i[:, None] - x_j, dim=2, p=2) ** 2) / (2 * sigma**2)
-        )
-
     kernels: Kernels = {
-        "linear": linear,
-        "poly": poly,
-        "rbf": rbf,
+        "linear": torch.compile(linear),
+        "poly": functools.partial(poly, d=params.get("d", 3)),
+        "rbf": functools.partial(rbf, sigma=params.get("sigma", 1)),
     }
 
     if kernels.get(name) is None:
@@ -136,11 +134,12 @@ class LSSVR:
 
     def __init__(
         self,
+        C=1.0,
+        kernel: Kernel_Type = "rbf",
         min_error=0.2,
         max_error=0.8,
-        C=100.0,
-        kernel: Kernel_Type = "rbf",
         verbose=False,
+        batch_size_func=lambda dims: 2**21 // dims + 7,
         **kernel_params,
     ):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -160,19 +159,43 @@ class LSSVR:
         self.sv_y = None
         self.y_indicies = None
         self.dtype = torch.float16
+        self.batch_size_func = batch_size_func
 
         self.K = torch_get_kernel(kernel, **kernel_params)
+
+    def _batched_K(self, x_i: torch.Tensor, x_j: torch.Tensor):
+        batch_size_i = self.batch_size_func(x_i.shape[1])
+        batch_size_j = self.batch_size_func(x_j.shape[1])
+        self.print(f"batch_size_i: {batch_size_i}")
+        self.print(f"batch_size_j: {batch_size_j}")
+        num_samples_i = x_i.shape[0]
+        num_samples_j = x_j.shape[0]
+        KXX = torch.empty(
+            (num_samples_i, num_samples_j), device=self.device, dtype=self.dtype
+        )
+
+        for i in range(0, num_samples_i, batch_size_i):
+            i_end = min(i + batch_size_i, num_samples_i)
+            for j in range(0, num_samples_j, batch_size_j):
+                j_end = min(j + batch_size_j, num_samples_j)
+                KXX[i:i_end, j:j_end] = self.K(
+                    x_i[i:i_end, :].unsqueeze(1), x_j[j:j_end, :]
+                )
+        return KXX
 
     def _optimize_parameters(self, X: torch.Tensor, y_values: torch.Tensor):
         """Helper function that optimizes the dual variables through the
         use of the kernel matrix pseudo-inverse.
         """
-        KXX = self.K(X, X)
+        KXX = self._batched_K(X, X)
+        # assert torch.allclose(self.K(X.unsqueeze(1), X), KXX), "KXX is not the same"
+        # KXX = X.unsqueeze(1) - X
         self.print("omega:")
         self.print(KXX)
         KXX.diagonal().copy_(
             KXX.diagonal()
-            + torch.ones((KXX.shape[0],)).to(self.device, dtype=self.dtype) / self.C
+            + torch.ones((KXX.shape[0],), device=self.device, dtype=self.dtype).to()
+            / self.C
         )
         self.print("H:")
         self.print(KXX)
@@ -201,6 +224,7 @@ class LSSVR:
         solution: torch.Tensor = torch.linalg.lstsq(
             A.to(dtype=torch.float), B.to(dtype=torch.float)
         ).solution.to(dtype=self.dtype)
+        # solution = torch.rand((10, 10))
         # solution = torch.mm(A_cross, B)
         self.print("S")
         self.print(solution)
@@ -370,7 +394,7 @@ class LSSVR:
 
         self.print(f"X:{X.shape}")
         self.print(f"sv_x:{self.sv_x.shape}")
-        KxX = self.K(X, self.sv_x)
+        KxX = self._batched_K(X, self.sv_x)
 
         # if len(self.y_indicies) == 1:  # binary classification
         # y_values = self.sv_y
