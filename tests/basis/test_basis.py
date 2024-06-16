@@ -4,7 +4,7 @@ from skripsi_program.utils.fourier import to_complex_coeff, to_real_coeff
 import torch
 
 
-def basis_test():
+def test_basis():
     # Generate Signal
     ## sampling rate
     sr = 100
@@ -55,9 +55,12 @@ def basis_test():
     freq = 7
     f1 += 0.5 * torch.sin(2 * torch.pi * freq * t)
 
-    f1 = f1.unsqueeze(-1) * (1 + 0j)
+    f1 = f1.unsqueeze(0) * (1 + 0j)
 
     coeff = FourierBasis.transform(f1)
+    assert (
+        coeff.ndim == 2
+    ), "coeff needs to have two dimensions, the first the sample and the second the modes for the coefficients"
     coeff_real = to_real_coeff(coeff)
     coeff_complex = to_complex_coeff(coeff_real)
     invertible = torch.equal(coeff_complex, coeff)

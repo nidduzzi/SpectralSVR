@@ -2,15 +2,16 @@ import torch.utils
 import torch.utils.data
 import torch.utils.data.dataset
 import torch
-from ..basis import Basis, FourierBasis
+from ..basis import Basis
 from .LSSVR import LSSVR
 from ..utils.fourier import to_complex_coeff, to_real_coeff
+from typing import Literal
 # model from fourier/chebyshev series
 # coeficients are modeled by LSSVRs that are trained on either the input function coefficients or the discretized input function itself
 # coeff . basis(x)
 
 
-class SpectralLSSVR:
+class SpectralSVR:
     def __init__(
         self,
         basis: Basis,
@@ -18,7 +19,8 @@ class SpectralLSSVR:
         sigma=1.0,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
-        verbose=False,
+        svr = LSSVR,
+        verbose: Literal["ALL", "LSSVR", "LITE", False] = False,
         **kwargs,
     ) -> None:
         """
@@ -36,16 +38,16 @@ class SpectralLSSVR:
         is_lssvr_verbose = False
         self.verbose = False
         match verbose:
-            case "All":
+            case "ALL":
                 self.verbose = True
                 is_lssvr_verbose = True
             case "LSSVR":
                 is_lssvr_verbose = True
-            case "lite":
+            case "LITE":
                 self.verbose = True
 
         self.basis = basis
-        self.lssvr = LSSVR(
+        self.svr = svr(
             C=C,
             sigma=sigma,
             batch_size_func=batch_size_func,
@@ -82,7 +84,7 @@ class SpectralLSSVR:
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        coeff = self.lssvr.predict(f)
+        coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
 
         coeff_x_basis = coeff * self.basis.fn(x, self.modes, periods=periods).flatten(1)
@@ -117,7 +119,7 @@ class SpectralLSSVR:
             u_coeff = to_real_coeff(u_coeff)
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        self.lssvr.fit(f, u_coeff)
+        self.svr.fit(f, u_coeff)
 
     def test(
         self,
@@ -126,7 +128,7 @@ class SpectralLSSVR:
     ):
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        u_coeff_pred = self.lssvr.predict(f)
+        u_coeff_pred = self.svr.predict(f)
         u_coeff_pred = to_complex_coeff(u_coeff_pred)
         if self.verbose:
             print("TEST COEFF PRED:")

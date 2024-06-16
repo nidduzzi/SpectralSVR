@@ -1,2 +1,2 @@
-from .SpectralLSSVR import SpectralLSSVR
+from .SpectralSVR import SpectralSVR
 from .LSSVR import LSSVR

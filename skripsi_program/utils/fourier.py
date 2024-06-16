@@ -51,23 +51,7 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     converted_coeff[:, 1::2] = coeff.imag
 
     # mask for only coefficients that are never 0
-    mask = converted_coeff != 0.0
-    mask = mask.sum(dim=0) != 0
-    converted_coeff = converted_coeff[:, mask]
+    # mask = converted_coeff != 0.0
+    # mask = mask.sum(dim=0) != 0
+    # converted_coeff = converted_coeff[:, mask]
     return converted_coeff
-
-
-if __name__ == "__main__":
-    # even number of coefficients
-    a = torch.randn((10, 10))
-    a_complex = to_complex_coeff(a)
-    a_real = to_real_coeff(a_complex)
-    invertible = torch.equal(a, a_real)
-    assert invertible, f"a with shape {a.shape} and a_real with shape {a_real.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, a_complex has shape {a_complex.shape}"
-    # Odd number of coefficients
-    a = torch.randn((10, 9))
-    a_complex = to_complex_coeff(a)
-    a_real = to_real_coeff(a_complex)
-    invertible = torch.equal(a, a_real)
-    assert invertible, f"a with shape {a.shape} and a_real with shape {a_real.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, a_complex has shape {a_complex.shape}"
-    print("Test Passed")

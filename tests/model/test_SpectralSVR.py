@@ -1,5 +1,5 @@
 import pytest
-from skripsi_program.model.SpectralLSSVR import SpectralLSSVR
+from skripsi_program.model.SpectralSVR import SpectralSVR
 from skripsi_program.basis import FourierBasis
 from skripsi_program.utils.fourier import to_real_coeff, to_complex_coeff
 import torch
@@ -7,7 +7,7 @@ from torch.utils.data.dataset import TensorDataset
 from torch.utils.data import random_split
 
 
-def test_SpectralLSSVR():
+def test_SpectralSVR():
     generator = torch.Generator().manual_seed(42)
     # Generate functions/data
     # spectral density function
@@ -50,7 +50,7 @@ def test_SpectralLSSVR():
     df_train, df_test = random_split(df, (0.8, 0.2), generator=generator)
 
     # Train svm
-    model = SpectralLSSVR(FourierBasis(), 1.0, 1.0)
+    model = SpectralSVR(FourierBasis(), 1.0, 1.0)
 
     f_train, u_train, u_coeff_train = df_train[:]
     model.train(
@@ -63,7 +63,7 @@ def test_SpectralLSSVR():
     assert len(f_test.shape) == 2, "f_test is more than 2 dimensional"
     if torch.is_complex(f_test):
         f_test = to_real_coeff(f_test)
-    u_coeff_pred = model.lssvr.predict(f_test)
+    u_coeff_pred = model.svr.predict(f_test)
     u_coeff_pred = to_complex_coeff(u_coeff_pred)
     mse = torch.norm(u_coeff_pred - u_coeff_test, 2) / u_coeff_test.shape[0]
 
