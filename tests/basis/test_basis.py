@@ -1,6 +1,6 @@
 import pytest
 from skripsi_program.basis import FourierBasis
-from skripsi_program.utils.fourier import to_complex_coeff, to_real_coeff
+from skripsi_program.utils import to_complex_coeff, to_real_coeff
 import torch
 
 

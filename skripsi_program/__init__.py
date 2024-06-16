@@ -1,5 +1,5 @@
 from .model import *
-from .utils.fourier import *
+from .utils import *
 from .basis import *
 
 

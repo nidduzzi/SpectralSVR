@@ -1,6 +1,6 @@
 import torch
 import abc
-from ..utils.fourier import to_real_coeff, to_complex_coeff
+from ..utils import to_real_coeff, to_complex_coeff
 from typing import Literal
 
 

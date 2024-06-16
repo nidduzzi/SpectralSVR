@@ -1,7 +1,7 @@
 import pytest
 from skripsi_program.model.SpectralSVR import SpectralSVR
 from skripsi_program.basis import FourierBasis
-from skripsi_program.utils.fourier import to_real_coeff, to_complex_coeff
+from skripsi_program.utils import to_real_coeff, to_complex_coeff
 import torch
 from torch.utils.data.dataset import TensorDataset
 from torch.utils.data import random_split
@@ -50,7 +50,8 @@ def test_SpectralSVR():
     df_train, df_test = random_split(df, (0.8, 0.2), generator=generator)
 
     # Train svm
-    model = SpectralSVR(FourierBasis(), 1.0, 1.0)
+    periods = [1.0]
+    model = SpectralSVR(FourierBasis(periods=periods), 1.0, 1.0)
 
     f_train, u_train, u_coeff_train = df_train[:]
     model.train(
@@ -71,12 +72,9 @@ def test_SpectralSVR():
         torch.tensor(0.0), mse, atol=1e-2
     ), f"coefficient evaluation mse too high ({mse})"
 
-    indices = torch.randint(0, u_test.shape[1] - 1, (f_test.shape[0],))
-    s_sampled = s[indices, None]
-    u_sampled = u_test[torch.arange(len(indices)), indices]
-    u_pred = model.forward(f_test, s_sampled)
+    u_pred = model.forward(f_test, s)
     # calculate mse
-    mse = torch.norm(u_pred.ravel() - u_sampled.ravel(), 2) / len(u_pred.ravel())
+    mse = torch.norm(u_pred.ravel() - u_test.ravel(), 2) / len(u_pred.ravel())
     assert torch.isclose(
         torch.tensor(0.0), mse, atol=1e-2
     ), f"prediction evaluation mse too high ({mse})"

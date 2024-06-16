@@ -4,7 +4,7 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis
 from .LSSVR import LSSVR
-from ..utils.fourier import to_complex_coeff, to_real_coeff
+from ..utils import to_complex_coeff, to_real_coeff
 from typing import Literal
 # model from fourier/chebyshev series
 # coeficients are modeled by LSSVRs that are trained on either the input function coefficients or the discretized input function itself
@@ -19,7 +19,7 @@ class SpectralSVR:
         sigma=1.0,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
-        svr = LSSVR,
+        svr=LSSVR,
         verbose: Literal["ALL", "LSSVR", "LITE", False] = False,
         **kwargs,
     ) -> None:
@@ -62,6 +62,7 @@ class SpectralSVR:
         x: torch.Tensor,
         periods: list[int]
         | None = None,  # TODO: use basis args like period etc to make it easier to change for different basis
+        batched: bool = True,
     ) -> torch.Tensor:
         """
         forward
@@ -78,18 +79,24 @@ class SpectralSVR:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
-        assert (
-            f.shape[0] == x.shape[0]
-        ), f"f has shape {f.shape} and x has shape {x.shape}, make sure both has the same number of rows (0th dimension)"
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
         coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
-
-        coeff_x_basis = coeff * self.basis.fn(x, self.modes, periods=periods).flatten(1)
-        sum_coeff_x_basis = coeff_x_basis.sum(1, keepdim=True)
+        basis_values = self.basis.fn(x, self.modes, periods=periods)
         scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
+
+        if batched:
+            coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
+            sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
+        else:
+            assert (
+                f.shape[0] == x.shape[0]
+            ), f"When not batched make sure both has the same number of rows (0th dimension), otherwise use batched in the parameters f has shape {f.shape} and x has shape {x.shape}"
+            coeff_x_basis = coeff * basis_values.flatten(1)
+            sum_coeff_x_basis = coeff_x_basis.sum(1, keepdim=True)
+
         return scaling * sum_coeff_x_basis
 
     def train(self, f: torch.Tensor, u_coeff: torch.Tensor, modes: list[int]):
