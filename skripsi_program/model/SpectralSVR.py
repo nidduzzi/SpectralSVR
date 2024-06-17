@@ -79,6 +79,10 @@ class SpectralSVR:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
+        assert (
+            x.shape[1] == len(self.modes)
+        ), f"Make sure x is in shape (num_points, dimensions) or (num_points,) for 1D. x has shape {x.shape} and modes is {self.modes}"
+
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
