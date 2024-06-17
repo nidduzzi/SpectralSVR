@@ -42,11 +42,11 @@ def load_model(filepath="model"):
 
 
 def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
-    return torch.mm(x_i, torch.t(x_j))
+    return (x_i * x_j).sum(-1)
 
 
 def poly(x_i: torch.Tensor, x_j: torch.Tensor, d: float) -> torch.Tensor:
-    return (torch.mm(x_i, torch.t(x_j)) + 1) ** d
+    return (linear(x_i, x_j) + 1) ** d
 
 
 def rbf(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
@@ -62,7 +62,7 @@ def torch_get_kernel(
     """
 
     kernels: Kernels = {
-        "linear": torch.compile(linear),
+        "linear": linear,
         "poly": functools.partial(poly, d=params.get("d", 3)),
         "rbf": functools.partial(rbf, sigma=params.get("sigma", 1)),
     }
@@ -140,7 +140,7 @@ class LSSVR:
         max_error=0.8,
         verbose=False,
         batch_size_func=lambda dims: 2**21 // dims + 7,
-        dtype = torch.float32,
+        dtype=torch.float32,
         **kernel_params,
     ):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

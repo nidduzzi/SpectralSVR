@@ -74,7 +74,7 @@ def test_SpectralSVR():
 
     u_pred = model.forward(f_test, s)
     # calculate mse
-    mse = torch.norm(u_pred.ravel() - u_test.ravel(), 2) / len(u_pred.ravel())
+    mse = torch.norm(u_pred - u_test, 2) / u_test.shape[0]
     assert torch.isclose(
         torch.tensor(0.0), mse, atol=1e-2
     ), f"prediction evaluation mse too high ({mse})"

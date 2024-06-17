@@ -146,5 +146,6 @@ class SpectralSVR:
             print(u_coeff_pred[0, :])
             print("TEST COEFF:")
             print(u_coeff[0, :])
-        mse = torch.norm(u_coeff_pred - u_coeff, 2) / u_coeff.shape[0]
+        mse = ((u_coeff_pred - u_coeff) ** 2).sum() / u_coeff.shape[0]
         print(f"test coeff mse: {mse}")
+        return {"mse": mse.item()}

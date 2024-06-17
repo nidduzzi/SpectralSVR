@@ -74,10 +74,8 @@ class Basis(abc.ABC):
     def setCoeff(self, coeff: torch.Tensor):
         assert (
             coeff.shape[0] > 0
-        ), f"coef of shape {coeff.shape} is not allowed, make sure it has at least one entry"
-        assert (
-            coeff.shape[1] > 0 and len(coeff.shape) == 2
-        ), "coeff needs to be a two dimensional tensor"
+        ), f"make sure coeff has at least one entry, coef of shape {coeff.shape} is not allowed"
+        assert coeff.shape[1] > 0, "coeff needs to be a two dimensional tensor"
         self.coeff = coeff
         self.modes = list(coeff.shape[1:])
 
