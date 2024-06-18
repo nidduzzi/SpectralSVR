@@ -370,14 +370,7 @@ class LSSVR:
 
         self.b, self.alpha = self._optimize_parameters(X, y_values)
 
-        # else:  # multi-output regression
-        #     n_output = len(self.y_indicies)
-        #     self.b = torch.empty(n_output, dtype=X.dtype, device=self.device)
-        #     self.alpha = torch.empty(n_output, len(y), dtype=X.dtype, device=self.device)
-        #     for i in range(n_output):
-        #         y_values = y
-
-        #         self.b[i], self.alpha[i] = self._optimize_parameters(X, y_values)
+        return self
 
     def predict(self, X_arr: typing.Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         """Predicts the labels of data X given a trained model.

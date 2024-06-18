@@ -131,6 +131,7 @@ class SpectralSVR:
         if torch.is_complex(f):
             f = to_real_coeff(f)
         self.svr.fit(f, u_coeff)
+        return self
 
     def test(
         self,
