@@ -55,3 +55,15 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     # mask = mask.sum(dim=0) != 0
     # converted_coeff = converted_coeff[:, mask]
     return converted_coeff
+
+
+def scale_to_standard(x: torch.Tensor):
+    x_real = to_real_coeff(x) if torch.is_complex(x) else x
+    m = x_real.mean(0, keepdim=True)
+    s = x_real.std(0, unbiased=False, keepdim=True)
+    x_scaled = x_real - m
+    x_scaled = x_scaled / s
+    for dim in range(x.shape[1]):
+        x_scaled[:, dim].nan_to_num_(m[0, dim].item())
+    x_scaled = to_complex_coeff(x_scaled) if torch.is_complex(x) else x_scaled
+    return x_scaled

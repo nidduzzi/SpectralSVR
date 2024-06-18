@@ -1,6 +1,6 @@
 import torch
 import abc
-from ..utils import to_real_coeff, to_complex_coeff
+from ..utils import to_complex_coeff
 from typing import Literal
 
 
@@ -244,13 +244,14 @@ class FourierBasis(Basis):
         modes: int,
         domain: tuple[float, float] = (-1.0, 1.0),
         generator: torch.Generator | None = None,
+        random_func=torch.randn,
         complex: bool = True,
     ) -> torch.Tensor:
         if complex:
             modes = 2 * modes  # account for the imaginary part
         a, b = domain
         span = abs(b - a)
-        coeff_real = span * torch.randn((n, modes), generator=generator) + a
+        coeff_real = span * random_func((n, modes), generator=generator) + a
         if complex:
             return to_complex_coeff(coeff_real)
         else:
