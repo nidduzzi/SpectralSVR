@@ -61,6 +61,7 @@ def scale_to_standard(x: torch.Tensor):
     x_real = to_real_coeff(x) if torch.is_complex(x) else x
     m = x_real.mean(0, keepdim=True)
     s = x_real.std(0, unbiased=False, keepdim=True)
+    s[torch.isclose(s, torch.tensor(0.0))] = 1.0
     x_scaled = x_real - m
     x_scaled = x_scaled / s
     for dim in range(x.shape[1]):
