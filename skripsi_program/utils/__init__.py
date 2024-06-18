@@ -68,3 +68,25 @@ def scale_to_standard(x: torch.Tensor):
         x_scaled[:, dim].nan_to_num_(m[0, dim].item())
     x_scaled = to_complex_coeff(x_scaled) if torch.is_complex(x) else x_scaled
     return x_scaled
+
+
+def reduce_coeff(x: torch.Tensor, max_modes: int | list[int]):
+    if isinstance(max_modes, int):
+        max_modes = [max_modes] * len(x.shape[1:])
+    assert (
+        len(x.shape[1:]) == len(max_modes)
+    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {max_modes}"
+    x_reduced = x
+    for dim, max_mode in enumerate(max_modes, 1):
+        dim_len = x.shape[dim]
+        start_range = torch.tensor(range((max_mode - 1) // 2 + 1))
+        end_range = torch.tensor(range(dim_len - max_mode // 2, dim_len))
+
+        x_reduced = torch.concat(
+            (
+                x_reduced.index_select(dim, start_range),
+                x_reduced.index_select(dim, end_range),
+            ),
+            dim,
+        )
+    return x_reduced

@@ -16,7 +16,7 @@ class Basis(abc.ABC):
 
     coeff: torch.Tensor | None
     ndim: int
-    modes: list[int]
+    modes: list[int] | None
 
     def __init__(
         self,
@@ -144,6 +144,7 @@ class FourierBasis(Basis):
         x: torch.Tensor,
         coeff: torch.Tensor | None = None,
         periods: list[float] | None = None,
+        modes: list[int] | None = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
@@ -163,9 +164,14 @@ class FourierBasis(Basis):
         assert (
             periods is not None
         ), "periods is none, set it in the function parameters, at initialization of this basis, or via class properties"
+        if modes is None:
+            modes = self.modes
+        assert (
+            modes is not None
+        ), "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
 
         coeff_x_basis = coeff.unsqueeze(1) * self.fn(
-            x, self.modes, periods=periods
+            x, modes, periods=periods
         ).unsqueeze(0)
         sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
         scaling = 1.0 / torch.prod(torch.Tensor(self.modes))

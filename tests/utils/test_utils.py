@@ -47,3 +47,6 @@ def test_complex_invertible_odd():
     invertible = torch.equal(c, c_complex)
     assert invertible, f"c with shape {c.shape} and c_complex with shape {c_complex.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, c_real has shape {c_real.shape}"
     print("Test Passed")
+
+# TODO: test scale_to_standard
+# TODO: test reduce_coeff
