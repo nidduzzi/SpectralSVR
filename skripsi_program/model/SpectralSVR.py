@@ -5,7 +5,7 @@ import torch
 from ..basis import Basis
 from .LSSVR import LSSVR
 from ..utils import to_complex_coeff, to_real_coeff
-from typing import Literal
+from typing import Literal, Union
 # model from fourier/chebyshev series
 # coeficients are modeled by LSSVRs that are trained on either the input function coefficients or the discretized input function itself
 # coeff . basis(x)
@@ -89,17 +89,24 @@ class SpectralSVR:
         coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
         basis_values = self.basis.fn(x, self.modes, periods=periods)
-        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
+        scaling = 1.0   / torch.prod(torch.Tensor(self.modes))
 
+        self.print(f"batched: {batched}")
+        self.print(f"coeff: {coeff.shape}")
+        self.print(f"basis_values: {basis_values.shape}")
         if batched:
             coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
+            self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
             sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
+            self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
         else:
             assert (
                 f.shape[0] == x.shape[0]
             ), f"When not batched make sure both has the same number of rows (0th dimension), otherwise use batched in the parameters f has shape {f.shape} and x has shape {x.shape}"
             coeff_x_basis = coeff * basis_values.flatten(1)
+            self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
             sum_coeff_x_basis = coeff_x_basis.sum(1, keepdim=True)
+            self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
 
         return scaling * sum_coeff_x_basis
 
@@ -142,11 +149,19 @@ class SpectralSVR:
             f = to_real_coeff(f)
         u_coeff_pred = self.svr.predict(f)
         u_coeff_pred = to_complex_coeff(u_coeff_pred)
-        if self.verbose:
-            print("TEST COEFF PRED:")
-            print(u_coeff_pred[0, :])
-            print("TEST COEFF:")
-            print(u_coeff[0, :])
+        self.print("TEST COEFF PRED:")
+        self.print(u_coeff_pred[0, :])
+        self.print("TEST COEFF:")
+        self.print(u_coeff[0, :])
         mse = ((u_coeff_pred - u_coeff) ** 2).sum() / u_coeff.shape[0]
         print(f"test coeff mse: {mse}")
         return {"mse": mse.item()}
+
+    def print(
+        self,
+        *values: object,
+        sep: Union[str, None] = " ",
+        end: Union[str, None] = "\n",
+    ):
+        if self.verbose:
+            print(*values, sep=sep, end=end)
