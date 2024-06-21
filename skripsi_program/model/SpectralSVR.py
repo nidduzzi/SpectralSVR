@@ -4,8 +4,8 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis
 from .LSSVR import LSSVR
-from ..utils import to_complex_coeff, to_real_coeff
-from typing import Literal, Union
+from ..utils import to_complex_coeff, to_real_coeff, mse
+from typing import Literal, Union, Callable
 # model from fourier/chebyshev series
 # coeficients are modeled by LSSVRs that are trained on either the input function coefficients or the discretized input function itself
 # coeff . basis(x)
@@ -16,7 +16,6 @@ class SpectralSVR:
         self,
         basis: Basis,
         C=10.0,
-        sigma=1.0,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
         svr=LSSVR,
@@ -49,7 +48,6 @@ class SpectralSVR:
         self.basis = basis
         self.svr = svr(
             C=C,
-            sigma=sigma,
             batch_size_func=batch_size_func,
             dtype=dtype,
             verbose=is_lssvr_verbose,
@@ -89,7 +87,7 @@ class SpectralSVR:
         coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
         basis_values = self.basis.fn(x, self.modes, periods=periods)
-        scaling = 1.0   / torch.prod(torch.Tensor(self.modes))
+        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
 
         self.print(f"batched: {batched}")
         self.print(f"coeff: {coeff.shape}")
@@ -146,16 +144,73 @@ class SpectralSVR:
         u_coeff: torch.Tensor,
     ):
         if torch.is_complex(f):
+            self.print("transform f to complex")
             f = to_real_coeff(f)
         u_coeff_pred = self.svr.predict(f)
+        if torch.is_complex(u_coeff):
+            self.print("transform u_coeff to complex")
+            u_coeff = to_real_coeff(u_coeff)
+        nan_pred_sum = torch.isnan(u_coeff_pred).sum().item()
+
+        ssr = ((u_coeff_pred - u_coeff) ** 2).sum(0)
+        mse = ssr.sum() / u_coeff.shape[0]
+        # u_coeff_pred can be nan if invalid kernel parameters
+        # or data containing nan is input into the model
+        # mse.nan_to_num_(3.40282e38)
+
+        u_coeff_val_mean = u_coeff.mean(dim=0)
+        ssg = ((u_coeff_pred - u_coeff_val_mean) ** 2).sum(0)
+        sst = ((u_coeff - u_coeff_val_mean) ** 2).sum(0)
+        ssr_sst = ssr / sst
+        ssg_sst = ssg / sst
+
+        r2 = torch.nan_to_num(1 - ssr_sst).sum().item()
+        r2_expected = torch.nan_to_num(1 - ssg_sst).sum().item()
         u_coeff_pred = to_complex_coeff(u_coeff_pred)
-        self.print("TEST COEFF PRED:")
-        self.print(u_coeff_pred[0, :])
-        self.print("TEST COEFF:")
-        self.print(u_coeff[0, :])
-        mse = ((u_coeff_pred - u_coeff) ** 2).sum() / u_coeff.shape[0]
-        print(f"test coeff mse: {mse}")
-        return {"mse": mse.item()}
+        metrics = {
+            "mse": mse.item(),
+            "r2": r2,
+            "r2_abs": abs(r2),
+            "r2_expected": r2_expected,
+            "r2_expected_abs": abs(r2_expected),
+            "pred_nan_sum": nan_pred_sum,
+        }
+        return metrics
+
+    def inverse(
+        self,
+        u: torch.Tensor,
+        points: torch.Tensor,
+        loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = mse,
+        epochs=100,
+        generator=torch.Generator().manual_seed(42),
+        gain=0.2,
+        **optimizer_params,
+    ):
+        assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
+        f_shape = (u.shape[0], self.svr.sv_x.shape[1])
+        # inverse problem
+        f_pred = torch.empty(f_shape, dtype=u.dtype)  # predicted density
+        f_pred: torch.Tensor = torch.nn.init.xavier_normal_(
+            f_pred,
+            gain=gain,
+            generator=generator,  # for repeatability
+        )
+        f_pred.requires_grad_()
+
+        # x = torch.arange(0, period, step)
+        # pp = torch.meshgrid([x, x], indexing="xy")
+        # points = torch.concat([p.flatten().unsqueeze(-1) for p in pp], dim=1)
+
+        optim = torch.optim.Adam([f_pred], **optimizer_params)
+        for epoch in range(epochs):
+            optim.zero_grad()
+            u_pred = self.forward(f_pred, points).real
+            loss = loss_fn(u_pred, u)
+            loss.backward()
+            optim.step()
+        optim.zero_grad()
+        return f_pred
 
     def print(
         self,

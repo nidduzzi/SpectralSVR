@@ -51,7 +51,7 @@ def test_SpectralSVR():
 
     # Train svm
     periods = [1.0]
-    model = SpectralSVR(FourierBasis(periods=periods), 1.0, 1.0)
+    model = SpectralSVR(FourierBasis(periods=periods), C=1.0, sigma=1.0)
 
     f_train, u_train, u_coeff_train = df_train[:]
     model.train(
