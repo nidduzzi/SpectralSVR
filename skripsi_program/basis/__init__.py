@@ -174,7 +174,7 @@ class FourierBasis(Basis):
             x, modes, periods=periods
         ).unsqueeze(0)
         sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
-        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
+        scaling = 1.0 / torch.prod(torch.Tensor(modes))
         return scaling * sum_coeff_x_basis
 
     @staticmethod
