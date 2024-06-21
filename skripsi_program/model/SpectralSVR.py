@@ -190,12 +190,8 @@ class SpectralSVR:
         assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
         f_shape = (u.shape[0], self.svr.sv_x.shape[1])
         # inverse problem
-        f_pred = torch.empty(f_shape, dtype=u.dtype)  # predicted density
-        f_pred: torch.Tensor = torch.nn.init.xavier_normal_(
-            f_pred,
-            gain=gain,
-            generator=generator,  # for repeatability
-        )
+        # f_pred = torch.empty(f_shape, dtype=u.dtype)  # predicted density
+        f_pred: torch.Tensor = torch.randn(f_shape, generator=generator) * gain
         f_pred.requires_grad_()
 
         # x = torch.arange(0, period, step)
