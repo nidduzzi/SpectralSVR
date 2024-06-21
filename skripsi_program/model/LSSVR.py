@@ -5,18 +5,6 @@ import functools
 
 import torch
 import numpy as np
-from typing_extensions import TypedDict
-
-
-Kernel_Type = typing.Literal["linear", "poly", "rbf"]
-Kernels = TypedDict(
-    "Kernels",
-    {
-        "linear": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        "poly": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        "rbf": typing.Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    },
-)
 
 
 def torch_json_encoder(obj):
@@ -41,6 +29,9 @@ def load_model(filepath="model"):
     return model_json
 
 
+Kernel_Type = typing.Literal["linear", "poly", "rbf", "frob", "max", "tri"]
+
+
 def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
     return (x_i * x_j).sum(-1)
 
@@ -50,7 +41,19 @@ def poly(x_i: torch.Tensor, x_j: torch.Tensor, d: float) -> torch.Tensor:
 
 
 def rbf(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
-    return torch.exp(-(((torch.norm(x_i - x_j, dim=2, p=2)) / (2 * sigma)) ** 2))
+    return torch.exp(-(((torch.norm(x_i - x_j, p=2, dim=2)) / (2 * sigma)) ** 2))
+
+
+def tri(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
+    return 1 - torch.norm(x_i - x_j, p=2, dim=2) / sigma
+
+
+def frob(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
+    return torch.norm(x_i - x_j, p="fro", dim=2)
+
+
+def max_k(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
+    return torch.max(x_i - x_j, dim=2).values
 
 
 def torch_get_kernel(
@@ -60,20 +63,21 @@ def torch_get_kernel(
     """The method that returns the kernel function, given the 'kernel'
     parameter.
     """
-
-    kernels: Kernels = {
-        "linear": linear,
-        "poly": functools.partial(poly, d=params.get("d", 3)),
-        "rbf": functools.partial(rbf, sigma=params.get("sigma", 1)),
-    }
-
-    if kernels.get(name) is None:
-        raise KeyError(
-            f"Kernel '{name}' is not defined, try one in the list: "
-            f"{list(kernels.keys())}."
-        )
-    else:
-        return kernels[name]
+    match name:
+        case "linear":
+            return linear
+        case "poly":
+            return functools.partial(poly, d=params.get("d", 3.0))
+        case "rbf":
+            return functools.partial(rbf, sigma=params.get("sigma", 1.0))
+        case "tri":
+            return functools.partial(tri, sigma=params.get("sigma", 1.0))
+        case "frob":
+            return frob
+        case "max":
+            return max_k
+        case _:
+            raise KeyError(f"kernel {name} is not defined, try one of {Kernel_Type}")
 
 
 class LSSVR:
