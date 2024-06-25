@@ -2,7 +2,7 @@ import torch.utils
 import torch.utils.data
 import torch.utils.data.dataset
 import torch
-from ..basis import Basis
+from ..basis import FourierBasis
 from .LSSVR import LSSVR
 from ..utils import to_complex_coeff, to_real_coeff
 from typing import Literal, Union, Callable
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SpectralSVR:
     def __init__(
         self,
-        basis: Basis,
+        basis: FourierBasis,
         C=10.0,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
@@ -68,14 +68,14 @@ class SpectralSVR:
         self,
         f: torch.Tensor,
         x: torch.Tensor,
-        periods: list[int]
+        periods: list[float]
         | None = None,  # TODO: use basis args like period etc to make it easier to change for different basis
         batched: bool = True,
     ) -> torch.Tensor:
         """
         forward
 
-        Compute F = D(f) and evaluate F(x) where D is an abritrary operator
+        Compute F = D(f) and evaluate F(x) where D is an abritrary operator and F is "transformed" function f
 
         Arguments:
             f {torch.Tensor} -- m discretized input functions to transform using the approximated operator
@@ -103,10 +103,13 @@ class SpectralSVR:
         self.print(f"coeff: {coeff.shape}")
         self.print(f"basis_values: {basis_values.shape}")
         if batched:
-            coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
-            self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
-            sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
-            self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
+            # coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
+            # self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
+            # sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
+            # self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
+            return self.basis.evaluate(
+                x, coeff.view((-1, *self.modes)), periods, self.modes
+            )
         else:
             assert (
                 f.shape[0] == x.shape[0]
