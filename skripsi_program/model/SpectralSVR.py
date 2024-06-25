@@ -4,11 +4,21 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis
 from .LSSVR import LSSVR
-from ..utils import to_complex_coeff, to_real_coeff, mse
+from ..utils import to_complex_coeff, to_real_coeff
 from typing import Literal, Union, Callable
+from torchmetrics.functional.regression import (
+    mean_squared_error,
+    mean_absolute_error,
+    symmetric_mean_absolute_percentage_error,
+    r2_score,
+    relative_squared_error,
+)
+import logging
 # model from fourier/chebyshev series
 # coeficients are modeled by LSSVRs that are trained on either the input function coefficients or the discretized input function itself
 # coeff . basis(x)
+
+logger = logging.getLogger(__name__)
 
 
 class SpectralSVR:
@@ -144,35 +154,45 @@ class SpectralSVR:
         u_coeff: torch.Tensor,
     ):
         if torch.is_complex(f):
-            self.print("transform f to complex")
+            logger.warning("transform f to complex")
             f = to_real_coeff(f)
         u_coeff_pred = self.svr.predict(f)
         if torch.is_complex(u_coeff):
-            self.print("transform u_coeff to complex")
+            logger.warning("transform u_coeff to complex")
             u_coeff = to_real_coeff(u_coeff)
         nan_pred_sum = torch.isnan(u_coeff_pred).sum().item()
 
-        ssr = ((u_coeff_pred - u_coeff) ** 2).sum(0)
-        mse = ssr.sum() / u_coeff.shape[0]
+        # ssr = ((u_coeff_pred - u_coeff) ** 2).sum(0)
+        # mse = ssr.sum() / u_coeff.shape[0]
         # u_coeff_pred can be nan if invalid kernel parameters
         # or data containing nan is input into the model
         # mse.nan_to_num_(3.40282e38)
 
-        u_coeff_val_mean = u_coeff.mean(dim=0)
-        ssg = ((u_coeff_pred - u_coeff_val_mean) ** 2).sum(0)
-        sst = ((u_coeff - u_coeff_val_mean) ** 2).sum(0)
-        ssr_sst = ssr / sst
-        ssg_sst = ssg / sst
+        # u_coeff_val_mean = u_coeff.mean(dim=0)
+        # ssg = ((u_coeff_pred - u_coeff_val_mean) ** 2).sum(0)
+        # sst = ((u_coeff - u_coeff_val_mean) ** 2).sum(0)
+        # ssr_sst = ssr / sst
+        # ssg_sst = ssg / sst
 
-        r2 = torch.nan_to_num(1 - ssr_sst).sum().item()
-        r2_expected = torch.nan_to_num(1 - ssg_sst).sum().item()
-        u_coeff_pred = to_complex_coeff(u_coeff_pred)
+        # r2 = torch.nan_to_num(1 - ssr_sst).sum().item()
+        # r2_expected = torch.nan_to_num(1 - ssg_sst).sum().item()
+        # u_coeff_pred = to_complex_coeff(u_coeff_pred)
+        mse = mean_squared_error(u_coeff_pred, u_coeff)
+        rmse = mean_squared_error(u_coeff_pred, u_coeff, squared=False)
+        mae = mean_absolute_error(u_coeff_pred, u_coeff)
+        r2 = r2_score(u_coeff_pred, u_coeff)
+        smape = symmetric_mean_absolute_percentage_error(u_coeff_pred, u_coeff)
+        rse = relative_squared_error(u_coeff_pred, u_coeff)
+        rrse = relative_squared_error(u_coeff_pred, u_coeff, squared=False)
         metrics = {
             "mse": mse.item(),
-            "r2": r2,
-            "r2_abs": abs(r2),
-            "r2_expected": r2_expected,
-            "r2_expected_abs": abs(r2_expected),
+            "rmse": rmse.item(),
+            "mae": mae.item(),
+            "r2": r2.item(),
+            "r2_abs": r2.abs().item(),
+            "smape": smape.item(),
+            "rse": rse.item(),
+            "rrse": rrse.item(),
             "pred_nan_sum": nan_pred_sum,
         }
         return metrics
@@ -181,7 +201,9 @@ class SpectralSVR:
         self,
         u: torch.Tensor,
         points: torch.Tensor,
-        loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = mse,
+        loss_fn: Callable[
+            [torch.Tensor, torch.Tensor], torch.Tensor
+        ] = mean_squared_error,
         epochs=100,
         generator=torch.Generator().manual_seed(42),
         gain=0.2,

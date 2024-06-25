@@ -118,6 +118,16 @@ class StandardScaler:
             xs_dims == self.xs_dims
         ), f"make sure the tensors have the same 2nd dimensions with the ones used at fitting, current dims: {xs_dims}, fitting dims: {self.xs_dims}"
 
+    def get_subset_scaler(self, indices: int | list[int]):
+        if isinstance(indices, int):
+            indices = [indices]
+        new_scaler = StandardScaler()
+        new_scaler.ms = tuple(self.ms[index] for index in indices)
+        new_scaler.ss = tuple(self.ss[index] for index in indices)
+        new_scaler.xs_is_complex = tuple(self.xs_is_complex[index] for index in indices)
+        new_scaler.xs_dims = tuple(self.xs_dims[index] for index in indices)
+        return new_scaler
+
     def transform(self, xs: tuple[torch.Tensor, ...]):
         self._check_consistency(xs)
         xs_real = tuple(
@@ -178,14 +188,14 @@ def scale_to_standard(x: torch.Tensor):
     return x_scaled
 
 
-def reduce_coeff(x: torch.Tensor, max_modes: int | list[int]):
-    if isinstance(max_modes, int):
-        max_modes = [max_modes] * len(x.shape[1:])
+def reduce_coeff(x: torch.Tensor, reduced_modes: int | list[int], rescale=True):
+    if isinstance(reduced_modes, int):
+        reduced_modes = [reduced_modes] * len(x.shape[1:])
     assert (
-        len(x.shape[1:]) == len(max_modes)
-    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {max_modes}"
+        len(x.shape[1:]) == len(reduced_modes)
+    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {reduced_modes}"
     x_reduced = x
-    for dim, max_mode in enumerate(max_modes, 1):
+    for dim, max_mode in enumerate(reduced_modes, 1):
         dim_len = x.shape[dim]
         start_range = torch.tensor(range((max_mode - 1) // 2 + 1))
         end_range = torch.tensor(range(dim_len - max_mode // 2, dim_len))
@@ -197,32 +207,72 @@ def reduce_coeff(x: torch.Tensor, max_modes: int | list[int]):
             ),
             dim,
         )
+
+    if rescale:
+        modes = list(x.shape[1:])
+        x_reduced = (
+            x_reduced
+            * torch.prod(torch.tensor(reduced_modes))
+            / torch.prod(torch.tensor(modes))
+        )
+
     return x_reduced
 
 
-def mse(u_pred: torch.Tensor, u: torch.Tensor):
-    return (u - u_pred).pow(2).sum(1).mean()
+def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
+    if isinstance(zeroed_modes, int):
+        zeroed_modes = [zeroed_modes] * len(x.shape[1:])
+    assert (
+        len(x.shape[1:]) == len(zeroed_modes)
+    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {zeroed_modes}"
+    x_zeroed = x.clone()
+    for dim, max_mode in enumerate(zeroed_modes, 1):
+        dim_len = x.shape[dim]
+        zero_range = torch.tensor(
+            range((max_mode - 1) // 2 + 1, dim_len - max_mode // 2)
+        )
+        x_zeroed.index_fill_(dim, zero_range, torch.zeros((1,), dtype=x.dtype)[0])
+
+    return x_zeroed
 
 
-def rmse(u_pred: torch.Tensor, u: torch.Tensor):
-    return (u - u_pred).pow(2).sum(1).pow(0.5).mean()
+def mse(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
+    mse = (u - u_pred).pow(2).sum(0)
+    if mean:
+        return mse.mean()
+    else:
+        return mse
 
 
-def r2_score(u_pred: torch.Tensor, u: torch.Tensor):
+def rmse(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
+    rmse = mse(u_pred, u, mean=False).pow(0.5)
+    if mean:
+        return rmse.mean()
+    else:
+        return rmse
+
+
+def r2_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
     u_mean = u.mean(0)
-    ssr = (u_pred - u).pow(2).sum(0)
-    sst = (u - u_mean).pow(2).sum(0)
+    ssr = mse(u_pred, u)
+    sst = mse(u, u_mean)
     ssr_sst = ssr / sst
 
-    r2 = torch.nan_to_num(1 - ssr_sst).sum()
-    return r2
+    r2 = torch.nan_to_num(1 - ssr_sst)
+    if mean:
+        return r2.mean()
+    else:
+        return r2
 
 
-def r2_expected_score(u_pred: torch.Tensor, u: torch.Tensor):
+def r2_expected_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
     u_mean = u.mean(0)
-    ssg = (u_pred - u_mean).pow(2).sum(0)
-    sst = (u - u_mean).pow(2).sum(0)
+    ssg = mse(u_pred, u_mean)
+    sst = mse(u, u_mean)
     ssg_sst = ssg / sst
 
-    r2_expected = torch.nan_to_num(1 - ssg_sst).sum()
-    return r2_expected
+    r2_expected = torch.nan_to_num(1 - ssg_sst)
+    if mean:
+        return r2_expected.mean()
+    else:
+        return r2_expected
