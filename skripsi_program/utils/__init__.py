@@ -80,7 +80,7 @@ class StandardScaler:
     def _get_s(x: torch.Tensor):
         x_real = to_real_coeff(x) if torch.is_complex(x) else x
         s = x_real.std(0, unbiased=False, keepdim=True)
-        s[torch.isclose(s, torch.tensor(0.0))] = 1.0
+        s[s.isclose(torch.tensor(0.0, dtype=s.dtype))] = 1.0
         return s
 
     def fit(self, xs: tuple[torch.Tensor, ...]):
@@ -179,7 +179,7 @@ def scale_to_standard(x: torch.Tensor):
     x_real = to_real_coeff(x) if torch.is_complex(x) else x
     m = x_real.mean(0, keepdim=True)
     s = x_real.std(0, unbiased=False, keepdim=True)
-    s[torch.isclose(s, torch.tensor(0.0))] = 1.0
+    s[s.isclose(torch.tensor(0.0, dtype=s.dtype))] = 1.0
     x_scaled = x_real - m
     x_scaled = x_scaled / s
     for dim in range(x.shape[1]):
