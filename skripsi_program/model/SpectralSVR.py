@@ -26,7 +26,8 @@ class SpectralSVR:
         self,
         basis: FourierBasis,
         C=10.0,
-        batch_size_func=lambda dims: 2**21 // dims + 7,
+        batch_size_func=lambda dims: 25599 // dims
+        + 1,  # 32 for 400, seems to be the fastest after some rough tests
         dtype=torch.float32,
         svr=LSSVR,
         verbose: Literal["ALL", "LSSVR", "LITE", False] = False,
@@ -157,11 +158,11 @@ class SpectralSVR:
         u_coeff: torch.Tensor,
     ):
         if torch.is_complex(f):
-            logger.warning("transform f to complex")
+            logger.warning("transform f to real")
             f = to_real_coeff(f)
         u_coeff_pred = self.svr.predict(f)
         if torch.is_complex(u_coeff):
-            logger.warning("transform u_coeff to complex")
+            logger.warning("transform u_coeff to real")
             u_coeff = to_real_coeff(u_coeff)
         nan_pred_sum = torch.isnan(u_coeff_pred).sum().item()
 
