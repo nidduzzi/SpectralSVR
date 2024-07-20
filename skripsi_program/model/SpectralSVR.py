@@ -97,12 +97,10 @@ class SpectralSVR:
             f = to_real_coeff(f)
         coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
-        basis_values = self.basis.fn(x, self.modes, periods=periods)
         scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
 
         self.print(f"batched: {batched}")
         self.print(f"coeff: {coeff.shape}")
-        self.print(f"basis_values: {basis_values.shape}")
         if batched:
             # coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
             # self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
@@ -112,6 +110,8 @@ class SpectralSVR:
                 x, coeff.view((-1, *self.modes)), periods, self.modes
             )
         else:
+            basis_values = self.basis.fn(x, self.modes, periods=periods)
+            self.print(f"basis_values: {basis_values.shape}")
             assert (
                 f.shape[0] == x.shape[0]
             ), f"When not batched make sure both has the same number of rows (0th dimension), otherwise use batched in the parameters f has shape {f.shape} and x has shape {x.shape}"

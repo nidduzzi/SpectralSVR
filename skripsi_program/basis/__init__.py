@@ -170,10 +170,8 @@ class FourierBasis(Basis):
             modes is not None
         ), "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
 
-        coeff_x_basis = coeff.unsqueeze(1) * self.fn(
-            x, modes, periods=periods
-        ).unsqueeze(0)
-        sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
+        basis = self.fn(x, modes, periods=periods)
+        sum_coeff_x_basis = coeff.flatten(1).mm(basis.flatten(1).t())
         scaling = 1.0 / torch.prod(torch.Tensor(modes))
         return scaling * sum_coeff_x_basis
 
@@ -368,5 +366,11 @@ class FourierBasis(Basis):
 ## Chebyshev basis
 # TODO: implement chebyshev basis https://en.wikipedia.org/wiki/Discrete_Chebyshev_transform
 class ChebyshevBasis(Basis):
+    def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
+        super().__init__(coef)
+
+## Wavelet Basis
+# TODO: implement wavelet basis https://pywavelets.readthedocs.io/en/latest/ https://pytorch-wavelets.readthedocs.io/en/latest/readme.html
+class WaveletBasis(Basis):
     def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
         super().__init__(coef)
