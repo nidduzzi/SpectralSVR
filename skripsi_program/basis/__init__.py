@@ -222,7 +222,8 @@ class FourierBasis(Basis):
             dim_basis_shape = [1 for i in range(ndims + 1)]
             dim_basis_shape[0] = x.shape[0]
             dim_basis_shape[dim + 1] = num_modes
-            dim_kx = k * x[:, dim : dim + 1] / periods[dim]
+            dim_x = x[:, dim : dim + 1].div(periods[dim])
+            dim_kx = torch.mm(dim_x, k)
             if transpose:
                 dim_kx = dim_kx.T
             dim_kx = dim_kx.reshape(dim_basis_shape)
@@ -234,12 +235,12 @@ class FourierBasis(Basis):
         return basis
 
     @staticmethod
-    def waveNumber(modes: int):
+    def waveNumber(modes: int, dtype=torch.float):
         N = (modes - 1) // 2 + 1
         n = modes // 2
         k1 = torch.arange(0, N)
         k2 = torch.arange(-n, 0)
-        k = torch.concat([k1, k2], dim=0).unsqueeze(-1)
+        k = torch.concat([k1, k2], dim=0).unsqueeze(-1).to(dtype)
         return k
 
     @staticmethod
@@ -263,25 +264,31 @@ class FourierBasis(Basis):
 
     @staticmethod
     def _raw_transform(
-        x: torch.Tensor, func: Literal["forward", "inverse"]
+        f: torch.Tensor, func: Literal["forward", "inverse"]
     ) -> torch.Tensor:
         assert torch.is_complex(
-            x
+            f
         ), "f is not complex, cast it to complex first eg. f * (1+0j)"
-        modes = x.shape[1]
+        N = f.shape[1]
         match func:
             case "forward":
                 sign = -1
             case "inverse":
                 sign = 1
 
-        n = torch.arange(modes)
-        k = FourierBasis.waveNumber(modes)
-        e = torch.exp(sign * 2j * torch.pi * k * n / modes)
+        n = torch.arange(N)
+        # k = FourierBasis.waveNumber(N)
+        # e = torch.exp(sign * 2j * torch.pi * k * n / modes)
+        e = FourierBasis.fn(
+            n.view(-1, 1),
+            N,
+            periods=N,
+            constant=sign * 2j * torch.pi,
+        )
 
-        X = torch.mm(x, e.T)
+        F = torch.mm(f, e.T)
 
-        return X
+        return F
 
     @staticmethod
     def _ndim_transform(
@@ -289,16 +296,16 @@ class FourierBasis(Basis):
     ) -> torch.Tensor:
         # flatten so that each extra dimension is treated as a separate "sample"
         # move dimension to transform to the end so that it can stay intact after f is flatened
-        f_transposed = f.transpose(dim, -1)
+        f_transposed = f.moveaxis(dim, -1)
         # flatten so that the last dimension is intact
         f_flatened = f_transposed.flatten(0, -2)
 
-        X_flattened = FourierBasis._raw_transform(f_flatened, func=func)
+        F_flattened = FourierBasis._raw_transform(f_flatened, func=func)
         # unflatten so that the correct shape is returned
-        X_transposed = X_flattened.reshape(f_transposed.shape)
-        X = X_transposed.transpose(-1, dim)
+        F_transposed = F_flattened.reshape(f_transposed.shape)
+        F = F_transposed.moveaxis(-1, dim)
 
-        return X
+        return F
 
     @staticmethod
     def transform(f: torch.Tensor) -> torch.Tensor:
@@ -322,14 +329,14 @@ class FourierBasis(Basis):
         if not torch.is_complex(f):
             f = f * (1 + 0j)
         if ndims == 2:
-            X = FourierBasis._raw_transform(f, "forward")
+            F = FourierBasis._raw_transform(f, "forward")
         elif ndims > 2:
             # perform 1d transform over every dimension
-            X = FourierBasis._ndim_transform(f, dim=1, func="forward")
+            F = FourierBasis._ndim_transform(f, dim=1, func="forward")
             for cdim in range(2, ndims):
-                X = FourierBasis._ndim_transform(X, dim=cdim, func="forward")
+                F = FourierBasis._ndim_transform(F, dim=cdim, func="forward")
 
-        return X
+        return F
 
     @staticmethod
     def inv_transform(coeff: torch.Tensor):
@@ -368,6 +375,7 @@ class FourierBasis(Basis):
 class ChebyshevBasis(Basis):
     def __init__(self, coef: torch.Tensor, ndim: int = 1) -> None:
         super().__init__(coef)
+
 
 ## Wavelet Basis
 # TODO: implement wavelet basis https://pywavelets.readthedocs.io/en/latest/ https://pytorch-wavelets.readthedocs.io/en/latest/readme.html
