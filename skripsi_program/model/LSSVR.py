@@ -75,7 +75,7 @@ def torch_get_kernel(
             return functools.partial(poly, d=params.get("d", 3.0))
         case "rbf":
             return functools.partial(
-                rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** 2)
+                rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
             )
         case "tri":
             return functools.partial(tri, sigma=params.get("sigma", 1.0))

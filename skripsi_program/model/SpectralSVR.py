@@ -26,8 +26,7 @@ class SpectralSVR:
         self,
         basis: FourierBasis,
         C=10.0,
-        batch_size_func=lambda dims: 25599 // dims
-        + 1,  # 32 for 400, seems to be the fastest after some rough tests
+        batch_size_func=lambda dims: 2**21 // dims + 1,
         dtype=torch.float32,
         svr=LSSVR,
         verbose: Literal["ALL", "LSSVR", "LITE", False] = False,
