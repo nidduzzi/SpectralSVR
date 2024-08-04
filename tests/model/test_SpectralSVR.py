@@ -5,6 +5,7 @@ from skripsi_program.utils import to_real_coeff, to_complex_coeff
 import torch
 from torch.utils.data.dataset import TensorDataset
 from torch.utils.data import random_split
+from torchmetrics.functional import mean_squared_error
 
 
 def test_SpectralSVR():
@@ -66,15 +67,15 @@ def test_SpectralSVR():
         f_test = to_real_coeff(f_test)
     u_coeff_pred = model.svr.predict(f_test)
     u_coeff_pred = to_complex_coeff(u_coeff_pred)
-    mse = torch.norm(u_coeff_pred - u_coeff_test, 2) / u_coeff_test.shape[0]
+    mse = mean_squared_error(to_real_coeff(u_coeff_pred), to_real_coeff(u_coeff_test))
 
     assert torch.isclose(
         torch.tensor(0.0), mse, atol=1e-2
     ), f"coefficient evaluation mse too high ({mse})"
 
-    u_pred = model.forward(f_test, s)
+    u_pred = model.forward(f_test, s).real
     # calculate mse
-    mse = torch.norm(u_pred - u_test, 2) / u_test.shape[0]
+    mse = mean_squared_error(u_pred, u_test)
     assert torch.isclose(
         torch.tensor(0.0), mse, atol=1e-2
     ), f"prediction evaluation mse too high ({mse})"

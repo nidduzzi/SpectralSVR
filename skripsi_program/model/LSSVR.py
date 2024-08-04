@@ -5,6 +5,9 @@ import functools
 
 import torch
 import numpy as np
+# Inspired by:
+# https://github.com/zealberth/lssvr
+#
 
 
 def torch_json_encoder(obj):
@@ -29,31 +32,33 @@ def load_model(filepath="model"):
     return model_json
 
 
-Kernel_Type = typing.Literal["linear", "poly", "rbf", "frob", "max", "tri"]
+Kernel_Type = typing.Literal[
+    "linear", "poly", "rbf", "rbf_unoptimized", "frob", "max", "tri"
+]
 
 
 def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
-    return (x_i * x_j).sum(-1)
+    return torch.mm(x_i, x_j.T)
 
 
 def poly(x_i: torch.Tensor, x_j: torch.Tensor, d: float) -> torch.Tensor:
     return (linear(x_i, x_j) + 1) ** d
 
 
-def rbf(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
-    return torch.exp(-(((torch.norm(x_i - x_j, p=2, dim=2)) / (2 * sigma)) ** 2))
+def rbf(x_i: torch.Tensor, x_j: torch.Tensor, neg_gamma22: float) -> torch.Tensor:
+    return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
 
 
 def tri(x_i: torch.Tensor, x_j: torch.Tensor, sigma: float) -> torch.Tensor:
-    return 1 - torch.norm(x_i - x_j, p=2, dim=2) / sigma
+    return 1 - torch.cdist(x_i, x_j, p=2.0) / sigma
 
 
 def frob(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
-    return torch.norm(x_i - x_j, p="fro", dim=2)
+    return torch.norm(x_i.unsqueeze(1) - x_j, p="fro", dim=2)
 
 
 def max_k(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
-    return torch.max(x_i - x_j, dim=2).values
+    return torch.max(x_i.unsqueeze(1) - x_j, dim=2).values
 
 
 def torch_get_kernel(
@@ -69,7 +74,9 @@ def torch_get_kernel(
         case "poly":
             return functools.partial(poly, d=params.get("d", 3.0))
         case "rbf":
-            return functools.partial(rbf, sigma=params.get("sigma", 1.0))
+            return functools.partial(
+                rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** 2)
+            )
         case "tri":
             return functools.partial(tri, sigma=params.get("sigma", 1.0))
         case "frob":
@@ -169,6 +176,7 @@ class LSSVR:
         self.K = torch_get_kernel(kernel, **kernel_params)
 
     def _batched_K(self, x_i: torch.Tensor, x_j: torch.Tensor):
+        # TODO: gram marix is symmetric so only compute upper triangle
         batch_size_i = self.batch_size_func(x_i.shape[1])
         batch_size_j = self.batch_size_func(x_j.shape[1])
         self.print(f"batch_size_i: {batch_size_i}")
@@ -183,9 +191,7 @@ class LSSVR:
             i_end = min(i + batch_size_i, num_samples_i)
             for j in range(0, num_samples_j, batch_size_j):
                 j_end = min(j + batch_size_j, num_samples_j)
-                KXX[i:i_end, j:j_end] = self.K(
-                    x_i[i:i_end, :].unsqueeze(1), x_j[j:j_end, :]
-                )
+                KXX[i:i_end, j:j_end] = self.K(x_i[i:i_end, :], x_j[j:j_end, :])
         return KXX
 
     def _optimize_parameters(self, X: torch.Tensor, y_values: torch.Tensor):
