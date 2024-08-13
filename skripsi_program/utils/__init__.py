@@ -55,7 +55,9 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     if not torch.is_complex(coeff):
         logger.warning("coeff is already real")
         return coeff
-    converted_coeff = torch.zeros((coeff.shape[0], coeff.shape[1] * 2))
+    converted_coeff = torch.empty(
+        (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
+    )
     converted_coeff[:, ::2] = coeff.real
     converted_coeff[:, 1::2] = coeff.imag
 

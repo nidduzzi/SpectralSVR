@@ -183,6 +183,8 @@ class LSSVR:
         self.print(f"batch_size_j: {batch_size_j}")
         num_samples_i = x_i.shape[0]
         num_samples_j = x_j.shape[0]
+        if num_samples_i <= batch_size_i and num_samples_j <= batch_size_j:
+            return self.K(x_i, x_j)
         KXX = torch.empty(
             (num_samples_i, num_samples_j), device=self.device, dtype=self.dtype
         )
@@ -198,23 +200,21 @@ class LSSVR:
         """Helper function that optimizes the dual variables through the
         use of the kernel matrix pseudo-inverse.
         """
-        KXX = self._batched_K(X, X)
-        # assert torch.allclose(self.K(X.unsqueeze(1), X), KXX), "KXX is not the same"
-        # KXX = X.unsqueeze(1) - X
+
+        A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
+        A[1:, 1:] = self._batched_K(X, X)
+        # KXX = A[1:, 1:]
         self.print("omega:")
-        self.print(KXX)
-        KXX.diagonal().copy_(
-            KXX.diagonal()
-            + torch.ones((KXX.shape[0],), device=self.device, dtype=self.dtype).to()
+        self.print(A[1:, 1:])
+        A[1:, 1:].diagonal().copy_(
+            A[1:, 1:].diagonal()
+            + torch.ones(
+                (A[1:, 1:].shape[0],), device=self.device, dtype=self.dtype
+            ).to()
             / self.C
         )
         self.print("H:")
-        self.print(KXX)
-
-        A = torch.empty(
-            list(np.array(KXX.shape) + 1), device=self.device, dtype=self.dtype
-        )
-        A[1:, 1:] = KXX
+        self.print(A[1:, 1:])
         A[0, 0] = 0
         A[0, 1:] = 1
         A[1:, 0] = 1

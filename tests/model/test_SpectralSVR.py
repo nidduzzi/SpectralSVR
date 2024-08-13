@@ -1,7 +1,5 @@
 import pytest
-from skripsi_program.model.SpectralSVR import SpectralSVR
-from skripsi_program.basis import FourierBasis
-from skripsi_program.utils import to_real_coeff, to_complex_coeff
+from skripsi_program import SpectralSVR, FourierBasis, to_real_coeff, to_complex_coeff
 import torch
 from torch.utils.data.dataset import TensorDataset
 from torch.utils.data import random_split
@@ -77,7 +75,7 @@ def test_SpectralSVR():
     # calculate mse
     mse = mean_squared_error(u_pred, u_test)
     assert torch.isclose(
-        torch.tensor(0.0), mse, atol=1e-2
+        torch.tensor(0.0), mse, atol=1e-4
     ), f"prediction evaluation mse too high ({mse})"
 
     # Ablation Studies (maybe in another file)

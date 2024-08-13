@@ -1,6 +1,6 @@
 import pytest
-from skripsi_program.basis import FourierBasis
-from skripsi_program.utils import to_complex_coeff, to_real_coeff
+from skripsi_program import FourierBasis
+from skripsi_program import to_complex_coeff, to_real_coeff
 import torch
 
 
@@ -35,6 +35,7 @@ def test_basis():
     # Get coefficients and create basis
     coeff = FourierBasis.transform(f)
     basis = FourierBasis(coeff)
+    assert basis.modes is not None, "Basis modes is None, it shouldn't be since coeff was passed into FourierBasis"
     # derivative
     k = FourierBasis.waveNumber(basis.modes[0])
     f_coeff = coeff * 2j * torch.pi * k.T
@@ -97,5 +98,5 @@ def test_basis():
     # Compare prediction with real function
     mse = torch.norm((f3_pred - f3), 2)
     assert torch.isclose(
-        torch.tensor(0.0), mse, atol=1e-2
+        torch.tensor(0.0), mse, atol=1e-3
     ), f"interpolation mse too high ({mse})"

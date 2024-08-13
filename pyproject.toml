@@ -24,6 +24,7 @@ matplotlib = "^3.9.0"
 black = "^24.4.2"
 mypy = "^1.10.0"
 ruff = "^0.4.9"
+memory-profiler = "^0.61.0"
 
 [build-system]
 requires = ["poetry-core"]
