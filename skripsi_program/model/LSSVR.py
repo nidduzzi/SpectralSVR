@@ -200,6 +200,7 @@ class LSSVR:
         """Helper function that optimizes the dual variables through the
         use of the kernel matrix pseudo-inverse.
         """
+        # TODO: add loss term from residual coefficients computed using linear combination of inputs minus output (possible only when PDE is known and this linear combination is achievable) y^m_i = r * x_i
 
         A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
         A[1:, 1:] = self._batched_K(X, X)
@@ -389,7 +390,8 @@ class LSSVR:
         assert (
             self.alpha is not None and self.sv_x is not None and self.sv_y is not None
         ), "The model doesn't see to be fitted, try running .fit() method first"
-        if isinstance(X_arr, torch.Tensor):
+        is_torch = isinstance(X_arr, torch.Tensor)
+        if is_torch:
             X_reshaped_torch = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
             X = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
         else:
@@ -407,7 +409,11 @@ class LSSVR:
         y = KxX @ self.alpha + self.b
         self.print("v")
         self.print(y)
-        predictions = y.to(dtype=X_arr.dtype)
+        if is_torch:
+            predictions = y.to(dtype=X_arr.dtype)
+        else:
+            predictions = y.detach().numpy()
+
 
         # else:  # multiclass classification, ONE-VS-ALL APPROACH
         #     y = torch.empty((len(self.y_indicies), len(X)), dtype=X.dtype, device=self.device)
