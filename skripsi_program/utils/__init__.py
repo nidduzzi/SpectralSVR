@@ -176,6 +176,14 @@ class StandardScaler:
         )
         return xs_out
 
+    def save(self, path: str):
+        torch.save(self, path)
+
+    @staticmethod
+    def load(path: str):
+        scaler: StandardScaler = torch.load(path)
+        return scaler
+
 
 def scale_to_standard(x: torch.Tensor):
     x_real = to_real_coeff(x) if torch.is_complex(x) else x
