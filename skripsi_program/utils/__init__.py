@@ -79,15 +79,15 @@ class StandardScaler:
         return m
 
     @staticmethod
-    def _get_s(x: torch.Tensor):
+    def _get_s(x: torch.Tensor, eps: float):
         x_real = to_real_coeff(x) if torch.is_complex(x) else x
         s = x_real.std(0, unbiased=False, keepdim=True)
-        s[s.isclose(torch.tensor(0.0, dtype=s.dtype))] = 1.0
+        s[s <= eps] = eps
         return s
 
-    def fit(self, xs: tuple[torch.Tensor, ...]):
+    def fit(self, xs: tuple[torch.Tensor, ...], eps=1e-12):
         self.ms = tuple(self._get_m(x) for x in xs)
-        self.ss = tuple(self._get_s(x) for x in xs)
+        self.ss = tuple(self._get_s(x, eps) for x in xs)
         self.xs_is_complex = tuple(torch.is_complex(x) for x in xs)
         self.xs_dims = tuple(x.shape[1] for x in xs)
         return self
@@ -98,7 +98,7 @@ class StandardScaler:
         assert (
             x.shape[1] == m.shape[1]
         ), f"{x_name} needs to have the same 2nd dimension now and at fitting"
-        x_translated = x - m
+        x_translated = x.subtract(m)
         return x_translated
 
     @staticmethod
@@ -107,7 +107,7 @@ class StandardScaler:
         assert (
             x.shape[1] == s.shape[1]
         ), f"{x_name} needs to have the same 2nd dimension now and at fitting"
-        x_scaled = x / s
+        x_scaled = x.div(s)
         return x_scaled
 
     def _check_consistency(self, xs: tuple[torch.Tensor, ...]):
