@@ -37,9 +37,9 @@ def to_complex_coeff(coeff: torch.Tensor) -> torch.Tensor:
     return converted_coeff
 
 
-def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
+def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     """
-    to_real_coeff
+    to_mag_angle
 
     convert a tensor containing rows of complex coefficient vectors into rows of real coefficient vectors
 
@@ -58,8 +58,35 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     converted_coeff = torch.empty(
         (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
     )
-    converted_coeff[:, ::2] = coeff.real
-    converted_coeff[:, 1::2] = coeff.imag
+    converted_coeff[:, ::2] = coeff.abs()
+    converted_coeff[:, 1::2] = coeff.angle()
+
+    return converted_coeff
+
+def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
+    """
+    to_real_coeff
+
+    convert a tensor containing rows of complex coefficient vectors into rows of real coefficient vectors
+
+    Arguments:
+        coeff {torch.Tensor} -- m by p complex tensor where p is the number modes
+
+    Returns:
+        torch.Tensor -- m by 2p tensor of elements in real numbers
+    """
+    # assert torch.is_complex(
+    #     coeff
+    # ), f"coeff has dtype {coeff.dtype}, make sure coeff is a complex tensor"
+    if not torch.is_complex(coeff):
+        logger.warning("coeff is already real")
+        return coeff
+    # converted_coeff = torch.empty(
+    #     (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
+    # )
+    # converted_coeff[:, ::2] = coeff.real
+    # converted_coeff[:, 1::2] = coeff.imag
+    converted_coeff = torch.view_as_real(coeff).flatten(-2)
 
     # mask for only coefficients that are never 0
     # mask = converted_coeff != 0.0

@@ -122,14 +122,14 @@ class FourierBasis(Basis):
     def generateCoeff(
         n: int,
         modes: int,
-        domain: tuple[float, float] = (-1.0, 1.0),
+        range: tuple[float, float] = (0.0, 1.0),
         generator: torch.Generator | None = None,
         random_func=torch.randn,
         complex: bool = True,
     ) -> torch.Tensor:
         if complex:
             modes = 2 * modes  # account for the imaginary part
-        a, b = domain
+        a, b = range
         span = abs(b - a)
         coeff_real = span * random_func((n, modes), generator=generator) + a
         if complex:

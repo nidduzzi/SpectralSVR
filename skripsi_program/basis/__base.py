@@ -19,6 +19,7 @@ class Basis(abc.ABC):
         self,
         coeff: torch.Tensor | None = None,
     ) -> None:
+        super().__init__()
         # assert ndim > 0, f"ndim {ndim} is not allowed because it is less than 1"
         # assert (
         #     coef.shape[1] == 1
