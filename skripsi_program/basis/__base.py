@@ -1,6 +1,6 @@
 import torch
 import abc
-
+from typing_extensions import Self
 # Basis functions
 # - able to set number of modes / basis functions
 # - provides access to the vector of basis function values evaluated at x
@@ -109,6 +109,29 @@ class Basis(abc.ABC):
         """
         pass
 
+    @classmethod
+    @abc.abstractmethod
+    def generate(
+        cls,
+        n: int,
+        modes: int,
+        generator: torch.Generator | None = None,
+        random_func=torch.randn,
+    ) -> Self:
+        """
+        generate
+
+        generate functions using basis functions with random coefficients
+
+        Arguments:
+            n {int} -- number of random functions to generate coefficients for.
+
+            modes {int} -- number of coefficients in a series.
+
+        Returns:
+            Basis -- n sets of functions with coefficients with the shape (n, modes)
+        """
+
     @staticmethod
     @abc.abstractmethod
     def generateCoeff(n: int, modes: int) -> torch.Tensor:
@@ -124,4 +147,32 @@ class Basis(abc.ABC):
 
         Returns:
             torch.Tensor -- n sets of coefficients with the shape (n, modes)
+        """
+
+    @abc.abstractmethod
+    def grad(self, dim: int = 1) -> Self:
+        """
+        grad
+
+        grad computes the derivative along a dimension
+
+        Keyword Arguments:
+            dim {int} -- dimension to compute gradient on (default: {1})
+
+        Returns:
+            Self -- returns an instance of current basis with antiderivative coefficients
+        """
+
+    @abc.abstractmethod
+    def integral(self, dim: int = 1) -> Self:
+        """
+        integral
+
+        integral computes the antiderivative along a dimension
+
+        Keyword Arguments:
+            dim {int} -- dimension to compute antiderivative on (default: {1})
+
+        Returns:
+            Self -- returns an instance of current basis with antiderivative coefficients
         """

@@ -1,7 +1,7 @@
 from . import Basis
 import torch
 from ..utils import to_complex_coeff
-from typing import Literal
+from typing_extensions import Self, Literal
 
 
 ## Fourier basis
@@ -117,6 +117,21 @@ class FourierBasis(Basis):
         k2 = torch.arange(-n, 0)
         k = torch.concat([k1, k2], dim=0).unsqueeze(-1).to(dtype)
         return k
+
+    @classmethod
+    def generate(
+        cls,
+        n: int,
+        modes: int,
+        range: tuple[float, float] = (0.0, 1.0),
+        generator: torch.Generator | None = None,
+        random_func=torch.randn,
+    ) -> Self:
+        return cls(
+            cls.generateCoeff(
+                n, modes, range=range, generator=generator, random_func=random_func
+            )
+        )
 
     @staticmethod
     def generateCoeff(
@@ -245,3 +260,17 @@ class FourierBasis(Basis):
         if scale:
             f = f.div(torch.tensor(F.shape[1:]).prod())
         return f
+
+    def grad(self, dim: int = 1) -> Self:
+        if self.coeff is None:
+            return self.__class__()
+        k = self.waveNumber(self.coeff.shape[1])
+        multiplier = 2 * torch.pi * 1j * k.T
+        return self.__class__(self.coeff / multiplier, self.periods)
+
+    def integral(self, dim: int = 1) -> Self:
+        if self.coeff is None:
+            return self.__class__()
+        k = self.waveNumber(self.coeff.shape[1])
+        multiplier = 2 * torch.pi * 1j * k.T
+        return self.__class__(self.coeff * multiplier, self.periods)

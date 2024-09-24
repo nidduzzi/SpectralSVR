@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skripsi-program"
-version = "0.2.12"
+version = "0.3.0"
 description = ""
 authors = ["nidduzzi <74892632+nidduzzi@users.noreply.github.com>"]
 readme = "README.md"
