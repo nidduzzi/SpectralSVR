@@ -63,6 +63,7 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
 
     return converted_coeff
 
+
 def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     """
     to_real_coeff
@@ -100,6 +101,13 @@ class StandardScaler:
         pass
 
     @staticmethod
+    def _get_tensor_tuple(xs: tuple[torch.Tensor, ...] | torch.Tensor):
+        if isinstance(xs, torch.Tensor):
+            return (xs,)
+        else:
+            return xs
+
+    @staticmethod
     def _get_m(x: torch.Tensor):
         x_real = to_real_coeff(x) if torch.is_complex(x) else x
         m = x_real.mean(0, keepdim=True)
@@ -112,7 +120,8 @@ class StandardScaler:
         s[s <= eps] = eps
         return s
 
-    def fit(self, xs: tuple[torch.Tensor, ...], eps=1e-12):
+    def fit(self, xs: tuple[torch.Tensor, ...] | torch.Tensor, eps=1e-12):
+        xs = self._get_tensor_tuple(xs)
         self.ms = tuple(self._get_m(x) for x in xs)
         self.ss = tuple(self._get_s(x, eps) for x in xs)
         self.xs_is_complex = tuple(torch.is_complex(x) for x in xs)
@@ -157,7 +166,8 @@ class StandardScaler:
         new_scaler.xs_dims = tuple(self.xs_dims[index] for index in indices)
         return new_scaler
 
-    def transform(self, xs: tuple[torch.Tensor, ...]):
+    def transform(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
+        xs = self._get_tensor_tuple(xs)
         self._check_consistency(xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
@@ -180,7 +190,8 @@ class StandardScaler:
         )
         return xs_out
 
-    def inverse(self, xs: tuple[torch.Tensor, ...]):
+    def inverse(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
+        xs = self._get_tensor_tuple(xs)
         self._check_consistency(xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
@@ -209,6 +220,9 @@ class StandardScaler:
     @staticmethod
     def load(path: str):
         scaler: StandardScaler = torch.load(path)
+        assert isinstance(
+            scaler, StandardScaler
+        ), "Loaded object is not a valid instance of StandardScaler"
         return scaler
 
 

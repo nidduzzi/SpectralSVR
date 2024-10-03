@@ -1,9 +1,16 @@
 import pytest
-from skripsi_program import SpectralSVR, FourierBasis, to_real_coeff, to_complex_coeff
+from skripsi_program import (
+    SpectralSVR,
+    FourierBasis,
+    to_real_coeff,
+    to_complex_coeff,
+    StandardScaler,
+    Antiderivative,
+)
 import torch
 from torch.utils.data.dataset import TensorDataset
 from torch.utils.data import random_split
-from torchmetrics.functional import mean_squared_error
+from torchmetrics.functional import symmetric_mean_absolute_percentage_error
 
 
 def test_SpectralSVR():
@@ -14,68 +21,56 @@ def test_SpectralSVR():
     # Compute coefficients for both
     n_coeffs = 2000
     modes = 7
-    u_coeff_fourier = (
-        FourierBasis.generateCoeff(n_coeffs, modes, generator=generator)
-        * 1
-        / (n_coeffs**0.5)
+    problem = Antiderivative()
+    u_fourier, f_fourier = problem.generate(
+        FourierBasis(), n_coeffs, modes, 0, generator=generator
     )
-    # ).to(dtype=torch.complex32)
-    # derivative
-    k = FourierBasis.waveNumber(modes)
-    f_coeff_fourier = u_coeff_fourier * 2j * torch.pi * k.T
-    # f_coeff_ls https://jsteinhardt.stat.berkeley.edu/blog/least-squares-and-fourier-analysis
-    # u_coeff_ls
-    # print(k)
-    # print(u_coeff_fourier[0, :])
-    # print(f_coeff_fourier[0, :])
 
     # Interpolate f & u
-    step = 0.01
-    t = torch.arange(0, 1, step)
-    f_basis = FourierBasis(f_coeff_fourier)
-    f = f_basis.evaluate(t)
+    t = FourierBasis.grid(slice(0, 1, 200))
+    f_basis = FourierBasis(f_fourier.coeff)
+    f = f_basis(t)
     f = f.real
 
-    s = torch.arange(-1, 1, step)
-    u_basis = FourierBasis(u_coeff_fourier)
-    u = u_basis.evaluate(s)
+    s = FourierBasis.grid(slice(-1, 1, 400))
+    u_basis = FourierBasis(u_fourier.coeff)
+    u = u_basis(s)
     u = u.real
 
     # Add noise
 
     # Train-test split
-    df = TensorDataset(f, u, u_coeff_fourier)
-    # df = torch.utils.data.dataset.TensorDataset(f_coeff_fourier, u, u_coeff_fourier)
+    df = TensorDataset(f, u, u_fourier.coeff)
     df_train, df_test = random_split(df, (0.8, 0.2), generator=generator)
+
+    # Scale inputs based on training inputs
+    f_train, u_train, u_coeff_train = df_train[:]
+    scaler = StandardScaler().fit(f_train)
+    f_train = scaler.transform(f_train)[0]
+    f_test, u_test, u_coeff_test = df_test[:]
+    f_test = scaler.transform(f_test)[0]
 
     # Train svm
     periods = [1.0]
-    model = SpectralSVR(FourierBasis(periods=periods), C=1.0, sigma=1.0)
-
-    f_train, u_train, u_coeff_train = df_train[:]
+    model = SpectralSVR(FourierBasis(periods=periods), C=1.0)
     model.train(
         f_train.flatten(1), u_coeff_train.flatten(1), list(u_coeff_train.shape[1:])
     )
 
     # Test
-    # model.test(df_test)
-    f_test, u_test, u_coeff_test = df_test[:]
-    assert len(f_test.shape) == 2, "f_test is more than 2 dimensional"
-    if torch.is_complex(f_test):
-        f_test = to_real_coeff(f_test)
     u_coeff_pred = model.svr.predict(f_test)
     u_coeff_pred = to_complex_coeff(u_coeff_pred)
-    mse = mean_squared_error(to_real_coeff(u_coeff_pred), to_real_coeff(u_coeff_test))
+    smape = symmetric_mean_absolute_percentage_error(
+        to_real_coeff(u_coeff_pred), to_real_coeff(u_coeff_test)
+    )
 
     assert torch.isclose(
-        torch.tensor(0.0), mse, atol=1e-2
-    ), f"coefficient evaluation mse too high ({mse})"
+        torch.tensor(0.0), smape, atol=9e-2
+    ), f"coefficient evaluation smape too high ({smape})"
 
     u_pred = model.forward(f_test, s).real
-    # calculate mse
-    mse = mean_squared_error(u_pred, u_test)
+    # calculate smape
+    smape = symmetric_mean_absolute_percentage_error(u_pred, u_test)
     assert torch.isclose(
-        torch.tensor(0.0), mse, atol=1e-4
-    ), f"prediction evaluation mse too high ({mse})"
-
-    # Ablation Studies (maybe in another file)
+        torch.tensor(0.0), smape, atol=11e-2
+    ), f"prediction evaluation smape too high ({smape})"

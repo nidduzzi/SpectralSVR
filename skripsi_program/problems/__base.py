@@ -9,14 +9,20 @@ class Problem(abc.ABC):
 
     @abc.abstractmethod
     def generate(
-        self, basis: Basis, n: int, m: int, *args, **kwargs
-    ) -> list[torch.Tensor]:
+        self,
+        basis: Basis,
+        n: int,
+        m: int,
+        *args,
+        generator: torch.Generator | None = None,
+        **kwargs,
+    ) -> list[Basis]:
         pass
 
     @abc.abstractmethod
-    def spectral_residual(self, *args, **kwargs) -> torch.Tensor:
+    def spectral_residual(self, *args, **kwargs) -> Basis:
         pass
 
     @abc.abstractmethod
-    def residual(self, *args, **kwargs) -> torch.Tensor:
+    def residual(self, *args, **kwargs) -> Basis:
         pass

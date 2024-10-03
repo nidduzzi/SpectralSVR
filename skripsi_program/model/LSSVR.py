@@ -2,12 +2,15 @@ import codecs
 import json
 import typing
 import functools
+import logging
 
 import torch
 import numpy as np
+
 # Inspired by:
 # https://github.com/zealberth/lssvr
 #
+logger = logging.getLogger(__name__)
 
 
 def torch_json_encoder(obj):
@@ -41,8 +44,10 @@ def linear(x_i: torch.Tensor, x_j: torch.Tensor) -> torch.Tensor:
     return torch.mm(x_i, x_j.T)
 
 
-def poly(x_i: torch.Tensor, x_j: torch.Tensor, d: float) -> torch.Tensor:
-    return (linear(x_i, x_j) + 1) ** d
+def poly(
+    x_i: torch.Tensor, x_j: torch.Tensor, d: float, gamma22: float
+) -> torch.Tensor:
+    return (gamma22 * linear(x_i, x_j) + 1) ** d
 
 
 def rbf(x_i: torch.Tensor, x_j: torch.Tensor, neg_gamma22: float) -> torch.Tensor:
@@ -72,7 +77,11 @@ def torch_get_kernel(
         case "linear":
             return linear
         case "poly":
-            return functools.partial(poly, d=params.get("d", 3.0))
+            return functools.partial(
+                poly,
+                d=params.get("d", 3.0),
+                gamma22=((2 * params.get("sigma", 1.0)) ** -2),
+            )
         case "rbf":
             return functools.partial(
                 rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
@@ -87,7 +96,7 @@ def torch_get_kernel(
             raise KeyError(f"kernel {name} is not defined, try one of {Kernel_Type}")
 
 
-class LSSVR:
+class LSSVR(object):
     """A class GPU variation that implements the Least Squares Support
     Vector Machine for regression tasks
 
@@ -160,7 +169,9 @@ class LSSVR:
         self.min_error = min_error
         self.max_error = max_error
         self.C = C
-        self.kernel_ = kernel
+        self._kernel: Kernel_Type = kernel
+        self._initialized_sigma: bool = False
+        self._initialized_kernel: bool = False
         self.verbose = verbose
         self.kernel_params = kernel_params
         self.dtype = dtype
@@ -173,10 +184,28 @@ class LSSVR:
         self.sv_y = None
         self.y_indicies = None
 
-        self.K = torch_get_kernel(kernel, **kernel_params)
+    @property
+    def kernel(self):
+        return self._kernel
+
+    @property
+    def K(self):
+        if self.kernel in ["rbf", "poly"] and not self._initialized_sigma:
+            if self.kernel_params.get("sigma") is None:
+                if self.sv_x is None:
+                    self.kernel_params["sigma"] = 1.0
+                else:
+                    self.kernel_params["sigma"] = self.sv_x.var(0).sum().pow(0.5)
+                    self._initialized_sigma = True
+            else:
+                self._initialized_sigma = True
+        if not self._initialized_kernel:
+            self._K = torch_get_kernel(self._kernel, **self.kernel_params)
+            self._initialized_kernel = True
+
+        return self._K
 
     def _batched_K(self, x_i: torch.Tensor, x_j: torch.Tensor):
-        # TODO: gram marix is symmetric so only compute upper triangle
         batch_size_i = self.batch_size_func(x_i.shape[1])
         batch_size_j = self.batch_size_func(x_j.shape[1])
         self.print(f"batch_size_i: {batch_size_i}")
@@ -205,7 +234,7 @@ class LSSVR:
         A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
         A[1:, 1:] = self._batched_K(X, X)
         # KXX = A[1:, 1:]
-        self.print("omega:")
+        self.print("Omega:")
         self.print(A[1:, 1:])
         A[1:, 1:].diagonal().copy_(
             A[1:, 1:].diagonal()
@@ -219,14 +248,14 @@ class LSSVR:
         A[0, 0] = 0
         A[0, 1:] = 1
         A[1:, 0] = 1
-        self.print("A")
+        self.print("A:")
         self.print(A)
         shape = np.array(y_values.shape)
         shape[0] += 1
         B = torch.empty(list(shape), device=self.device, dtype=self.dtype)
         B[0] = 0
         B[1:] = y_values
-        self.print("B")
+        self.print("B:")
         self.print(B)
 
         # A_cross = torch.t(torch.pinverse(A))
@@ -238,14 +267,14 @@ class LSSVR:
         ).solution.to(dtype=self.dtype)
         # solution = torch.rand((10, 10))
         # solution = torch.mm(A_cross, B)
-        self.print("S")
+        self.print("S:")
         self.print(solution)
 
         b = solution[0, :]
-        self.print("b")
+        self.print("b:")
         self.print(b)
         alpha = solution[1:, :]
-        self.print("alpha")
+        self.print("alpha:")
         self.print(alpha)
 
         return (b, alpha)
@@ -404,16 +433,15 @@ class LSSVR:
 
         # if len(self.y_indicies) == 1:  # binary classification
         # y_values = self.sv_y
-        self.print("Omega")
+        self.print("Omega:")
         self.print(KxX)
         y = KxX @ self.alpha + self.b
-        self.print("v")
+        self.print("v:")
         self.print(y)
         if is_torch:
             predictions = y.to(dtype=X_arr.dtype)
         else:
             predictions = y.detach().numpy()
-
 
         # else:  # multiclass classification, ONE-VS-ALL APPROACH
         #     y = torch.empty((len(self.y_indicies), len(X)), dtype=X.dtype, device=self.device)
@@ -439,7 +467,7 @@ class LSSVR:
             "type": "LSSVR",
             "hyperparameters": {
                 "C": self.C,
-                "kernel": self.kernel_,
+                "kernel": self._kernel,
                 "kernel_params": self.kernel_params,
             },
         }
@@ -493,8 +521,6 @@ class LSSVR:
     def print(
         self,
         *values: object,
-        sep: typing.Union[str, None] = " ",
-        end: typing.Union[str, None] = "\n",
     ):
         if self.verbose:
-            print(*values, sep=sep, end=end)
+            print(*values)

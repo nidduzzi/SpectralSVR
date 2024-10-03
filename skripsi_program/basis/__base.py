@@ -1,9 +1,13 @@
 import torch
 import abc
 from typing_extensions import Self
+import matplotlib.pyplot as plt
+import logging
 # Basis functions
 # - able to set number of modes / basis functions
 # - provides access to the vector of basis function values evaluated at x
+
+logger = logging.getLogger(__name__)
 
 
 class Basis(abc.ABC):
@@ -11,9 +15,7 @@ class Basis(abc.ABC):
     Basis function for ndim dimensions
     """
 
-    coeff: torch.Tensor | None
-    ndim: int
-    modes: list[int] | None
+    _coeff: torch.Tensor
 
     def __init__(
         self,
@@ -25,17 +27,38 @@ class Basis(abc.ABC):
         #     coef.shape[1] == 1
         # ), f"coef of shape {coef.shape} is not allowed, make sure it is one dimensional"
         # self.ndim = ndim
-        if coeff is not None:
-            self.setCoeff(coeff)
+        self.coeff = coeff
+
+    @property
+    def coeff(self):
+        return self._coeff
+
+    @coeff.setter
+    @abc.abstractmethod
+    def coeff(self, coeff: torch.Tensor | None):
+        if coeff is None:
+            self._coeff = torch.empty(0)
+        else:
+            assert (
+                coeff.ndim >= 2
+            ), "coeff needs to be at least a two dimensional tensor of coefficients"
+            self._coeff = coeff
+
+    @property
+    def ndim(self):
+        if self.coeff is None:
+            return 0
+        return self.coeff.ndim - 1
+
+    def __len__(self):
+        if self.coeff is None:
+            return 0
+        return self.coeff.__len__()
 
     @staticmethod
     @abc.abstractmethod
     def fn(
         x: torch.Tensor,
-        modes: int | list[int],
-        periods: int | float | list[float] | list[int] | None = None,
-        constant=None,
-        transpose: bool = False,
     ) -> torch.Tensor:
         """
         fn
@@ -43,11 +66,7 @@ class Basis(abc.ABC):
         evaluate the value of the basis functions
 
         Arguments:
-            x {torch.Tensor} -- the m locations of ndim dimensions to evaluate the basis functions at.
-
-            ndim {int} -- dimensions of the basis functions.
-
-            modes {int} -- number of basis functions from the first one to evaluate.
+            x {torch.Tensor} -- the m by ndim matrix of points to evaluate the basis functions at.
 
         Returns:
             torch.Tensor -- returns a vector using a tensor of the shape {m,modes}
@@ -55,27 +74,54 @@ class Basis(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def evaluate(self, x: torch.Tensor) -> torch.Tensor:
+    def __call__(
+        self, x: torch.Tensor, *args, i: int = 0, n: int = 0, **kwargs
+    ) -> torch.Tensor:
         """
-        evaluate
+        __call__
 
-        evaluate approximated function at x
+        evaluate approximated function at points x
 
         Arguments:
-            x {torch.Tensor} -- m points to evaluate approximated function at.
+            x {torch.Tensor} -- m points to evaluate approximated function at
+
+        Keyword Arguments:
+            i {int} -- function i to start evaluations at (default: {0})
+            n {int} -- n functions after function i to evaluate (default: {0} all functions)
 
         Returns:
-            torch.Tensor -- {m, n} evaluations where n is the number different functions (coeff first dimension)
+            torch.Tensor -- {n, m} evaluations where n is the number different functions (coeff first dimension)
         """
         pass
 
-    def setCoeff(self, coeff: torch.Tensor):
-        assert (
-            coeff.shape[0] > 0
-        ), f"make sure coeff has at least one entry, coef of shape {coeff.shape} is not allowed"
-        assert coeff.shape[1] > 0, "coeff needs to be a two dimensional tensor"
-        self.coeff = coeff
-        self.modes = list(coeff.shape[1:])
+    @classmethod
+    @abc.abstractmethod
+    def evaluate(
+        cls,
+        x: torch.Tensor,
+        coeff: torch.Tensor,
+        *args,
+        i: int = 0,
+        n: int = 0,
+        **kwargs,
+    ) -> torch.Tensor:
+        """
+        evaluate
+
+        evaluate approximated function of coeff at points x
+
+        Arguments:
+            x {torch.Tensor} -- m points to evaluate approximated function at
+            coeff {torch.Tensor} -- coefficients of approximated functions
+
+        Keyword Arguments:
+            i {int} -- function i to start evaluations at (default: {0})
+            n {int} -- n functions after function i to evaluate (default: {0} all functions)
+
+        Returns:
+            torch.Tensor -- {n, m} evaluations where n is the number different functions (coeff first dimension)
+        """
+        pass
 
     @staticmethod
     @abc.abstractmethod
@@ -125,8 +171,11 @@ class Basis(abc.ABC):
 
         Arguments:
             n {int} -- number of random functions to generate coefficients for.
-
             modes {int} -- number of coefficients in a series.
+
+        Keyword Arguments:
+            generator {torch.Generator | None} -- PRNG Generator for reproducability (default: {None})
+            random_func {callable} -- random function that generates the coefficients (default: {torch.randn})
 
         Returns:
             Basis -- n sets of functions with coefficients with the shape (n, modes)
@@ -176,3 +225,109 @@ class Basis(abc.ABC):
         Returns:
             Self -- returns an instance of current basis with antiderivative coefficients
         """
+
+    @abc.abstractmethod
+    def copy(self) -> Self:
+        """
+        copy
+
+        copy returns an instance of the same basis subclass with identical attributes
+
+        Returns:
+            Self -- a copied instance of current instance
+        """
+        return self.__class__(self.coeff)
+
+    def __sub__(self, other: Self):
+        if isinstance(other, self.__class__):
+            if other.coeff is None:
+                return self.copy()
+            elif self.coeff is None:
+                other_copy = other.copy()
+                other_copy.coeff = -other.coeff.clone()
+                return other_copy
+            else:
+                result = self.copy()
+                result.coeff = self.coeff - other.coeff
+                return result
+        else:
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{self.__class__}' and '{type(other)}'"
+            )
+
+    def __add__(self, other: Self):
+        if isinstance(other, self.__class__):
+            if other.coeff is None:
+                return self.copy()
+            elif self.coeff is None:
+                return other.copy()
+            else:
+                result = self.copy()
+                result.coeff = self.coeff + other.coeff
+                return result
+        else:
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{self.__class__}' and '{type(other)}'"
+            )
+
+    # TODO: Add plot coefficients function
+
+    def plot(self, i=0, n=1, res: int | slice | list[slice] = 200, plt=plt, tol=1e-5):
+        """
+        plot
+
+        plot draws a plot of the functions in the basis
+
+        Keyword Arguments:
+            i {int} -- function i to start plotting (default: {0})
+            n {int} -- n functions after function i to evaluate (default: {1})
+            res {int | slice | list[slice]} -- function discretization resolution and domain (default: {0:1:200} domain from 0 to one on all dimensions with 200 points each)
+            plt {_type_} -- Axes or pyplot to get plot or imshow from (default: {pyplot})
+
+        Returns:
+            _type_ -- returns the result of the plotting function such as list[Line2D] or AxesImage
+        """
+        if isinstance(res, int):
+            res = [slice(0, 1, res)]
+        elif isinstance(res, slice):
+            res = [res]
+
+        grid = self.grid(res).flatten(0, -2)
+        values = self.__call__(grid, i=i, n=n)
+
+        match self.ndim:
+            case 1:
+                color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
+                if values.is_complex() and values.imag.ge(tol).any():
+                    for j, func in enumerate(values):
+                        c = next(color)
+                        func_num = j + 1
+                        plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
+                        plot = plt.plot(
+                            grid.flatten(), func.flatten().imag, c=c, linestyle="dashed"
+                        )
+                        plt.legend([f"Real ({func_num})", f"Imaginary ({func_num})"])
+                else:
+                    for j, func in enumerate(values):
+                        c = next(color)
+                        func_num = j + 1
+                        plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
+                        plt.legend([f"Real ({func_num})"])
+            case 2:
+                plot = plt.imshow(values.real.reshape((res[0].step, res[1].step)))
+            case _:
+                raise NotImplementedError(
+                    "plots for dimensions > 2 need to be implemented"
+                )
+
+        return plot
+
+    @staticmethod
+    def grid(res: int | slice | list[slice] = 200) -> torch.Tensor:
+        if isinstance(res, int):
+            res = [slice(0, 1, res)]
+        elif isinstance(res, slice):
+            res = [res]
+        axes = [torch.linspace(r.start, r.stop, r.step) for r in res]
+        meshgrid = torch.meshgrid(axes, indexing="xy")
+        return torch.stack(meshgrid, dim=-1)

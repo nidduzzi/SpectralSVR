@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skripsi-program"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 authors = ["nidduzzi <74892632+nidduzzi@users.noreply.github.com>"]
 readme = "README.md"
@@ -8,19 +8,19 @@ packages = [{include = "skripsi_program"}]
 
 [tool.poetry.dependencies]
 python = "^3.10.6"
-torch = "^2.0.1"
+torch = "^2.4.0"
 numpy = "^1.24.0"
 tqdm = "^4.65.0"
 jaxtyping = "^0.2.20"
 pandas = "^2.2.2"
-torchmetrics = "^1.4.0.post0"
+torchmetrics = "^1.4.2"
 scikit-learn = "^1.5.0"
+matplotlib = "^3.9.0"
 
 [tool.poetry.group.dev.dependencies]
 types-tqdm = "^4.65.0.1"
 pytest = "^8.2.2"
 ipykernel = "^6.29.4"
-matplotlib = "^3.9.0"
 black = "^24.4.2"
 mypy = "^1.10.0"
 ruff = "^0.4.9"

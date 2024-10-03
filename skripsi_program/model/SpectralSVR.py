@@ -29,7 +29,7 @@ class SpectralSVR:
         batch_size_func=lambda dims: 2**21 // dims + 1,
         dtype=torch.float32,
         svr=LSSVR,
-        verbose: Literal["ALL", "LSSVR", "LITE", False] = False,
+        verbose: Literal["ALL", "SVR", "LITE", False] = False,
         **kwargs,
     ) -> None:
         """
@@ -42,16 +42,16 @@ class SpectralSVR:
         Keyword Arguments:
             C {float} -- regularization term with smaller values meaning less complicated models (default: {10.0})
             sigma {float} -- kernel bandwidth (default: {1.0})
-            verbose {False | "All" | "LSSVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
+            verbose {False | "All" | "SVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
         """
-        is_lssvr_verbose = False
+        is_svr_verbose = False
         self.verbose = False
         match verbose:
             case "ALL":
                 self.verbose = True
-                is_lssvr_verbose = True
-            case "LSSVR":
-                is_lssvr_verbose = True
+                is_svr_verbose = True
+            case "SVR":
+                is_svr_verbose = True
             case "LITE":
                 self.verbose = True
 
@@ -60,7 +60,7 @@ class SpectralSVR:
             C=C,
             batch_size_func=batch_size_func,
             dtype=dtype,
-            verbose=is_lssvr_verbose,
+            verbose=is_svr_verbose,
             **kwargs,
         )
 
@@ -105,7 +105,7 @@ class SpectralSVR:
             # self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
             # sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
             # self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
-            return self.basis.evaluate(
+            return self.basis(
                 x, coeff.view((-1, *self.modes)), periods, self.modes
             )
         else:
@@ -139,13 +139,13 @@ class SpectralSVR:
         assert (
             len(u_coeff.shape) == 2
         ), f"u_coeff needs to have only 2 dimensions, currently it has shape {u_coeff.shape}"
-        assert (
-            torch.prod(torch.Tensor(modes)) == u_coeff.shape[1]
-        ), f"modes is {modes} and u_coeff has shape {u_coeff.shape}, the product of modes need to equal to the second dimension of u_coeff"
-        self.modes = modes
 
         if torch.is_complex(u_coeff):
             u_coeff = to_real_coeff(u_coeff)
+        # assert (
+        #     torch.prod(torch.Tensor(modes)) == u_coeff.shape[1] // 2
+        # ), f"modes is {modes} and u_coeff has shape {u_coeff.shape}, the product of modes need to equal to the second dimension of u_coeff"
+        self.modes = modes
         if torch.is_complex(f):
             f = to_real_coeff(f)
         self.svr.fit(f, u_coeff)

@@ -1,7 +1,7 @@
 from . import Basis
 import torch
-from ..utils import to_complex_coeff
-from typing_extensions import Self, Literal
+from typing_extensions import Self, Literal, Callable
+from functools import partial
 
 
 ## Fourier basis
@@ -14,22 +14,28 @@ class FourierBasis(Basis):
         super().__init__(coeff)
         self.periods = periods
 
-    def evaluate(
+    @Basis.coeff.setter
+    def coeff(self, coeff: torch.Tensor | None):
+        Basis.coeff.__set__(self, coeff)
+        if coeff is not None:
+            self.modes = list(coeff.shape[1:])
+
+    def __call__(
         self,
         x: torch.Tensor,
         coeff: torch.Tensor | None = None,
         periods: list[float] | None = None,
         modes: list[int] | None = None,
+        i=0,
+        n=0,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
-
         if coeff is None:
             coeff = self.coeff
         assert (
             coeff is not None
         ), "coeff is none, set it in the function parameters or with setCoeff"
-
         if periods is None:
             periods = (
                 [1.0 for i in range(len(coeff.shape[1:]))]
@@ -44,8 +50,24 @@ class FourierBasis(Basis):
         assert (
             modes is not None
         ), "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
+        return self.evaluate(x, coeff, periods, modes, i=i, n=n)
 
-        basis = self.fn(x, modes, periods=periods)
+    @classmethod
+    def evaluate(
+        cls,
+        x: torch.Tensor,
+        coeff: torch.Tensor,
+        periods: list[float],
+        modes: list[int],
+        i=0,
+        n=0,
+    ) -> torch.Tensor:
+        if len(x.shape) == 1:
+            x = x.unsqueeze(-1)
+        if n > 0:
+            coeff = coeff[i : i + n]
+
+        basis = cls.fn(x, modes, periods=periods)
         sum_coeff_x_basis = coeff.flatten(1).mm(basis.flatten(1).t())
         scaling = 1.0 / torch.prod(torch.Tensor(modes))
         return scaling * sum_coeff_x_basis
@@ -126,10 +148,16 @@ class FourierBasis(Basis):
         range: tuple[float, float] = (0.0, 1.0),
         generator: torch.Generator | None = None,
         random_func=torch.randn,
+        complex_funcs: bool = False,
     ) -> Self:
         return cls(
             cls.generateCoeff(
-                n, modes, range=range, generator=generator, random_func=random_func
+                n,
+                modes,
+                range=range,
+                generator=generator,
+                random_func=random_func,
+                complex_funcs=complex_funcs,
             )
         )
 
@@ -139,18 +167,33 @@ class FourierBasis(Basis):
         modes: int,
         range: tuple[float, float] = (0.0, 1.0),
         generator: torch.Generator | None = None,
-        random_func=torch.randn,
-        complex: bool = True,
+        random_func: Callable[..., torch.Tensor] = torch.randn,
+        complex_funcs: bool = False,
+        scale: bool = True,
     ) -> torch.Tensor:
-        if complex:
-            modes = 2 * modes  # account for the imaginary part
+        random_func = partial(random_func, generator=generator)
         a, b = range
         span = abs(b - a)
-        coeff_real = span * random_func((n, modes), generator=generator) + a
-        if complex:
-            return to_complex_coeff(coeff_real)
+        if complex_funcs:
+            coeff = span * random_func((n, modes), dtype=torch.complex64) + a
         else:
-            return coeff_real
+            rem2 = modes % 2
+            is_even = rem2 == 0
+            reflected_modes = (modes - 2 + rem2) // 2
+            reflected_coeff = (
+                span * random_func((n, reflected_modes), dtype=torch.complex64) + a
+            )
+            constant = span * random_func((n, 1)) + a + 0j
+            # constant = constant + 0j
+            coeff = torch.concatenate((constant, reflected_coeff), dim=1)
+            if is_even:
+                center = span * random_func((n, 1), dtype=torch.complex64) + a + 0j
+                coeff = torch.concatenate((coeff, center), dim=1)
+            coeff = torch.concatenate((coeff, reflected_coeff.conj().flip(1)), dim=1)
+
+        if scale:
+            coeff = coeff.mul(torch.prod(torch.tensor(modes)))
+        return coeff
 
     @staticmethod
     def _raw_transform(
@@ -262,15 +305,18 @@ class FourierBasis(Basis):
         return f
 
     def grad(self, dim: int = 1) -> Self:
-        if self.coeff is None:
-            return self.__class__()
         k = self.waveNumber(self.coeff.shape[1])
         multiplier = 2 * torch.pi * 1j * k.T
-        return self.__class__(self.coeff / multiplier, self.periods)
+        coeff = self.coeff.div(multiplier)
+        coeff[:, 0] = torch.tensor(0 + 0j)
+        return self.__class__(coeff, self.periods)
 
     def integral(self, dim: int = 1) -> Self:
-        if self.coeff is None:
-            return self.__class__()
         k = self.waveNumber(self.coeff.shape[1])
         multiplier = 2 * torch.pi * 1j * k.T
         return self.__class__(self.coeff * multiplier, self.periods)
+
+    def copy(self) -> Self:
+        basis_copy = super().copy()
+        basis_copy.periods = self.periods
+        return basis_copy
