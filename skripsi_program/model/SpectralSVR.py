@@ -2,7 +2,7 @@ import torch.utils
 import torch.utils.data
 import torch.utils.data.dataset
 import torch
-from ..basis import FourierBasis
+from ..basis import Basis
 from .LSSVR import LSSVR
 from ..utils import to_complex_coeff, to_real_coeff
 from typing import Literal, Union, Callable
@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 class SpectralSVR:
     def __init__(
         self,
-        basis: FourierBasis,
+        basis: Basis,
         C=10.0,
         batch_size_func=lambda dims: 2**21 // dims + 1,
         dtype=torch.float32,
         svr=LSSVR,
-        verbose: Literal["ALL", "SVR", "LITE", False] = False,
+        verbose: Literal["ALL", "SVR", "LITE", False, None] = None,
         **kwargs,
     ) -> None:
         """
@@ -54,6 +54,8 @@ class SpectralSVR:
                 is_svr_verbose = True
             case "LITE":
                 self.verbose = True
+            case None:
+                self.verbose = False
 
         self.basis = basis
         self.svr = svr(
@@ -70,7 +72,6 @@ class SpectralSVR:
         x: torch.Tensor,
         periods: list[float]
         | None = None,  # TODO: use basis args like period etc to make it easier to change for different basis
-        batched: bool = True,
     ) -> torch.Tensor:
         """
         forward
@@ -96,30 +97,9 @@ class SpectralSVR:
             f = to_real_coeff(f)
         coeff = self.svr.predict(f)
         coeff = to_complex_coeff(coeff)
-        scaling = 1.0 / torch.prod(torch.Tensor(self.modes))
 
-        self.print(f"batched: {batched}")
         self.print(f"coeff: {coeff.shape}")
-        if batched:
-            # coeff_x_basis = coeff.unsqueeze(1) * basis_values.unsqueeze(0)
-            # self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
-            # sum_coeff_x_basis = coeff_x_basis.flatten(2).sum(2)
-            # self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
-            return self.basis(
-                x, coeff.view((-1, *self.modes)), periods, self.modes
-            )
-        else:
-            basis_values = self.basis.fn(x, self.modes, periods=periods)
-            self.print(f"basis_values: {basis_values.shape}")
-            assert (
-                f.shape[0] == x.shape[0]
-            ), f"When not batched make sure both has the same number of rows (0th dimension), otherwise use batched in the parameters f has shape {f.shape} and x has shape {x.shape}"
-            coeff_x_basis = coeff * basis_values.flatten(1)
-            self.print(f"coeff_x_basis: {coeff_x_basis.shape}")
-            sum_coeff_x_basis = coeff_x_basis.sum(1, keepdim=True)
-            self.print(f"sum_coeff_x_basis: {sum_coeff_x_basis.shape}")
-
-        return scaling * sum_coeff_x_basis
+        return self.basis(x, coeff.view((-1, *self.modes)), periods=periods)
 
     def train(self, f: torch.Tensor, u_coeff: torch.Tensor, modes: list[int]):
         """
@@ -142,9 +122,6 @@ class SpectralSVR:
 
         if torch.is_complex(u_coeff):
             u_coeff = to_real_coeff(u_coeff)
-        # assert (
-        #     torch.prod(torch.Tensor(modes)) == u_coeff.shape[1] // 2
-        # ), f"modes is {modes} and u_coeff has shape {u_coeff.shape}, the product of modes need to equal to the second dimension of u_coeff"
         self.modes = modes
         if torch.is_complex(f):
             f = to_real_coeff(f)
@@ -154,50 +131,50 @@ class SpectralSVR:
     def test(
         self,
         f: torch.Tensor,
-        u_coeff: torch.Tensor,
+        u_coeff_targets: torch.Tensor,
+        res: int | slice | list[slice] = 200,
     ):
         if torch.is_complex(f):
-            logger.warning("transform f to real")
+            logger.debug("transform f to real")
             f = to_real_coeff(f)
-        u_coeff_pred = self.svr.predict(f)
-        if torch.is_complex(u_coeff):
-            logger.warning("transform u_coeff to real")
-            u_coeff = to_real_coeff(u_coeff)
-        nan_pred_sum = torch.isnan(u_coeff_pred).sum().item()
+        u_coeff_preds = self.svr.predict(f)
+        if torch.is_complex(u_coeff_targets):
+            logger.debug("transform u_coeff to real")
+            u_coeff_targets = to_real_coeff(u_coeff_targets)
 
-        # ssr = ((u_coeff_pred - u_coeff) ** 2).sum(0)
-        # mse = ssr.sum() / u_coeff.shape[0]
-        # u_coeff_pred can be nan if invalid kernel parameters
-        # or data containing nan is input into the model
-        # mse.nan_to_num_(3.40282e38)
+        def get_metrics(preds: torch.Tensor, targets: torch.Tensor):
+            nan_pred_sum = torch.isnan(preds).sum().item()
+            mse = mean_squared_error(preds, targets)
+            rmse = mean_squared_error(preds, targets, squared=False)
+            mae = mean_absolute_error(preds, targets)
+            r2 = r2_score(preds, targets)
+            smape = symmetric_mean_absolute_percentage_error(preds, targets)
+            rse = relative_squared_error(preds, targets)
+            rrse = relative_squared_error(preds, targets, squared=False)
+            return {
+                "mse": mse.item(),
+                "rmse": rmse.item(),
+                "mae": mae.item(),
+                "r2": r2.item(),
+                "r2_abs": r2.abs().item(),
+                "smape": smape.item(),
+                "rse": rse.item(),
+                "rrse": rrse.item(),
+                "pred_nan_sum": nan_pred_sum,
+            }
 
-        # u_coeff_val_mean = u_coeff.mean(dim=0)
-        # ssg = ((u_coeff_pred - u_coeff_val_mean) ** 2).sum(0)
-        # sst = ((u_coeff - u_coeff_val_mean) ** 2).sum(0)
-        # ssr_sst = ssr / sst
-        # ssg_sst = ssg / sst
+        grid = self.basis.grid(res).flatten(0, -2)
 
-        # r2 = torch.nan_to_num(1 - ssr_sst).sum().item()
-        # r2_expected = torch.nan_to_num(1 - ssg_sst).sum().item()
-        # u_coeff_pred = to_complex_coeff(u_coeff_pred)
-        mse = mean_squared_error(u_coeff_pred, u_coeff)
-        rmse = mean_squared_error(u_coeff_pred, u_coeff, squared=False)
-        mae = mean_absolute_error(u_coeff_pred, u_coeff)
-        r2 = r2_score(u_coeff_pred, u_coeff)
-        smape = symmetric_mean_absolute_percentage_error(u_coeff_pred, u_coeff)
-        rse = relative_squared_error(u_coeff_pred, u_coeff)
-        rrse = relative_squared_error(u_coeff_pred, u_coeff, squared=False)
+        u_preds = self.basis.evaluate(grid, coeff=to_complex_coeff(u_coeff_preds)).real
+        u_targets = self.basis.evaluate(
+            grid, coeff=to_complex_coeff(u_coeff_targets)
+        ).real
+
         metrics = {
-            "mse": mse.item(),
-            "rmse": rmse.item(),
-            "mae": mae.item(),
-            "r2": r2.item(),
-            "r2_abs": r2.abs().item(),
-            "smape": smape.item(),
-            "rse": rse.item(),
-            "rrse": rrse.item(),
-            "pred_nan_sum": nan_pred_sum,
+            "spectral": get_metrics(u_coeff_preds, u_coeff_targets),
+            "function value": get_metrics(u_preds, u_targets),
         }
+
         return metrics
 
     def inverse(
@@ -215,13 +192,9 @@ class SpectralSVR:
         assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
         f_shape = (u.shape[0], self.svr.sv_x.shape[1])
         # inverse problem
-        # f_pred = torch.empty(f_shape, dtype=u.dtype)  # predicted density
         f_pred: torch.Tensor = torch.randn(f_shape, generator=generator) * gain
         f_pred.requires_grad_()
 
-        # x = torch.arange(0, period, step)
-        # pp = torch.meshgrid([x, x], indexing="xy")
-        # points = torch.concat([p.flatten().unsqueeze(-1) for p in pp], dim=1)
 
         optim = torch.optim.Adam([f_pred], **optimizer_params)
         for epoch in range(epochs):

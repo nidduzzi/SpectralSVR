@@ -18,16 +18,11 @@ class Basis(abc.ABC):
     _coeff: torch.Tensor
 
     def __init__(
-        self,
-        coeff: torch.Tensor | None = None,
+        self, coeff: torch.Tensor | None = None, complex_funcs: bool = False
     ) -> None:
         super().__init__()
-        # assert ndim > 0, f"ndim {ndim} is not allowed because it is less than 1"
-        # assert (
-        #     coef.shape[1] == 1
-        # ), f"coef of shape {coef.shape} is not allowed, make sure it is one dimensional"
-        # self.ndim = ndim
         self.coeff = coeff
+        self._complex_funcs = complex_funcs
 
     @property
     def coeff(self):
@@ -45,10 +40,22 @@ class Basis(abc.ABC):
             self._coeff = coeff
 
     @property
+    def modes(self):
+        if self.ndim < 1:
+            return [0]
+        else:
+            return self.get_modes(self.coeff)
+
+    @staticmethod
+    def get_modes(coeff: torch.Tensor):
+        return list(coeff.shape[1:])
+
+    @property
     def ndim(self):
-        if self.coeff is None:
+        coeff_ndim = self.coeff.ndim
+        if self.coeff is None or coeff_ndim < 1:
             return 0
-        return self.coeff.ndim - 1
+        return coeff_ndim - 1
 
     def __len__(self):
         if self.coeff is None:
@@ -181,9 +188,9 @@ class Basis(abc.ABC):
             Basis -- n sets of functions with coefficients with the shape (n, modes)
         """
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def generateCoeff(n: int, modes: int) -> torch.Tensor:
+    def generateCoeff(cls, n: int, modes: int) -> torch.Tensor:
         """
         generateCoeff
 
@@ -298,7 +305,7 @@ class Basis(abc.ABC):
         match self.ndim:
             case 1:
                 color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
-                if values.is_complex() and values.imag.ge(tol).any():
+                if self._complex_funcs:
                     for j, func in enumerate(values):
                         c = next(color)
                         func_num = j + 1

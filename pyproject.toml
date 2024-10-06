@@ -8,7 +8,6 @@ packages = [{include = "skripsi_program"}]
 
 [tool.poetry.dependencies]
 python = "^3.10.6"
-torch = "^2.4.0"
 numpy = "^1.24.0"
 tqdm = "^4.65.0"
 jaxtyping = "^0.2.20"
@@ -16,6 +15,9 @@ pandas = "^2.2.2"
 torchmetrics = "^1.4.2"
 scikit-learn = "^1.5.0"
 matplotlib = "^3.9.0"
+torch = {version = "^2.4.1+cu124", source = "pytorch-gpu"}
+torchvision = {version = "^0.19.1+cu124", source = "pytorch-gpu"}
+torchaudio = {version = "^2.4.1+cu124", source = "pytorch-gpu"}
 
 [tool.poetry.group.dev.dependencies]
 types-tqdm = "^4.65.0.1"
@@ -25,6 +27,12 @@ black = "^24.4.2"
 mypy = "^1.10.0"
 ruff = "^0.4.9"
 memory-profiler = "^0.61.0"
+
+
+[[tool.poetry.source]]
+name = "pytorch-gpu"
+url = "https://download.pytorch.org/whl/cu124"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

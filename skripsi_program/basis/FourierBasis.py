@@ -9,25 +9,23 @@ class FourierBasis(Basis):
     def __init__(
         self,
         coeff: torch.Tensor | None = None,
+        complex_funcs: bool = False,
         periods: list[float] | None = None,
     ) -> None:
-        super().__init__(coeff)
+        super().__init__(coeff, complex_funcs=complex_funcs)
         self.periods = periods
 
     @Basis.coeff.setter
     def coeff(self, coeff: torch.Tensor | None):
         Basis.coeff.__set__(self, coeff)
-        if coeff is not None:
-            self.modes = list(coeff.shape[1:])
 
     def __call__(
         self,
         x: torch.Tensor,
         coeff: torch.Tensor | None = None,
-        periods: list[float] | None = None,
-        modes: list[int] | None = None,
         i=0,
         n=0,
+        periods: list[float] | None = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
@@ -37,36 +35,32 @@ class FourierBasis(Basis):
             coeff is not None
         ), "coeff is none, set it in the function parameters or with setCoeff"
         if periods is None:
-            periods = (
-                [1.0 for i in range(len(coeff.shape[1:]))]
-                if self.periods is None
-                else self.periods
-            )
-        assert (
-            periods is not None
-        ), "periods is none, set it in the function parameters, at initialization of this basis, or via class properties"
-        if modes is None:
-            modes = self.modes
+            periods = self.periods
+        modes = self.get_modes(coeff)
         assert (
             modes is not None
         ), "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
-        return self.evaluate(x, coeff, periods, modes, i=i, n=n)
+        return self.evaluate(x, coeff, periods=periods, i=i, n=n)
 
     @classmethod
     def evaluate(
         cls,
         x: torch.Tensor,
         coeff: torch.Tensor,
-        periods: list[float],
-        modes: list[int],
         i=0,
         n=0,
+        periods: list[float] | None = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
+        if periods is None:
+            periods = [1.0 for i in range(len(coeff.shape[1:]))]
+
         if n > 0:
             coeff = coeff[i : i + n]
+        assert coeff.is_complex(), "the coefficients passed in need to be complex"
 
+        modes = cls.get_modes(coeff)
         basis = cls.fn(x, modes, periods=periods)
         sum_coeff_x_basis = coeff.flatten(1).mm(basis.flatten(1).t())
         scaling = 1.0 / torch.prod(torch.Tensor(modes))
@@ -158,11 +152,13 @@ class FourierBasis(Basis):
                 generator=generator,
                 random_func=random_func,
                 complex_funcs=complex_funcs,
-            )
+            ),
+            complex_funcs=complex_funcs,
         )
 
-    @staticmethod
+    @classmethod
     def generateCoeff(
+        cls,
         n: int,
         modes: int,
         range: tuple[float, float] = (0.0, 1.0),
@@ -309,12 +305,12 @@ class FourierBasis(Basis):
         multiplier = 2 * torch.pi * 1j * k.T
         coeff = self.coeff.div(multiplier)
         coeff[:, 0] = torch.tensor(0 + 0j)
-        return self.__class__(coeff, self.periods)
+        return self.__class__(coeff, periods=self.periods)
 
     def integral(self, dim: int = 1) -> Self:
         k = self.waveNumber(self.coeff.shape[1])
         multiplier = 2 * torch.pi * 1j * k.T
-        return self.__class__(self.coeff * multiplier, self.periods)
+        return self.__class__(self.coeff * multiplier, periods=self.periods)
 
     def copy(self) -> Self:
         basis_copy = super().copy()

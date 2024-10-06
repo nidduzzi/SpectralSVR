@@ -161,9 +161,10 @@ class LSSVR(object):
         verbose=False,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
+        device: torch.device = torch.device("cpu"),
         **kernel_params,
     ):
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self._device = device
 
         # Hyperparameters
         self.min_error = min_error
@@ -178,11 +179,19 @@ class LSSVR(object):
         self.batch_size_func = batch_size_func
 
         # Model parameters
-        self.alpha = None
-        self.b = None
-        self.sv_x = None
-        self.sv_y = None
-        self.y_indicies = None
+        self.alpha: torch.Tensor | None = None
+        self.b: torch.Tensor | None = None
+        self.sv_x: torch.Tensor | None = None
+        self.sv_y: torch.Tensor | None = None
+        self.y_indicies: torch.Tensor | None = None
+
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, device: torch.device):
+        self._device = device
 
     @property
     def kernel(self):
@@ -435,23 +444,13 @@ class LSSVR(object):
         # y_values = self.sv_y
         self.print("Omega:")
         self.print(KxX)
-        y = KxX @ self.alpha + self.b
-        self.print("v:")
-        self.print(y)
+        y_pred = KxX @ self.alpha + self.b
+        self.print("y':")
+        self.print(y_pred)
         if is_torch:
-            predictions = y.to(dtype=X_arr.dtype)
+            predictions = y_pred.to(X_arr)
         else:
-            predictions = y.detach().numpy()
-
-        # else:  # multiclass classification, ONE-VS-ALL APPROACH
-        #     y = torch.empty((len(self.y_indicies), len(X)), dtype=X.dtype, device=self.device)
-        #     for i in range(len(self.y_indicies)):
-        #         # y_values = self.sv_y
-
-        #         y[i] = KxX @ self.alpha[i] + self.b[i]
-
-        #     predictions = y
-        # y_pred_labels = torch.stack([self.y_indicies[i] for i in predictions])
+            predictions = y_pred.cpu()
 
         return predictions.reshape(-1) if X_arr.ndim == 1 else predictions
 
