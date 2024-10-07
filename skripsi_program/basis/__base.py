@@ -308,18 +308,21 @@ class Basis(abc.ABC):
                 if self._complex_funcs:
                     for j, func in enumerate(values):
                         c = next(color)
-                        func_num = j + 1
                         plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
                         plot = plt.plot(
                             grid.flatten(), func.flatten().imag, c=c, linestyle="dashed"
                         )
-                        plt.legend([f"Real ({func_num})", f"Imaginary ({func_num})"])
+                    plt.legend(
+                        [
+                            (f"Real ({j+1})", f"Imaginary ({j+1})")
+                            for j in range(len(values))
+                        ]
+                    )
                 else:
                     for j, func in enumerate(values):
                         c = next(color)
-                        func_num = j + 1
                         plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
-                        plt.legend([f"Real ({func_num})"])
+                    plt.legend([(f"Real ({j+1})") for j in range(len(values))])
             case 2:
                 plot = plt.imshow(values.real.reshape((res[0].step, res[1].step)))
             case _:
