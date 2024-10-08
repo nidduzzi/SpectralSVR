@@ -167,7 +167,7 @@ class Basis(abc.ABC):
     def generate(
         cls,
         n: int,
-        modes: int,
+        modes: int | list[int],
         generator: torch.Generator | None = None,
         random_func=torch.randn,
     ) -> Self:
@@ -178,7 +178,7 @@ class Basis(abc.ABC):
 
         Arguments:
             n {int} -- number of random functions to generate coefficients for.
-            modes {int} -- number of coefficients in a series.
+            modes {int | list[int]} -- number of coefficients in a series.
 
         Keyword Arguments:
             generator {torch.Generator | None} -- PRNG Generator for reproducability (default: {None})
@@ -206,28 +206,28 @@ class Basis(abc.ABC):
         """
 
     @abc.abstractmethod
-    def grad(self, dim: int = 1) -> Self:
+    def grad(self, dim: int = 0) -> Self:
         """
         grad
 
         grad computes the derivative along a dimension
 
         Keyword Arguments:
-            dim {int} -- dimension to compute gradient on (default: {1})
+            dim {int} -- dimension to compute gradient on (default: {0})
 
         Returns:
             Self -- returns an instance of current basis with antiderivative coefficients
         """
 
     @abc.abstractmethod
-    def integral(self, dim: int = 1) -> Self:
+    def integral(self, dim: int = 0) -> Self:
         """
         integral
 
         integral computes the antiderivative along a dimension
 
         Keyword Arguments:
-            dim {int} -- dimension to compute antiderivative on (default: {1})
+            dim {int} -- dimension to compute antiderivative on (default: {0})
 
         Returns:
             Self -- returns an instance of current basis with antiderivative coefficients
@@ -306,7 +306,7 @@ class Basis(abc.ABC):
             case 1:
                 color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
                 if self._complex_funcs:
-                    for j, func in enumerate(values):
+                    for func in values:
                         c = next(color)
                         plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
                         plot = plt.plot(
@@ -319,7 +319,7 @@ class Basis(abc.ABC):
                         ]
                     )
                 else:
-                    for j, func in enumerate(values):
+                    for func in values:
                         c = next(color)
                         plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
                     plt.legend([(f"Real ({j+1})") for j in range(len(values))])
@@ -334,6 +334,17 @@ class Basis(abc.ABC):
 
     @staticmethod
     def grid(res: int | slice | list[slice] = 200) -> torch.Tensor:
+        """
+        grid
+
+        grid creates a rectangular grid whose dimensions and resolution is dependant on the res parameter
+
+        Keyword Arguments:
+            res {int | slice | list[slice]} -- the resolution and dimensions of the grid passed as n slices (default: {slice(0,1,200)})
+
+        Returns:
+            torch.Tensor -- {d1,...,dn,n} tensor with n+1 dimensions where the last dimension is the coordinates and therefore of size n. all other dimensions have sizes coresponding to the resolution specified by their coresponding res parameter
+        """
         if isinstance(res, int):
             res = [slice(0, 1, res)]
         elif isinstance(res, slice):

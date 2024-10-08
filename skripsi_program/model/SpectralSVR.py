@@ -101,7 +101,7 @@ class SpectralSVR:
         self.print(f"coeff: {coeff.shape}")
         return self.basis(x, coeff.view((-1, *self.modes)), periods=periods)
 
-    def train(self, f: torch.Tensor, u_coeff: torch.Tensor, modes: list[int]):
+    def train(self, f: torch.Tensor, u_coeff: torch.Tensor):
         """
         train _summary_
 
@@ -110,19 +110,17 @@ class SpectralSVR:
 
         Arguments:
             f {torch.Tensor} -- n flattened input functions
-            u_coeff {torch.Tensor} -- n flattend output functions coefficients
-            modes {list[int]} -- list of modes
+            u_coeff {torch.Tensor} -- n output functions coefficients
         """
-        assert (
-            len(f.shape) == 2
-        ), f"f needs to have only 2 dimensions, currently it has shape {f.shape}"
-        assert (
-            len(u_coeff.shape) == 2
-        ), f"u_coeff needs to have only 2 dimensions, currently it has shape {u_coeff.shape}"
+        self.modes = Basis.get_modes(u_coeff)
+        self.print(f"modes: {self.modes}")
+        if f.ndim > 2:
+            f = f.flatten(1)
+        if u_coeff.ndim > 2:
+            u_coeff = u_coeff.flatten(1)
 
         if torch.is_complex(u_coeff):
             u_coeff = to_real_coeff(u_coeff)
-        self.modes = modes
         if torch.is_complex(f):
             f = to_real_coeff(f)
         self.svr.fit(f, u_coeff)
@@ -194,7 +192,6 @@ class SpectralSVR:
         # inverse problem
         f_pred: torch.Tensor = torch.randn(f_shape, generator=generator) * gain
         f_pred.requires_grad_()
-
 
         optim = torch.optim.Adam([f_pred], **optimizer_params)
         for epoch in range(epochs):

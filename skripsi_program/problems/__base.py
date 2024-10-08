@@ -12,7 +12,7 @@ class Problem(abc.ABC):
         self,
         basis: Basis,
         n: int,
-        m: int,
+        modes: int | list[int],
         *args,
         generator: torch.Generator | None = None,
         **kwargs,

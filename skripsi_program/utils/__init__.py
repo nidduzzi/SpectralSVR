@@ -1,5 +1,6 @@
 import torch
 import logging
+import typing
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +167,13 @@ class StandardScaler:
         new_scaler.xs_dims = tuple(self.xs_dims[index] for index in indices)
         return new_scaler
 
+    @typing.overload
+    def transform(self, xs: torch.Tensor) -> torch.Tensor: ...
+    @typing.overload
+    def transform(self, xs: tuple[torch.Tensor, ...]) -> tuple[torch.Tensor, ...]: ...
+
     def transform(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
+        is_tensor_input = isinstance(xs, torch.Tensor)
         xs = self._get_tensor_tuple(xs)
         self._check_consistency(xs)
         xs_real = tuple(
@@ -188,9 +195,15 @@ class StandardScaler:
             to_complex_coeff(x) if x_is_complex else x
             for x_is_complex, x in zip(self.xs_is_complex, xs_transformed)
         )
-        return xs_out
+        return xs_out[0] if is_tensor_input else xs_out
+
+    @typing.overload
+    def inverse(self, xs: torch.Tensor) -> torch.Tensor: ...
+    @typing.overload
+    def inverse(self, xs: tuple[torch.Tensor, ...]) -> tuple[torch.Tensor, ...]: ...
 
     def inverse(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
+        is_tensor_input = isinstance(xs, torch.Tensor)
         xs = self._get_tensor_tuple(xs)
         self._check_consistency(xs)
         xs_real = tuple(
@@ -212,7 +225,7 @@ class StandardScaler:
             to_complex_coeff(x) if x_is_complex else x
             for x_is_complex, x in zip(self.xs_is_complex, xs_transformed)
         )
-        return xs_out
+        return xs_out[0] if is_tensor_input else xs_out
 
     def save(self, path: str):
         torch.save(self, path)
@@ -227,15 +240,8 @@ class StandardScaler:
 
 
 def scale_to_standard(x: torch.Tensor):
-    x_real = to_real_coeff(x) if torch.is_complex(x) else x
-    m = x_real.mean(0, keepdim=True)
-    s = x_real.std(0, unbiased=False, keepdim=True)
-    s[s.isclose(torch.tensor(0.0, dtype=s.dtype))] = 1.0
-    x_scaled = x_real - m
-    x_scaled = x_scaled / s
-    for dim in range(x.shape[1]):
-        x_scaled[:, dim].nan_to_num_(m[0, dim].item())
-    x_scaled = to_complex_coeff(x_scaled) if torch.is_complex(x) else x_scaled
+    scaler = StandardScaler().fit(x)
+    x_scaled = scaler.transform(x)
     return x_scaled
 
 

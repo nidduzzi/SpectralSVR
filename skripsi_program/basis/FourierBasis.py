@@ -138,7 +138,7 @@ class FourierBasis(Basis):
     def generate(
         cls,
         n: int,
-        modes: int,
+        modes: int | list[int],
         range: tuple[float, float] = (0.0, 1.0),
         generator: torch.Generator | None = None,
         random_func=torch.randn,
@@ -160,33 +160,46 @@ class FourierBasis(Basis):
     def generateCoeff(
         cls,
         n: int,
-        modes: int,
+        modes: int | list[int],
         range: tuple[float, float] = (0.0, 1.0),
         generator: torch.Generator | None = None,
         random_func: Callable[..., torch.Tensor] = torch.randn,
         complex_funcs: bool = False,
         scale: bool = True,
     ) -> torch.Tensor:
-        random_func = partial(random_func, generator=generator)
+        if isinstance(modes, int):
+            modes = [modes]
+        n_modes = len(modes)
+        assert n_modes > 0, "modes should have at least one element"
         a, b = range
         span = abs(b - a)
+        random_func = partial(random_func, generator=generator)
         if complex_funcs:
-            coeff = span * random_func((n, modes), dtype=torch.complex64) + a
+            coeff = span * random_func((n, *modes), dtype=torch.complex64) + a
         else:
-            rem2 = modes % 2
-            is_even = rem2 == 0
-            reflected_modes = (modes - 2 + rem2) // 2
-            reflected_coeff = (
-                span * random_func((n, reflected_modes), dtype=torch.complex64) + a
-            )
-            constant = span * random_func((n, 1)) + a + 0j
-            # constant = constant + 0j
-            coeff = torch.concatenate((constant, reflected_coeff), dim=1)
-            if is_even:
-                center = span * random_func((n, 1), dtype=torch.complex64) + a + 0j
-                coeff = torch.concatenate((coeff, center), dim=1)
-            coeff = torch.concatenate((coeff, reflected_coeff.conj().flip(1)), dim=1)
-
+            if n_modes == 1:
+                modes = modes[0]
+                rem2 = modes % 2
+                is_even = rem2 == 0
+                reflected_modes = (modes - 2 + rem2) // 2
+                reflected_coeff = (
+                    span * random_func((n, reflected_modes), dtype=torch.complex64) + a
+                )
+                constant = span * random_func((n, 1)) + a + 0j
+                # constant = constant + 0j
+                coeff = torch.concatenate((constant, reflected_coeff), dim=1)
+                if is_even:
+                    center = span * random_func((n, 1), dtype=torch.complex64) + a + 0j
+                    coeff = torch.concatenate((coeff, center), dim=1)
+                coeff = torch.concatenate(
+                    (coeff, reflected_coeff.conj().flip(1)), dim=1
+                )
+            elif n_modes:
+                print("n_modes not one")
+                coeff = span * random_func((n, *modes), dtype=torch.complex64) + a
+                # TODO: replace with more efficient algo
+                vals = cls.inv_transform(coeff)
+                coeff = cls.transform(vals.real + 0j)
         if scale:
             coeff = coeff.mul(torch.prod(torch.tensor(modes)))
         return coeff
@@ -300,17 +313,23 @@ class FourierBasis(Basis):
             f = f.div(torch.tensor(F.shape[1:]).prod())
         return f
 
-    def grad(self, dim: int = 1) -> Self:
-        k = self.waveNumber(self.coeff.shape[1])
-        multiplier = 2 * torch.pi * 1j * k.T
+    def grad(self, dim: int = 0) -> Self:
+        k = self.waveNumber(self.modes[dim])
+        multiplier_dims = [1 for i in range(self.ndim)]
+        multiplier_dims[dim] = self.modes[dim]
+        multiplier = 2 * torch.pi * 1j * k.reshape(multiplier_dims)
         coeff = self.coeff.div(multiplier)
         coeff[:, 0] = torch.tensor(0 + 0j)
         return self.__class__(coeff, periods=self.periods)
 
-    def integral(self, dim: int = 1) -> Self:
-        k = self.waveNumber(self.coeff.shape[1])
-        multiplier = 2 * torch.pi * 1j * k.T
-        return self.__class__(self.coeff * multiplier, periods=self.periods)
+    def integral(self, dim: int = 0) -> Self:
+        k = self.waveNumber(self.modes[dim])
+        multiplier_dims = [1 for i in range(self.ndim)]
+        multiplier_dims[dim] = self.modes[dim]
+        multiplier = 2 * torch.pi * 1j * k.reshape(multiplier_dims)
+        coeff = self.coeff.mul(multiplier)
+        coeff[:, 0] = torch.tensor(0 + 0j)
+        return self.__class__(coeff, periods=self.periods)
 
     def copy(self) -> Self:
         basis_copy = super().copy()

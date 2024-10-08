@@ -46,16 +46,16 @@ def test_SpectralSVR():
     # Scale inputs based on training inputs
     f_train, u_train, u_coeff_train = df_train[:]
     scaler = StandardScaler().fit(f_train)
-    f_train = scaler.transform(f_train)[0]
+    f_train = scaler.transform(f_train)
     f_test, u_test, u_coeff_test = df_test[:]
-    f_test = scaler.transform(f_test)[0]
+    f_test = scaler.transform(f_test)
 
     # Train svm
     periods = [1.0]
-    model = SpectralSVR(FourierBasis(periods=periods), C=1.0)
-    model.train(
-        f_train.flatten(1), u_coeff_train.flatten(1), list(u_coeff_train.shape[1:])
-    )
+    model = SpectralSVR(FourierBasis(periods=periods), C=1.0, verbose="ALL")
+    print(f"f_train.shape:, {f_train.shape}")
+    print(f"u_coeff_train.shape: {u_coeff_train.shape}")
+    model.train(f_train, u_coeff_train)
 
     # Test
     u_coeff_pred = model.svr.predict(f_test)

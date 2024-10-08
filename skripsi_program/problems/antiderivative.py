@@ -4,6 +4,11 @@ from . import Problem
 
 
 class Antiderivative(Problem):
+    """
+    Antiderivative problem for one dimension
+
+    This class defines and generates the antiderivative problem in one dimension. The functions themselves may be multidimensional but the derivative is only in the 0th mode dimension
+    """
     def __init__(self) -> None:
         super().__init__()
 
@@ -11,19 +16,24 @@ class Antiderivative(Problem):
         self,
         basis: Basis,
         n: int,
-        m: int,
+        modes: int | list[int],
         u0,
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
     ) -> list[Basis]:
+        if isinstance(modes, int):
+            modes = [modes]
         assert n > 0, "number of samples n must be more than 0"
-        assert m > 0, "number of harmonics m must be more than 0"
+        for i, m in enumerate(modes):
+            assert m > 0, f"number of harmonics m must be more than 0 at dim {i}"
         assert u0 is not None, "integration constant u0 must not be None"
         # generate derivative functions
-        ut = basis.generate(n, m, generator=generator, *args, **kwargs)
-        assert ut.coeff is not None, "generated derivative functions ut should not have None coeff"
-        ut.coeff[:,0].mul_(0)
+        ut = basis.generate(n, modes, generator=generator, *args, **kwargs)
+        assert (
+            ut.coeff is not None
+        ), "generated derivative functions ut should not have None coeff"
+        ut.coeff[:, 0].mul_(0)
         # compute antiderivative functions
         u = ut.integral()
         # set the integration coefficient
