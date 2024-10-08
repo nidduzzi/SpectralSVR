@@ -421,24 +421,34 @@ class LSSVR(object):
 
         return self
 
-    def predict(self, X_arr: typing.Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    @typing.overload
+    def predict(self, X: torch.Tensor) -> torch.Tensor: ...
+
+    @typing.overload
+    def predict(
+        self, X: np.ndarray[typing.Any, np.dtype[np.float_]]
+    ) -> np.ndarray[typing.Any, np.dtype[np.float_]]: ...
+
+    def predict(
+        self, X: np.ndarray[typing.Any, np.dtype[np.float_]] | torch.Tensor
+    ) -> np.ndarray[typing.Any, np.dtype[np.float_]] | torch.Tensor:
         """Predicts the labels of data X given a trained model.
         - X: ndarray of shape (n_samples, n_attributes)
         """
         assert (
             self.alpha is not None and self.sv_x is not None and self.sv_y is not None
         ), "The model doesn't see to be fitted, try running .fit() method first"
-        is_torch = isinstance(X_arr, torch.Tensor)
+        is_torch = isinstance(X, torch.Tensor)
         if is_torch:
-            X_reshaped_torch = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
-            X = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
+            X_reshaped_torch = X.reshape(-1, 1) if X.ndim == 1 else X
+            X_ = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
         else:
-            X_reshaped_np = X_arr.reshape(-1, 1) if X_arr.ndim == 1 else X_arr
-            X = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
+            X_reshaped_np = X.reshape(-1, 1) if X.ndim == 1 else X
+            X_ = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
 
-        self.print(f"X:{X.shape}")
+        self.print(f"X:{X_.shape}")
         self.print(f"sv_x:{self.sv_x.shape}")
-        KxX = self._batched_K(X, self.sv_x)
+        KxX = self._batched_K(X_, self.sv_x)
 
         # if len(self.y_indicies) == 1:  # binary classification
         # y_values = self.sv_y
@@ -447,12 +457,13 @@ class LSSVR(object):
         y_pred = KxX @ self.alpha + self.b
         self.print("y':")
         self.print(y_pred)
+        predictions: np.ndarray[typing.Any, np.dtype[np.float_]] | torch.Tensor
         if is_torch:
-            predictions = y_pred.to(X_arr)
+            predictions = y_pred.to(X)
         else:
-            predictions = y_pred.cpu()
+            predictions = y_pred.cpu().numpy()
 
-        return predictions.reshape(-1) if X_arr.ndim == 1 else predictions
+        return predictions.reshape(-1) if X.ndim == 1 else predictions
 
     def dump(self, filepath="model", only_hyperparams=False):
         """This method saves the model in a JSON format.
