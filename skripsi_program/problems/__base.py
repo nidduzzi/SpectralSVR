@@ -12,11 +12,11 @@ class Problem(abc.ABC):
         self,
         basis: Basis,
         n: int,
-        modes: int | list[int],
+        modes: int | tuple[int, ...],
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
-    ) -> list[Basis]:
+    ) -> tuple[Basis, ...]:
         pass
 
     @abc.abstractmethod

@@ -245,35 +245,52 @@ def scale_to_standard(x: torch.Tensor):
     return x_scaled
 
 
-def reduce_coeff(x: torch.Tensor, reduced_modes: int | list[int], rescale=True):
-    if isinstance(reduced_modes, int):
-        reduced_modes = [reduced_modes] * len(x.shape[1:])
+def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=True):
+    if isinstance(target_modes, int):
+        target_modes = (target_modes,) * len(x.shape[1:])
     assert (
-        len(x.shape[1:]) == len(reduced_modes)
-    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {reduced_modes}"
-    x_reduced = x
-    for dim, max_mode in enumerate(reduced_modes, 1):
-        dim_len = x.shape[dim]
-        start_range = torch.tensor(range((max_mode - 1) // 2 + 1))
-        end_range = torch.tensor(range(dim_len - max_mode // 2, dim_len))
+        len(x.shape[1:]) == len(target_modes)
+    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {target_modes}"
+    x_resized = x
+    for dim, new_mode in enumerate(target_modes, 1):
+        current_mode = x.shape[dim]
+        if new_mode < current_mode:
+            start_range = torch.tensor(range((new_mode - 1) // 2 + 1))
+            end_range = torch.tensor(range(current_mode - new_mode // 2, current_mode))
 
-        x_reduced = torch.concat(
-            (
-                x_reduced.index_select(dim, start_range),
-                x_reduced.index_select(dim, end_range),
-            ),
-            dim,
-        )
+            x_resized = torch.concat(
+                (
+                    x_resized.index_select(dim, start_range),
+                    x_resized.index_select(dim, end_range),
+                ),
+                dim,
+            )
+        elif new_mode > current_mode:
+            start_range = torch.tensor(range((current_mode - 1) // 2 + 1))
+            end_range = torch.tensor(range(current_mode // 2, current_mode))
+            padding_size = new_mode - current_mode
+            modes = list(x_resized.shape)
+            modes[dim] = padding_size
+            padding = torch.zeros(modes).to(x_resized)
+
+            x_resized = torch.concat(
+                (
+                    x_resized.index_select(dim, start_range),
+                    padding,
+                    x_resized.index_select(dim, end_range),
+                ),
+                dim,
+            )
 
     if rescale:
         modes = list(x.shape[1:])
-        x_reduced = (
-            x_reduced
-            * torch.prod(torch.tensor(reduced_modes))
+        x_resized = (
+            x_resized
+            * torch.prod(torch.tensor(target_modes))
             / torch.prod(torch.tensor(modes))
         )
 
-    return x_reduced
+    return x_resized
 
 
 def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):

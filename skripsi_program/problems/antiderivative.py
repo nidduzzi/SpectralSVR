@@ -9,6 +9,7 @@ class Antiderivative(Problem):
 
     This class defines and generates the antiderivative problem in one dimension. The functions themselves may be multidimensional but the derivative is only in the 0th mode dimension
     """
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -16,14 +17,14 @@ class Antiderivative(Problem):
         self,
         basis: Basis,
         n: int,
-        modes: int | list[int],
+        modes: int | tuple[int, ...],
         u0,
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
-    ) -> list[Basis]:
+    ) -> tuple[Basis, Basis]:
         if isinstance(modes, int):
-            modes = [modes]
+            modes = (modes,)
         assert n > 0, "number of samples n must be more than 0"
         for i, m in enumerate(modes):
             assert m > 0, f"number of harmonics m must be more than 0 at dim {i}"
@@ -53,7 +54,7 @@ class Antiderivative(Problem):
         else:
             u.coeff[:, 0] = u0
 
-        results = [u, ut]
+        results = (u, ut)
         return results
 
     def spectral_residual(self, u: Basis, ut: Basis, *args, **kwargs) -> Basis:

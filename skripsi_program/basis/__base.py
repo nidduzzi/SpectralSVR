@@ -1,8 +1,9 @@
 import torch
 import abc
-from typing_extensions import Self
+from typing_extensions import Self, Literal
 import matplotlib.pyplot as plt
 import logging
+from ..utils import resize_modes
 # Basis functions
 # - able to set number of modes / basis functions
 # - provides access to the vector of basis function values evaluated at x
@@ -40,15 +41,15 @@ class Basis(abc.ABC):
             self._coeff = coeff
 
     @property
-    def modes(self):
+    def modes(self) -> tuple[int, ...]:
         if self.ndim < 1:
-            return [0]
+            return (0,)
         else:
             return self.get_modes(self.coeff)
 
     @staticmethod
-    def get_modes(coeff: torch.Tensor):
-        return list(coeff.shape[1:])
+    def get_modes(coeff: torch.Tensor) -> tuple[int, ...]:
+        return tuple(coeff.shape[1:])
 
     @property
     def ndim(self):
@@ -167,7 +168,7 @@ class Basis(abc.ABC):
     def generate(
         cls,
         n: int,
-        modes: int | list[int],
+        modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
         random_func=torch.randn,
     ) -> Self:
@@ -178,7 +179,7 @@ class Basis(abc.ABC):
 
         Arguments:
             n {int} -- number of random functions to generate coefficients for.
-            modes {int | list[int]} -- number of coefficients in a series.
+            modes {int | tuple[int,...]} -- number of coefficients in a series.
 
         Keyword Arguments:
             generator {torch.Generator | None} -- PRNG Generator for reproducability (default: {None})
@@ -190,7 +191,11 @@ class Basis(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def generateCoeff(cls, n: int, modes: int) -> torch.Tensor:
+    def generateCoeff(
+        cls,
+        n: int,
+        modes: int | tuple[int, ...],
+    ) -> torch.Tensor:
         """
         generateCoeff
 
@@ -198,8 +203,7 @@ class Basis(abc.ABC):
 
         Arguments:
             n {int} -- number of random functions to generate coefficients for.
-
-            modes {int} -- number of coefficients in a series.
+            modes {int | tuple[int,...]} -- number of coefficients in a series.
 
         Returns:
             torch.Tensor -- n sets of coefficients with the shape (n, modes)
@@ -243,7 +247,7 @@ class Basis(abc.ABC):
         Returns:
             Self -- a copied instance of current instance
         """
-        return self.__class__(self.coeff)
+        return self.__class__(coeff=self.coeff, complex_funcs=self._complex_funcs)
 
     def __sub__(self, other: Self):
         if isinstance(other, self.__class__):
@@ -254,8 +258,8 @@ class Basis(abc.ABC):
                 other_copy.coeff = -other.coeff.clone()
                 return other_copy
             else:
-                result = self.copy()
-                result.coeff = self.coeff - other.coeff
+                result = self.resize_modes(other)
+                result.coeff = result.coeff - other.coeff
                 return result
         else:
             raise TypeError(
@@ -269,8 +273,8 @@ class Basis(abc.ABC):
             elif self.coeff is None:
                 return other.copy()
             else:
-                result = self.copy()
-                result.coeff = self.coeff + other.coeff
+                result = self.resize_modes(other)
+                result.coeff = result.coeff + other.coeff
                 return result
         else:
             raise TypeError(
@@ -279,7 +283,15 @@ class Basis(abc.ABC):
 
     # TODO: Add plot coefficients function
 
-    def plot(self, i=0, n=1, res: int | slice | list[slice] = 200, plt=plt, tol=1e-5):
+    def plot(
+        self,
+        i=0,
+        n=1,
+        res: int | slice | list[slice] | None = None,
+        plt=plt,
+        complex_scatter=False,
+        plot_component: None | Literal["imag", "real"] = None,
+    ):
         """
         plot
 
@@ -288,8 +300,13 @@ class Basis(abc.ABC):
         Keyword Arguments:
             i {int} -- function i to start plotting (default: {0})
             n {int} -- n functions after function i to evaluate (default: {1})
-            res {int | slice | list[slice]} -- function discretization resolution and domain (default: {0:1:200} domain from 0 to one on all dimensions with 200 points each)
+            res {int | slice | list[slice] | None} -- function discretization resolution and domain (default: {0:1:5xmodes} domain from 0 to one on all dimensions with 5 times the number of modes in points each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of modes. Currently dimension higher than 2 just uses the inverse transform and ignores this parameter.
             plt {_type_} -- Axes or pyplot to get plot or imshow from (default: {pyplot})
+            complex_scatter {bool} -- plot the complex values on a scatter plot instead (default: {False})
+            plot_imag {bool} -- prefer to plot the imaginary values if both real and imaginary cant be plotted together, otherwise plot the real values (default: {False})
+
+        Raises:
+            NotImplementedError: TODO: implement dimension higher than 2
 
         Returns:
             _type_ -- returns the result of the plotting function such as list[Line2D] or AxesImage
@@ -298,33 +315,107 @@ class Basis(abc.ABC):
             res = [slice(0, 1, res)]
         elif isinstance(res, slice):
             res = [res]
+        elif res is None:
+            res = [slice(0, 1, 5 * mode) for mode in self.modes]
 
-        grid = self.grid(res).flatten(0, -2)
-        values = self.__call__(grid, i=i, n=n)
+        if len(res) == 1:
+            res = res * self.ndim
 
+        if self.ndim > 2:
+            values = self.inv_transform(self.coeff)
+            for j in range(len(res)):
+                res[j] = slice(res[j].start, res[j].stop, values[0].shape[j])
+            grid = self.grid(res).flatten(0, -2)
+        else:
+            grid = self.grid(res).flatten(0, -2)
+            values = self.__call__(grid, i=i, n=n)
+
+        color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
         match self.ndim:
             case 1:
-                color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
                 if self._complex_funcs:
-                    for func in values:
-                        c = next(color)
-                        plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
-                        plot = plt.plot(
-                            grid.flatten(), func.flatten().imag, c=c, linestyle="dashed"
-                        )
-                    plt.legend(
-                        [
-                            (f"Real ({j+1})", f"Imaginary ({j+1})")
-                            for j in range(len(values))
-                        ]
-                    )
+                    if complex_scatter:
+                        for func in values:
+                            func_flat = func.flatten()
+                            c = next(color)
+                            plot = plt.scatter(func_flat.real, func_flat.imag, color=c)
+                        plt.legend([f"Function ({i+j})" for j in range(len(values))])
+                    else:
+                        match plot_component:
+                            case "real":
+                                for func in values:
+                                    func_flat = func.flatten()
+                                    c = next(color)
+                                    plot = plt.plot(grid.flatten(), func_flat.real, c=c)
+                                plt.legend(
+                                    [
+                                        f"Real function ({i+j})"
+                                        for j in range(len(values))
+                                    ]
+                                )
+                            case "imag":
+                                for func in values:
+                                    func_flat = func.flatten()
+                                    c = next(color)
+                                    plot = plt.plot(
+                                        grid.flatten(),
+                                        func_flat.imag,
+                                        c=c,
+                                        linestyle="dashed",
+                                    )
+                                plt.legend(
+                                    [
+                                        f"Imaginary function ({i+j})"
+                                        for j in range(len(values))
+                                    ]
+                                )
+                            case _:
+                                for func in values:
+                                    func_flat = func.flatten()
+                                    c = next(color)
+                                    plot = plt.plot(grid.flatten(), func_flat.real, c=c)
+                                    plot = plt.plot(
+                                        grid.flatten(),
+                                        func_flat.imag,
+                                        c=c,
+                                        linestyle="dashed",
+                                    )
+                                plt.legend(
+                                    [
+                                        (
+                                            f"Real function ({i+j})",
+                                            f"Imaginary function ({i+j})",
+                                        )
+                                        for j in range(len(values))
+                                    ]
+                                )
                 else:
                     for func in values:
                         c = next(color)
                         plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
-                    plt.legend([(f"Real ({j+1})") for j in range(len(values))])
+                    plt.legend([(f"Real function ({i+j})") for j in range(len(values))])
             case 2:
-                plot = plt.imshow(values.real.reshape((res[0].step, res[1].step)))
+                if complex_scatter:
+                    for func in values:
+                        func_flat = func.flatten()
+                        c = next(color)
+                        plot = plt.scatter(func_flat.real, func_flat.imag, color=c)
+                    plt.legend([f"Function ({i+j})" for j in range(len(values))])
+                else:
+                    match plot_component:
+                        case "imag":
+                            plot = plt.imshow(
+                                values.imag.reshape((res[0].step, res[1].step))
+                            )
+                        case "real":
+                            plot = plt.imshow(
+                                values.real.reshape((res[0].step, res[1].step))
+                            )
+                        case _:
+                            raise NotImplementedError(
+                                "Can't plot both imaginary and real in 2D"
+                            )
+
             case _:
                 raise NotImplementedError(
                     "plots for dimensions > 2 need to be implemented"
@@ -352,3 +443,67 @@ class Basis(abc.ABC):
         axes = [torch.linspace(r.start, r.stop, r.step) for r in res]
         meshgrid = torch.meshgrid(axes, indexing="xy")
         return torch.stack(meshgrid, dim=-1)
+
+    def resize_modes(self, target_modes: int | tuple[int, ...] | Self):
+        """
+        resize_modes
+
+        creates a copy of this basis with modes resized to target modes
+
+        Arguments:
+            target_modes {int | tuple[int, ...] | Basis} -- the target mode or basis mode to resize this basis to
+
+
+        Returns:
+            Basis -- A copy of this basis with resized coefficients
+        """
+        if isinstance(target_modes, int):
+            target_modes = (target_modes,)
+        elif isinstance(target_modes, Basis):
+            target_modes = target_modes.modes
+        copy = self.copy()
+        copy.coeff = resize_modes(self.coeff, target_modes)
+        return copy
+
+    def perturb(
+        self,
+        std_ratio: float = 0.1,
+        rand_func=torch.randn,
+        generator: torch.Generator | None = None,
+    ) -> Self:
+        """
+        perturb
+
+        add noise to the function values of the basis coefficients
+
+        Keyword Arguments:
+            std_ratio {float} -- ratio of noise to standard deviation of function values (default: {0.1})
+            rand_func {Callable} -- random value generator function (default: {torch.randn})
+            generator {torch.Generator | None} -- generator for reproducability (default: {None})
+
+        Returns:
+            Basis -- a perturbed copy of this basis
+        """
+        values = self.inv_transform(self.coeff)
+        perturbed_values = (
+            values
+            + rand_func(
+                values.shape,
+                generator=generator,
+                dtype=self.coeff.dtype
+                if self._complex_funcs
+                else self.coeff.real.dtype,
+            )
+            * std_ratio
+            * values.std()
+        )
+        copy = self.copy()
+        copy.coeff = self.transform(perturbed_values)
+        return copy
+
+    def __getitem__(self, indices):
+        copy = self.copy()
+        idx = torch.arange(len(copy))[indices]
+        # ensure the indexing results in list of coefficients (0th dimension is the list index)
+        copy.coeff = copy.coeff[idx].reshape((-1, *copy.modes))
+        return copy
