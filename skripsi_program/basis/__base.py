@@ -291,6 +291,7 @@ class Basis(abc.ABC):
         plt=plt,
         complex_scatter=False,
         plot_component: None | Literal["imag", "real"] = None,
+        **kwargs,
     ):
         """
         plot
@@ -330,23 +331,28 @@ class Basis(abc.ABC):
             grid = self.grid(res).flatten(0, -2)
             values = self.__call__(grid, i=i, n=n)
 
-        color = iter(plt.colormaps["gist_rainbow"](torch.rand((len(values),))))
         match self.ndim:
             case 1:
                 if self._complex_funcs:
                     if complex_scatter:
                         for func in values:
                             func_flat = func.flatten()
-                            c = next(color)
-                            plot = plt.scatter(func_flat.real, func_flat.imag, color=c)
+                            plot = plt.scatter(
+                                func_flat.real,
+                                func_flat.imag,
+                                **kwargs,
+                            )
                         plt.legend([f"Function ({i+j})" for j in range(len(values))])
                     else:
                         match plot_component:
                             case "real":
                                 for func in values:
                                     func_flat = func.flatten()
-                                    c = next(color)
-                                    plot = plt.plot(grid.flatten(), func_flat.real, c=c)
+                                    plot = plt.plot(
+                                        grid.flatten(),
+                                        func_flat.real,
+                                        **kwargs,
+                                    )
                                 plt.legend(
                                     [
                                         f"Real function ({i+j})"
@@ -356,12 +362,11 @@ class Basis(abc.ABC):
                             case "imag":
                                 for func in values:
                                     func_flat = func.flatten()
-                                    c = next(color)
                                     plot = plt.plot(
                                         grid.flatten(),
                                         func_flat.imag,
-                                        c=c,
                                         linestyle="dashed",
+                                        **kwargs,
                                     )
                                 plt.legend(
                                     [
@@ -372,44 +377,52 @@ class Basis(abc.ABC):
                             case _:
                                 for func in values:
                                     func_flat = func.flatten()
-                                    c = next(color)
-                                    plot = plt.plot(grid.flatten(), func_flat.real, c=c)
+                                    plot = plt.plot(
+                                        grid.flatten(),
+                                        func_flat.real,
+                                        **kwargs,
+                                    )
+                                    kwargs["color"] = kwargs.get(
+                                        "color", plot[0].get_color()
+                                    )
+                                    kwargs["linestyle"] = kwargs.get(
+                                        "linestyle", "dashed"
+                                    )
                                     plot = plt.plot(
                                         grid.flatten(),
                                         func_flat.imag,
-                                        c=c,
-                                        linestyle="dashed",
+                                        **kwargs,
                                     )
                                 plt.legend(
                                     [
-                                        (
-                                            f"Real function ({i+j})",
-                                            f"Imaginary function ({i+j})",
-                                        )
+                                        f"Real function ({i+j})"
+                                        if k == 0
+                                        else f"Imaginary function ({i+j})"
+                                        for k in range(2)
                                         for j in range(len(values))
                                     ]
                                 )
                 else:
                     for func in values:
-                        c = next(color)
-                        plot = plt.plot(grid.flatten(), func.flatten().real, c=c)
+                        plot = plt.plot(grid.flatten(), func.flatten().real, **kwargs)
                     plt.legend([(f"Real function ({i+j})") for j in range(len(values))])
             case 2:
                 if complex_scatter:
                     for func in values:
                         func_flat = func.flatten()
-                        c = next(color)
-                        plot = plt.scatter(func_flat.real, func_flat.imag, color=c)
+                        plot = plt.scatter(func_flat.real, func_flat.imag, **kwargs)
                     plt.legend([f"Function ({i+j})" for j in range(len(values))])
                 else:
                     match plot_component:
                         case "imag":
                             plot = plt.imshow(
-                                values.imag.reshape((res[0].step, res[1].step))
+                                values.imag.reshape((res[0].step, res[1].step)),
+                                **kwargs,
                             )
                         case "real":
                             plot = plt.imshow(
-                                values.real.reshape((res[0].step, res[1].step))
+                                values.real.reshape((res[0].step, res[1].step)),
+                                **kwargs,
                             )
                         case _:
                             raise NotImplementedError(
