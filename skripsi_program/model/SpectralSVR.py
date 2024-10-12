@@ -154,7 +154,6 @@ class SpectralSVR:
                 "rmse": rmse.item(),
                 "mae": mae.item(),
                 "r2": r2.item(),
-                "r2_abs": r2.abs().item(),
                 "smape": smape.item(),
                 "rse": rse.item(),
                 "rrse": rrse.item(),
