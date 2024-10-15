@@ -4,6 +4,8 @@ import typing
 
 logger = logging.getLogger(__name__)
 
+Number = int | float
+
 
 def to_complex_coeff(coeff: torch.Tensor) -> torch.Tensor:
     """
@@ -17,24 +19,10 @@ def to_complex_coeff(coeff: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor -- m by p/2 tensor of elements in complex numbers
     """
-    # assert (
-    #     coeff.shape[1] % 2 == 0
-    # ), f"coeff has shape {coeff.shape}, make sure the number of columns are even"
     if torch.is_complex(coeff):
         logger.warning("coeff is already complex")
         return coeff
-    coeff_real = coeff[:, ::2]
-    coeff_imag = coeff[:, 1::2]
-    assert (
-        coeff_real.shape[1] >= coeff_imag.shape[1]
-    ), f"coeff_real has shape {coeff_real.shape} and coeff_imag has shape {coeff_imag.shape}, the second dimension coeff_real needs to be bigger or equal to the second dimension of coeff_imag"
-    if coeff_real.shape[1] > coeff_imag.shape[1]:
-        coeff_imag = torch.concat(
-            (coeff_imag, torch.zeros((coeff_imag.shape[0], 1), dtype=coeff_imag.dtype)),
-            dim=1,
-        )
-
-    converted_coeff = torch.complex(coeff_real, coeff_imag)
+    converted_coeff = torch.view_as_complex(coeff.reshape((*coeff.shape[:-1], -1, 2)))
     return converted_coeff
 
 
@@ -50,9 +38,6 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor -- m by 2p tensor of elements in real numbers
     """
-    # assert torch.is_complex(
-    #     coeff
-    # ), f"coeff has dtype {coeff.dtype}, make sure coeff is a complex tensor"
     if not torch.is_complex(coeff):
         logger.warning("coeff is already real")
         return coeff
@@ -77,23 +62,11 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor -- m by 2p tensor of elements in real numbers
     """
-    # assert torch.is_complex(
-    #     coeff
-    # ), f"coeff has dtype {coeff.dtype}, make sure coeff is a complex tensor"
     if not torch.is_complex(coeff):
         logger.warning("coeff is already real")
         return coeff
-    # converted_coeff = torch.empty(
-    #     (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
-    # )
-    # converted_coeff[:, ::2] = coeff.real
-    # converted_coeff[:, 1::2] = coeff.imag
     converted_coeff = torch.view_as_real(coeff).flatten(-2)
 
-    # mask for only coefficients that are never 0
-    # mask = converted_coeff != 0.0
-    # mask = mask.sum(dim=0) != 0
-    # converted_coeff = converted_coeff[:, mask]
     return converted_coeff
 
 

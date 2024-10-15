@@ -156,8 +156,6 @@ class LSSVR(object):
         self,
         C=1.0,
         kernel: Kernel_Type = "rbf",
-        min_error=0.2,
-        max_error=0.8,
         verbose=False,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
@@ -167,8 +165,6 @@ class LSSVR(object):
         self._device = device
 
         # Hyperparameters
-        self.min_error = min_error
-        self.max_error = max_error
         self.C = C
         self._kernel: Kernel_Type = kernel
         self._initialized_sigma: bool = False
@@ -238,7 +234,6 @@ class LSSVR(object):
         """Helper function that optimizes the dual variables through the
         use of the kernel matrix pseudo-inverse.
         """
-        # TODO: add loss term from residual coefficients computed using linear combination of inputs minus output (possible only when PDE is known and this linear combination is achievable) y^m_i = r * x_i
 
         A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
         A[1:, 1:] = self._batched_K(X, X)
@@ -267,15 +262,9 @@ class LSSVR(object):
         self.print("B:")
         self.print(B)
 
-        # A_cross = torch.t(torch.pinverse(A))
-        # self.print("A_cross")
-        # self.print(A_cross)
-
         solution: torch.Tensor = torch.linalg.lstsq(
             A.to(dtype=torch.float), B.to(dtype=torch.float)
         ).solution.to(dtype=self.dtype)
-        # solution = torch.rand((10, 10))
-        # solution = torch.mm(A_cross, B)
         self.print("S:")
         self.print(solution)
 
@@ -287,96 +276,6 @@ class LSSVR(object):
         self.print(alpha)
 
         return (b, alpha)
-
-    def _filter_simillar(
-        self, X_new_data: torch.Tensor, y_new_data: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        # source: https://doi.org/10.1007/s12652-022-03798-w
-        if self.sv_x is None and self.sv_y is None:
-            return X_new_data, y_new_data
-
-        if self.sv_x is None:
-            raise ValueError("sv_x is none")
-        if self.sv_y is None:
-            raise ValueError("sv_y is none")
-        if X_new_data.shape[1] != self.sv_x.shape[1]:
-            raise ValueError("old data and new data X has mismatched feature size")
-        if y_new_data.shape[1] != self.sv_y.shape[1]:
-            raise ValueError("old data and new data y has mismatched output size")
-
-        # current_X = self.sv_x.clone().requires_grad_()
-        current_X = self.sv_x
-        current_pred = self.predict(current_X)
-        current_err = torch.norm(current_pred - self.sv_y, p=2, dim=1)
-        # current_err.sum().backward(retain_graph=True)
-
-        # new_X = X_new_data.clone().requires_grad_()
-        new_X = X_new_data
-        new_pred = self.predict(new_X)
-        new_err = torch.norm(new_pred - y_new_data, p=2, dim=1)
-
-        if not isinstance(current_err, torch.Tensor):
-            raise ValueError(f"current_err ({current_err}) is not a tensor")
-        if not isinstance(new_err, torch.Tensor):
-            raise ValueError(f"new_err ({new_err}) is not a tensor")
-        # new_err.sum().backward(retain_graph=True)
-
-        # similarity_mat = torch.norm(current_data[:, None] - new_data, dim=2, p=2)
-        # similar_mat = similarity_mat >= self.error_threshold
-
-        # no_similar_new_data = torch.sum(similar_mat, dim=1) == 0
-        # valid_support_vectors = current_data[no_similar_new_data, :]
-        # most_similar_new_data = torch.argmin(similarity_mat, dim=1)
-        # valid_new_data = new_data[torch.unique(most_similar_new_data), :]
-        current_err_range = (
-            (current_err.min(), current_err.max())
-            if current_err.shape[0] > 0
-            else (torch.tensor(0.0), torch.tensor(0.0))
-        )
-        current_valid = current_err > (
-            (current_err_range[1] - current_err_range[0]) * self.min_error
-            + current_err_range[0]
-        )
-        new_err_range = (
-            (new_err.min(), new_err.max())
-            if new_err.shape[0] > 0
-            else (torch.tensor(0.0), torch.tensor(0.0))
-        )
-        new_valid = new_err > (
-            (new_err_range[1] - new_err_range[0]) * self.max_error + new_err_range[0]
-        )
-        # current_X_grad = current_X.grad.flatten()
-        # current_err_d_min, current_err_d_max = current_X_grad.min(), current_X_grad.max()
-        # current_valid = current_X_grad > (
-        #     (current_err_d_max - current_err_d_min) * self.min_error_percentile + current_err_d_min
-        # )
-        # new_X_grad = new_X.grad.flatten()
-        # new_err_d_min, new_err_d_max = new_X_grad.min(), new_X_grad.max()
-        # new_valid = new_X_grad > (
-        #     (new_err_d_max - new_err_d_min) * self.max_error_percentile + new_err_d_min
-        # )
-
-        # self.print(current_valid.shape)
-        # self.print(new_valid.shape)
-        self.print(
-            f"current_err_max: {current_err_range[1]} ({torch.argmax(current_err)}), current_err_min: {current_err_range[0]} ({torch.argmin(current_err)})"
-        )
-        # self.print(f"current_err_d_max: {current_err_d_max} ({torch.argmax(current_X_grad)}), current_err_d_min: {current_err_d_min} ({torch.argmin(current_X_grad)})")
-        # self.print(current_err[current_valid])
-        # self.print(current_X_grad[current_valid])
-        self.print(
-            f"new_err_max: {new_err_range[1]} ({torch.argmax(new_err)}), new_err_min: {new_err_range[0]} ({torch.argmin(new_err)})"
-        )
-        # self.print(f"new_err_d_max: {new_err_d_max} ({torch.argmax(new_X_grad)}), new_err_d_min: {new_err_d_min} ({torch.argmin(new_X_grad)})")
-        # self.print(new_err[new_valid])
-        # self.print(new_X_grad[new_valid])
-        self.print(
-            f"current_valid: {torch.sum(current_valid)/current_err.shape[0]}, new_valid: {torch.sum(new_valid)/new_err.shape[0]}"
-        )
-
-        return torch.vstack(
-            (self.sv_x[current_valid, :], X_new_data[new_valid, :])
-        ), torch.vstack((self.sv_y[current_valid, :], y_new_data[new_valid, :]))
 
     def fit(
         self,
@@ -406,9 +305,6 @@ class LSSVR(object):
         assert (
             X.shape[0] == y.shape[0]
         ), f"X_arr and y_arr does not have the same shape along the 0th dim: (X: {X.shape}, y: {y.shape})"
-
-        if update:
-            X, y = self._filter_simillar(X, y)
 
         self.sv_x = X
         self.sv_y = y
@@ -450,8 +346,6 @@ class LSSVR(object):
         self.print(f"sv_x:{self.sv_x.shape}")
         KxX = self._batched_K(X_, self.sv_x)
 
-        # if len(self.y_indicies) == 1:  # binary classification
-        # y_values = self.sv_y
         self.print("Omega:")
         self.print(KxX)
         y_pred = KxX @ self.alpha + self.b
@@ -464,6 +358,19 @@ class LSSVR(object):
             predictions = y_pred.cpu().numpy()
 
         return predictions.reshape(-1) if X.ndim == 1 else predictions
+
+    def get_correlation_image(self):
+        # using dot product
+        assert (
+            self.sv_x is not None
+        ), "The model needs to be trained first before correlation image can be generated"
+        return self._batched_K(self.sv_x, self.sv_x).mm(self.sv_x)
+
+    def get_p_matrix(self):
+        assert (
+            self.sv_x is not None and self.alpha is not None
+        ), "The model needs to be trained first before correlation image can be generated"
+        return self.sv_x.T.mm(self.alpha)
 
     def dump(self, filepath="model", only_hyperparams=False):
         """This method saves the model in a JSON format.

@@ -1,7 +1,22 @@
 from . import Basis
+from ..utils import Number
 import torch
 from typing_extensions import Self, Literal, Callable
 from functools import partial
+
+PeriodsInputType = Number | list[Number] | tuple[Number, ...] | None
+
+
+def periodsInputTypeToListFloat(
+    periods: PeriodsInputType, modes: tuple[int, ...]
+) -> tuple[float, ...]:
+    if isinstance(periods, list) or isinstance(periods, tuple):
+        periods = tuple(float(period) for period in periods)
+    elif periods is None:
+        periods = tuple(1.0 for _ in range(len(modes)))
+    else:
+        periods = (float(periods),)
+    return periods
 
 
 ## Fourier basis
@@ -10,7 +25,7 @@ class FourierBasis(Basis):
         self,
         coeff: torch.Tensor | None = None,
         complex_funcs: bool = False,
-        periods: list[float] | None = None,
+        periods: PeriodsInputType = None,
     ) -> None:
         super().__init__(coeff, complex_funcs=complex_funcs)
         self.periods = periods
@@ -19,13 +34,24 @@ class FourierBasis(Basis):
     def coeff(self, coeff: torch.Tensor | None):
         Basis.coeff.__set__(self, coeff)
 
+    @property
+    def periods(self) -> tuple[float, ...]:
+        return self._periods
+
+    @periods.setter
+    def periods(
+        self,
+        periods: PeriodsInputType,
+    ):
+        self._periods = periodsInputTypeToListFloat(periods, self.modes)
+
     def __call__(
         self,
         x: torch.Tensor,
         coeff: torch.Tensor | None = None,
         i=0,
         n=0,
-        periods: list[float] | None = None,
+        periods: tuple[float, ...] | None = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
@@ -49,12 +75,10 @@ class FourierBasis(Basis):
         coeff: torch.Tensor,
         i=0,
         n=0,
-        periods: list[float] | None = None,
+        periods: tuple[float, ...] | None = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
-        if periods is None:
-            periods = [1.0 for i in range(len(coeff.shape[1:]))]
 
         if n > 0:
             init_len = len(coeff)
@@ -74,18 +98,13 @@ class FourierBasis(Basis):
     def fn(
         x: torch.Tensor,
         modes: int | tuple[int, ...],
-        periods: int | float | list[float] | list[int] | None = None,
+        periods: PeriodsInputType = None,
         constant=2j * torch.pi,
         transpose: bool = False,
     ) -> torch.Tensor:
         if isinstance(modes, int):
             modes = (modes,)
-        if isinstance(periods, int):
-            periods = [periods]
-        if isinstance(periods, float):
-            periods = [periods]
-        if periods is None:
-            periods = [1.0 for i in range(len(modes))]
+        periods = periodsInputTypeToListFloat(periods, modes)
 
         assert (
             len(x.shape) > 1
@@ -147,6 +166,7 @@ class FourierBasis(Basis):
         generator: torch.Generator | None = None,
         random_func=torch.randn,
         complex_funcs: bool = False,
+        periods: PeriodsInputType = None,
     ) -> Self:
         return cls(
             cls.generateCoeff(
@@ -157,6 +177,7 @@ class FourierBasis(Basis):
                 random_func=random_func,
                 complex_funcs=complex_funcs,
             ),
+            periods=periods,
             complex_funcs=complex_funcs,
         )
 

@@ -6,7 +6,7 @@ import torch
 
 def test_real_invertible_even():
     # even number of coefficients
-    a = torch.rand((10, 10))
+    a = torch.rand((10, 20))
     a_complex = to_complex_coeff(a)
     a_real = to_real_coeff(a_complex)
     invertible = torch.allclose(a, a_real)
@@ -15,7 +15,7 @@ def test_real_invertible_even():
 
 def test_real_invertible_odd():
     # Odd number of coefficients
-    a = torch.rand((10, 9))
+    a = torch.rand((10, 18))
     a_complex = to_complex_coeff(a)
     a_real = to_real_coeff(a_complex)
     # get rid of the padding
@@ -28,9 +28,7 @@ def test_real_invertible_odd():
 
 def test_complex_invertible_even():
     # even number of coefficients
-    a = torch.concat((torch.rand((10, 9)), torch.zeros((10, 1))), 1)
-    b = torch.rand((10, 10))
-    c = torch.complex(a, b)
+    c = torch.rand((10, 10), dtype=torch.complex64)
     c_real = to_real_coeff(c)
     c_complex = to_complex_coeff(c_real)
     invertible = torch.equal(c, c_complex)
@@ -39,14 +37,13 @@ def test_complex_invertible_even():
 
 def test_complex_invertible_odd():
     # Odd number of coefficients
-    a = torch.rand((10, 9))
-    b = torch.rand((10, 9))
-    c = torch.complex(a, b)
+    c = torch.rand((10, 9), dtype=torch.complex64)
     c_real = to_real_coeff(c)
     c_complex = to_complex_coeff(c_real)
     invertible = torch.equal(c, c_complex)
     assert invertible, f"c with shape {c.shape} and c_complex with shape {c_complex.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, c_real has shape {c_real.shape}"
     print("Test Passed")
+
 
 # TODO: test scale_to_standard
 # TODO: test reduce_coeff

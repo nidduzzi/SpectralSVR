@@ -10,7 +10,7 @@ class Problem(abc.ABC):
     @abc.abstractmethod
     def generate(
         self,
-        basis: Basis,
+        basis: type[Basis],
         n: int,
         modes: int | tuple[int, ...],
         *args,

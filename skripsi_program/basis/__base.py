@@ -291,12 +291,13 @@ class Basis(abc.ABC):
         plt=plt,
         complex_scatter=False,
         plot_component: None | Literal["imag", "real"] = None,
+        legend: bool = True,
         **kwargs,
     ):
         """
         plot
 
-        plot draws a plot of the functions in the basis
+        plot draws a plot of the functions in the basis, extra keyword arguments are passed to the matplotlib plotting functions.
 
         Keyword Arguments:
             i {int} -- function i to start plotting (default: {0})
@@ -304,10 +305,12 @@ class Basis(abc.ABC):
             res {int | slice | list[slice] | None} -- function discretization resolution and domain (default: {0:1:5xmodes} domain from 0 to one on all dimensions with 5 times the number of modes in points each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of modes. Currently dimension higher than 2 just uses the inverse transform and ignores this parameter.
             plt {_type_} -- Axes or pyplot to get plot or imshow from (default: {pyplot})
             complex_scatter {bool} -- plot the complex values on a scatter plot instead (default: {False})
-            plot_imag {bool} -- prefer to plot the imaginary values if both real and imaginary cant be plotted together, otherwise plot the real values (default: {False})
+            plot_component {None | Literal[&quot;imag&quot;, &quot;real&quot;]} -- plot the imaginary or real values or both if None (default: {None})
+            legend {bool} -- add legend to plots (default: {True})
 
         Raises:
             NotImplementedError: TODO: implement dimension higher than 2
+            NotImplementedError: For 2 dimension, no plotting is available, try using complex scatter instead
 
         Returns:
             _type_ -- returns the result of the plotting function such as list[Line2D] or AxesImage
@@ -342,7 +345,10 @@ class Basis(abc.ABC):
                                 func_flat.imag,
                                 **kwargs,
                             )
-                        plt.legend([f"Function ({i+j})" for j in range(len(values))])
+                        if legend:
+                            plt.legend(
+                                [f"Function ({i+j})" for j in range(len(values))]
+                            )
                     else:
                         match plot_component:
                             case "real":
@@ -353,12 +359,13 @@ class Basis(abc.ABC):
                                         func_flat.real,
                                         **kwargs,
                                     )
-                                plt.legend(
-                                    [
-                                        f"Real function ({i+j})"
-                                        for j in range(len(values))
-                                    ]
-                                )
+                                if legend:
+                                    plt.legend(
+                                        [
+                                            f"Real function ({i+j})"
+                                            for j in range(len(values))
+                                        ]
+                                    )
                             case "imag":
                                 for func in values:
                                     func_flat = func.flatten()
@@ -368,12 +375,13 @@ class Basis(abc.ABC):
                                         linestyle="dashed",
                                         **kwargs,
                                     )
-                                plt.legend(
-                                    [
-                                        f"Imaginary function ({i+j})"
-                                        for j in range(len(values))
-                                    ]
-                                )
+                                if legend:
+                                    plt.legend(
+                                        [
+                                            f"Imaginary function ({i+j})"
+                                            for j in range(len(values))
+                                        ]
+                                    )
                             case _:
                                 for func in values:
                                     func_flat = func.flatten()
@@ -393,25 +401,30 @@ class Basis(abc.ABC):
                                         func_flat.imag,
                                         **kwargs,
                                     )
-                                plt.legend(
-                                    [
-                                        f"Real function ({i+j})"
-                                        if k == 0
-                                        else f"Imaginary function ({i+j})"
-                                        for k in range(2)
-                                        for j in range(len(values))
-                                    ]
-                                )
+                                if legend:
+                                    plt.legend(
+                                        [
+                                            f"Real function ({i+j})"
+                                            if k == 0
+                                            else f"Imaginary function ({i+j})"
+                                            for k in range(2)
+                                            for j in range(len(values))
+                                        ]
+                                    )
                 else:
                     for func in values:
                         plot = plt.plot(grid.flatten(), func.flatten().real, **kwargs)
-                    plt.legend([(f"Real function ({i+j})") for j in range(len(values))])
+                    if legend:
+                        plt.legend(
+                            [(f"Real function ({i+j})") for j in range(len(values))]
+                        )
             case 2:
                 if complex_scatter:
                     for func in values:
                         func_flat = func.flatten()
                         plot = plt.scatter(func_flat.real, func_flat.imag, **kwargs)
-                    plt.legend([f"Function ({i+j})" for j in range(len(values))])
+                    if legend:
+                        plt.legend([f"Function ({i+j})" for j in range(len(values))])
                 else:
                     match plot_component:
                         case "imag":

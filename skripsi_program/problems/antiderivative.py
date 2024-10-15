@@ -15,7 +15,7 @@ class Antiderivative(Problem):
 
     def generate(
         self,
-        basis: Basis,
+        basis: type[Basis],
         n: int,
         modes: int | tuple[int, ...],
         u0,
