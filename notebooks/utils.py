@@ -6,7 +6,6 @@ def save_to_pgf(fname: str, verbosity: Literal["removed", "kept"] | None = None)
     start_idx = fname.find(".pgf")
     assert start_idx >= 0, "invalid file name"
     tmp_prefix = "tmp_"
-    # raw_fname = fname.split(".")[0]
     plt.savefig(tmp_prefix + fname)
     fr = open(tmp_prefix + fname, "r")
     fw = open(fname, "w")
