@@ -2942,6 +2942,21 @@ url = "https://download.pytorch.org/whl/cu124"
 reference = "pytorch-gpu"
 
 [[package]]
+name = "torchdiffeq"
+version = "0.2.4"
+description = "ODE solvers and adjoint sensitivity analysis in PyTorch."
+optional = false
+python-versions = "~=3.6"
+files = [
+    {file = "torchdiffeq-0.2.4-py3-none-any.whl", hash = "sha256:70b7e5afb373af0aded660588aaeb63c2a56c7064ae7c3037ffc12a1bad16b28"},
+    {file = "torchdiffeq-0.2.4.tar.gz", hash = "sha256:c0e57c3c889fedda7f23a6015dbfcd6dae5072a06dd6ed10e8200c2009844043"},
+]
+
+[package.dependencies]
+scipy = ">=1.4.0"
+torch = ">=1.5.0"
+
+[[package]]
 name = "torchmetrics"
 version = "1.4.2"
 description = "PyTorch native Metrics"
@@ -3169,4 +3184,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10.6"
-content-hash = "ed6a9f0fb56003520953edb344e8c7dd29a7c7b59a9e1be5f4a66ad263cf2b28"
+content-hash = "2671c71ba0c14162ef9a0a24815c8b3d291969140f14bb418448ed1fb7fc2bec"

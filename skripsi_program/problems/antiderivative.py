@@ -1,6 +1,7 @@
 import torch
-from ..basis import Basis
+from ..basis import Basis, BasisSubType
 from . import Problem
+from typing import Type
 
 
 class Antiderivative(Problem):
@@ -15,14 +16,14 @@ class Antiderivative(Problem):
 
     def generate(
         self,
-        basis: type[Basis],
+        basis: Type[BasisSubType],
         n: int,
         modes: int | tuple[int, ...],
-        u0,
+        u0: float | int | complex,
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
-    ) -> tuple[Basis, Basis]:
+    ) -> tuple[BasisSubType, BasisSubType]:
         if isinstance(modes, int):
             modes = (modes,)
         assert n > 0, "number of samples n must be more than 0"

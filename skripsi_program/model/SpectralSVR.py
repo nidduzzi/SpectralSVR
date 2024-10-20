@@ -99,9 +99,16 @@ class SpectralSVR:
         coeff = to_complex_coeff(coeff)
 
         self.print(f"coeff: {coeff.shape}")
-        return self.basis(x, coeff.view((-1, *self.modes)), periods=periods)
+        return self.basis.evaluate(
+            coeff=coeff.reshape((-1, *self.modes)),
+            x=x,
+            periods=periods,
+            time_dependent=self.basis.time_dependent,
+        )
 
-    def train(self, f: torch.Tensor, u_coeff: torch.Tensor):
+    def train(
+        self, f: torch.Tensor, u_coeff: torch.Tensor, u_time_dependent: bool = False
+    ):
         """
         train _summary_
 
@@ -111,8 +118,10 @@ class SpectralSVR:
         Arguments:
             f {torch.Tensor} -- n flattened input functions
             u_coeff {torch.Tensor} -- n output functions coefficients
+            u_u_time_dependent {bool} -- whether the output coefficients are time dependent or not (default: {False})
         """
-        self.modes = Basis.get_modes(u_coeff)
+        self.basis.time_dependent = u_time_dependent
+        self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         self.print(f"modes: {self.modes}")
         if f.ndim > 2:
             f = f.flatten(1)
@@ -162,9 +171,15 @@ class SpectralSVR:
 
         grid = self.basis.grid(res).flatten(0, -2)
 
-        u_preds = self.basis.evaluate(grid, coeff=to_complex_coeff(u_coeff_preds)).real
+        u_preds = self.basis.evaluate(
+            coeff=to_complex_coeff(u_coeff_preds),
+            x=grid,
+            time_dependent=self.basis.time_dependent,
+        ).real
         u_targets = self.basis.evaluate(
-            grid, coeff=to_complex_coeff(u_coeff_targets)
+            coeff=to_complex_coeff(u_coeff_targets),
+            x=grid,
+            time_dependent=self.basis.time_dependent,
         ).real
 
         metrics = {

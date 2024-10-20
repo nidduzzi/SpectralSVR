@@ -1,6 +1,7 @@
 import torch
 import logging
 import typing
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -219,17 +220,24 @@ def scale_to_standard(x: torch.Tensor):
 
 
 def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=True):
+    current_modes = tuple(x.shape[1:])
+    ncurrent_modes = len(current_modes)
     if isinstance(target_modes, int):
-        target_modes = (target_modes,) * len(x.shape[1:])
+        target_modes = (target_modes,) * ncurrent_modes
     assert (
-        len(x.shape[1:]) == len(target_modes)
+        ncurrent_modes == len(target_modes)
     ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {target_modes}"
     x_resized = x
-    for dim, new_mode in enumerate(target_modes, 1):
-        current_mode = x.shape[dim]
-        if new_mode < current_mode:
-            start_range = torch.tensor(range((new_mode - 1) // 2 + 1))
-            end_range = torch.tensor(range(current_mode - new_mode // 2, current_mode))
+    for dim, (target_mode, current_mode) in enumerate(
+        zip(target_modes, current_modes), 1
+    ):
+        if target_mode < current_mode:
+            start_range = torch.tensor(
+                range((target_mode - 1) // 2 + 1), dtype=torch.int
+            )
+            end_range = torch.tensor(
+                range(current_mode - target_mode // 2, current_mode), dtype=torch.int
+            )
 
             x_resized = torch.concat(
                 (
@@ -238,10 +246,18 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 ),
                 dim,
             )
-        elif new_mode > current_mode:
-            start_range = torch.tensor(range((current_mode - 1) // 2 + 1))
-            end_range = torch.tensor(range(current_mode // 2, current_mode))
-            padding_size = new_mode - current_mode
+        elif target_mode > current_mode:
+            start_range = torch.tensor(
+                range((current_mode - 1) // 2 + 1), dtype=torch.int
+            )
+            # make sure that end range is empty if the coefficient is only size 1
+            end_range = torch.tensor(
+                range(current_mode // 2, current_mode)
+                if current_mode > 1
+                else range(0),
+                dtype=torch.int,
+            )
+            padding_size = target_mode - current_mode
             modes = list(x_resized.shape)
             modes[dim] = padding_size
             padding = torch.zeros(modes).to(x_resized)
@@ -323,3 +339,31 @@ def r2_expected_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
         return r2_expected.mean()
     else:
         return r2_expected
+
+
+RHSFuncType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+SolverSignatureType = Callable[[RHSFuncType, torch.Tensor, torch.Tensor], torch.Tensor]
+
+
+def euler_solver(
+    rhs_func: RHSFuncType,
+    y0: torch.Tensor,
+    t: torch.Tensor,
+):
+    assert (
+        len(t.shape) == 1
+    ), "t should be a one dimensional tensor of all time evaluation points"
+    assert len(t) > 1, "t should have more than one evaluation points"
+
+    solution = torch.zeros((len(t), *y0.shape)).to(y0)
+
+    j = 1
+    solution[j - 1] = y0
+    for t0, t1 in zip(t[:-1], t[1:]):
+        dt = t1 - t0
+        y = solution[j - 1]
+        solution[j] = y + dt * rhs_func(t0, y)
+        # print(f"j {j}")
+        j = j + 1
+    # print(f"j_last {j}")
+    return solution
