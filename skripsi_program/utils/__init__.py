@@ -21,7 +21,7 @@ def to_complex_coeff(coeff: torch.Tensor) -> torch.Tensor:
         torch.Tensor -- m by p/2 tensor of elements in complex numbers
     """
     if torch.is_complex(coeff):
-        logger.warning("coeff is already complex")
+        logger.debug("coeff is already complex")
         return coeff
     converted_coeff = torch.view_as_complex(coeff.reshape((*coeff.shape[:-1], -1, 2)))
     return converted_coeff
@@ -40,7 +40,7 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
         torch.Tensor -- m by 2p tensor of elements in real numbers
     """
     if not torch.is_complex(coeff):
-        logger.warning("coeff is already real")
+        logger.debug("coeff is already real")
         return coeff
     converted_coeff = torch.empty(
         (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
@@ -64,7 +64,7 @@ def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
         torch.Tensor -- m by 2p tensor of elements in real numbers
     """
     if not torch.is_complex(coeff):
-        logger.warning("coeff is already real")
+        logger.debug("coeff is already real")
         return coeff
     converted_coeff = torch.view_as_real(coeff).flatten(-2)
 
