@@ -2,7 +2,7 @@ import torch.utils
 import torch.utils.data
 import torch.utils.data.dataset
 import torch
-from ..basis import Basis
+from ..basis import Basis, ResType
 from .LSSVR import LSSVR
 from ..utils import to_complex_coeff, to_real_coeff
 from typing import Literal, Union, Callable
@@ -70,7 +70,7 @@ class SpectralSVR:
         self,
         f: torch.Tensor,
         x: torch.Tensor,
-        periods: list[float]
+        periods: tuple[float, ...]
         | None = None,  # TODO: use basis args like period etc to make it easier to change for different basis
     ) -> torch.Tensor:
         """
@@ -96,11 +96,13 @@ class SpectralSVR:
         if torch.is_complex(f):
             f = to_real_coeff(f)
         coeff = self.svr.predict(f)
-        coeff = to_complex_coeff(coeff)
+        # convert to complex if basis needs complex values so that the reshaping is correct
+        if self.basis.coeff_dtype.is_complex:
+            coeff = to_complex_coeff(coeff)
 
         self.print(f"coeff: {coeff.shape}")
         return self.basis.evaluate(
-            coeff=coeff.reshape((-1, *self.modes)),
+            coeff=coeff.reshape((f.shape[0], *self.modes)),
             x=x,
             periods=periods,
             time_dependent=self.basis.time_dependent,
@@ -121,6 +123,8 @@ class SpectralSVR:
             u_u_time_dependent {bool} -- whether the output coefficients are time dependent or not (default: {False})
         """
         self.basis.time_dependent = u_time_dependent
+        if self.basis.coeff_dtype.is_complex:
+            u_coeff = to_complex_coeff(u_coeff)
         self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         self.print(f"modes: {self.modes}")
         if f.ndim > 2:
@@ -139,7 +143,7 @@ class SpectralSVR:
         self,
         f: torch.Tensor,
         u_coeff_targets: torch.Tensor,
-        res: int | slice | list[slice] = 200,
+        res: ResType = 200,
     ):
         if torch.is_complex(f):
             logger.debug("transform f to real")

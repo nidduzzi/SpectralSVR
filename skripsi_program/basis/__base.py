@@ -51,6 +51,7 @@ class Basis(abc.ABC):
     """
 
     _coeff: torch.Tensor
+    coeff_dtype: torch.dtype
 
     def __init__(
         self,
@@ -62,9 +63,11 @@ class Basis(abc.ABC):
     ) -> None:
         super().__init__()
         self.coeff = coeff
+        self.periods = periods
         self._complex_funcs = complex_funcs
         self.time_dependent = time_dependent
-        self.periods = periods
+        if not hasattr(self, "coeff_dtype"):
+            raise NotImplementedError("Subclasses must define 'coeff_dtype'")
 
     @property
     def coeff(self):
@@ -74,7 +77,7 @@ class Basis(abc.ABC):
     @abc.abstractmethod
     def coeff(self, coeff: torch.Tensor | None):
         if coeff is None:
-            self._coeff = torch.empty(0)
+            self._coeff = torch.empty(0, dtype=self.coeff_dtype)
         else:
             assert (
                 coeff.ndim >= 2
@@ -113,17 +116,17 @@ class Basis(abc.ABC):
 
     @property
     def periods(self) -> tuple[float, ...]:
-        return self._periods
+        return periodsInputType_to_tuple(
+            self._periods,
+            (self.time_size, *self.modes) if self.time_dependent else self.modes,
+        )
 
     @periods.setter
     def periods(
         self,
         periods: PeriodsInputType,
     ):
-        self._periods = periodsInputType_to_tuple(
-            periods,
-            (self.time_size, *self.modes) if self.time_dependent else self.modes,
-        )
+        self._periods = periods
 
     @staticmethod
     @abc.abstractmethod
@@ -338,6 +341,7 @@ class Basis(abc.ABC):
         i=0,
         n=0,
         time_dependent: Literal[True] | bool = True,
+        periods: PeriodsInputType = None,
         **kwargs,
     ) -> torch.Tensor: ...
 
@@ -353,6 +357,7 @@ class Basis(abc.ABC):
         i=0,
         n=0,
         time_dependent: Literal[False] | bool = False,
+        periods: PeriodsInputType = None,
         **kwargs,
     ) -> torch.Tensor: ...
 
@@ -367,6 +372,7 @@ class Basis(abc.ABC):
         i: int = 0,
         n: int = 0,
         time_dependent: bool = False,
+        periods: PeriodsInputType = None,
         **kwargs,
     ) -> torch.Tensor:
         """
@@ -435,6 +441,8 @@ class Basis(abc.ABC):
         modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
         random_func=torch.randn,
+        complex_funcs: bool = False,
+        periods: PeriodsInputType = None,
         **kwargs,
     ) -> Self:
         """
@@ -449,6 +457,8 @@ class Basis(abc.ABC):
         Keyword Arguments:
             generator {torch.Generator | None} -- PRNG Generator for reproducability (default: {None})
             random_func {callable} -- random function that generates the coefficients (default: {torch.randn})
+            complex_funcs {bool} -- whether the functions generated should be complex or not (default: {False})
+            periods {int | float | list[int] | list[float] | None} -- the period for which the coefficients of the basis applies to (default: {None})
 
         Returns:
             Basis -- n sets of functions with coefficients with the shape (n, modes)
@@ -534,7 +544,12 @@ class Basis(abc.ABC):
         Returns:
             Self -- a copied instance of current instance
         """
-        return self.__class__(coeff=self.coeff, complex_funcs=self._complex_funcs)
+        return self.__class__(
+            coeff=self.coeff,
+            periods=self.periods,
+            complex_funcs=self._complex_funcs,
+            time_dependent=self.time_dependent,
+        )
 
     def __sub__(self, other: Self):
         if isinstance(other, self.__class__):

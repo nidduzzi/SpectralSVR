@@ -1,4 +1,4 @@
-from . import (
+from .__base import (
     Basis,
     EvaluationModeType,
     PeriodsInputType,
@@ -6,6 +6,7 @@ from . import (
     TransformResType,
     transformResType_to_tuple,
 )
+from ..utils import to_complex_coeff
 import torch
 from typing_extensions import Self, Literal, Callable, overload
 from functools import partial
@@ -13,6 +14,8 @@ from functools import partial
 
 ## Fourier basis
 class FourierBasis(Basis):
+    coeff_dtype = torch.complex64
+
     def __init__(
         self,
         coeff: torch.Tensor | None = None,
@@ -29,6 +32,8 @@ class FourierBasis(Basis):
 
     @Basis.coeff.setter
     def coeff(self, coeff: torch.Tensor | None):
+        if coeff is not None:
+            assert coeff.is_complex(), "the coefficients passed in need to be complex"
         Basis.coeff.__set__(self, coeff)
 
     def __call__(
@@ -37,7 +42,7 @@ class FourierBasis(Basis):
         t: torch.Tensor | None = None,
         i=0,
         n=0,
-        periods: tuple[float, ...] | None = None,
+        periods: PeriodsInputType = None,
     ) -> torch.Tensor:
         coeff = self.coeff
         assert (
@@ -69,7 +74,7 @@ class FourierBasis(Basis):
         i=0,
         n=0,
         time_dependent: Literal[True] | bool = True,
-        periods: tuple[float, ...] | None = None,
+        periods: PeriodsInputType = None,
     ) -> torch.Tensor: ...
 
     @overload
@@ -82,7 +87,7 @@ class FourierBasis(Basis):
         i=0,
         n=0,
         time_dependent: Literal[False] | bool = False,
-        periods: tuple[float, ...] | None = None,
+        periods: PeriodsInputType = None,
     ) -> torch.Tensor: ...
 
     @classmethod
@@ -94,7 +99,7 @@ class FourierBasis(Basis):
         i=0,
         n=0,
         time_dependent: bool = False,
-        periods: tuple[float, ...] | None = None,
+        periods: PeriodsInputType = None,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
@@ -105,15 +110,16 @@ class FourierBasis(Basis):
             assert (
                 True if init_len < 1 else len(coeff) > 0
             ), "pass valid values for i and n"
-        assert coeff.is_complex(), "the coefficients passed in need to be complex"
+        if not coeff.is_complex():
+            coeff = to_complex_coeff(coeff)
 
         modes = cls.get_modes(coeff, time_dependent=time_dependent)
         if time_dependent:
             assert t is not None, "t must not be none for time dependent evaluations"
-            if periods is not None:
-                assert (
-                    len(periods) > 1
-                ), f"periods given for time dependent evaluation must at least be of dimension 2, got {len(periods)}"
+            periods = periodsInputType_to_tuple(periods, (coeff.shape[1:]))
+            assert (
+                len(periods) > 1
+            ), f"periods given for time dependent evaluation must at least be of dimension 2, got {len(periods)}"
             basis = cls.fn(
                 x,
                 modes,
@@ -339,7 +345,6 @@ class FourierBasis(Basis):
                 sign = 1
         mode = f.shape[1]
         period = res.stop - res.start
-        # n = torch.linspace(N.start, N.stop, N.step).to(f)
         n = res.start + torch.arange(res.step).to(f) / res.step * period
         e = FourierBasis.fn(
             n.view(-1, 1),
@@ -464,7 +469,6 @@ class FourierBasis(Basis):
 
     def copy(self) -> Self:
         basis_copy = super().copy()
-        basis_copy.periods = self.periods
         return basis_copy
 
     @staticmethod
