@@ -25,7 +25,7 @@ class SpectralSVR:
     def __init__(
         self,
         basis: Basis,
-        C=10.0,
+        C=1.0,
         batch_size_func=lambda dims: 2**21 // dims + 1,
         dtype=torch.float32,
         svr=LSSVR,
@@ -40,7 +40,7 @@ class SpectralSVR:
             basis {Basis} -- Basis to use for evaluating the computed function
 
         Keyword Arguments:
-            C {float} -- regularization term with smaller values meaning less complicated models (default: {10.0})
+            C {float} -- the regularization term. Smaller values meaning less complicated models and larger means the model follows the data more closely (default: {1.0})
             sigma {float} -- kernel bandwidth (default: {1.0})
             verbose {False | "All" | "SVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
         """

@@ -133,28 +133,10 @@ class FourierBasis(Basis):
                 periods = (1.0,)
 
             index_float = t.flatten().real / periods[0] * (coeff.shape[1] - 1)
-            index_floor = index_float.floor().to(torch.int)
-            index_ceil = index_float.ceil().to(torch.int)
-            if index_float.remainder(1).eq(0).all():
-                coeff_floor = coeff[:, index_floor]
-                sum_coeff_x_basis = cls.sum_mul(coeff_floor.flatten(2), basis)
-            else:
-                coeff_ceil = coeff[:, index_ceil]
-                coeff_floor = coeff[:, index_floor]
-                # evaluate
-                sum_coeff_x_basis_ceil = cls.sum_mul(coeff_ceil.flatten(2), basis)
-                sum_coeff_x_basis_floor = cls.sum_mul(coeff_floor.flatten(2), basis)
-                # interpolate value
-                index_shape = [1 for _ in range(sum_coeff_x_basis_floor.ndim)]
-                index_shape[1] = -1
-                index_scaler = (
-                    ((index_float - index_floor) / (index_ceil - index_floor))
-                    .reshape(index_shape)
-                    .nan_to_num()
-                )
-                sum_coeff_x_basis = sum_coeff_x_basis_floor.add(
-                    (sum_coeff_x_basis_ceil - sum_coeff_x_basis_floor) * index_scaler
-                )
+            # interpolate
+            coeff_interp = cls.interpolate_time_coeff(coeff, index_float)
+            # evaluate
+            sum_coeff_x_basis = cls.sum_mul(coeff_interp.flatten(2), basis)
 
         else:
             basis = cls.fn(x, modes, periods=periods)
@@ -239,15 +221,26 @@ class FourierBasis(Basis):
         random_func=torch.randn,
         complex_funcs: bool = False,
         periods: PeriodsInputType = None,
+        value_type: Literal["random", "zero"] = "random",
     ) -> Self:
+        match value_type:
+            case "random":
+                coeff = cls.generate_coeff(
+                    n,
+                    modes,
+                    generator=generator,
+                    random_func=random_func,
+                    complex_funcs=complex_funcs,
+                )
+            case "zero":
+                coeff = cls.generate_empty(n, modes)
+            case _:
+                raise RuntimeError(
+                    f"FourierBasis generate expects value_type random or zero but got {value_type}"
+                )
+
         return cls(
-            cls.generate_coeff(
-                n,
-                modes,
-                generator=generator,
-                random_func=random_func,
-                complex_funcs=complex_funcs,
-            ),
+            coeff,
             periods=periods,
             complex_funcs=complex_funcs,
         )
@@ -261,7 +254,7 @@ class FourierBasis(Basis):
         if isinstance(modes, int):
             modes = (modes,)
         n_modes = len(modes)
-        assert n_modes > 0, "modes should have at least one element"
+        assert n_modes > 0, "modes should have at least one dimension"
         coeff = torch.zeros((n, *modes), dtype=torch.complex64)
         return coeff
 
@@ -326,7 +319,10 @@ class FourierBasis(Basis):
             vals = cls.inv_transform(coeff)
             coeff = cls.transform(vals.real + 0j)
         if scale:
-            coeff = coeff.mul(torch.prod(torch.tensor(modes)))
+            # TODO: fix this to be more exact
+            scaler = torch.tensor(modes).sum() * 0.2
+            coeff = coeff.mul(scaler)
+            # pass
         return coeff
 
     @staticmethod
@@ -334,6 +330,7 @@ class FourierBasis(Basis):
         f: torch.Tensor,
         func: Literal["forward", "inverse"],
         res: slice,
+        periodic: bool,
     ) -> torch.Tensor:
         assert torch.is_complex(
             f
@@ -345,7 +342,10 @@ class FourierBasis(Basis):
                 sign = 1
         mode = f.shape[1]
         period = res.stop - res.start
-        n = res.start + torch.arange(res.step).to(f) / res.step * period
+        if periodic:
+            n = res.start + torch.arange(res.step).to(f) / res.step * period
+        else:
+            n = torch.linspace(res.start, res.stop, res.step).to(f)
         e = FourierBasis.fn(
             n.view(-1, 1),
             mode,
@@ -364,6 +364,7 @@ class FourierBasis(Basis):
         dim: int,
         func: Literal["forward", "inverse"],
         res: slice,
+        periodic: bool,
     ) -> torch.Tensor:
         # flatten so that each extra dimension is treated as a separate "sample"
         # move dimension to transform to the end so that it can stay intact after f is flatened
@@ -371,7 +372,9 @@ class FourierBasis(Basis):
         # flatten so that the last dimension is intact
         f_flatened = f_transposed.flatten(0, -2)
 
-        F_flattened = FourierBasis._raw_transform(f_flatened, func=func, res=res)
+        F_flattened = FourierBasis._raw_transform(
+            f_flatened, func=func, res=res, periodic=periodic
+        )
         # unflatten so that the correct shape is returned
         F_transposed = F_flattened.reshape((*f_transposed.shape[:-1], res.step))
         F = F_transposed.moveaxis(-1, dim)
@@ -379,16 +382,22 @@ class FourierBasis(Basis):
         return F
 
     @staticmethod
-    def transform(f: torch.Tensor, res: TransformResType | None = None) -> torch.Tensor:
+    def transform(
+        f: torch.Tensor,
+        res: TransformResType | None = None,
+        periodic: bool = True,
+    ) -> torch.Tensor:
         """
         transform
 
         Function to calculate the
         discrete Fourier Transform
-        of a real-valued signal f
+        of complex-valued signal f
 
         Arguments:
             f {torch.Tensor} -- m discretized real valued functions
+            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
 
         Returns:
             torch.Tensor -- m complex valued coefficients of f
@@ -401,28 +410,40 @@ class FourierBasis(Basis):
             f = f * (1 + 0j)
         res = transformResType_to_tuple(res, tuple(f.shape[1:]))
         if ndims == 2:
-            F = FourierBasis._raw_transform(f, "forward", res=res[0])
+            F = FourierBasis._raw_transform(f, "forward", res=res[0], periodic=periodic)
         elif ndims > 2:
             # perform 1d transform over every dimension
             F = f
             for cdim in range(1, ndims):
                 F = FourierBasis._ndim_transform(
-                    F, dim=cdim, func="forward", res=res[cdim - 1]
+                    F,
+                    dim=cdim,
+                    func="forward",
+                    res=res[cdim - 1],
+                    periodic=periodic,
                 )
 
         return F
 
     @staticmethod
-    def inv_transform(F: torch.Tensor, res: TransformResType | None = None, scale=True):
+    def inv_transform(
+        F: torch.Tensor,
+        res: TransformResType | None = None,
+        periodic: bool = True,
+        scale: bool = True,
+    ):
         """
-        transform
+        inv_transform
 
         Function to calculate the
-        discrete Fourier Transform
-        of a real-valued signal f
+        discrete Inverse Fourier Transform
+        of coefficients F
 
         Arguments:
             f {torch.Tensor} -- m discretized real valued functions
+            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
+            scale {bool} -- whether the outputs are scaled by N or not
 
         Returns:
             torch.Tensor -- m complex valued coefficients of f
@@ -436,36 +457,89 @@ class FourierBasis(Basis):
         res = transformResType_to_tuple(res, tuple(F.shape[1:]))
 
         if ndims == 2:
-            f = FourierBasis._raw_transform(F, func="inverse", res=res[0])
+            f = FourierBasis._raw_transform(
+                F,
+                func="inverse",
+                res=res[0],
+                periodic=periodic,
+            )
         elif ndims > 2:
             # perform 1d transform over every dimension
             f = F
             for cdim in range(1, ndims):
                 f = FourierBasis._ndim_transform(
-                    f, dim=cdim, func="inverse", res=res[cdim - 1]
+                    f,
+                    dim=cdim,
+                    func="inverse",
+                    res=res[cdim - 1],
+                    periodic=periodic,
                 )
 
         if scale:
             f = f.div(torch.tensor(F.shape[1:]).prod())
         return f
 
-    def grad(self, dim: int = 0) -> Self:
-        k = self.wave_number(self.modes[dim])
-        multiplier_dims = [1 for i in range(self.ndim)]
-        multiplier_dims[dim] = self.modes[dim]
-        multiplier = 2 * torch.pi * 1j * k.reshape(multiplier_dims)
-        coeff = self.coeff.mul(multiplier)
-        coeff[:, ..., 0] = torch.tensor(0 + 0j)
-        return self.__class__(coeff, periods=self.periods)
+    def grad(self, dim: int = 0, ord: int = 1) -> Self:
+        copy = self.copy()
+        if dim == 0 and self.time_dependent:
+            # time dependent use finite differences
+            dt = self.periods[0] / (self.time_size - 1)
+            coeff = copy.coeff
+            for o in range(ord):
+                coeff = torch.gradient(coeff, spacing=dt, dim=1)[0]
+            copy.coeff = coeff
+        else:
+            if self.time_dependent:
+                # disregard time dimension
+                dim = dim - 1
+            k = copy.wave_number(copy.modes[dim])
+            multiplier_dims = [1 for _ in range(copy.ndim)]
+            multiplier_dims[dim] = copy.modes[dim]
+            if self.time_dependent:
+                multiplier_dims = (1, *multiplier_dims)
+            multiplier = (
+                2
+                * torch.pi
+                * 1j
+                * k.reshape(multiplier_dims).to(copy.coeff)
+                / self.periods[dim]
+            )
+            multiplier = multiplier.pow(ord)
+            coeff = copy.coeff.mul(multiplier)
+            coeff[:, ..., 0] = torch.tensor(0 + 0j)
+            copy.coeff = coeff
+        return copy
 
-    def integral(self, dim: int = 0) -> Self:
-        k = self.wave_number(self.modes[dim])
-        multiplier_dims = [1 for i in range(self.ndim)]
-        multiplier_dims[dim] = self.modes[dim]
-        multiplier = 2 * torch.pi * 1j * k.reshape(multiplier_dims)
-        coeff = self.coeff.div(multiplier)
-        coeff[:, ..., 0] = torch.tensor(0 + 0j)
-        return self.__class__(coeff, periods=self.periods)
+    def integral(self, dim: int = 0, ord: int = 1) -> Self:
+        copy = self.copy()
+        if dim == 0 and self.time_dependent:
+            # time dependent use finite differences
+            dt = self.periods[0] / (self.time_size - 1)
+            coeff = copy.coeff
+            for o in range(ord):
+                coeff = coeff.cumsum(1).mul(dt)
+            copy.coeff = coeff
+        else:
+            if self.time_dependent:
+                # disregard time dimension
+                dim = dim - 1
+            k = copy.wave_number(copy.modes[dim])
+            multiplier_dims = [1 for _ in range(copy.ndim)]
+            multiplier_dims[dim] = copy.modes[dim]
+            if self.time_dependent:
+                multiplier_dims = (1, *multiplier_dims)
+            multiplier = (
+                2
+                * torch.pi
+                * 1j
+                * k.reshape(multiplier_dims).to(copy.coeff)
+                / self.periods[dim]
+            )
+            multiplier = multiplier.pow(ord)
+            coeff = copy.coeff.div(multiplier)
+            coeff[:, ..., 0] = torch.tensor(0 + 0j)
+            copy.coeff = coeff
+        return copy
 
     def copy(self) -> Self:
         basis_copy = super().copy()

@@ -1,10 +1,16 @@
 import torch
 from ..basis import Basis, BasisSubType
-from ..utils import Number, euler_solver, SolverSignatureType
+from ..utils import (
+    Number,
+    SolverSignatureType,
+    implicit_adams_solver,
+    to_complex_coeff,
+    to_real_coeff,
+)
 from . import Problem
 from typing import Literal, Type
 
-ParamInput = Literal["random"] | Number
+ParamInput = Literal["random"] | Number | torch.Tensor
 
 
 # https://www.math.unl.edu/~alarios2/courses/2017_spring_M934/documents/burgersProject.pdf
@@ -23,14 +29,14 @@ class Burgers(Problem):
         self,
         basis: Type[BasisSubType],
         n: int,
-        modes: int | tuple[int],
+        modes: int | tuple[int, ...],
         u0: ParamInput | BasisSubType = "random",
         f: ParamInput | BasisSubType = 0,
         nu: float = 0.01,
-        space_domain=slice(0, 1),
-        time_domain=slice(0, 1),
-        solver: SolverSignatureType = euler_solver,
-        timedependent_solution: bool = True,
+        space_domain=slice(0, 1, 200),
+        time_domain=slice(0, 1, 200),
+        solver: SolverSignatureType = implicit_adams_solver,
+        time_dependent_coeff: bool = True,
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
@@ -41,19 +47,95 @@ class Burgers(Problem):
         for dim, m in enumerate(modes):
             assert m > 0, f"number of modes m must be more than 0 at dim {dim}"
 
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
         L = space_domain.stop - space_domain.start
-        x = basis.grid(slice(space_domain.start, space_domain.stop, modes[0])).flatten(
-            0, -2
+        x = (
+            basis.grid(slice(space_domain.start, space_domain.stop, modes[0]))
+            .flatten(0, -2)
+            .to(device=device)
         )
-        T = time_domain.stop - time_domain.start
-        nt = int(T / (0.01 * nu) + 2)
+        T: float = time_domain.stop - time_domain.start
+        nt = int(time_domain.step)
+        # nt = int(T / (0.01 * nu) + 2)
         dt = T / (nt - 1)
-        t = torch.linspace(time_domain.start, time_domain.stop, nt)
+        t = basis.grid(time_domain).flatten().to(device=device)
         assert (
-            dt == t[1] - t[0]
+            t[1].sub(t[0]).isclose(torch.tensor(dt))
         ), f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1]-t[0]})"
         periods = (T, L)
+        if u0 == "random" and f == "random":
+            # use method of manufactured solution
+            # generate solution itself since u0 just follows from the generate solution
+            time_mode = modes[0]
+            if len(modes) > 1:
+                modes = modes[1:]
+            u = basis.generate(
+                n, (time_mode, *modes), periods=periods, generator=generator
+            )
+            res_modes = tuple(slice(0, L, mode) for mode in modes)
 
+            fst = self.spectral_residual(
+                u, basis(basis.generate_empty(n, (time_mode, *modes))), nu
+            )
+
+            u_gen = u
+            f_gen = fst
+            # convert to timed dependent coeffs
+            if time_dependent_coeff:
+                u_val = u.get_values(res=(time_domain, *res_modes))
+                u_coeff = basis.transform(u_val.flatten(0, 1)).reshape((n, nt, *modes))
+                u_gen = basis(coeff=u_coeff, time_dependent=True, periods=periods)
+
+                f_val = fst.get_values(res=(time_domain, *res_modes))
+                f_coeff = basis.transform(f_val.flatten(0, 1)).reshape((n, nt, *modes))
+                f_gen = basis(coeff=f_coeff, time_dependent=True, periods=periods)
+
+        else:
+            # use ivp solution
+            # TODO: use Exponential Time Differencing RK4 (ETDRK4) solver for more stable and accurate results
+            # https://matematicas.uclm.es/cedya09/archive/textos/129_de-la-Hoz-Mendez-F.pdf
+            #
+            u_gen, f_gen = self.solve_numerically(
+                basis,
+                n,
+                modes,
+                nu,
+                u0,
+                f,
+                periods,
+                x,
+                t,
+                solver,
+                nt,
+                time_dependent_coeff,
+                device,
+                generator,
+                **kwargs,
+            )
+
+        results = (u_gen, f_gen)
+        return results
+
+    @classmethod
+    def solve_numerically(
+        cls,
+        basis: Type[BasisSubType],
+        n: int,
+        modes: tuple[int, ...],
+        nu: float,
+        u0: ParamInput | BasisSubType,
+        f: ParamInput | BasisSubType,
+        periods: tuple[float, ...],
+        x: torch.Tensor,
+        t: torch.Tensor,
+        solver: SolverSignatureType,
+        nt: int,
+        timedependent_solution: bool,
+        device,
+        generator,
+        **kwargs,
+    ) -> tuple[BasisSubType, BasisSubType]:
         # Setup solution using initial condition
         if isinstance(u0, str):
             match u0:
@@ -104,28 +186,39 @@ class Burgers(Problem):
         else:
             raise RuntimeError("Invalid f value")
 
-        def f_hat(t: torch.Tensor, x: torch.Tensor = x):
+        u0.coeff = u0.coeff.to(device=device)
+        fst.coeff = fst.coeff.to(device=device)
+        print(f"generating with {len(t)} time steps")
+
+        def f_func(t: torch.Tensor, x: torch.Tensor = x):
             x = x.tile((1, 2))
             x[:, 0] = t
             return basis.transform(fst(x).reshape((-1, modes[0])))
 
         def rhs_func(t: torch.Tensor, y0: torch.Tensor):
-            return self.rhs(basis, nu, y0, f_hat(t))
+            y0 = to_complex_coeff(y0)
+            return to_real_coeff(cls.rhs(basis, nu, y0, f_func(t)))
 
-        u_hat = solver(rhs_func, u0.coeff, t)
-        # pad temporal boundary with zeros
+        u_hat = solver(rhs_func, to_real_coeff(u0.coeff), t)
+        if basis.coeff_dtype.is_complex:
+            u_shape = u_hat.shape
+            u_hat = to_complex_coeff(u_hat.flatten(0, 1)).reshape(
+                (*u_shape[:2], *u0.coeff.shape[1:])
+            )
+
         u_hat = u_hat.movedim(0, 1)
         if timedependent_solution:
-            ust = basis(u_hat, **kwargs, time_dependent=True)
+            u = basis(u_hat, **kwargs, time_dependent=True)
         else:
             u_hat = u_hat.reshape((n * nt, modes[0]))
-            ust = basis(
+            u = basis(
                 basis.transform(basis.inv_transform(u_hat).reshape((n, nt, modes[0]))),
                 **kwargs,
             )  # .resize_modes((*modes,) * 2)
 
-        results = (ust, fst)
-        return results
+        u.coeff = u.coeff.cpu()
+        fst.coeff = fst.coeff.cpu()
+        return (u, fst)
 
     # addapted from
     # @MISC {3834917,
@@ -146,25 +239,57 @@ class Burgers(Problem):
     ) -> torch.Tensor:
         u = basis(u_hat)
         dealias_modes = tuple(int(mode * 1.5) for mode in u.modes)
-        # u_dealiased = u
         u_dealiased = u.resize_modes(dealias_modes, rescale=False)
         u_val = basis.inv_transform(u_dealiased.coeff)
-        dealiased_u_u_x_hat = basis.transform(0.5 * u_val**2)
-        u_u_x = basis(dealiased_u_u_x_hat).resize_modes(u.modes, rescale=False).grad()
+        uu_x_hat_dealiased = 0.5 * basis.transform(u_val**2)
+        uu_x = basis(uu_x_hat_dealiased).resize_modes(u.modes, rescale=False).grad()
 
-        u_u_x_hat = u_u_x.coeff
-        # if u_u_x_hat.abs().ge(20).any():
-        #     print(u_val.std())
+        u_u_x_hat = uu_x.coeff
         u_xx_hat = u.grad().grad().coeff
-        u_hat = nu * u_xx_hat + f_hat - u_u_x_hat
-        return u_hat
+        u_t_hat = nu * u_xx_hat + f_hat - u_u_x_hat
+        return u_t_hat
 
-    def spectral_residual(self, u: Basis, ut: Basis, *args, **kwargs) -> Basis:
-        residual = super().spectral_residual(*args, **kwargs)
-        raise NotImplementedError("spectral residual not implemented")
+    def spectral_residual(
+        self, u: BasisSubType, f: BasisSubType, nu: float
+    ) -> BasisSubType:
+        u_t = u.grad(dim=0, ord=1)
+
+        dealias_modes = tuple(int(mode * 1.5) for mode in u.modes)
+        u_dealiased = u.resize_modes(dealias_modes, rescale=False)
+        u_val = u.inv_transform(u_dealiased.coeff)
+        uu_dealiased = u.copy()
+        uu_dealiased.coeff = u.transform(u_val.pow(2).mul(0.5))
+        uu_x = uu_dealiased.resize_modes(u.modes, rescale=False).grad(dim=1)
+
+        u_xx = u.grad(dim=1, ord=2)
+        nu_u_xx = u_xx
+        nu_u_xx.coeff = nu_u_xx.coeff * nu
+
+        residual = u_t + uu_x - nu_u_xx - f
         return residual
 
-    def residual(self, *args, **kwargs) -> Basis:
-        residual = super().residual(*args, **kwargs)
-        raise NotImplementedError("Function value residual not implemented")
+    def residual(self, u: BasisSubType, f: BasisSubType, nu: float) -> BasisSubType:
+        u_val, grid = u.get_values_and_grid()
+        f_val = f.get_values()
+        dt = grid[1, 0, 0] - grid[0, 0, 0]
+        dx = grid[0, 1, 1] - grid[0, 0, 1]
+
+        u_t = torch.gradient(u_val, spacing=dt.item(), dim=1, edge_order=2)[0]
+
+        u_x = torch.gradient(u_val, spacing=dx.item(), dim=2, edge_order=2)[0]
+        u_xx = torch.gradient(u_x, spacing=dx.item(), dim=2, edge_order=2)[0]
+
+        uu_x = torch.gradient(
+            u_val.pow(2).mul(0.5), spacing=dx.item(), dim=2, edge_order=2
+        )[0]
+
+        residual_val = u_t + uu_x - nu * u_xx - f_val
+        residual = u.copy()
+        if u.time_dependent:
+            residual.coeff = u.transform(residual_val.flatten(0, 1)).unflatten(
+                0, residual_val.shape[0:2]
+            )
+        else:
+            residual.coeff = u.transform(residual_val)
+
         return residual

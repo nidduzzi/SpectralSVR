@@ -1,5 +1,5 @@
 import torch
-from ..basis import Basis, BasisSubType
+from ..basis import BasisSubType
 from . import Problem
 from typing import Type
 
@@ -58,14 +58,14 @@ class Antiderivative(Problem):
         results = (u, ut)
         return results
 
-    def spectral_residual(self, u: Basis, ut: Basis, *args, **kwargs) -> Basis:
+    def spectral_residual(self, u: BasisSubType, ut: BasisSubType) -> BasisSubType:
         residual = u.grad() - ut
         if residual.coeff is not None:
             residual.coeff[:, 0].mul_(0)
 
         return residual
 
-    def residual(self, *args, **kwargs) -> Basis:
+    def residual(self, u: BasisSubType, *args, **kwargs) -> BasisSubType:
         residual = super().residual(*args, **kwargs)
         raise NotImplementedError("Function value residual not implemented")
         return residual

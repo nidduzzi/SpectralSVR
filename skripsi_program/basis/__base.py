@@ -62,12 +62,12 @@ class Basis(abc.ABC):
         **kwargs,
     ) -> None:
         super().__init__()
+        if not hasattr(self, "coeff_dtype"):
+            raise NotImplementedError("Subclasses must define 'coeff_dtype'")
         self.coeff = coeff
         self.periods = periods
         self._complex_funcs = complex_funcs
         self.time_dependent = time_dependent
-        if not hasattr(self, "coeff_dtype"):
-            raise NotImplementedError("Subclasses must define 'coeff_dtype'")
 
     @property
     def coeff(self):
@@ -118,7 +118,7 @@ class Basis(abc.ABC):
     def periods(self) -> tuple[float, ...]:
         return periodsInputType_to_tuple(
             self._periods,
-            (self.time_size, *self.modes) if self.time_dependent else self.modes,
+            self.coeff.shape[1:],
         )
 
     @periods.setter
@@ -126,6 +126,8 @@ class Basis(abc.ABC):
         self,
         periods: PeriodsInputType,
     ):
+        if len(self.coeff.shape) > 0:
+            periods = periodsInputType_to_tuple(periods, self.coeff.shape[1:])
         self._periods = periods
 
     @staticmethod
@@ -157,7 +159,7 @@ class Basis(abc.ABC):
         Keyword Arguments:
             i {int} -- function i to start plotting (default: {0})
             n {int} -- n functions after function i to evaluate (default: {-1}). The default evaluates all functions
-            res {int | slice | list[slice] | None} -- function discretization resolution and domain (default: {0:1:200} domain from 0 to one on all dimensions with 5 times the number of modes in points each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
+            res {int | slice | tuple[slice,...] | None} -- function discretization resolution and domain (default: {0:period:dimension modes} domain from 0 to the dimensio period on all dimensions with the same number of points as the dimensions modes each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
             evaluation_mode {"auto" | "inverse transform" | "basis"} -- coefficient evaluation mode (default: {"auto"}). Auto will use the inverse transform if the number of evaluations is high or res is not provided
             device {torch.device | None} -- device the evaluations are done on (default: {None}). By default, the function will try to use the GPU and fallback on the CPU.
 
@@ -174,22 +176,21 @@ class Basis(abc.ABC):
             evaluation_mode = self.prefered_evaluation_mode()
         evaluation_dim = (self.ndim + 1) if self.time_dependent else self.ndim
         if res is None:
-            res = slice(0, 1, 200)
-        res_t = None
+            modes = self.modes
+            periods = self.periods
+            if self.time_dependent:
+                modes = (self.time_size, *modes)
+            res = tuple(slice(0, period, mode) for mode, period in zip(modes, periods))
         if isinstance(res, int):
-            res = (slice(0, 1, res),)
+            res = tuple(slice(0, period, res) for period in self.periods)
         elif isinstance(res, slice):
-            res = (res,)
-
-        if len(res) == 1:
-            res = res * evaluation_dim
+            res = (res,) * evaluation_dim
 
         if evaluation_mode == "inverse transform":
             if n > 0:
                 coeff = self.coeff[i : i + n]
             else:
                 coeff = self.coeff
-            coeff_shape = coeff.shape
             coeff = coeff.to(device=device)
 
             if self.time_dependent:
@@ -197,30 +198,23 @@ class Basis(abc.ABC):
                 res_spatial = res[1:]
                 t = self.grid(res_t).to(device=device)
                 index_float = t.flatten() / self.periods[0] * (coeff.shape[1] - 1)
-                index_floor = index_float.floor().to(torch.int)
-                index_ceil = index_float.ceil().to(torch.int)
-                coeff_ceil = coeff[:, index_ceil].reshape((-1, *self.modes))
-                coeff_floor = coeff[:, index_floor].reshape((-1, *self.modes))
-                # evaluate
-                values_ceil = self.inv_transform(coeff_ceil, res=res_spatial)
-                values_floor = self.inv_transform(coeff_floor, res=res_spatial)
-                values_shape = (coeff_shape[0], -1, *values_ceil.shape[1:])
-                values_ceil = values_ceil.reshape(values_shape)
-                values_floor = values_floor.reshape(values_shape)
-                # interpolate time values
-                index_shape = [1 for _ in range(values_ceil.ndim)]
-                index_shape[1] = -1
-                index_scaler = (
-                    ((index_float - index_floor) / (index_ceil - index_floor))
-                    .reshape(index_shape)
-                    .nan_to_num()
+                coeff = self.interpolate_time_coeff(coeff, index_float)
+                values = (
+                    self.inv_transform(
+                        coeff.flatten(0, 1),
+                        res=res_spatial,
+                        periodic=True,
+                    )
+                    .unflatten(0, coeff.shape[0:2])
+                    .to(self.coeff)
                 )
-                values = values_floor.add(
-                    (values_ceil - values_floor) * index_scaler
-                ).to(self.coeff)
             else:
                 res_spatial = res
-                values = self.inv_transform(coeff, res=res_spatial).to(self.coeff)
+                values = self.inv_transform(
+                    coeff,
+                    res=res_spatial,
+                    periodic=True,
+                ).to(self.coeff)
 
             grid = self.grid(res)
         else:
@@ -267,7 +261,7 @@ class Basis(abc.ABC):
         Keyword Arguments:
             i {int} -- function i to start plotting (default: {0})
             n {int} -- n functions after function i to evaluate (default: {-1}). The default evaluates all functions
-            res {int | slice | list[slice] | None} -- function discretization resolution and domain (default: {0:1:200} domain from 0 to one on all dimensions with 5 times the number of modes in points each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
+            res {int | slice | tuple[slice,...] | None} -- function discretization resolution and domain (default: {0:period:dimension modes} domain from 0 to the dimensio period on all dimensions with the same number of points as the dimensions modes each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
             evaluation_mode {"auto" | "inverse transform" | "basis"} -- coefficient evaluation mode (default: {"auto"}). Auto will use the inverse transform if the number of evaluations is high or res is not provided
             device {torch.device | None} -- device the evaluations are done on (default: {None}). By default, the function will try to use the GPU and fallback on the CPU.
 
@@ -275,7 +269,7 @@ class Basis(abc.ABC):
             torch.Tensor -- value of the evaluated functions
         """
         return self.get_values_and_grid(
-            i=i, n=n, res=res, evaluation_mode=evaluation_mode
+            i=i, n=n, res=res, evaluation_mode=evaluation_mode, device=device
         )[0]
 
     def __len__(self):
@@ -398,7 +392,10 @@ class Basis(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def transform(
-        f: torch.Tensor, res: TransformResType | None = None, **kwargs
+        f: torch.Tensor,
+        res: TransformResType | None = None,
+        periodic: bool = False,
+        **kwargs,
     ) -> torch.Tensor:
         """
         transform
@@ -408,6 +405,7 @@ class Basis(abc.ABC):
         Arguments:
             f {torch.Tensor} -- m vectors of descretized functions to compute the coefficients of.
             res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
 
         Returns:
             torch.Tensor -- m vectors of coefficients
@@ -417,7 +415,10 @@ class Basis(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def inv_transform(
-        f: torch.Tensor, res: TransformResType | None = None, **kwargs
+        f: torch.Tensor,
+        res: TransformResType | None = None,
+        periodic: bool = False,
+        **kwargs,
     ) -> torch.Tensor:
         """
         inv_transform
@@ -427,6 +428,7 @@ class Basis(abc.ABC):
         Arguments:
             f {torch.Tensor} -- m vectors of coefficeints to compute the function values of.
             res {tuple[slice,...] | None} -- resolution to evaluate the coefficients at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
 
         Returns:
             torch.Tensor -- m vectors of function values
@@ -458,7 +460,7 @@ class Basis(abc.ABC):
             generator {torch.Generator | None} -- PRNG Generator for reproducability (default: {None})
             random_func {callable} -- random function that generates the coefficients (default: {torch.randn})
             complex_funcs {bool} -- whether the functions generated should be complex or not (default: {False})
-            periods {int | float | list[int] | list[float] | None} -- the period for which the coefficients of the basis applies to (default: {None})
+            periods {int | float | list[int|float] | tuple[int|float] | None} -- the period for which the coefficients of the basis applies to (default: {None})
 
         Returns:
             Basis -- n sets of functions with coefficients with the shape (n, modes)
@@ -507,21 +509,22 @@ class Basis(abc.ABC):
         """
 
     @abc.abstractmethod
-    def grad(self, dim: int = 0) -> Self:
+    def grad(self, dim: int = 0, ord: int = 1) -> Self:
         """
         grad
 
         grad computes the derivative along a dimension
 
         Keyword Arguments:
-            dim {int} -- dimension to compute gradient on (default: {0})
+            dim {int} -- dimension to compute derivative on (default: {0})
+            ord {int} -- order of derivative (default: {1})
 
         Returns:
-            Self -- returns an instance of current basis with antiderivative coefficients
+            Self -- returns an instance of current basis with derivative coefficients
         """
 
     @abc.abstractmethod
-    def integral(self, dim: int = 0) -> Self:
+    def integral(self, dim: int = 0, ord: int = 1) -> Self:
         """
         integral
 
@@ -529,6 +532,7 @@ class Basis(abc.ABC):
 
         Keyword Arguments:
             dim {int} -- dimension to compute antiderivative on (default: {0})
+            ord {int} -- order of antiderivative (default: {1})
 
         Returns:
             Self -- returns an instance of current basis with antiderivative coefficients
@@ -606,7 +610,7 @@ class Basis(abc.ABC):
         Keyword Arguments:
             i {int} -- function i to start plotting (default: {0})
             n {int} -- n functions after function i to evaluate (default: {1})
-            res {int | slice | list[slice] | None} -- function discretization resolution and domain (default: {0:1:min(2x modes, 200)} domain from 0 to one on all dimensions with 5 times the number of modes in points each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of modes. Currently dimension higher than 2 just uses the inverse transform and ignores this parameter.
+            res {int | slice | tuple[slice,...] | None} -- function discretization resolution and domain (default: {0:period:200} domain of 200 points from 0 to period of each dimension which is 1 by default on all dimensions). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of modes. Currently dimension higher than 2 just uses the inverse transform and ignores this parameter.
             plt {_type_} -- Axes or pyplot to get plot or imshow from (default: {pyplot})
             complex_scatter {bool} -- plot the complex values on a scatter plot instead (default: {False})
             plot_component {None | Literal[&quot;imag&quot;, &quot;real&quot;]} -- plot the imaginary or real values or both if None (default: {None})
@@ -621,15 +625,18 @@ class Basis(abc.ABC):
         Returns:
             _type_ -- returns the result of the plotting function such as list[Line2D] or AxesImage
         """
-        plot_modes = (
-            (self.time_size, *self.modes) if self.time_dependent else self.modes
-        )
+        assert (
+            i + n <= len(self)
+        ), f"values of i={i} and n={n} is out of bounds. i+n needs to be less than or equal to the number of functions {len(self)}"
         if res is None:
-            res = tuple(slice(0, 1, 200) for mode in plot_modes)
+            res = tuple(slice(0, period, 200) for period in self.periods)
         plot_dims = self.ndim + 1 if self.time_dependent else self.ndim
         values, grid = self.get_values_and_grid(
-            i=i, n=n, res=res, evaluation_mode=evaluation_mode
+            i=i, n=n, res=res, evaluation_mode=evaluation_mode, device=device
         )
+        assert (
+            len(values) > 0 or values is None
+        ), "something went wrong in computing the values"
         values = values.cpu()
         grid = grid.cpu()
 
@@ -754,7 +761,7 @@ class Basis(abc.ABC):
         grid creates a rectangular grid whose dimensions and resolution is dependent on the res parameter
 
         Keyword Arguments:
-            res {int | slice | list[slice]} -- the resolution and dimensions of the grid passed as n slices (default: {slice(0,1,200)})
+            res {int | slice | tuple[slice,...]} -- the resolution and dimensions of the grid passed as n slices (default: {slice(0,1,200)})
 
         Returns:
             torch.Tensor -- {d1,...,dn,n} tensor with n+1 dimensions where the last dimension is the coordinates and therefore of size n. all other dimensions have sizes coresponding to the resolution specified by their coresponding res parameter
@@ -782,12 +789,28 @@ class Basis(abc.ABC):
         Returns:
             Basis -- A copy of this basis with resized coefficients
         """
+        target_basis = None
         if isinstance(target_modes, int):
             target_modes = (target_modes,)
         elif isinstance(target_modes, Basis):
-            target_modes = target_modes.modes
+            target_basis = target_modes
+            target_modes = target_basis.modes
+
         copy = self.copy()
-        copy.coeff = resize_modes(self.coeff, target_modes, rescale=rescale)
+        coeff = copy.coeff
+        if self.time_dependent:
+            coeff = coeff.flatten(0, 1)
+            coeff = resize_modes(coeff, target_modes, rescale=rescale)
+            coeff = coeff.unflatten(0, (len(self), self.time_size))
+            if target_basis is not None:
+                # interpolate time dependent coefficients
+                index_float = torch.linspace(0, 1, target_basis.time_size) * (
+                    self.time_size - 1
+                )
+                coeff = self.interpolate_time_coeff(coeff, index_float)
+        else:
+            coeff = resize_modes(coeff, target_modes, rescale=rescale)
+        copy.coeff = coeff
         return copy
 
     def perturb(
@@ -828,10 +851,65 @@ class Basis(abc.ABC):
 
     def __getitem__(self, indices):
         copy = self.copy()
-        idx = torch.arange(len(copy))[indices]
+        idx = torch.arange(len(copy))[indices].reshape(-1)
         # ensure the indexing results in list of coefficients (0th dimension is the list index)
-        copy.coeff = copy.coeff[idx].reshape((-1, *copy.modes))
+        copy.coeff = copy.coeff[idx, ...]
         return copy
+
+    def to_time_dependent(self):
+        copy = self.copy()
+        if self.time_dependent:
+            return copy
+
+        res_modes = tuple(
+            slice(0, period, mode) for mode, period in zip(self.modes, self.periods)
+        )
+        val = self.get_values(res=res_modes)
+        time_dependent_coeff = self.transform(val.flatten(0, 1)).reshape(
+            (len(self), *self.modes)
+        )
+        copy.time_dependent = True
+        copy.coeff = time_dependent_coeff
+        return copy
+
+    def to_time_independent(self):
+        copy = self.copy()
+        if not self.time_dependent:
+            return copy
+
+        # since periods combine time period with spatial period, get only the spatial ones with index [1:]
+        res_modes = tuple(
+            slice(0, period, mode) for mode, period in zip(self.modes, self.periods[1:])
+        )
+        res_modes = (slice(0, self.periods[0], self.time_size), *res_modes)
+        val = self.get_values(res=res_modes)
+        time_dependent_coeff = self.transform(val)
+        copy.time_dependent = False
+        copy.coeff = time_dependent_coeff
+        return copy
+
+    @staticmethod
+    def interpolate_time_coeff(coeff: torch.Tensor, index_float: torch.Tensor):
+        index_floor = index_float.floor().to(torch.int)
+        index_ceil = index_float.ceil().to(torch.int)
+        if index_float.remainder(1).eq(0).all():
+            coeff_interp = coeff[:, index_floor]
+        else:
+            coeff_ceil = coeff[:, index_ceil]
+            coeff_floor = coeff[:, index_floor]
+            # interpolate coefficients
+            index_shape = [1 for _ in range(coeff_floor.ndim)]
+            index_shape[1] = -1
+            index_scaler = (
+                ((index_float - index_floor) / (index_ceil - index_floor))
+                .reshape(index_shape)
+                .nan_to_num()
+            )
+            # ynt + scaler * (ynt1 - ynt)
+            # (1 - scaler) * ynt + scaler * ynt1
+            coeff_interp = (1 - index_scaler) * coeff_floor + index_scaler * coeff_ceil
+
+        return coeff_interp
 
 
 BasisSubType = TypeVar("BasisSubType", bound="Basis")

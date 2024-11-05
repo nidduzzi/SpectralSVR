@@ -2,6 +2,8 @@ import torch
 import logging
 import typing
 from typing import Callable
+from torchdiffeq import odeint
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -231,13 +233,14 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
     for dim, (target_mode, current_mode) in enumerate(
         zip(target_modes, current_modes), 1
     ):
+        device = x.device
         if target_mode < current_mode:
             start_range = torch.tensor(
                 range((target_mode - 1) // 2 + 1), dtype=torch.int
-            )
+            ).to(device=device)
             end_range = torch.tensor(
                 range(current_mode - target_mode // 2, current_mode), dtype=torch.int
-            )
+            ).to(device=device)
 
             x_resized = torch.concat(
                 (
@@ -249,14 +252,14 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
         elif target_mode > current_mode:
             start_range = torch.tensor(
                 range((current_mode - 1) // 2 + 1), dtype=torch.int
-            )
+            ).to(device=device)
             # make sure that end range is empty if the coefficient is only size 1
             end_range = torch.tensor(
                 range(current_mode // 2, current_mode)
                 if current_mode > 1
                 else range(0),
                 dtype=torch.int,
-            )
+            ).to(device=device)
             padding_size = target_mode - current_mode
             modes = list(x_resized.shape)
             modes[dim] = padding_size
@@ -343,6 +346,10 @@ def r2_expected_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
 
 RHSFuncType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 SolverSignatureType = Callable[[RHSFuncType, torch.Tensor, torch.Tensor], torch.Tensor]
+MixedRHSFuncType = Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]
+MixedSolverSignatureType = Callable[
+    [MixedRHSFuncType, torch.Tensor, torch.Tensor], torch.Tensor
+]
 
 
 def euler_solver(
@@ -363,7 +370,19 @@ def euler_solver(
         dt = t1 - t0
         y = solution[j - 1]
         solution[j] = y + dt * rhs_func(t0, y)
+        assert (
+            solution.isnan().sum() == 0
+        ), f"solver encountered nan at timestep {j} (t={t0})"
         # print(f"j {j}")
         j = j + 1
     # print(f"j_last {j}")
     return solution
+
+
+implicit_adams_solver: SolverSignatureType = partial(
+    odeint, method="implicit_adams", options={"max_iters": 4}
+)  # type: ignore
+
+lsoda_solver: SolverSignatureType = partial(
+    odeint, method="scipy_solver", options={"solver": "LSODA"}
+)  # type: ignore

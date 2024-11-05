@@ -1,6 +1,6 @@
 import abc
 import torch
-from ..basis import Basis
+from ..basis import BasisSubType
 
 
 class Problem(abc.ABC):
@@ -10,19 +10,19 @@ class Problem(abc.ABC):
     @abc.abstractmethod
     def generate(
         self,
-        basis: type[Basis],
+        basis: type[BasisSubType],
         n: int,
         modes: int | tuple[int, ...],
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
-    ) -> tuple[Basis, ...]:
+    ) -> tuple[BasisSubType, ...]:
         pass
 
     @abc.abstractmethod
-    def spectral_residual(self, *args, **kwargs) -> Basis:
+    def spectral_residual(self, u: BasisSubType, *args, **kwargs) -> BasisSubType:
         pass
 
     @abc.abstractmethod
-    def residual(self, *args, **kwargs) -> Basis:
+    def residual(self, u: BasisSubType, *args, **kwargs) -> BasisSubType:
         pass
