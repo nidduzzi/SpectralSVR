@@ -198,6 +198,7 @@ class Basis(abc.ABC):
                     coeff.flatten(0, 1),
                     res=res_spatial,
                     periodic=False,
+                    periods=self.periods[1:],
                 ).unflatten(0, coeff.shape[0:2])
                 res_t = res[0]
                 t = self.grid(res_t).to(device=device)
@@ -209,6 +210,7 @@ class Basis(abc.ABC):
                     coeff,
                     res=res_spatial,
                     periodic=False,
+                    periods=self.periods,
                 )
 
             values = values.to(self.coeff)
@@ -732,6 +734,22 @@ class Basis(abc.ABC):
                         plot_component = "real"
                         if self._complex_funcs:
                             logger.warning("plotting only real component")
+                    extent = (
+                        grid[0, 0, 1],
+                        grid[0, -1, 1],
+                        grid[0, 0, 0],
+                        grid[-1, 0, 0],
+                    )
+                    xlim = (
+                        grid[0, 0, 1],
+                        grid[0, -1, 1],
+                    )
+                    ylim = (
+                        grid[0, 0, 0],
+                        grid[-1, 0, 0],
+                    )
+                    kwargs["extent"] = kwargs.get("extent", extent)
+                    kwargs["origin"] = kwargs.get("origin", "lower")
                     match plot_component:
                         case "imag":
                             plot = plt.imshow(values[0].imag, **kwargs)
@@ -741,6 +759,8 @@ class Basis(abc.ABC):
                             raise NotImplementedError(
                                 "Can't plot both imaginary and real in 2D"
                             )
+                    plt.xlim(*xlim)
+                    plt.ylim(*ylim)
 
             case _:
                 raise NotImplementedError(

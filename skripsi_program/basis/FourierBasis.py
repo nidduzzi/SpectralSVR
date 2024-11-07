@@ -328,6 +328,7 @@ class FourierBasis(Basis):
         func: Literal["forward", "inverse"],
         res: slice,
         periodic: bool,
+        period: float,
     ) -> torch.Tensor:
         assert torch.is_complex(
             f
@@ -338,7 +339,6 @@ class FourierBasis(Basis):
             case "inverse":
                 sign = 1
         mode = f.shape[1]
-        period = res.stop - res.start
         if periodic:
             n = res.start + torch.arange(res.step).to(f) / res.step * period
         else:
@@ -362,6 +362,7 @@ class FourierBasis(Basis):
         func: Literal["forward", "inverse"],
         res: slice,
         periodic: bool,
+        period: float,
     ) -> torch.Tensor:
         # flatten so that each extra dimension is treated as a separate "sample"
         # move dimension to transform to the end so that it can stay intact after f is flatened
@@ -370,7 +371,11 @@ class FourierBasis(Basis):
         f_flatened = f_transposed.flatten(0, -2)
 
         F_flattened = FourierBasis._raw_transform(
-            f_flatened, func=func, res=res, periodic=periodic
+            f_flatened,
+            func=func,
+            res=res,
+            periodic=periodic,
+            period=period,
         )
         # unflatten so that the correct shape is returned
         F_transposed = F_flattened.reshape((*f_transposed.shape[:-1], res.step))
@@ -383,6 +388,7 @@ class FourierBasis(Basis):
         f: torch.Tensor,
         res: TransformResType | None = None,
         periodic: bool = True,
+        periods: PeriodsInputType = None,
     ) -> torch.Tensor:
         """
         transform
@@ -406,8 +412,15 @@ class FourierBasis(Basis):
         if not torch.is_complex(f):
             f = f * (1 + 0j)
         res = transformResType_to_tuple(res, tuple(f.shape[1:]))
+        periods = periodsInputType_to_tuple(periods, f.shape[1:])
         if ndims == 2:
-            F = FourierBasis._raw_transform(f, "forward", res=res[0], periodic=periodic)
+            F = FourierBasis._raw_transform(
+                f,
+                "forward",
+                res=res[0],
+                periodic=periodic,
+                period=periods[0],
+            )
         elif ndims > 2:
             # perform 1d transform over every dimension
             F = f
@@ -418,6 +431,7 @@ class FourierBasis(Basis):
                     func="forward",
                     res=res[cdim - 1],
                     periodic=periodic,
+                    period=periods[cdim - 1],
                 )
 
         return F
@@ -428,6 +442,7 @@ class FourierBasis(Basis):
         res: TransformResType | None = None,
         periodic: bool = True,
         scale: bool = True,
+        periods: PeriodsInputType = None,
     ):
         """
         inv_transform
@@ -452,6 +467,7 @@ class FourierBasis(Basis):
         if not torch.is_complex(F):
             F = F * (1 + 0j)
         res = transformResType_to_tuple(res, tuple(F.shape[1:]))
+        periods = periodsInputType_to_tuple(periods, F.shape[1:])
 
         if ndims == 2:
             f = FourierBasis._raw_transform(
@@ -459,6 +475,7 @@ class FourierBasis(Basis):
                 func="inverse",
                 res=res[0],
                 periodic=periodic,
+                period=periods[0],
             )
         elif ndims > 2:
             # perform 1d transform over every dimension
@@ -470,6 +487,7 @@ class FourierBasis(Basis):
                     func="inverse",
                     res=res[cdim - 1],
                     periodic=periodic,
+                    period=periods[cdim - 1],
                 )
 
         if scale:
