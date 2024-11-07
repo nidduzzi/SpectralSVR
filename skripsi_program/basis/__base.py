@@ -3,8 +3,7 @@ import abc
 from typing_extensions import Self, Literal, TypeVar, overload
 import matplotlib.pyplot as plt
 import logging
-from ..utils import resize_modes
-from ..utils import Number
+from ..utils import Number, resize_modes, interpolate_tensor
 # Basis functions
 # - able to set number of modes / basis functions
 # - provides access to the vector of basis function values evaluated at x
@@ -194,28 +193,25 @@ class Basis(abc.ABC):
             coeff = coeff.to(device=device)
 
             if self.time_dependent:
-                res_t = res[0]
                 res_spatial = res[1:]
+                values = self.inv_transform(
+                    coeff.flatten(0, 1),
+                    res=res_spatial,
+                    periodic=False,
+                ).unflatten(0, coeff.shape[0:2])
+                res_t = res[0]
                 t = self.grid(res_t).to(device=device)
-                index_float = t.flatten() / self.periods[0] * (coeff.shape[1] - 1)
-                coeff = self.interpolate_time_coeff(coeff, index_float)
-                values = (
-                    self.inv_transform(
-                        coeff.flatten(0, 1),
-                        res=res_spatial,
-                        periodic=True,
-                    )
-                    .unflatten(0, coeff.shape[0:2])
-                    .to(self.coeff)
-                )
+                index_float = t.flatten() / self.periods[0] * (values.shape[1] - 1)
+                values = self.interpolate_time_tensor(values, index_float)
             else:
                 res_spatial = res
                 values = self.inv_transform(
                     coeff,
                     res=res_spatial,
-                    periodic=True,
-                ).to(self.coeff)
+                    periodic=False,
+                )
 
+            values = values.to(self.coeff)
             grid = self.grid(res)
         else:
             if self.time_dependent:
@@ -807,7 +803,7 @@ class Basis(abc.ABC):
                 index_float = torch.linspace(0, 1, target_basis.time_size) * (
                     self.time_size - 1
                 )
-                coeff = self.interpolate_time_coeff(coeff, index_float)
+                coeff = self.interpolate_time_tensor(coeff, index_float)
         else:
             coeff = resize_modes(coeff, target_modes, rescale=rescale)
         copy.coeff = coeff
@@ -889,27 +885,10 @@ class Basis(abc.ABC):
         return copy
 
     @staticmethod
-    def interpolate_time_coeff(coeff: torch.Tensor, index_float: torch.Tensor):
-        index_floor = index_float.floor().to(torch.int)
-        index_ceil = index_float.ceil().to(torch.int)
-        if index_float.remainder(1).eq(0).all():
-            coeff_interp = coeff[:, index_floor]
-        else:
-            coeff_ceil = coeff[:, index_ceil]
-            coeff_floor = coeff[:, index_floor]
-            # interpolate coefficients
-            index_shape = [1 for _ in range(coeff_floor.ndim)]
-            index_shape[1] = -1
-            index_scaler = (
-                ((index_float - index_floor) / (index_ceil - index_floor))
-                .reshape(index_shape)
-                .nan_to_num()
-            )
-            # ynt + scaler * (ynt1 - ynt)
-            # (1 - scaler) * ynt + scaler * ynt1
-            coeff_interp = (1 - index_scaler) * coeff_floor + index_scaler * coeff_ceil
+    def interpolate_time_tensor(x: torch.Tensor, index_float: torch.Tensor):
+        x_interp = interpolate_tensor(x, index_float, dim=1)
 
-        return coeff_interp
+        return x_interp
 
 
 BasisSubType = TypeVar("BasisSubType", bound="Basis")

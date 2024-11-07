@@ -302,47 +302,30 @@ def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
     return x_zeroed
 
 
-def mse(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
-    mse = (u - u_pred).pow(2).sum(0)
-    if mean:
-        return mse.mean()
+def interpolate_tensor(x: torch.Tensor, index_float: torch.Tensor, dim: int = 1):
+    index_floor = index_float.floor().to(torch.int)
+    index_ceil = index_float.ceil().to(torch.int)
+    if index_float.remainder(1).eq(0).all():
+        x_interp = x.index_select(dim, index_floor)
     else:
-        return mse
+        x_ceil = x.index_select(dim, index_ceil)
+        x_floor = x.index_select(dim, index_floor)
+        # interpolate coefficients
+        index_shape = [1 for _ in range(x_floor.ndim)]
+        index_shape[1] = -1
+        index_scaler = (
+            ((index_float - index_floor) / (index_ceil - index_floor))
+            .reshape(index_shape)
+            .nan_to_num()
+        )
+        # ynt + scaler * (ynt1 - ynt)
+        # (1 - scaler) * ynt + scaler * ynt1
+        x_interp = torch.lerp(x_floor, x_ceil, index_scaler.to(x))
+
+    return x_interp
 
 
-def rmse(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
-    rmse = mse(u_pred, u, mean=False).pow(0.5)
-    if mean:
-        return rmse.mean()
-    else:
-        return rmse
-
-
-def r2_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
-    u_mean = u.mean(0)
-    ssr = mse(u_pred, u)
-    sst = mse(u, u_mean)
-    ssr_sst = ssr / sst
-
-    r2 = torch.nan_to_num(1 - ssr_sst)
-    if mean:
-        return r2.mean()
-    else:
-        return r2
-
-
-def r2_expected_score(u_pred: torch.Tensor, u: torch.Tensor, mean=True):
-    u_mean = u.mean(0)
-    ssg = mse(u_pred, u_mean)
-    sst = mse(u, u_mean)
-    ssg_sst = ssg / sst
-
-    r2_expected = torch.nan_to_num(1 - ssg_sst)
-    if mean:
-        return r2_expected.mean()
-    else:
-        return r2_expected
-
+# SOLVERS
 
 RHSFuncType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 SolverSignatureType = Callable[[RHSFuncType, torch.Tensor, torch.Tensor], torch.Tensor]

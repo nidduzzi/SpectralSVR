@@ -127,16 +127,13 @@ class FourierBasis(Basis):
                 if time_dependent and periods is not None
                 else periods,
             )
-            # linear interpolation between two time dependent sets of coefficient closest to evaluation time
-            # get two closest coeff
-            if periods is None:
-                periods = (1.0,)
-
-            index_float = t.flatten().real / periods[0] * (coeff.shape[1] - 1)
-            # interpolate
-            coeff_interp = cls.interpolate_time_coeff(coeff, index_float)
             # evaluate
-            sum_coeff_x_basis = cls.sum_mul(coeff_interp.flatten(2), basis)
+            sum_coeff_x_basis = cls.sum_mul(coeff.flatten(2), basis)
+            # interpolate
+            index_float = t.flatten().real / periods[0] * (coeff.shape[1] - 1)
+            sum_coeff_x_basis = cls.interpolate_time_tensor(
+                sum_coeff_x_basis, index_float
+            )
 
         else:
             basis = cls.fn(x, modes, periods=periods)
