@@ -28,16 +28,15 @@ class Antiderivative(Problem):
             modes = (modes,)
         assert n > 0, "number of samples n must be more than 0"
         for i, m in enumerate(modes):
-            assert m > 0, f"number of harmonics m must be more than 0 at dim {i}"
+            assert m > 0, f"number of modes m must be more than 0 at dim {i}"
         assert u0 is not None, "integration constant u0 must not be None"
-        # generate derivative functions
-        ut = basis.generate(n, modes, generator=generator, *args, **kwargs)
+        # generate solution functions
+        u = basis.generate(n, modes, generator=generator, *args, **kwargs)
         assert (
-            ut.coeff is not None
-        ), "generated derivative functions ut should not have None coeff"
-        ut.coeff[:, 0].mul_(0)
-        # compute antiderivative functions
-        u = ut.integral()
+            u.coeff is not None
+        ), "generated solution functions u should not have None coeff"
+        # compute derivative functions
+        ut = u.grad()
         # set the integration coefficient
         assert (
             u.coeff is not None and ut.coeff is not None
@@ -65,7 +64,12 @@ class Antiderivative(Problem):
 
         return residual
 
-    def residual(self, u: BasisSubType, *args, **kwargs) -> BasisSubType:
-        residual = super().residual(*args, **kwargs)
-        raise NotImplementedError("Function value residual not implemented")
+    def residual(self, u: BasisSubType, ut: BasisSubType) -> BasisSubType:
+        u_val, grid = u.get_values_and_grid()
+        ut_val = ut.get_values()
+        dt = grid[1, 0] - grid[0, 0]
+        u_grad = torch.gradient(u_val, spacing=dt.item(), dim=1)[0]
+        residual_val = u_grad - ut_val
+        residual = u.copy()
+        residual.coeff = u.transform(residual_val)
         return residual

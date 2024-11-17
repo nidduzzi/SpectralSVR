@@ -28,19 +28,17 @@ def test_SpectralSVR():
 
     # Interpolate f & u
     t = FourierBasis.grid(slice(0, 1, 200))
-    f_basis = FourierBasis(f_fourier.coeff)
-    f = f_basis(t)
+    f = f_fourier(t)
     f = f.real
 
     s = FourierBasis.grid(slice(-1, 1, 400))
-    u_basis = FourierBasis(u_fourier.coeff)
-    u = u_basis(s)
+    u = u_fourier(s)
     u = u.real
 
     # Add noise
 
     # Train-test split
-    df = TensorDataset(f, u, u_fourier.coeff)
+    df = TensorDataset(to_real_coeff(f_fourier.coeff), u, u_fourier.coeff)
     df_train, df_test = random_split(df, (0.8, 0.2), generator=generator)
 
     # Scale inputs based on training inputs
