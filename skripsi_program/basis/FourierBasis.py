@@ -329,6 +329,7 @@ class FourierBasis(Basis):
         res: slice,
         periodic: bool,
         period: float,
+        allow_fft: bool,
     ) -> torch.Tensor:
         assert torch.is_complex(
             f
@@ -339,19 +340,37 @@ class FourierBasis(Basis):
             case "inverse":
                 sign = 1
         mode = f.shape[1]
-        if periodic:
-            n = res.start + torch.arange(res.step).to(f) / res.step * period
-        else:
-            n = torch.linspace(res.start, res.stop, res.step).to(f)
-        e = FourierBasis.fn(
-            n.view(-1, 1),
-            mode,
-            periods=period,
-            constant=sign * 2j * torch.pi,
+        domain_starts_at_0 = res.start == 0
+        domain_length_equal_to_period = res.stop == period
+        can_use_fft = (
+            domain_starts_at_0
+            and domain_length_equal_to_period
+            and periodic
+            and allow_fft
         )
-        # TODO: fix performance problem with very narrow tensors (eg. size 1x400000 tensors)
+        if can_use_fft:
+            if func == "forward":
+                F = torch.fft.fft(f, dim=1, n=res.step, norm="backward")
+            elif func == "inverse":
+                F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
+        else:
+            if periodic:
+                n = res.start + torch.arange(res.step).to(f) / res.step * period
+            else:
+                n = torch.linspace(res.start, res.stop, res.step).to(f)
+            e = FourierBasis.fn(
+                n.view(-1, 1),
+                mode,
+                periods=period,
+                constant=sign * 2j * torch.pi,
+            )
+            # TODO: fix performance problem with very narrow tensors (eg. size 1x400000 tensors)
 
-        F = torch.mm(f, e.T)
+            F = torch.mm(f, e.T)
+
+        assert isinstance(
+            F, torch.Tensor
+        ), f"Something went wrong during the raw transform, expected result of {torch.Tensor}, but got {type(F)}"
 
         return F
 
@@ -363,6 +382,7 @@ class FourierBasis(Basis):
         res: slice,
         periodic: bool,
         period: float,
+        allow_fft: bool,
     ) -> torch.Tensor:
         # flatten so that each extra dimension is treated as a separate "sample"
         # move dimension to transform to the end so that it can stay intact after f is flatened
@@ -376,6 +396,7 @@ class FourierBasis(Basis):
             res=res,
             periodic=periodic,
             period=period,
+            allow_fft=allow_fft,
         )
         # unflatten so that the correct shape is returned
         F_transposed = F_flattened.reshape((*f_transposed.shape[:-1], res.step))
@@ -389,6 +410,7 @@ class FourierBasis(Basis):
         res: TransformResType | None = None,
         periodic: bool = True,
         periods: PeriodsInputType = None,
+        allow_fft: bool = True,
     ) -> torch.Tensor:
         """
         transform
@@ -400,7 +422,9 @@ class FourierBasis(Basis):
         Arguments:
             f {torch.Tensor} -- m discretized real valued functions
             res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
-            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic) (default: {True})
+            periods: {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
+            allow_fft {bool} -- allow the use of torch.fft module (default: {True}). By default the function will use fft if possible (domain is [0,1) which is also periodic)
 
         Returns:
             torch.Tensor -- m complex valued coefficients of f
@@ -420,6 +444,7 @@ class FourierBasis(Basis):
                 res=res[0],
                 periodic=periodic,
                 period=periods[0],
+                allow_fft=allow_fft,
             )
         elif ndims > 2:
             # perform 1d transform over every dimension
@@ -432,6 +457,7 @@ class FourierBasis(Basis):
                     res=res[cdim - 1],
                     periodic=periodic,
                     period=periods[cdim - 1],
+                    allow_fft=allow_fft,
                 )
 
         return F
@@ -443,6 +469,7 @@ class FourierBasis(Basis):
         periodic: bool = True,
         scale: bool = True,
         periods: PeriodsInputType = None,
+        allow_fft: bool = True,
     ):
         """
         inv_transform
@@ -452,10 +479,12 @@ class FourierBasis(Basis):
         of coefficients F
 
         Arguments:
-            f {torch.Tensor} -- m discretized real valued functions
-            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
-            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic)
-            scale {bool} -- whether the outputs are scaled by N or not
+            f {torch.Tensor} -- m discretized complex valued coefficients with K modes
+            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1) if periodic or [0,1] if not periodic.
+            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic) (default: {True})
+            scale {bool} -- whether the outputs are scaled by N or not (default: {True})
+            periods {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
+            allow_fft {bool} -- allow the use of torch.fft module (default: {True}). By default the function will use fft if possible (domain is [0,1) which is also periodic)
 
         Returns:
             torch.Tensor -- m complex valued coefficients of f
@@ -476,6 +505,7 @@ class FourierBasis(Basis):
                 res=res[0],
                 periodic=periodic,
                 period=periods[0],
+                allow_fft=allow_fft,
             )
         elif ndims > 2:
             # perform 1d transform over every dimension
@@ -488,6 +518,7 @@ class FourierBasis(Basis):
                     res=res[cdim - 1],
                     periodic=periodic,
                     period=periods[cdim - 1],
+                    allow_fft=allow_fft,
                 )
 
         if scale:

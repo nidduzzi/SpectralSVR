@@ -734,6 +734,7 @@ class Basis(abc.ABC):
                         plot_component = "real"
                         if self._complex_funcs:
                             logger.warning("plotting only real component")
+                    # TODO: fix by subtracting half pixel length so edges are in the middle of pixels. possible fix by computing pixle length with dividing period with number of pixel.
                     extent = (
                         grid[0, 0, 1],
                         grid[0, -1, 1],
@@ -750,6 +751,7 @@ class Basis(abc.ABC):
                     )
                     kwargs["extent"] = kwargs.get("extent", extent)
                     kwargs["origin"] = kwargs.get("origin", "lower")
+                    kwargs["aspect"] = kwargs.get("aspect", "auto")
                     match plot_component:
                         case "imag":
                             plot = plt.imshow(values[0].imag, **kwargs)
