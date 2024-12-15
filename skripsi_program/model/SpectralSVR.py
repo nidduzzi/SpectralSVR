@@ -25,12 +25,8 @@ class SpectralSVR:
     def __init__(
         self,
         basis: Basis,
-        C=1.0,
-        batch_size_func=lambda dims: 2**21 // dims + 1,
-        dtype=torch.float32,
-        svr=LSSVR,
+        svr=LSSVR() ,
         verbose: Literal["ALL", "SVR", "LITE", False, None] = None,
-        **kwargs,
     ) -> None:
         """
         __init__
@@ -40,8 +36,6 @@ class SpectralSVR:
             basis {Basis} -- Basis to use for evaluating the computed function
 
         Keyword Arguments:
-            C {float} -- the regularization term. Smaller values meaning less complicated models and larger means the model follows the data more closely (default: {1.0})
-            sigma {float} -- kernel bandwidth (default: {1.0})
             verbose {False | "All" | "SVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
         """
         is_svr_verbose = False
@@ -58,13 +52,8 @@ class SpectralSVR:
                 self.verbose = False
 
         self.basis = basis
-        self.svr = svr(
-            C=C,
-            batch_size_func=batch_size_func,
-            dtype=dtype,
-            verbose=is_svr_verbose,
-            **kwargs,
-        )
+        self.svr = svr
+        self.svr.verbose = is_svr_verbose
 
     def forward(
         self,
@@ -133,6 +122,8 @@ class SpectralSVR:
             u_coeff = u_coeff.flatten(1)
 
         if torch.is_complex(u_coeff):
+            # TODO: instance should remember if training output samples are complex
+            # this info is used to inform the format of the output during evaluation
             u_coeff = to_real_coeff(u_coeff)
         if torch.is_complex(f):
             f = to_real_coeff(f)
@@ -208,7 +199,7 @@ class SpectralSVR:
         assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
         f_shape = (u.shape[0], self.svr.sv_x.shape[1])
         # inverse problem
-        f_pred: torch.Tensor = torch.randn(f_shape, generator=generator) * gain
+        f_pred = torch.randn(f_shape, generator=generator) * gain
         f_pred.requires_grad_()
 
         optim = torch.optim.Adam([f_pred], **optimizer_params)

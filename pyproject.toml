@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skripsi-program"
-version = "0.8.4"
+version = "0.8.5"
 description = ""
 authors = ["nidduzzi <74892632+nidduzzi@users.noreply.github.com>"]
 readme = "README.md"
@@ -22,6 +22,9 @@ ray = {extras = ["tune"], version = "^2.37.0"}
 hyperopt = "^0.2.7"
 ipywidgets = "^8.1.5"
 torchdiffeq = "^0.2.4"
+xarray = "^2024.10.0"
+zarr = "^2.18.3"
+gcsfs = "^2024.10.0"
 
 [tool.poetry.group.dev.dependencies]
 types-tqdm = "^4.65.0.1"

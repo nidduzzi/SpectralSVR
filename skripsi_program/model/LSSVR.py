@@ -326,7 +326,9 @@ class LSSVR(object):
     ) -> np.ndarray[typing.Any, np.dtype[np.float_]]: ...
 
     def predict(
-        self, X: np.ndarray[typing.Any, np.dtype[np.float_]] | torch.Tensor
+        self,
+        X: np.ndarray[typing.Any, np.dtype[np.float_]] |
+        torch.Tensor,
     ) -> np.ndarray[typing.Any, np.dtype[np.float_]] | torch.Tensor:
         """Predicts the labels of data X given a trained model.
         - X: ndarray of shape (n_samples, n_attributes)
@@ -441,3 +443,8 @@ class LSSVR(object):
     ):
         if self.verbose:
             print(*values)
+
+NumpyArrayorTensor = (
+    np.ndarray[typing.Any, np.dtype[np.float_]] |
+    torch.Tensor
+)

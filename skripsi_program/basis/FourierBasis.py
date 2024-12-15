@@ -172,6 +172,8 @@ class FourierBasis(Basis):
             x.shape[1] == len(periods)
         ), f"x has dimensions {x.shape[1]} and periods has dimensions {len(periods)}, both need to have the same dimensions (periods the function periodicity in each dimension)"
         ndims = x.shape[1]
+        if not x.is_floating_point() and not x.is_complex():
+            x = x.float()
 
         # Compute the Fourier basis functions
         # one time for each dimension
@@ -341,10 +343,10 @@ class FourierBasis(Basis):
                 sign = 1
         mode = f.shape[1]
         domain_starts_at_0 = res.start == 0
-        domain_length_equal_to_period = res.stop == period
+        domain_end_equal_to_period = res.stop == period
         can_use_fft = (
             domain_starts_at_0
-            and domain_length_equal_to_period
+            and domain_end_equal_to_period
             and periodic
             and allow_fft
         )
@@ -355,9 +357,12 @@ class FourierBasis(Basis):
                 F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
         else:
             if periodic:
-                n = res.start + torch.arange(res.step).to(f) / res.step * period
+                n = res.start + torch.arange(res.step).to(f)
+                n = n / res.step * period
             else:
-                n = torch.linspace(res.start, res.stop, res.step).to(f)
+                n = torch.linspace(
+                    res.start, res.stop, res.step
+                ).to(f)
             e = FourierBasis.fn(
                 n.view(-1, 1),
                 mode,
@@ -437,28 +442,18 @@ class FourierBasis(Basis):
             f = f * (1 + 0j)
         res = transformResType_to_tuple(res, tuple(f.shape[1:]))
         periods = periodsInputType_to_tuple(periods, f.shape[1:])
-        if ndims == 2:
-            F = FourierBasis._raw_transform(
-                f,
-                "forward",
-                res=res[0],
+        # perform 1d transform over every dimension
+        F = f
+        for cdim in range(1, ndims):
+            F = FourierBasis._ndim_transform(
+                F,
+                dim=cdim,
+                func="forward",
+                res=res[cdim - 1],
                 periodic=periodic,
-                period=periods[0],
+                period=periods[cdim - 1],
                 allow_fft=allow_fft,
             )
-        elif ndims > 2:
-            # perform 1d transform over every dimension
-            F = f
-            for cdim in range(1, ndims):
-                F = FourierBasis._ndim_transform(
-                    F,
-                    dim=cdim,
-                    func="forward",
-                    res=res[cdim - 1],
-                    periodic=periodic,
-                    period=periods[cdim - 1],
-                    allow_fft=allow_fft,
-                )
 
         return F
 
@@ -498,28 +493,18 @@ class FourierBasis(Basis):
         res = transformResType_to_tuple(res, tuple(F.shape[1:]))
         periods = periodsInputType_to_tuple(periods, F.shape[1:])
 
-        if ndims == 2:
-            f = FourierBasis._raw_transform(
-                F,
+        # perform 1d transform over every dimension
+        f = F
+        for cdim in range(1, ndims):
+            f = FourierBasis._ndim_transform(
+                f,
+                dim=cdim,
                 func="inverse",
-                res=res[0],
+                res=res[cdim - 1],
                 periodic=periodic,
-                period=periods[0],
+                period=periods[cdim - 1],
                 allow_fft=allow_fft,
             )
-        elif ndims > 2:
-            # perform 1d transform over every dimension
-            f = F
-            for cdim in range(1, ndims):
-                f = FourierBasis._ndim_transform(
-                    f,
-                    dim=cdim,
-                    func="inverse",
-                    res=res[cdim - 1],
-                    periodic=periodic,
-                    period=periods[cdim - 1],
-                    allow_fft=allow_fft,
-                )
 
         if scale:
             f = f.div(torch.tensor(F.shape[1:]).prod())
