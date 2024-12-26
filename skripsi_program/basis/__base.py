@@ -75,7 +75,7 @@ class Basis(abc.ABC):
     @coeff.setter
     @abc.abstractmethod
     def coeff(self, coeff: torch.Tensor | None):
-        if coeff is None:
+        if coeff is None or coeff.numel() == 0:
             self._coeff = torch.empty(0, dtype=self.coeff_dtype)
         else:
             assert (

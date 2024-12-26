@@ -4,6 +4,13 @@ import typing
 from typing import Callable
 from torchdiffeq import odeint
 from functools import partial
+from torchmetrics.functional.regression import (
+    mean_squared_error,
+    mean_absolute_error,
+    symmetric_mean_absolute_percentage_error,
+    r2_score,
+    relative_squared_error,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +226,31 @@ def scale_to_standard(x: torch.Tensor):
     scaler = StandardScaler().fit(x)
     x_scaled = scaler.transform(x)
     return x_scaled
+
+
+def get_metrics(preds: torch.Tensor, targets: torch.Tensor):
+    nan_pred_sum = torch.isnan(preds).sum().item()
+    mse = mean_squared_error(preds, targets)
+    rmse = mean_squared_error(preds, targets, squared=False)
+    mae = mean_absolute_error(preds, targets)
+    if targets.shape[0] > 1:
+        r2 = r2_score(preds, targets)
+    else:
+        r2 = torch.tensor(float("nan"))
+    smape = symmetric_mean_absolute_percentage_error(preds, targets)
+    # TODO: trace problem of rse and rrse values blowing up when a model trained with noise is tested against the clean version of u_coeff_targets
+    rse = relative_squared_error(preds, targets)
+    rrse = relative_squared_error(preds, targets, squared=False)
+    return {
+        "mse": mse.item(),
+        "rmse": rmse.item(),
+        "mae": mae.item(),
+        "r2": r2.item(),
+        "smape": smape.item(),
+        "rse": rse.item(),
+        "rrse": rrse.item(),
+        "pred_nan_sum": nan_pred_sum,
+    }
 
 
 def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=True):

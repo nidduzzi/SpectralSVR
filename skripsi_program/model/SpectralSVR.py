@@ -4,14 +4,10 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis, ResType
 from .LSSVR import LSSVR
-from ..utils import to_complex_coeff, to_real_coeff
+from ..utils import to_complex_coeff, to_real_coeff, get_metrics
 from typing import Literal, Union, Callable
 from torchmetrics.functional.regression import (
     mean_squared_error,
-    mean_absolute_error,
-    symmetric_mean_absolute_percentage_error,
-    r2_score,
-    relative_squared_error,
 )
 import logging
 # model from fourier/chebyshev series
@@ -25,7 +21,7 @@ class SpectralSVR:
     def __init__(
         self,
         basis: Basis,
-        svr=LSSVR() ,
+        svr=LSSVR(),
         verbose: Literal["ALL", "SVR", "LITE", False, None] = None,
     ) -> None:
         """
@@ -112,14 +108,13 @@ class SpectralSVR:
             u_u_time_dependent {bool} -- whether the output coefficients are time dependent or not (default: {False})
         """
         self.basis.time_dependent = u_time_dependent
+        self.modes = Basis.get_modes(u_coeff, u_time_dependent)
+        f = f.flatten(1)
+        u_coeff = u_coeff.flatten(1)
+
         if self.basis.coeff_dtype.is_complex:
             u_coeff = to_complex_coeff(u_coeff)
-        self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         self.print(f"modes: {self.modes}")
-        if f.ndim > 2:
-            f = f.flatten(1)
-        if u_coeff.ndim > 2:
-            u_coeff = u_coeff.flatten(1)
 
         if torch.is_complex(u_coeff):
             # TODO: instance should remember if training output samples are complex
@@ -136,6 +131,8 @@ class SpectralSVR:
         u_coeff_targets: torch.Tensor,
         res: ResType = 200,
     ):
+        f = f.flatten(1)
+        u_coeff_targets = u_coeff_targets.flatten(1)
         if torch.is_complex(f):
             logger.debug("transform f to real")
             f = to_real_coeff(f)
@@ -143,26 +140,6 @@ class SpectralSVR:
         if torch.is_complex(u_coeff_targets):
             logger.debug("transform u_coeff to real")
             u_coeff_targets = to_real_coeff(u_coeff_targets)
-
-        def get_metrics(preds: torch.Tensor, targets: torch.Tensor):
-            nan_pred_sum = torch.isnan(preds).sum().item()
-            mse = mean_squared_error(preds, targets)
-            rmse = mean_squared_error(preds, targets, squared=False)
-            mae = mean_absolute_error(preds, targets)
-            r2 = r2_score(preds, targets)
-            smape = symmetric_mean_absolute_percentage_error(preds, targets)
-            rse = relative_squared_error(preds, targets)
-            rrse = relative_squared_error(preds, targets, squared=False)
-            return {
-                "mse": mse.item(),
-                "rmse": rmse.item(),
-                "mae": mae.item(),
-                "r2": r2.item(),
-                "smape": smape.item(),
-                "rse": rse.item(),
-                "rrse": rrse.item(),
-                "pred_nan_sum": nan_pred_sum,
-            }
 
         grid = self.basis.grid(res).flatten(0, -2)
 
@@ -186,7 +163,7 @@ class SpectralSVR:
 
     def inverse(
         self,
-        u: torch.Tensor,
+        u_coeff: torch.Tensor,
         points: torch.Tensor,
         loss_fn: Callable[
             [torch.Tensor, torch.Tensor], torch.Tensor
@@ -196,21 +173,56 @@ class SpectralSVR:
         gain=0.2,
         **optimizer_params,
     ):
-        assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
-        f_shape = (u.shape[0], self.svr.sv_x.shape[1])
-        # inverse problem
-        f_pred = torch.randn(f_shape, generator=generator) * gain
-        f_pred.requires_grad_()
+        f_coeff_pred = self.inverse_coeff(
+            u_coeff,
+            loss_fn=loss_fn,
+            epochs=epochs,
+            generator=generator,
+            gain=gain,
+            **optimizer_params,
+        )
+        f = self.basis.copy()
+        f.coeff = f_coeff_pred
+        f_pred = f(points)
 
-        optim = torch.optim.Adam([f_pred], **optimizer_params)
+        return f_pred
+
+    def inverse_coeff(
+        self,
+        u_coeff: torch.Tensor,
+        loss_fn: Callable[
+            [torch.Tensor, torch.Tensor], torch.Tensor
+        ] = mean_squared_error,
+        epochs=100,
+        generator=torch.Generator().manual_seed(42),
+        gain=0.05,
+        **optimizer_params,
+    ):
+        assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
+        f_shape = (u_coeff.shape[0], self.svr.sv_x.shape[1])
+        complex_coeff = u_coeff.is_complex()
+        original_device = u_coeff.device
+        u_coeff = to_real_coeff(u_coeff.flatten(1)).to(self.svr.device)
+
+        # inverse problem
+        f_coeff_pred = (
+            torch.randn(f_shape, generator=generator).to(self.svr.device) * gain
+        )
+        f_coeff_pred.requires_grad_()
+        optim = torch.optim.Adam([f_coeff_pred], **optimizer_params)
+
         for epoch in range(epochs):
             optim.zero_grad()
-            u_pred = self.forward(f_pred, points).real
-            loss = loss_fn(u_pred, u)
+            u_coeff_pred = self.svr.predict(f_coeff_pred)
+            loss = loss_fn(u_coeff_pred, u_coeff)
             loss.backward()
             optim.step()
         optim.zero_grad()
-        return f_pred
+        f_coeff_pred.requires_grad_(False)
+        if complex_coeff:
+            f_coeff_pred = to_complex_coeff(f_coeff_pred)
+        f_coeff_pred = f_coeff_pred.unflatten(1, self.modes).to(original_device)
+        return f_coeff_pred
 
     def print(
         self,
