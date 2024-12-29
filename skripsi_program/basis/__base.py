@@ -1,7 +1,9 @@
 import torch
 import abc
 from typing_extensions import Self, Literal, TypeVar, overload
+from types import ModuleType
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import logging
 from ..utils import Number, resize_modes, interpolate_tensor
 # Basis functions
@@ -592,7 +594,7 @@ class Basis(abc.ABC):
         i=0,
         n=1,
         res: ResType | None = None,
-        plt=plt,
+        plt: ModuleType | Axes = plt,
         complex_scatter=False,
         plot_component: None | Literal["imag", "real"] = None,
         legend: bool = True,
@@ -736,18 +738,18 @@ class Basis(abc.ABC):
                             logger.warning("plotting only real component")
                     # TODO: fix by subtracting half pixel length so edges are in the middle of pixels. possible fix by computing pixle length with dividing period with number of pixel.
                     extent = (
-                        grid[0, 0, 1],
-                        grid[0, -1, 1],
-                        grid[0, 0, 0],
-                        grid[-1, 0, 0],
+                        grid[0, 0, 1].item(),
+                        grid[0, -1, 1].item(),
+                        grid[0, 0, 0].item(),
+                        grid[-1, 0, 0].item(),
                     )
                     xlim = (
-                        grid[0, 0, 1],
-                        grid[0, -1, 1],
+                        grid[0, 0, 1].item(),
+                        grid[0, -1, 1].item(),
                     )
                     ylim = (
-                        grid[0, 0, 0],
-                        grid[-1, 0, 0],
+                        grid[0, 0, 0].item(),
+                        grid[-1, 0, 0].item(),
                     )
                     kwargs["extent"] = kwargs.get("extent", extent)
                     kwargs["origin"] = kwargs.get("origin", "lower")
@@ -761,8 +763,13 @@ class Basis(abc.ABC):
                             raise NotImplementedError(
                                 "Can't plot both imaginary and real in 2D"
                             )
-                    plt.xlim(*xlim)
-                    plt.ylim(*ylim)
+
+                    if isinstance(plt, Axes):
+                        plt.set_xlim(*xlim)
+                        plt.set_ylim(*ylim)
+                    else:
+                        plt.xlim(*xlim)
+                        plt.ylim(*ylim)
 
             case _:
                 raise NotImplementedError(
