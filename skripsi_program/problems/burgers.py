@@ -42,7 +42,7 @@ class Burgers(Problem):
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         if isinstance(modes, int):
-            modes = (modes,)
+            modes = (modes, modes)
         assert n > 0, "number of samples n must be more than 0"
         for dim, m in enumerate(modes):
             assert m > 0, f"number of modes m must be more than 0 at dim {dim}"
@@ -68,15 +68,14 @@ class Burgers(Problem):
             # use method of manufactured solution
             # generate solution itself since u0 just follows from the generate solution
             time_mode = modes[0]
-            if len(modes) > 1:
-                modes = modes[1:]
+            spatial_modes = modes[1:]
             u = basis.generate(
-                n, (time_mode, *modes), periods=periods, generator=generator
+                n, modes, periods=periods, generator=generator
             )
-            res_modes = tuple(slice(0, L, mode) for mode in modes)
+            res_modes = tuple(slice(0, L, mode) for mode in spatial_modes)
 
             fst = self.spectral_residual(
-                u, basis(basis.generate_empty(n, (time_mode, *modes))), nu
+                u, basis(basis.generate_empty(n, modes)), nu
             )
 
             u_gen = u
@@ -84,11 +83,11 @@ class Burgers(Problem):
             # convert to timed dependent coeffs
             if time_dependent_coeff:
                 u_val = u.get_values(res=(time_domain, *res_modes))
-                u_coeff = basis.transform(u_val.flatten(0, 1)).reshape((n, nt, *modes))
+                u_coeff = basis.transform(u_val.flatten(0, 1)).reshape((n, nt, *spatial_modes))
                 u_gen = basis(coeff=u_coeff, time_dependent=True, periods=periods)
 
                 f_val = fst.get_values(res=(time_domain, *res_modes))
-                f_coeff = basis.transform(f_val.flatten(0, 1)).reshape((n, nt, *modes))
+                f_coeff = basis.transform(f_val.flatten(0, 1)).reshape((n, nt, *spatial_modes))
                 f_gen = basis(coeff=f_coeff, time_dependent=True, periods=periods)
 
         else:
@@ -96,6 +95,8 @@ class Burgers(Problem):
             # TODO: use Exponential Time Differencing RK4 (ETDRK4) solver for more stable and accurate results
             # https://matematicas.uclm.es/cedya09/archive/textos/129_de-la-Hoz-Mendez-F.pdf
             #
+            # ignore time modes
+            spatial_modes = modes[1:]
             u_gen, f_gen = self.solve_numerically(
                 basis,
                 n,
