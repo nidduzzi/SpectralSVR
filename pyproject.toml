@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skripsi-program"
-version = "0.8.9"
+version = "0.8.10"
 description = ""
 authors = ["nidduzzi <74892632+nidduzzi@users.noreply.github.com>"]
 readme = "README.md"
@@ -14,7 +14,7 @@ jaxtyping = "^0.2.20"
 pandas = "^2.2.2"
 torchmetrics = "^1.6.1"
 scikit-learn = "^1.5.0"
-matplotlib = "^3.9.0"
+matplotlib = "~3.7.5"
 torch = {version = "^2.4.1", source = "pytorch-gpu"}
 torchvision = {version = "^0.19.1", source = "pytorch-gpu"}
 torchaudio = {version = "^2.4.1", source = "pytorch-gpu"}
