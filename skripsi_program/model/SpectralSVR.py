@@ -70,6 +70,7 @@ class SpectralSVR:
         Returns:
             torch.Tensor -- _description_
         """
+        # TODO: add logic for multidimensional functions (2D+)
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
@@ -129,33 +130,48 @@ class SpectralSVR:
         self,
         f: torch.Tensor,
         u_coeff_targets: torch.Tensor,
-        res: ResType = 200,
+        res: ResType | None = None,
     ):
         f = f.flatten(1)
-        u_coeff_targets = u_coeff_targets.flatten(1)
         if torch.is_complex(f):
             logger.debug("transform f to real")
             f = to_real_coeff(f)
         u_coeff_preds = self.svr.predict(f)
-        if torch.is_complex(u_coeff_targets):
-            logger.debug("transform u_coeff to real")
-            u_coeff_targets = to_real_coeff(u_coeff_targets)
 
-        grid = self.basis.grid(res).flatten(0, -2)
+        if self.basis.coeff_dtype.is_complex:
+            u_coeff_preds = to_complex_coeff(u_coeff_preds)
+        u_coeff_preds = u_coeff_preds.unflatten(1, u_coeff_targets.shape[1:])
 
-        u_preds = self.basis.evaluate(
-            coeff=to_complex_coeff(u_coeff_preds),
-            x=grid,
-            time_dependent=self.basis.time_dependent,
-        ).real
-        u_targets = self.basis.evaluate(
-            coeff=to_complex_coeff(u_coeff_targets),
-            x=grid,
-            time_dependent=self.basis.time_dependent,
-        ).real
+        if self.basis.time_dependent:
+            time_shape = u_coeff_targets.shape[1]
+
+            u_preds = (
+                self.basis.inv_transform(u_coeff_preds.flatten(0, 1), res=res)
+                .unflatten(0, (-1, time_shape))
+                .flatten(1)
+            )
+            u_targets = (
+                self.basis.inv_transform(u_coeff_targets.flatten(0, 1), res=res)
+                .unflatten(0, (-1, time_shape))
+                .flatten(1)
+            )
+
+        else:
+            u_preds = self.basis.inv_transform(u_coeff_preds, res=res).flatten(1)
+            u_targets = self.basis.inv_transform(u_coeff_targets, res=res).flatten(1)
+
+        if self.basis._complex_funcs:
+            u_preds = to_real_coeff(u_preds)
+            u_targets = to_real_coeff(u_targets)
+        else:
+            u_preds = u_preds.real
+            u_targets = u_targets.real
 
         metrics = {
-            "spectral": get_metrics(u_coeff_preds, u_coeff_targets),
+            "spectral": get_metrics(
+                to_real_coeff(u_coeff_preds.flatten(1)),
+                to_real_coeff(u_coeff_targets.flatten(1)),
+            ),
             "function value": get_metrics(u_preds, u_targets),
         }
 
@@ -173,6 +189,7 @@ class SpectralSVR:
         gain=0.2,
         **optimizer_params,
     ):
+        # TODO: add logic for multidimensional functions (2D+)
         f_coeff_pred = self.inverse_coeff(
             u_coeff,
             loss_fn=loss_fn,
@@ -198,6 +215,7 @@ class SpectralSVR:
         gain=0.05,
         **optimizer_params,
     ):
+        # TODO: add logic for multidimensional functions (2D+)
         assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
         f_shape = (u_coeff.shape[0], self.svr.sv_x.shape[1])
         complex_coeff = u_coeff.is_complex()

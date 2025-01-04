@@ -3,7 +3,7 @@ from .__base import (
     EvaluationModeType,
     PeriodsInputType,
     periodsInputType_to_tuple,
-    TransformResType,
+    ResType,
     transformResType_to_tuple,
 )
 from ..utils import to_complex_coeff
@@ -345,10 +345,7 @@ class FourierBasis(Basis):
         domain_starts_at_0 = res.start == 0
         domain_end_equal_to_period = res.stop == period
         can_use_fft = (
-            domain_starts_at_0
-            and domain_end_equal_to_period
-            and periodic
-            and allow_fft
+            domain_starts_at_0 and domain_end_equal_to_period and periodic and allow_fft
         )
         if can_use_fft:
             if func == "forward":
@@ -360,9 +357,7 @@ class FourierBasis(Basis):
                 n = res.start + torch.arange(res.step).to(f)
                 n = n / res.step * period
             else:
-                n = torch.linspace(
-                    res.start, res.stop, res.step
-                ).to(f)
+                n = torch.linspace(res.start, res.stop, res.step).to(f)
             e = FourierBasis.fn(
                 n.view(-1, 1),
                 mode,
@@ -412,7 +407,7 @@ class FourierBasis(Basis):
     @staticmethod
     def transform(
         f: torch.Tensor,
-        res: TransformResType | None = None,
+        res: ResType | None = None,
         periodic: bool = True,
         periods: PeriodsInputType = None,
         allow_fft: bool = True,
@@ -460,7 +455,7 @@ class FourierBasis(Basis):
     @staticmethod
     def inv_transform(
         F: torch.Tensor,
-        res: TransformResType | None = None,
+        res: ResType | None = None,
         periodic: bool = True,
         scale: bool = True,
         periods: PeriodsInputType = None,

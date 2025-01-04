@@ -15,7 +15,6 @@ ResType = int | slice | tuple[slice, ...]
 EvaluationModeType = Literal["inverse transform", "basis"]
 AutoEvaluationModeType = Literal["auto"] | EvaluationModeType
 PeriodsInputType = Number | list[Number] | tuple[Number, ...] | None
-TransformResType = int | tuple[slice, ...]
 
 
 def periodsInputType_to_tuple(
@@ -32,12 +31,14 @@ def periodsInputType_to_tuple(
 
 
 def transformResType_to_tuple(
-    res: TransformResType | None, modes: tuple[int, ...]
+    res: ResType | None, modes: tuple[int, ...]
 ) -> tuple[slice, ...]:
     if res is None:
         _res = tuple(slice(0, 1, mode) for mode in modes)
     elif isinstance(res, int):
         _res = tuple(slice(0, 1, res) for mode in modes)
+    elif isinstance(res, slice):
+        _res = tuple(res for mode in modes)
     else:
         assert len(res) == len(
             modes
@@ -393,7 +394,7 @@ class Basis(abc.ABC):
     @abc.abstractmethod
     def transform(
         f: torch.Tensor,
-        res: TransformResType | None = None,
+        res: ResType | None = None,
         periodic: bool = False,
         **kwargs,
     ) -> torch.Tensor:
@@ -416,7 +417,7 @@ class Basis(abc.ABC):
     @abc.abstractmethod
     def inv_transform(
         f: torch.Tensor,
-        res: TransformResType | None = None,
+        res: ResType | None = None,
         periodic: bool = False,
         **kwargs,
     ) -> torch.Tensor:
