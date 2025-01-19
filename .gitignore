@@ -1,3 +1,8 @@
+# Google Drive files
+**/desktop.ini
+.tmp.driveupload/
+.tmp.drivedownload/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
