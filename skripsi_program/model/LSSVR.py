@@ -1,39 +1,17 @@
-import codecs
-import json
 import typing
 import functools
-import logging
 
 import torch
 import numpy as np
-
+from . import (
+    MultiRegression,
+    dump_model,
+    load_model,
+    torch_json_encoder,
+)
 # Inspired by:
 # https://github.com/zealberth/lssvr
 #
-logger = logging.getLogger(__name__)
-
-
-def torch_json_encoder(obj):
-    if type(obj).__module__ == torch.__name__:
-        if isinstance(obj, torch.Tensor):
-            return obj.tolist()
-        else:
-            return obj.item()
-    raise TypeError(f"""Unable to  "jsonify" object of type :', {type(obj)}""")
-
-
-def dump_model(model_dict, file_encoder, filepath="model"):
-    with open(f"{filepath.replace('.json', '')}.json", "w") as fp:
-        json.dump(model_dict, fp, default=file_encoder)
-
-
-def load_model(filepath="model"):
-    helper_filepath = filepath if filepath.endswith(".json") else f"{filepath}.json"
-    file_text = codecs.open(helper_filepath, "r", encoding="utf-8").read()
-    model_json = json.loads(file_text)
-
-    return model_json
-
 
 Kernel_Type = typing.Literal[
     "linear", "poly", "rbf", "rbf_unoptimized", "frob", "max", "tri"
@@ -96,7 +74,7 @@ def torch_get_kernel(
             raise KeyError(f"kernel {name} is not defined, try one of {Kernel_Type}")
 
 
-class LSSVR(object):
+class LSSVR(MultiRegression):
     """A class GPU variation that implements the Least Squares Support
     Vector Machine for regression tasks
 
@@ -162,16 +140,14 @@ class LSSVR(object):
         device: torch.device = torch.device("cpu"),
         **kernel_params,
     ):
-        self._device = device
+        super().__init__(verbose, dtype, device)
 
         # Hyperparameters
         self.C = C
         self._kernel: Kernel_Type = kernel
         self._initialized_sigma: bool = False
         self._initialized_kernel: bool = False
-        self.verbose = verbose
         self.kernel_params = kernel_params
-        self.dtype = dtype
         self.batch_size_func = batch_size_func
 
         # Model parameters
@@ -180,14 +156,6 @@ class LSSVR(object):
         self.sv_x: torch.Tensor | None = None
         self.sv_y: torch.Tensor | None = None
         self.y_indicies: torch.Tensor | None = None
-
-    @property
-    def device(self):
-        return self._device
-
-    @device.setter
-    def device(self, device: torch.device):
-        self._device = device
 
     @property
     def kernel(self):
@@ -230,10 +198,14 @@ class LSSVR(object):
                 KXX[i:i_end, j:j_end] = self.K(x_i[i:i_end, :], x_j[j:j_end, :])
         return KXX
 
-    def _optimize_parameters(self, X: torch.Tensor, y_values: torch.Tensor):
+    def _optimize_parameters_and_set(self, X: torch.Tensor, y: torch.Tensor):
         """Helper function that optimizes the dual variables through the
         use of the kernel matrix pseudo-inverse.
         """
+
+        self.sv_x = X
+        self.sv_y = y
+        self.y_indicies = torch.arange(0, y.shape[1])
 
         A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
         A[1:, 1:] = self._batched_K(X, X)
@@ -254,11 +226,11 @@ class LSSVR(object):
         A[1:, 0] = 1
         self.print("A:")
         self.print(A)
-        shape = np.array(y_values.shape)
+        shape = np.array(y.shape)
         shape[0] += 1
         B = torch.empty(list(shape), device=self.device, dtype=self.dtype)
         B[0] = 0
-        B[1:] = y_values
+        B[1:] = y
         self.print("B:")
         self.print(B)
 
@@ -275,72 +247,15 @@ class LSSVR(object):
         self.print("alpha:")
         self.print(alpha)
 
+        self.alpha = alpha
+        self.b = b
+
         return (b, alpha)
 
-    def fit(
-        self,
-        X_arr: typing.Union[np.ndarray, torch.Tensor],
-        y_arr: typing.Union[np.ndarray, torch.Tensor],
-        update=False,
-    ):
-        """Fits the model given the set of X attribute vectors and y labels.
-        - X: ndarray or tensor of shape (n_samples, n_attributes)
-        - y: ndarray or tensor of shape (n_samples,) or (n_samples, n_outputs)
-            If the label is represented by an array of n_outputs elements, the y
-            parameter must have n_outputs columns.
-        """
-        # converting to tensors and passing to GPU
-        if isinstance(X_arr, torch.Tensor):
-            X = X_arr.to(self.device, dtype=self.dtype)
-        else:
-            X = torch.from_numpy(X_arr).to(self.device, dtype=self.dtype)
-        X = X.view(-1, 1) if X.ndim == 1 else X
-
-        if isinstance(y_arr, torch.Tensor):
-            y = y_arr.to(self.device, dtype=self.dtype)
-        else:
-            y = torch.from_numpy(y_arr).to(self.device, dtype=self.dtype)
-        y = y.view(-1, 1) if y.ndim == 1 else y
-
-        assert (
-            X.shape[0] == y.shape[0]
-        ), f"X_arr and y_arr does not have the same shape along the 0th dim: (X: {X.shape}, y: {y.shape})"
-
-        self.sv_x = X
-        self.sv_y = y
-        self.y_indicies = torch.arange(0, y.shape[1])
-
-        # if len(self.y_indicies) == 1:  # single regression
-        y_values = y
-
-        self.b, self.alpha = self._optimize_parameters(X, y_values)
-
-        return self
-
-    @typing.overload
-    def predict(self, X: torch.Tensor) -> torch.Tensor: ...
-
-    @typing.overload
-    def predict(self, X: np.ndarray) -> np.ndarray: ...
-
-    def predict(
-        self,
-        X: np.ndarray | torch.Tensor,
-    ) -> np.ndarray | torch.Tensor:
-        """Predicts the labels of data X given a trained model.
-        - X: ndarray of shape (n_samples, n_attributes)
-        """
+    def _predict(self, X_: torch.Tensor):
         assert (
             self.alpha is not None and self.sv_x is not None and self.sv_y is not None
         ), "The model doesn't see to be fitted, try running .fit() method first"
-        is_torch = isinstance(X, torch.Tensor)
-        if is_torch:
-            X_reshaped_torch = X.reshape(-1, 1) if X.ndim == 1 else X
-            X_ = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
-        else:
-            X_reshaped_np = X.reshape(-1, 1) if X.ndim == 1 else X
-            X_ = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
-
         self.print(f"X:{X_.shape}")
         self.print(f"sv_x:{self.sv_x.shape}")
         KxX = self._batched_K(X_, self.sv_x)
@@ -350,13 +265,7 @@ class LSSVR(object):
         y_pred = KxX @ self.alpha + self.b
         self.print("y':")
         self.print(y_pred)
-        predictions: np.ndarray | torch.Tensor
-        if is_torch:
-            predictions = y_pred.to(X)
-        else:
-            predictions = y_pred.cpu().numpy()
-
-        return predictions.reshape(-1) if X.ndim == 1 else predictions
+        return y_pred
 
     def get_correlation_image(self):
         # using dot product
@@ -368,7 +277,7 @@ class LSSVR(object):
     def get_p_matrix(self):
         assert (
             self.sv_x is not None and self.alpha is not None
-        ), "The model needs to be trained first before correlation image can be generated"
+        ), "The model needs to be trained first before p-matrix can be generated"
         return self.sv_x.T.mm(self.alpha)
 
     def dump(self, filepath="model", only_hyperparams=False):
@@ -416,7 +325,7 @@ class LSSVR(object):
         if model_json["type"] != "LSSVR":
             raise Exception(f"Model type '{model_json['type']}' doesn't match 'LSSVR'")
 
-        lssvr = LSSVR(
+        lssvr = cls(
             C=model_json["hyperparameters"]["C"],
             kernel=model_json["hyperparameters"]["kernel"],
             **model_json["hyperparameters"]["kernel_params"],
@@ -433,13 +342,3 @@ class LSSVR(object):
             lssvr.y_indicies = torch.Tensor(params["y_indicies"]).double().to(device)
 
         return lssvr
-
-    def print(
-        self,
-        *values: object,
-    ):
-        if self.verbose:
-            print(*values)
-
-
-NumpyArrayorTensor = np.ndarray | torch.Tensor
