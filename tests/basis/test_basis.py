@@ -30,7 +30,7 @@ def test_basis():
     f = f + 0j  # cast to complex
 
     # Get coefficients and create basis
-    coeff = FourierBasis.transform(f.unsqueeze(0))
+    coeff = FourierBasis.transform(f.unsqueeze(0), periodic=True)
     basis = FourierBasis(coeff)
     assert (
         basis.modes is not None
@@ -69,7 +69,7 @@ def test_basis():
 
     f1 = f1 + 0j
 
-    coeff = FourierBasis.transform(f1.unsqueeze(0))
+    coeff = FourierBasis.transform(f1.unsqueeze(0), periodic=True)
     assert (
         coeff.ndim == 2
     ), "coeff needs to have two dimensions, the first the sample and the second the modes for the coefficients"

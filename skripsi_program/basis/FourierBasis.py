@@ -353,7 +353,7 @@ class FourierBasis(Basis):
             elif func == "inverse":
                 F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
         else:
-            if periodic:
+            if periodic:# tn=t0, {t0,...,tn-1}
                 n = res.start + torch.arange(res.step).to(f)
                 n = n / res.step * period
             else:
@@ -408,6 +408,10 @@ class FourierBasis(Basis):
     def transform(
         f: torch.Tensor,
         res: ResType | None = None,
+        # TODO: change this to false and adjust affected areas like the notebooks and Basis.get_value()
+        # This should be false because all Basis transforms should have the same
+        # default behavior, in this case is including the end of the grid (non periodicity)
+        # periodicity introduces inconsistency in the assumed grid for other functions built on basis transforms
         periodic: bool = True,
         periods: PeriodsInputType = None,
         allow_fft: bool = True,
@@ -422,7 +426,7 @@ class FourierBasis(Basis):
         Arguments:
             f {torch.Tensor} -- m discretized real valued functions
             res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
-            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic) (default: {True})
+            periodic {bool} -- whether the evaluation grid should include the end or not (periodic) (default: {True})
             periods: {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
             allow_fft {bool} -- allow the use of torch.fft module (default: {True}). By default the function will use fft if possible (domain is [0,1) which is also periodic)
 
@@ -471,7 +475,7 @@ class FourierBasis(Basis):
         Arguments:
             f {torch.Tensor} -- m discretized complex valued coefficients with K modes
             res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1) if periodic or [0,1] if not periodic.
-            periodic {bool} -- whether the evaluation grid should include the ends or not (periodic) (default: {True})
+            periodic {bool} -- whether the evaluation grid should include the end or not (periodic) (default: {True})
             scale {bool} -- whether the outputs are scaled by N or not (default: {True})
             periods {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
             allow_fft {bool} -- allow the use of torch.fft module (default: {True}). By default the function will use fft if possible (domain is [0,1) which is also periodic)
