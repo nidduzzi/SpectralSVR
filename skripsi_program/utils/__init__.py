@@ -309,9 +309,7 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
     if rescale:
         modes = list(x.shape[1:])
         x_resized = (
-            x_resized
-            * torch.prod(torch.tensor(target_modes))
-            / torch.prod(torch.tensor(modes))
+            x_resized * torch.tensor(target_modes).prod() / torch.tensor(modes).prod()
         )
 
     return x_resized

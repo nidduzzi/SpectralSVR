@@ -31,12 +31,13 @@ def periodsInputType_to_tuple(
 
 
 def transformResType_to_tuple(
-    res: ResType | None, modes: tuple[int, ...]
+    res: ResType | None, modes: tuple[int, ...], periods: tuple[float, ...]
 ) -> tuple[slice, ...]:
+    assert len(periods) == len(modes), "periods should have the same dimension as modes"
     if res is None:
-        _res = tuple(slice(0, 1, mode) for mode in modes)
+        _res = tuple(slice(0, period, mode) for period, mode in zip(periods, modes))
     elif isinstance(res, int):
-        _res = tuple(slice(0, 1, res) for mode in modes)
+        _res = tuple(slice(0, period, res) for period in periods)
     elif isinstance(res, slice):
         _res = tuple(res for mode in modes)
     else:
@@ -212,7 +213,7 @@ class Basis(abc.ABC):
                 values = self.inv_transform(
                     coeff,
                     res=res_spatial,
-                    periodic=False,
+                    periodic=False,# TODO: handle periodicity better
                     periods=self.periods,
                 )
 
@@ -882,14 +883,19 @@ class Basis(abc.ABC):
         copy.coeff = copy.coeff[idx, ...]
         return copy
 
-    def to_time_dependent(self):
+    def to_time_dependent(self, nt: int | None = None):
         copy = self.copy()
         if self.time_dependent:
             return copy
 
         res_modes = tuple(
-            slice(0, period, mode) for mode, period in zip(self.modes, self.periods)
+            slice(0, period, mode)
+            for mode, period in zip(self.modes[1:], self.periods[1:])
         )
+        if nt is None:
+            nt = self.modes[0]
+        res_modes = (slice(0, self.periods[0], nt), *res_modes)
+
         val = self.get_values(res=res_modes)
         time_dependent_coeff = self.transform(val.flatten(0, 1)).reshape(
             (len(self), *self.modes)

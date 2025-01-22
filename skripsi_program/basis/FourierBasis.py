@@ -345,7 +345,7 @@ class FourierBasis(Basis):
         domain_starts_at_0 = res.start == 0
         domain_end_equal_to_period = res.stop == period
         can_use_fft = (
-            domain_starts_at_0 and domain_end_equal_to_period and periodic and allow_fft
+            domain_starts_at_0 and domain_end_equal_to_period and periodic and allow_fft and mode == res.step # TODO: using FFT can mess up the transform when evaluating at different resolutions
         )
         if can_use_fft:
             if func == "forward":
@@ -354,8 +354,9 @@ class FourierBasis(Basis):
                 F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
         else:
             if periodic:# tn=t0, {t0,...,tn-1}
-                n = res.start + torch.arange(res.step).to(f)
-                n = n / res.step * period
+                n = torch.arange(
+                    res.start, res.stop, (res.stop - res.start) / res.step
+                ).to(f)
             else:
                 n = torch.linspace(res.start, res.stop, res.step).to(f)
             e = FourierBasis.fn(
@@ -425,7 +426,7 @@ class FourierBasis(Basis):
 
         Arguments:
             f {torch.Tensor} -- m discretized real valued functions
-            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1).
+            res {tuple[slice,...] | None} -- resolution the function was evaluated at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,period) if periodic or [0,period] if not periodic.
             periodic {bool} -- whether the evaluation grid should include the end or not (periodic) (default: {True})
             periods: {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
             allow_fft {bool} -- allow the use of torch.fft module (default: {True}). By default the function will use fft if possible (domain is [0,1) which is also periodic)
@@ -439,8 +440,9 @@ class FourierBasis(Basis):
         ), f"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples"
         if not torch.is_complex(f):
             f = f * (1 + 0j)
-        res = transformResType_to_tuple(res, tuple(f.shape[1:]))
         periods = periodsInputType_to_tuple(periods, f.shape[1:])
+        # Res should by default evaluate to the period not 1
+        res = transformResType_to_tuple(res, tuple(f.shape[1:]), periods)
         # perform 1d transform over every dimension
         F = f
         for cdim in range(1, ndims):
@@ -474,7 +476,7 @@ class FourierBasis(Basis):
 
         Arguments:
             f {torch.Tensor} -- m discretized complex valued coefficients with K modes
-            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,1) if periodic or [0,1] if not periodic.
+            res {tuple[slice,...] | None} -- resolution to evaluate the function at and the bounds of the evaluation (dafault: {None}). When res is None, the evaluation takes the same resolution as f with bounds [0,period) if periodic or [0,period] if not periodic.
             periodic {bool} -- whether the evaluation grid should include the end or not (periodic) (default: {True})
             scale {bool} -- whether the outputs are scaled by N or not (default: {True})
             periods {Number | list[Number] | tuple[Number, ...] | None} -- evaluation period (default: {1})
@@ -489,8 +491,9 @@ class FourierBasis(Basis):
         ), f"f has shape {F.shape}, It needs to have at least two dimensions with the first being m samples"
         if not torch.is_complex(F):
             F = F * (1 + 0j)
-        res = transformResType_to_tuple(res, tuple(F.shape[1:]))
         periods = periodsInputType_to_tuple(periods, F.shape[1:])
+        # Res should by default evaluate to the period not 1
+        res = transformResType_to_tuple(res, tuple(F.shape[1:]), periods)
 
         # perform 1d transform over every dimension
         f = F

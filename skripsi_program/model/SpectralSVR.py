@@ -108,13 +108,14 @@ class SpectralSVR:
             u_coeff {torch.Tensor} -- n output functions coefficients
             u_u_time_dependent {bool} -- whether the output coefficients are time dependent or not (default: {False})
         """
+        assert (
+            self.basis.coeff_dtype.is_complex and u_coeff.is_complex()
+        ), f"u_coeff ({u_coeff.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
         self.basis.time_dependent = u_time_dependent
         self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         f = f.flatten(1)
         u_coeff = u_coeff.flatten(1)
 
-        if self.basis.coeff_dtype.is_complex:
-            u_coeff = to_complex_coeff(u_coeff)
         self.print(f"modes: {self.modes}")
 
         if torch.is_complex(u_coeff):
@@ -132,6 +133,9 @@ class SpectralSVR:
         u_coeff_targets: torch.Tensor,
         res: ResType | None = None,
     ):
+        assert (
+            self.basis.coeff_dtype.is_complex and u_coeff_targets.is_complex()
+        ), f"u_coeff ({u_coeff_targets.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
         f = f.flatten(1)
         if torch.is_complex(f):
             logger.debug("transform f to real")
