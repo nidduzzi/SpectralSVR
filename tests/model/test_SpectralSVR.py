@@ -1,5 +1,5 @@
 import pytest
-from skripsi_program import (
+from SpectralSVR import (
     SpectralSVR,
     FourierBasis,
     to_real_coeff,

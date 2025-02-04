@@ -2,6 +2,8 @@ from . import Basis
 import torch
 from ..utils import to_complex_coeff
 from typing import Literal
+
+
 ## Spherical Harmonics Basis
 class SphericalBasis(Basis):
     def __init__(self, coeff: torch.Tensor | None = None) -> None:
@@ -9,8 +11,8 @@ class SphericalBasis(Basis):
 
     def evaluate(
         self,
+        coeff: torch.Tensor,
         x: torch.Tensor,
-        coeff: torch.Tensor | None = None,
         periods: list[float] | None = None,
         modes: list[int] | None = None,
     ) -> torch.Tensor:
@@ -112,7 +114,7 @@ class SphericalBasis(Basis):
         return k
 
     @staticmethod
-    def generateCoeff(
+    def generate_coeff(
         n: int,
         modes: int,
         domain: tuple[float, float] = (-1.0, 1.0),

@@ -1,6 +1,6 @@
 import pytest
-from skripsi_program import FourierBasis
-from skripsi_program import to_complex_coeff, to_real_coeff
+from SpectralSVR import FourierBasis
+from SpectralSVR import to_complex_coeff, to_real_coeff
 import torch
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from skripsi_program.utils import to_complex_coeff, to_real_coeff
+from SpectralSVR.utils import to_complex_coeff, to_real_coeff
 import torch
 
 
