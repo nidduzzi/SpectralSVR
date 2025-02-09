@@ -4,6 +4,7 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis, ResType
 from .LSSVR import LSSVR
+from .__base import MultiRegression
 from ..utils import to_complex_coeff, to_real_coeff, get_metrics
 from typing import Literal, Union, Callable
 from torchmetrics.functional.regression import (
@@ -21,8 +22,8 @@ class SpectralSVR:
     def __init__(
         self,
         basis: Basis,
-        svr=LSSVR(),
-        verbose: Literal["ALL", "SVR", "LITE", False, None] = None,
+        regressor: MultiRegression = LSSVR(),
+        verbose: Literal["ALL", "REGRESSOR", "LITE", False, None] = None,
     ) -> None:
         """
         __init__
@@ -32,24 +33,24 @@ class SpectralSVR:
             basis {Basis} -- Basis to use for evaluating the computed function
 
         Keyword Arguments:
-            verbose {False | "All" | "SVR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, LSSVR for logs from LSSVR only, lite all logs except LSSVR (default: {False})
+            verbose {False | "All" | "REGRESSOR" | "lite"} -- verbosity levels, False for no debug logs, All for all logs, regressor for logs from regressor only, lite all logs except regressor (default: {False})
         """
-        is_svr_verbose = False
+        is_regressor_verbose = False
         self.verbose = False
         match verbose:
             case "ALL":
                 self.verbose = True
-                is_svr_verbose = True
-            case "SVR":
-                is_svr_verbose = True
+                is_regressor_verbose = True
+            case "REGRESSOR":
+                is_regressor_verbose = True
             case "LITE":
                 self.verbose = True
             case None:
                 self.verbose = False
 
         self.basis = basis
-        self.svr = svr
-        self.svr.verbose = is_svr_verbose
+        self.regressor = regressor
+        self.regressor.verbose = is_regressor_verbose
 
     def forward(
         self,
@@ -81,7 +82,7 @@ class SpectralSVR:
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        coeff = self.svr.predict(f)
+        coeff = self.regressor.predict(f)
         # convert to complex if basis needs complex values so that the reshaping is correct
         if self.basis.coeff_dtype.is_complex:
             coeff = to_complex_coeff(coeff)
@@ -98,10 +99,9 @@ class SpectralSVR:
         self, f: torch.Tensor, u_coeff: torch.Tensor, u_time_dependent: bool = False
     ):
         """
-        train _summary_
+        train
 
         fit the lssvr to predict the output function coefficients from the input function
-
 
         Arguments:
             f {torch.Tensor} -- n flattened input functions
@@ -124,7 +124,7 @@ class SpectralSVR:
             u_coeff = to_real_coeff(u_coeff)
         if torch.is_complex(f):
             f = to_real_coeff(f)
-        self.svr.fit(f, u_coeff)
+        self.regressor.fit(f, u_coeff)
         return self
 
     def test(
@@ -140,7 +140,8 @@ class SpectralSVR:
         if torch.is_complex(f):
             logger.debug("transform f to real")
             f = to_real_coeff(f)
-        u_coeff_preds = self.svr.predict(f)
+        self.features = f.shape[1]
+        u_coeff_preds = self.regressor.predict(f)
 
         if self.basis.coeff_dtype.is_complex:
             u_coeff_preds = to_complex_coeff(u_coeff_preds)
@@ -220,22 +221,27 @@ class SpectralSVR:
         **optimizer_params,
     ):
         # TODO: add logic for multidimensional functions (2D+)
-        assert self.svr.sv_x is not None, "SVR has not been trained, no support vectors"
-        f_shape = (u_coeff.shape[0], self.svr.sv_x.shape[1])
+        assert (
+            self.regressor.trained
+        ), "Regressor has not been trained, no support vectors"
+        assert (
+            self.features is not None
+        ), "Something went wrong during training, self.features is None"
+        f_shape = (u_coeff.shape[0], self.features)
         complex_coeff = u_coeff.is_complex()
         original_device = u_coeff.device
-        u_coeff = to_real_coeff(u_coeff.flatten(1)).to(self.svr.device)
+        u_coeff = to_real_coeff(u_coeff.flatten(1)).to(self.regressor.device)
 
         # inverse problem
         f_coeff_pred = (
-            torch.randn(f_shape, generator=generator).to(self.svr.device) * gain
+            torch.randn(f_shape, generator=generator).to(self.regressor.device) * gain
         )
         f_coeff_pred.requires_grad_()
         optim = torch.optim.Adam([f_coeff_pred], **optimizer_params)
 
         for epoch in range(epochs):
             optim.zero_grad()
-            u_coeff_pred = self.svr.predict(f_coeff_pred)
+            u_coeff_pred = self.regressor.predict(f_coeff_pred)
             loss = loss_fn(u_coeff_pred, u_coeff)
             loss.backward()
             optim.step()

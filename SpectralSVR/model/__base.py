@@ -43,6 +43,11 @@ class MultiRegression(abc.ABC):
         self.dtype = dtype
 
     @property
+    @abc.abstractmethod
+    def trained(self)->bool:
+        pass
+
+    @property
     def device(self):
         return self._device
 

@@ -56,7 +56,7 @@ def test_SpectralSVR():
     model.train(f_train, u_coeff_train)
 
     # Test
-    u_coeff_pred = model.svr.predict(f_test)
+    u_coeff_pred = model.regressor.predict(f_test)
     u_coeff_pred = to_complex_coeff(u_coeff_pred)
     smape = symmetric_mean_absolute_percentage_error(
         to_real_coeff(u_coeff_pred), to_real_coeff(u_coeff_test)

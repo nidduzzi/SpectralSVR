@@ -7,3 +7,4 @@ from .__base import (
 )
 from .SpectralSVR import SpectralSVR
 from .LSSVR import LSSVR
+from .FNN import FNN

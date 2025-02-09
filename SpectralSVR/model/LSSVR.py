@@ -158,6 +158,14 @@ class LSSVR(MultiRegression):
         self.y_indicies: torch.Tensor | None = None
 
     @property
+    def trained(self) -> bool:
+        return (
+            (self.alpha is not None)
+            and (self.b is not None)
+            and (self.sv_x is not None)
+        )
+
+    @property
     def kernel(self):
         return self._kernel
 
