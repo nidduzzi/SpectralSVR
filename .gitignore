@@ -3,6 +3,10 @@
 .tmp.driveupload/
 .tmp.drivedownload/
 
+# notebooks extras
+notebooks/**/*.png
+notebooks/**/*.pgf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
