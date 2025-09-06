@@ -1,4 +1,3 @@
-import pytest
 from SpectralSVR import (
     SpectralSVR,
     FourierBasis,
@@ -6,6 +5,7 @@ from SpectralSVR import (
     to_complex_coeff,
     StandardScaler,
     Antiderivative,
+    LSSVR,
 )
 import torch
 from torch.utils.data.dataset import TensorDataset
@@ -50,7 +50,9 @@ def test_SpectralSVR():
 
     # Train svm
     periods = [1.0]
-    model = SpectralSVR(FourierBasis(periods=periods), verbose="ALL")
+    model = SpectralSVR(
+        basis=FourierBasis(periods=periods), regressor=LSSVR(), verbose="ALL"
+    )
     print(f"f_train.shape:, {f_train.shape}")
     print(f"u_coeff_train.shape: {u_coeff_train.shape}")
     model.train(f_train, u_coeff_train)
@@ -62,13 +64,13 @@ def test_SpectralSVR():
         to_real_coeff(u_coeff_pred), to_real_coeff(u_coeff_test)
     )
 
-    assert torch.isclose(
-        torch.tensor(0.0), smape, atol=96e-3
-    ), f"coefficient evaluation smape too high ({smape})"
+    assert torch.isclose(torch.tensor(0.0), smape, atol=96e-3), (
+        f"coefficient evaluation smape too high ({smape})"
+    )
 
     u_pred = model.forward(f_test, s).real
     # calculate smape
     smape = symmetric_mean_absolute_percentage_error(u_pred, u_test)
-    assert torch.isclose(
-        torch.tensor(0.0), smape, atol=11e-2
-    ), f"prediction evaluation smape too high ({smape})"
+    assert torch.isclose(torch.tensor(0.0), smape, atol=11e-2), (
+        f"prediction evaluation smape too high ({smape})"
+    )

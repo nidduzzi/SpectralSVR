@@ -33,14 +33,18 @@ class Burgers(Problem):
         u0: ParamInput | BasisSubType = "random",
         f: ParamInput | BasisSubType = 0,
         nu: float = 0.01,
-        space_domain=slice(0, 1, 200),
-        time_domain=slice(0, 1, 200),
+        space_domain: slice | None = None,
+        time_domain: slice | None = None,
         solver: SolverSignatureType = implicit_adams_solver,
         time_dependent_coeff: bool = True,
         *args,
         generator: torch.Generator | None = None,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
+        if space_domain is None:
+            space_domain = slice(0, 1, 200)
+        if time_domain is None:
+            time_domain = slice(0, 1, 200)
         if isinstance(modes, int):
             modes = (modes, modes)
         assert n > 0, "number of samples n must be more than 0"
@@ -60,34 +64,34 @@ class Burgers(Problem):
         # nt = int(T / (0.01 * nu) + 2)
         dt = T / (nt - 1)
         t = basis.grid(time_domain).flatten().to(device=device)
-        assert (
-            t[1].sub(t[0]).isclose(torch.tensor(dt))
-        ), f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1]-t[0]})"
+        assert t[1].sub(t[0]).isclose(torch.tensor(dt)), (
+            f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1] - t[0]})"
+        )
         periods = (T, L)
         if u0 == "random" and f == "random":
             # use method of manufactured solution
             # generate solution itself since u0 just follows from the generate solution
-            time_mode = modes[0]
+            # time_mode = modes[0]
             spatial_modes = modes[1:]
-            u = basis.generate(
-                n, modes, periods=periods, generator=generator
-            )
+            u = basis.generate(n, modes, periods=periods, generator=generator)
             res_modes = tuple(slice(0, L, mode) for mode in spatial_modes)
 
-            fst = self.spectral_residual(
-                u, basis(basis.generate_empty(n, modes)), nu
-            )
+            fst = self.spectral_residual(u, basis(basis.generate_empty(n, modes)), nu)
 
             u_gen = u
             f_gen = fst
             # convert to timed dependent coeffs
             if time_dependent_coeff:
                 u_val = u.get_values(res=(time_domain, *res_modes))
-                u_coeff = basis.transform(u_val.flatten(0, 1)).reshape((n, nt, *spatial_modes))
+                u_coeff = basis.transform(u_val.flatten(0, 1)).reshape(
+                    (n, nt, *spatial_modes)
+                )
                 u_gen = basis(coeff=u_coeff, time_dependent=True, periods=periods)
 
                 f_val = fst.get_values(res=(time_domain, *res_modes))
-                f_coeff = basis.transform(f_val.flatten(0, 1)).reshape((n, nt, *spatial_modes))
+                f_coeff = basis.transform(f_val.flatten(0, 1)).reshape(
+                    (n, nt, *spatial_modes)
+                )
                 f_gen = basis(coeff=f_coeff, time_dependent=True, periods=periods)
 
         else:

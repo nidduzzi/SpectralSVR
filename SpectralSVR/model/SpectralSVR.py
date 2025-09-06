@@ -1,13 +1,13 @@
+from typing import TypeVar, Generic
 import torch.utils
 import torch.utils.data
 import torch.utils.data.dataset
 import torch
 from ..basis import Basis, ResType
-from .LSSVR import LSSVR
 from .__base import MultiRegression
 from ..utils import to_complex_coeff, to_real_coeff, get_metrics
 from typing import Literal, Union, Callable
-from torchmetrics.functional.regression import (
+from torchmetrics.functional.regression import (  # type: ignore[import-not-found]
     mean_squared_error,
 )
 import logging
@@ -16,13 +16,19 @@ import logging
 # coeff . basis(x)
 
 logger = logging.getLogger(__name__)
+R = TypeVar("R", bound=MultiRegression)
+B = TypeVar("B", bound=Basis)
 
 
-class SpectralSVR:
+class SpectralSVR(Generic[B, R]):
+    verbose: bool
+    basis: B
+    regressor: R
+
     def __init__(
         self,
-        basis: Basis,
-        regressor: MultiRegression = LSSVR(),
+        basis: B,
+        regressor: R,
         verbose: Literal["ALL", "REGRESSOR", "LITE", False, None] = None,
     ) -> None:
         """
@@ -75,9 +81,9 @@ class SpectralSVR:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
 
-        assert (
-            x.shape[1] == len(self.modes)
-        ), f"Make sure x is in shape (num_points, dimensions) or (num_points,) for 1D. x has shape {x.shape} and modes is {self.modes}"
+        assert x.shape[1] == len(self.modes), (
+            f"Make sure x is in shape (num_points, dimensions) or (num_points,) for 1D. x has shape {x.shape} and modes is {self.modes}"
+        )
 
         # compute coefficients
         if torch.is_complex(f):
@@ -108,9 +114,9 @@ class SpectralSVR:
             u_coeff {torch.Tensor} -- n output functions coefficients
             u_u_time_dependent {bool} -- whether the output coefficients are time dependent or not (default: {False})
         """
-        assert (
-            self.basis.coeff_dtype.is_complex and u_coeff.is_complex()
-        ), f"u_coeff ({u_coeff.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
+        assert self.basis.coeff_dtype.is_complex and u_coeff.is_complex(), (
+            f"u_coeff ({u_coeff.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
+        )
         self.basis.time_dependent = u_time_dependent
         self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         f = f.flatten(1)
@@ -133,9 +139,9 @@ class SpectralSVR:
         u_coeff_targets: torch.Tensor,
         res: ResType | None = None,
     ):
-        assert (
-            self.basis.coeff_dtype.is_complex and u_coeff_targets.is_complex()
-        ), f"u_coeff ({u_coeff_targets.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
+        assert self.basis.coeff_dtype.is_complex and u_coeff_targets.is_complex(), (
+            f"u_coeff ({u_coeff_targets.dtype}) and self.basis ({self.basis.coeff_dtype}) must both be either real or complex"
+        )
         f = f.flatten(1)
         if torch.is_complex(f):
             logger.debug("transform f to real")
@@ -190,10 +196,12 @@ class SpectralSVR:
             [torch.Tensor, torch.Tensor], torch.Tensor
         ] = mean_squared_error,
         epochs=100,
-        generator=torch.Generator().manual_seed(42),
+        generator=None,
         gain=0.2,
         **optimizer_params,
     ):
+        if generator is None:
+            generator = torch.Generator().manual_seed(42)
         # TODO: add logic for multidimensional functions (2D+)
         f_coeff_pred = self.inverse_coeff(
             u_coeff,
@@ -216,17 +224,19 @@ class SpectralSVR:
             [torch.Tensor, torch.Tensor], torch.Tensor
         ] = mean_squared_error,
         epochs=100,
-        generator=torch.Generator().manual_seed(42),
+        generator=None,
         gain=0.05,
         **optimizer_params,
     ):
+        if generator is None:
+            generator = torch.Generator().manual_seed(42)
         # TODO: add logic for multidimensional functions (2D+)
-        assert (
-            self.regressor.trained
-        ), "Regressor has not been trained, no support vectors"
-        assert (
-            self.features is not None
-        ), "Something went wrong during training, self.features is None"
+        assert self.regressor.trained, (
+            "Regressor has not been trained, no support vectors"
+        )
+        assert self.features is not None, (
+            "Something went wrong during training, self.features is None"
+        )
         f_shape = (u_coeff.shape[0], self.features)
         complex_coeff = u_coeff.is_complex()
         original_device = u_coeff.device
@@ -239,7 +249,7 @@ class SpectralSVR:
         f_coeff_pred.requires_grad_()
         optim = torch.optim.Adam([f_coeff_pred], **optimizer_params)
 
-        for epoch in range(epochs):
+        for _ in range(epochs):
             optim.zero_grad()
             u_coeff_pred = self.regressor.predict(f_coeff_pred)
             loss = loss_fn(u_coeff_pred, u_coeff)

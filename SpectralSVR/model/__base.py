@@ -1,15 +1,16 @@
+import abc
 import codecs
 import json
-import typing
-from typing_extensions import Self
-import abc
-import torch
+from typing import Callable, overload, Any
+
 import numpy as np
+import torch
+from typing_extensions import Self
 
 NumpyArrayorTensor = np.ndarray | torch.Tensor
 
 
-def torch_json_encoder(obj):
+def torch_json_encoder(obj: Any):  # pyright: ignore[reportExplicitAny]
     if type(obj).__module__ == torch.__name__:
         if isinstance(obj, torch.Tensor):
             return obj.tolist()
@@ -18,12 +19,16 @@ def torch_json_encoder(obj):
     raise TypeError(f"""Unable to  "jsonify" object of type :', {type(obj)}""")
 
 
-def dump_model(model_dict, file_encoder, filepath="model"):
+def dump_model(
+    model_dict: dict[str, Any],  # pyright: ignore[reportExplicitAny]
+    file_encoder: Callable[[Any], Any],  # pyright: ignore[reportExplicitAny]
+    filepath: str = "model",
+):
     with open(f"{filepath.replace('.json', '')}.json", "w") as fp:
         json.dump(model_dict, fp, default=file_encoder)
 
 
-def load_model(filepath="model"):
+def load_model(filepath: str = "model") -> dict[str, Any]:
     helper_filepath = filepath if filepath.endswith(".json") else f"{filepath}.json"
     file_text = codecs.open(helper_filepath, "r", encoding="utf-8").read()
     model_json = json.loads(file_text)
@@ -34,17 +39,19 @@ def load_model(filepath="model"):
 class MultiRegression(abc.ABC):
     def __init__(
         self,
-        verbose=False,
-        dtype=torch.float32,
-        device: torch.device = torch.device("cpu"),
+        verbose: bool = False,
+        dtype: torch.dtype = torch.float32,
+        device: torch.device | None = None,
     ):
-        self._device = device
-        self.verbose = verbose
-        self.dtype = dtype
+        if device is None:
+            device = torch.device("cpu")
+        self._device: torch.device = device
+        self.verbose: bool = verbose
+        self.dtype: torch.dtype = dtype
 
     @property
     @abc.abstractmethod
-    def trained(self)->bool:
+    def trained(self) -> bool:
         pass
 
     @property
@@ -57,7 +64,7 @@ class MultiRegression(abc.ABC):
 
     @abc.abstractmethod
     def _optimize_parameters_and_set(
-        self, X: torch.Tensor, y_values: torch.Tensor
+        self, X: torch.Tensor, y: torch.Tensor
     ) -> tuple[torch.Tensor, ...]:
         pass
 
@@ -74,11 +81,12 @@ class MultiRegression(abc.ABC):
             parameter must have n_outputs columns.
         """
         # converting to tensors and passing to GPU
+        x: torch.Tensor
         if isinstance(X_arr, torch.Tensor):
-            X = X_arr.to(self.device, dtype=self.dtype)
+            x = X_arr.to(self.device, dtype=self.dtype)
         else:
-            X = torch.from_numpy(X_arr).to(self.device, dtype=self.dtype)
-        X = X.view(-1, 1) if X.ndim == 1 else X
+            x = torch.from_numpy(X_arr).to(self.device, dtype=self.dtype)
+        x = x.view(-1, 1) if x.ndim == 1 else x
 
         if isinstance(y_arr, torch.Tensor):
             y = y_arr.to(self.device, dtype=self.dtype)
@@ -86,11 +94,11 @@ class MultiRegression(abc.ABC):
             y = torch.from_numpy(y_arr).to(self.device, dtype=self.dtype)
         y = y.view(-1, 1) if y.ndim == 1 else y
 
-        assert (
-            X.shape[0] == y.shape[0]
-        ), f"X_arr and y_arr does not have the same shape along the 0th dim: (X: {X.shape}, y: {y.shape})"
+        assert x.shape[0] == y.shape[0], (
+            f"X_arr and y_arr does not have the same shape along the 0th dim: (X: {x.shape}, y: {y.shape})"
+        )
 
-        self._optimize_parameters_and_set(X, y)
+        _ = self._optimize_parameters_and_set(x, y)
 
         return self
 
@@ -98,11 +106,11 @@ class MultiRegression(abc.ABC):
     def _predict(self, X_: torch.Tensor) -> torch.Tensor:
         pass
 
-    @typing.overload
-    def predict(self, X: torch.Tensor) -> torch.Tensor: ...
-
-    @typing.overload
+    @overload
     def predict(self, X: np.ndarray) -> np.ndarray: ...
+
+    @overload
+    def predict(self, X: torch.Tensor) -> torch.Tensor: ...
 
     def predict(
         self,
@@ -111,17 +119,16 @@ class MultiRegression(abc.ABC):
         """Predicts the labels of data X given a trained model.
         - X: ndarray of shape (n_samples, n_attributes)
         """
-        is_torch = isinstance(X, torch.Tensor)
-        if is_torch:
-            X_reshaped_torch = X.reshape(-1, 1) if X.ndim == 1 else X
-            X_ = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
+        if isinstance(X, torch.Tensor):
+            X_reshaped_torch: torch.Tensor = X.reshape(-1, 1) if X.ndim == 1 else X
+            x = X_reshaped_torch.clone().to(self.device, dtype=self.dtype)
         else:
             X_reshaped_np = X.reshape(-1, 1) if X.ndim == 1 else X
-            X_ = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
+            x = torch.from_numpy(X_reshaped_np).to(self.device, dtype=self.dtype)
 
-        y_pred = self._predict(X_)
+        y_pred = self._predict(x)
         predictions: np.ndarray | torch.Tensor
-        if is_torch:
+        if isinstance(X, torch.Tensor):
             predictions = y_pred.to(X)
         else:
             predictions = y_pred.cpu().numpy()
@@ -129,12 +136,12 @@ class MultiRegression(abc.ABC):
         return predictions.reshape(-1) if X.ndim == 1 else predictions
 
     @abc.abstractmethod
-    def dump(self, filepath="model", only_hyperparams=False):
+    def dump(self, filepath: str = "model", only_hyperparams: bool = False):
         pass
 
     @classmethod
     @abc.abstractmethod
-    def load(cls, filepath, only_hyperparams=False) -> Self:
+    def load(cls, filepath: str, only_hyperparams: bool = False) -> Self:
         pass
 
     def print(

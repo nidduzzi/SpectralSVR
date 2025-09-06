@@ -137,9 +137,11 @@ class LSSVR(MultiRegression):
         verbose=False,
         batch_size_func=lambda dims: 2**21 // dims + 7,
         dtype=torch.float32,
-        device: torch.device = torch.device("cpu"),
+        device: torch.device | None = None,
         **kernel_params,
     ):
+        if device is None:
+            device = torch.device("cpu")
         super().__init__(verbose, dtype, device)
 
         # Hyperparameters
@@ -277,15 +279,15 @@ class LSSVR(MultiRegression):
 
     def get_correlation_image(self):
         # using dot product
-        assert (
-            self.sv_x is not None
-        ), "The model needs to be trained first before correlation image can be generated"
+        assert self.sv_x is not None, (
+            "The model needs to be trained first before correlation image can be generated"
+        )
         return self._batched_K(self.sv_x, self.sv_x).mm(self.sv_x)
 
     def get_p_matrix(self):
-        assert (
-            self.sv_x is not None and self.alpha is not None
-        ), "The model needs to be trained first before p-matrix can be generated"
+        assert self.sv_x is not None and self.alpha is not None, (
+            "The model needs to be trained first before p-matrix can be generated"
+        )
         return self.sv_x.T.mm(self.alpha)
 
     def dump(self, filepath="model", only_hyperparams=False):

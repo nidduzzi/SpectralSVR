@@ -115,30 +115,30 @@ class StandardScaler:
     @staticmethod
     def _translate(x: torch.Tensor, m: torch.Tensor, i: int | None = None):
         x_name = "x" if i is None else f"xs[{i}]"
-        assert (
-            x.shape[1] == m.shape[1]
-        ), f"{x_name} needs to have the same 2nd dimension now and at fitting"
+        assert x.shape[1] == m.shape[1], (
+            f"{x_name} needs to have the same 2nd dimension now and at fitting"
+        )
         x_translated = x.subtract(m)
         return x_translated
 
     @staticmethod
     def _scale(x: torch.Tensor, s: torch.Tensor, i: int | None = None):
         x_name = "x" if i is None else f"xs[{i}]"
-        assert (
-            x.shape[1] == s.shape[1]
-        ), f"{x_name} needs to have the same 2nd dimension now and at fitting"
+        assert x.shape[1] == s.shape[1], (
+            f"{x_name} needs to have the same 2nd dimension now and at fitting"
+        )
         x_scaled = x.div(s)
         return x_scaled
 
     def _check_consistency(self, xs: tuple[torch.Tensor, ...]):
         xs_is_complex = tuple(torch.is_complex(x) for x in xs)
-        assert (
-            xs_is_complex == self.xs_is_complex
-        ), f"make sure the complex tensors are the same order when fitting, current complex: {xs_is_complex}, fitting complex: {self.xs_is_complex}"
+        assert xs_is_complex == self.xs_is_complex, (
+            f"make sure the complex tensors are the same order when fitting, current complex: {xs_is_complex}, fitting complex: {self.xs_is_complex}"
+        )
         xs_dims = tuple(x.shape[1] for x in xs)
-        assert (
-            xs_dims == self.xs_dims
-        ), f"make sure the tensors have the same 2nd dimensions with the ones used at fitting, current dims: {xs_dims}, fitting dims: {self.xs_dims}"
+        assert xs_dims == self.xs_dims, (
+            f"make sure the tensors have the same 2nd dimensions with the ones used at fitting, current dims: {xs_dims}, fitting dims: {self.xs_dims}"
+        )
 
     def get_subset_scaler(self, indices: int | list[int]):
         if isinstance(indices, int):
@@ -161,22 +161,23 @@ class StandardScaler:
         self._check_consistency(xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs)
+            for x_is_complex, x in zip(self.xs_is_complex, xs, strict=False)
         )
         xs_transformed = tuple(
-            self._translate(x, m, i=i) for i, (x, m) in enumerate(zip(xs_real, self.ms))
+            self._translate(x, m, i=i)
+            for i, (x, m) in enumerate(zip(xs_real, self.ms, strict=False))
         )
         xs_transformed = tuple(
             self._scale(x, s, i=i)
-            for i, (x, s) in enumerate(zip(xs_transformed, self.ss))
+            for i, (x, s) in enumerate(zip(xs_transformed, self.ss, strict=False))
         )
-        for x, m in zip(xs_transformed, self.ms):
+        for x, m in zip(xs_transformed, self.ms, strict=False):
             for dim in range(x.shape[1]):
                 x[:, dim].nan_to_num_(m[0, dim].item())
 
         xs_out = tuple(
             to_complex_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs_transformed)
+            for x_is_complex, x in zip(self.xs_is_complex, xs_transformed, strict=False)
         )
         return xs_out[0] if is_tensor_input else xs_out
 
@@ -191,22 +192,22 @@ class StandardScaler:
         self._check_consistency(xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs)
+            for x_is_complex, x in zip(self.xs_is_complex, xs, strict=False)
         )
         xs_transformed = tuple(
             self._scale(x, 1.0 / s, i=i)
-            for i, (x, s) in enumerate(zip(xs_real, self.ss))
+            for i, (x, s) in enumerate(zip(xs_real, self.ss, strict=False))
         )
         xs_transformed = tuple(
             self._translate(x, -1.0 * m, i=i)
-            for i, (x, m) in enumerate(zip(xs_transformed, self.ms))
+            for i, (x, m) in enumerate(zip(xs_transformed, self.ms, strict=False))
         )
-        for x, m in zip(xs_transformed, self.ms):
+        for x, m in zip(xs_transformed, self.ms, strict=False):
             for dim in range(x.shape[1]):
                 x[:, dim].nan_to_num_(m[0, dim].item())
         xs_out = tuple(
             to_complex_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs_transformed)
+            for x_is_complex, x in zip(self.xs_is_complex, xs_transformed, strict=False)
         )
         return xs_out[0] if is_tensor_input else xs_out
 
@@ -216,9 +217,9 @@ class StandardScaler:
     @staticmethod
     def load(path: str):
         scaler: StandardScaler = torch.load(path)
-        assert isinstance(
-            scaler, StandardScaler
-        ), "Loaded object is not a valid instance of StandardScaler"
+        assert isinstance(scaler, StandardScaler), (
+            "Loaded object is not a valid instance of StandardScaler"
+        )
         return scaler
 
 
@@ -258,12 +259,12 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
     ncurrent_modes = len(current_modes)
     if isinstance(target_modes, int):
         target_modes = (target_modes,) * ncurrent_modes
-    assert (
-        ncurrent_modes == len(target_modes)
-    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {target_modes}"
+    assert ncurrent_modes == len(target_modes), (
+        f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {target_modes}"
+    )
     x_resized = x
     for dim, (target_mode, current_mode) in enumerate(
-        zip(target_modes, current_modes), 1
+        zip(target_modes, current_modes, strict=False), 1
     ):
         device = x.device
         if target_mode < current_mode:
@@ -318,9 +319,9 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
 def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
     if isinstance(zeroed_modes, int):
         zeroed_modes = [zeroed_modes] * len(x.shape[1:])
-    assert (
-        len(x.shape[1:]) == len(zeroed_modes)
-    ), f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {zeroed_modes}"
+    assert len(x.shape[1:]) == len(zeroed_modes), (
+        f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {zeroed_modes}"
+    )
     x_zeroed = x.clone()
     for dim, max_mode in enumerate(zeroed_modes, 1):
         dim_len = x.shape[dim]
@@ -370,22 +371,22 @@ def euler_solver(
     y0: torch.Tensor,
     t: torch.Tensor,
 ):
-    assert (
-        len(t.shape) == 1
-    ), "t should be a one dimensional tensor of all time evaluation points"
+    assert len(t.shape) == 1, (
+        "t should be a one dimensional tensor of all time evaluation points"
+    )
     assert len(t) > 1, "t should have more than one evaluation points"
 
     solution = torch.zeros((len(t), *y0.shape)).to(y0)
 
     j = 1
     solution[j - 1] = y0
-    for t0, t1 in zip(t[:-1], t[1:]):
+    for t0, t1 in zip(t[:-1], t[1:], strict=False):
         dt = t1 - t0
         y = solution[j - 1]
         solution[j] = y + dt * rhs_func(t0, y)
-        assert (
-            solution.isnan().sum() == 0
-        ), f"solver encountered nan at timestep {j} (t={t0})"
+        assert solution.isnan().sum() == 0, (
+            f"solver encountered nan at timestep {j} (t={t0})"
+        )
         # print(f"j {j}")
         j = j + 1
     # print(f"j_last {j}")

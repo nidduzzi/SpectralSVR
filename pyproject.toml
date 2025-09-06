@@ -1,39 +1,40 @@
 [project]
-name = "skripsi-program"
+name = "spectralsvr"
 version = "0.9.3"
-description = ""
-requires-python = ">=3.10,<3.11"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
-    "gcsfs>=2024.6.1",
-    "hyperopt>=0.2.7",
-    "ipywidgets>=8.1.5",
-    "jaxtyping>=0.2.20",
-    "matplotlib~=3.7.5",
-    "numpy>=1.24.0",
-    "pandas>=2.2.2",
-    "pyqt6>=6.8.0",
-    "ray[tune]>=2.37.0",
-    "scikit-learn>=1.5.0",
-    "torch>=2.4.1",
-    "torchaudio>=2.4.1",
-    "torchdiffeq>=0.2.4",
-    "torchmetrics>=1.0.3",
-    "torchvision>=0.19.1",
-    "tqdm>=4.65.0",
-    "xarray>=2024.10.0",
-    "zarr>=2.18.3",
+    "matplotlib>=3.10.6",
+    "numpy>=2.3.2",
+    "pandas>=2.3.2",
+    "torch>=2.8.0",
+    "torchdiffeq>=0.2.5",
+    "torchmetrics>=1.8.1",
+    "torchvision>=0.23.0",
+    "tqdm>=4.67.1",
 ]
 authors = [{ name = "nidduzzi", email = "74892632+nidduzzi@users.noreply.github.com" }]
 
-[dependency-groups]
-dev = [
-    "black>=24.4.2",
-    "ipykernel>=6.29.4",
+[project.optional-dependencies]
+notebook = [
+    "ipykernel>=6.30.1",
+    "ray[tune]>=2.49.0",
+    "hyperopt>=0.2.7",
+    "xarray>=2025.8.0",
+    "zarr>=3.1.2",
+    "gcsfs>=2025.7.0",
+    "ipywidgets>=8.1.7",
+    "scikit-learn>=1.7.1",
+]
+
+lint = [
+    "mypy>=1.17.1",
+    "ruff>=0.12.11",
+]
+test = [
     "memory-profiler>=0.61.0",
-    "mypy>=1.10.0",
-    "pytest>=8.2.2",
-    "ruff>=0.12.0",
-    "types-tqdm>=4.65.0.1",
+    "pytest>=8.4.1",
 ]
 
 [tool.uv.sources]
@@ -55,3 +56,19 @@ packages = ["SpectralSVR"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.mypy]
+python_version = "3.11"
+
+[[tool.mypy.overrides]]
+module = ["torch.*", "numpy.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "W", "C9", "PERF"]
+
+[tool.ruff.format]
+quote-style = "double"

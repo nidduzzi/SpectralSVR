@@ -1,4 +1,3 @@
-import pytest
 from SpectralSVR import FourierBasis
 from SpectralSVR import to_complex_coeff, to_real_coeff
 import torch
@@ -32,17 +31,17 @@ def test_basis():
     # Get coefficients and create basis
     coeff = FourierBasis.transform(f.unsqueeze(0), periodic=True)
     basis = FourierBasis(coeff)
-    assert (
-        basis.modes is not None
-    ), "Basis modes is None, it shouldn't be since coeff was passed into FourierBasis"
+    assert basis.modes is not None, (
+        "Basis modes is None, it shouldn't be since coeff was passed into FourierBasis"
+    )
     # derivative
     k = FourierBasis.wave_number(basis.modes[0])
     f_coeff = coeff * 2j * torch.pi * k.T
     f_basis = FourierBasis(f_coeff)
     # grad
-    assert (
-        f_coeff.isclose(basis.grad().coeff).all().item()
-    ), "grad should result in f_coeff"
+    assert f_coeff.isclose(basis.grad().coeff).all().item(), (
+        "grad should result in f_coeff"
+    )
 
     # indexing
     f_basis = f_basis[:1]
@@ -70,13 +69,15 @@ def test_basis():
     f1 = f1 + 0j
 
     coeff = FourierBasis.transform(f1.unsqueeze(0), periodic=True)
-    assert (
-        coeff.ndim == 2
-    ), "coeff needs to have two dimensions, the first the sample and the second the modes for the coefficients"
+    assert coeff.ndim == 2, (
+        "coeff needs to have two dimensions, the first the sample and the second the modes for the coefficients"
+    )
     coeff_real = to_real_coeff(coeff)
     coeff_complex = to_complex_coeff(coeff_real)
     invertible = torch.equal(coeff_complex, coeff)
-    assert invertible, f"coeff_complex with shape {coeff_complex.shape} and coeff with shape {coeff.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, coeff_real has shape {coeff_real.shape}"
+    assert invertible, (
+        f"coeff_complex with shape {coeff_complex.shape} and coeff with shape {coeff.shape} are not equal, check if to_complex_coeff and to_real_coeff are producing correct results, coeff_real has shape {coeff_real.shape}"
+    )
     # Interpolate and and compare f2
     ## sampling rate
     t = torch.arange(-1, 1, 1.0 / 150)
@@ -90,12 +91,12 @@ def test_basis():
     f3 = f3
 
     f3_pred = basis(t)[0].real
-    assert (
-        f3_pred.shape == f3.shape
-    ), f"f3_pred has shape {f3_pred.shape} and f3 has shape {f3.shape}, both need to have the same shape"
+    assert f3_pred.shape == f3.shape, (
+        f"f3_pred has shape {f3_pred.shape} and f3 has shape {f3.shape}, both need to have the same shape"
+    )
 
     # Compare prediction with real function
     mse = torch.norm((f3_pred - f3), 2)
-    assert torch.isclose(
-        torch.tensor(0.0), mse, atol=1e-3
-    ), f"interpolation mse too high ({mse})"
+    assert torch.isclose(torch.tensor(0.0), mse, atol=1e-3), (
+        f"interpolation mse too high ({mse})"
+    )

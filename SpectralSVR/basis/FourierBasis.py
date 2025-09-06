@@ -45,15 +45,15 @@ class FourierBasis(Basis):
         periods: PeriodsInputType = None,
     ) -> torch.Tensor:
         coeff = self.coeff
-        assert (
-            coeff is not None
-        ), "coeff is none, set it in the function parameters or with setCoeff"
+        assert coeff is not None, (
+            "coeff is none, set it in the function parameters or with setCoeff"
+        )
         if periods is None:
             periods = self.periods
         modes = self.get_modes(coeff, time_dependent=self.time_dependent)
-        assert (
-            modes is not None
-        ), "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
+        assert modes is not None, (
+            "modes is none, set it in the function parameters, at initialization of this basis, or via class properties"
+        )
         return self.evaluate(
             coeff=coeff.to(device=x.device),
             x=x,
@@ -107,9 +107,9 @@ class FourierBasis(Basis):
         if n > 0:
             init_len = len(coeff)
             coeff = coeff[i : i + n]
-            assert (
-                True if init_len < 1 else len(coeff) > 0
-            ), "pass valid values for i and n"
+            assert True if init_len < 1 else len(coeff) > 0, (
+                "pass valid values for i and n"
+            )
         if not coeff.is_complex():
             coeff = to_complex_coeff(coeff)
 
@@ -117,9 +117,9 @@ class FourierBasis(Basis):
         if time_dependent:
             assert t is not None, "t must not be none for time dependent evaluations"
             periods = periodsInputType_to_tuple(periods, (coeff.shape[1:]))
-            assert (
-                len(periods) > 1
-            ), f"periods given for time dependent evaluation must at least be of dimension 2, got {len(periods)}"
+            assert len(periods) > 1, (
+                f"periods given for time dependent evaluation must at least be of dimension 2, got {len(periods)}"
+            )
             basis = cls.fn(
                 x,
                 modes,
@@ -159,18 +159,18 @@ class FourierBasis(Basis):
             modes = (modes,)
         periods = periodsInputType_to_tuple(periods, modes)
 
-        assert (
-            len(x.shape) > 1
-        ), "x must have at least 2 dimensions, the format needs to be row of points, the first dimension of the tensor being each row and the second being dimensions of the points"
-        assert (
-            x.shape[0] > 0
-        ), f"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples"
-        assert (
-            x.shape[1] == len(modes)
-        ), f"x has dimensions {x.shape[1]} and modes has dimensions {len(modes)}, both need to have the same dimensions (modes specify how many modes in each dimension of the fourier series)"
-        assert (
-            x.shape[1] == len(periods)
-        ), f"x has dimensions {x.shape[1]} and periods has dimensions {len(periods)}, both need to have the same dimensions (periods the function periodicity in each dimension)"
+        assert len(x.shape) > 1, (
+            "x must have at least 2 dimensions, the format needs to be row of points, the first dimension of the tensor being each row and the second being dimensions of the points"
+        )
+        assert x.shape[0] > 0, (
+            f"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples"
+        )
+        assert x.shape[1] == len(modes), (
+            f"x has dimensions {x.shape[1]} and modes has dimensions {len(modes)}, both need to have the same dimensions (modes specify how many modes in each dimension of the fourier series)"
+        )
+        assert x.shape[1] == len(periods), (
+            f"x has dimensions {x.shape[1]} and periods has dimensions {len(periods)}, both need to have the same dimensions (periods the function periodicity in each dimension)"
+        )
         ndims = x.shape[1]
         if not x.is_floating_point() and not x.is_complex():
             x = x.float()
@@ -333,9 +333,9 @@ class FourierBasis(Basis):
         period: float,
         allow_fft: bool,
     ) -> torch.Tensor:
-        assert torch.is_complex(
-            f
-        ), "f is not complex, cast it to complex first eg. f + 0j"
+        assert torch.is_complex(f), (
+            "f is not complex, cast it to complex first eg. f + 0j"
+        )
         match func:
             case "forward":
                 sign = -1
@@ -345,7 +345,12 @@ class FourierBasis(Basis):
         domain_starts_at_0 = res.start == 0
         domain_end_equal_to_period = res.stop == period
         can_use_fft = (
-            domain_starts_at_0 and domain_end_equal_to_period and periodic and allow_fft and mode == res.step # TODO: using FFT can mess up the transform when evaluating at different resolutions
+            domain_starts_at_0
+            and domain_end_equal_to_period
+            and periodic
+            and allow_fft
+            and mode
+            == res.step  # TODO: using FFT can mess up the transform when evaluating at different resolutions
         )
         if can_use_fft:
             if func == "forward":
@@ -353,7 +358,7 @@ class FourierBasis(Basis):
             elif func == "inverse":
                 F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
         else:
-            if periodic:# tn=t0, {t0,...,tn-1}
+            if periodic:  # tn=t0, {t0,...,tn-1}
                 n = torch.arange(
                     res.start, res.stop, (res.stop - res.start) / res.step
                 ).to(f)
@@ -369,9 +374,9 @@ class FourierBasis(Basis):
 
             F = torch.mm(f, e.T)
 
-        assert isinstance(
-            F, torch.Tensor
-        ), f"Something went wrong during the raw transform, expected result of {torch.Tensor}, but got {type(F)}"
+        assert isinstance(F, torch.Tensor), (
+            f"Something went wrong during the raw transform, expected result of {torch.Tensor}, but got {type(F)}"
+        )
 
         return F
 
@@ -435,9 +440,9 @@ class FourierBasis(Basis):
             torch.Tensor -- m complex valued coefficients of f
         """
         ndims = len(f.shape)
-        assert (
-            ndims >= 2
-        ), f"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples"
+        assert ndims >= 2, (
+            f"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples"
+        )
         if not torch.is_complex(f):
             f = f * (1 + 0j)
         periods = periodsInputType_to_tuple(periods, f.shape[1:])
@@ -486,9 +491,9 @@ class FourierBasis(Basis):
             torch.Tensor -- m complex valued coefficients of f
         """
         ndims = len(F.shape)
-        assert (
-            ndims >= 2
-        ), f"f has shape {F.shape}, It needs to have at least two dimensions with the first being m samples"
+        assert ndims >= 2, (
+            f"f has shape {F.shape}, It needs to have at least two dimensions with the first being m samples"
+        )
         if not torch.is_complex(F):
             F = F * (1 + 0j)
         periods = periodsInputType_to_tuple(periods, F.shape[1:])
@@ -518,7 +523,7 @@ class FourierBasis(Basis):
             # time dependent use finite differences
             dt = self.periods[0] / (self.time_size - 1)
             coeff = copy.coeff
-            for o in range(ord):
+            for _ in range(ord):
                 coeff = torch.gradient(coeff, spacing=dt, dim=1)[0]
             copy.coeff = coeff
         else:
@@ -549,7 +554,7 @@ class FourierBasis(Basis):
             # time dependent use finite differences
             dt = self.periods[0] / (self.time_size - 1)
             coeff = copy.coeff
-            for o in range(ord):
+            for _ in range(ord):
                 coeff = coeff.cumsum(1).mul(dt)
             copy.coeff = coeff
         else:

@@ -1,21 +1,13 @@
-import codecs
-import json
-import typing
-import functools
 import logging
+from typing_extensions import override
 
 import torch
 from torch import nn
 import numpy as np
-import torch.utils
-import torch.utils.data
 from torch.utils.data import TensorDataset, DataLoader
 
-from . import (
+from .__base import (
     MultiRegression,
-    # dump_model,
-    # load_model,
-    # torch_json_encoder,
 )
 from torchmetrics.functional import mean_squared_error
 
@@ -37,33 +29,37 @@ class FNN(MultiRegression):
         MAX_EPOCH: int = 100,
         lr: float = 0.001,
         batch_size: int = 4,
-        activation=nn.Softplus,
+        activation: type[nn.Module] = nn.Softplus,
         n_hidden: int = 3,  # number of hidden layers
         w_hidden: int = 100,  # width of hidden layers
-        verbose=False,
-        dtype=torch.float32,
-        device: torch.device = torch.device("cpu"),
+        verbose: bool = False,
+        dtype: torch.dtype = torch.float32,
+        device: torch.device | None = None,
     ):
+        if device is None:
+            device = torch.device("cpu")
         super().__init__(verbose, dtype, device)
 
         # Hyperparameters
-        self.batch_size = batch_size
-        self.MAX_EPOCH = MAX_EPOCH
-        self.lr = lr
-        self.n_hidden = n_hidden
-        self.w_hidden = w_hidden
-        self.activation = activation
+        self.batch_size: int = batch_size
+        self.MAX_EPOCH: int = MAX_EPOCH
+        self.lr: float = lr
+        self.n_hidden: int = n_hidden
+        self.w_hidden: int = w_hidden
+        self.activation: type[nn.Module] = activation
 
         # Model parameters
-        self.input = None
-        self.hidden = None
-        self.output = None
-        self.params = None
+        self.input: nn.Module | None = None
+        self.hidden: nn.Module | None = None
+        self.output: nn.Module | None = None
+        self.params: nn.Module | None = None
 
     @property
+    @override
     def trained(self) -> bool:
         return self.params is not None
 
+    @override
     def _optimize_parameters_and_set(self, X: torch.Tensor, y: torch.Tensor):
         self.input = nn.Sequential(
             nn.Linear(X.shape[1], self.w_hidden), self.activation()
@@ -103,9 +99,9 @@ class FNN(MultiRegression):
         return (self.params,)
 
     def _predict(self, X_: torch.Tensor):
-        assert (
-            self.params is not None
-        ), "The model doesn't see to be fitted, try running .fit() method first"
+        assert self.params is not None, (
+            "The model doesn't see to be fitted, try running .fit() method first"
+        )
         self.params.eval()
         self.print(f"X:{X_.shape}")
         y_pred = self.params.forward(X_)

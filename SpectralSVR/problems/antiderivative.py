@@ -8,7 +8,9 @@ class Antiderivative(Problem):
     """
     Antiderivative problem for one dimension
 
-    This class defines and generates the antiderivative problem in one dimension. The functions themselves may be multidimensional but the derivative is only in the 0th mode dimension
+    This class defines and generates the antiderivative problem in one
+    dimension. The functions themselves may be multidimensional but the
+    derivative is only in the 0th mode dimension
     """
 
     def __init__(self) -> None:
@@ -31,16 +33,16 @@ class Antiderivative(Problem):
             assert m > 0, f"number of modes m must be more than 0 at dim {i}"
         assert u0 is not None, "integration constant u0 must not be None"
         # generate solution functions
-        u = basis.generate(n, modes, generator=generator, *args, **kwargs)
-        assert (
-            u.coeff is not None
-        ), "generated solution functions u should not have None coeff"
+        u = basis.generate(n, modes, *args, generator=generator, **kwargs)
+        assert u.coeff is not None, (
+            "generated solution functions u should not have None coeff"
+        )
         # compute derivative functions
         ut = u.grad()
         # set the integration coefficient
-        assert (
-            u.coeff is not None and ut.coeff is not None
-        ), "Something went wrong, because generated functions have value of None for coeff"
+        assert u.coeff is not None and ut.coeff is not None, (
+            "Something went wrong, because generated functions have value of None for coeff"
+        )
         if isinstance(u0, complex):
             if u.coeff.is_complex():
                 u.coeff[:, 0] = torch.tensor(u0)

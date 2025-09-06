@@ -35,15 +35,17 @@ def transformResType_to_tuple(
 ) -> tuple[slice, ...]:
     assert len(periods) == len(modes), "periods should have the same dimension as modes"
     if res is None:
-        _res = tuple(slice(0, period, mode) for period, mode in zip(periods, modes))
+        _res = tuple(
+            slice(0, period, mode) for period, mode in zip(periods, modes, strict=True)
+        )
     elif isinstance(res, int):
         _res = tuple(slice(0, period, res) for period in periods)
     elif isinstance(res, slice):
         _res = tuple(res for mode in modes)
     else:
-        assert len(res) == len(
-            modes
-        ), f"expected res of length {len(modes)} but got length {len(res)}"
+        assert len(res) == len(modes), (
+            f"expected res of length {len(modes)} but got length {len(res)}"
+        )
         _res = res
     return _res
 
@@ -82,9 +84,9 @@ class Basis(abc.ABC):
         if coeff is None or coeff.numel() == 0:
             self._coeff = torch.empty(0, dtype=self.coeff_dtype)
         else:
-            assert (
-                coeff.ndim >= 2
-            ), "coeff needs to be at least a two dimensional tensor of coefficients"
+            assert coeff.ndim >= 2, (
+                "coeff needs to be at least a two dimensional tensor of coefficients"
+            )
             self._coeff = coeff
 
     @property
@@ -183,7 +185,10 @@ class Basis(abc.ABC):
             periods = self.periods
             if self.time_dependent:
                 modes = (self.time_size, *modes)
-            res = tuple(slice(0, period, mode) for mode, period in zip(modes, periods))
+            res = tuple(
+                slice(0, period, mode)
+                for mode, period in zip(modes, periods, strict=False)
+            )
         if isinstance(res, int):
             res = tuple(slice(0, period, res) for period in self.periods)
         elif isinstance(res, slice):
@@ -213,7 +218,7 @@ class Basis(abc.ABC):
                 values = self.inv_transform(
                     coeff,
                     res=res_spatial,
-                    periodic=False,# TODO: handle periodicity better
+                    periodic=False,  # TODO: handle periodicity better
                     periods=self.periods,
                 )
 
@@ -221,9 +226,9 @@ class Basis(abc.ABC):
             grid = self.grid(res)
         else:
             if self.time_dependent:
-                assert (
-                    len(res) > 1
-                ), "res list should be more than one element for time dependent coefficients"
+                assert len(res) > 1, (
+                    "res list should be more than one element for time dependent coefficients"
+                )
                 res_t = res[0]
                 res = res[1:]
 
@@ -627,18 +632,18 @@ class Basis(abc.ABC):
         Returns:
             _type_ -- returns the result of the plotting function such as list[Line2D] or AxesImage
         """
-        assert (
-            i + n <= len(self)
-        ), f"values of i={i} and n={n} is out of bounds. i+n needs to be less than or equal to the number of functions {len(self)}"
+        assert i + n <= len(self), (
+            f"values of i={i} and n={n} is out of bounds. i+n needs to be less than or equal to the number of functions {len(self)}"
+        )
         if res is None:
             res = tuple(slice(0, period, 200) for period in self.periods)
         plot_dims = self.ndim + 1 if self.time_dependent else self.ndim
         values, grid = self.get_values_and_grid(
             i=i, n=n, res=res, evaluation_mode=evaluation_mode, device=device
         )
-        assert (
-            len(values) > 0 or values is None
-        ), "something went wrong in computing the values"
+        assert len(values) > 0 or values is None, (
+            "something went wrong in computing the values"
+        )
         values = values.cpu()
         grid = grid.cpu()
 
@@ -655,7 +660,7 @@ class Basis(abc.ABC):
                             )
                         if legend:
                             plt.legend(
-                                [f"Function ({i+j})" for j in range(len(values))]
+                                [f"Function ({i + j})" for j in range(len(values))]
                             )
                     else:
                         match plot_component:
@@ -670,7 +675,7 @@ class Basis(abc.ABC):
                                 if legend:
                                     plt.legend(
                                         [
-                                            f"Real function ({i+j})"
+                                            f"Real function ({i + j})"
                                             for j in range(len(values))
                                         ]
                                     )
@@ -686,7 +691,7 @@ class Basis(abc.ABC):
                                 if legend:
                                     plt.legend(
                                         [
-                                            f"Imaginary function ({i+j})"
+                                            f"Imaginary function ({i + j})"
                                             for j in range(len(values))
                                         ]
                                     )
@@ -712,9 +717,9 @@ class Basis(abc.ABC):
                                 if legend:
                                     plt.legend(
                                         [
-                                            f"Real function ({i+j})"
+                                            f"Real function ({i + j})"
                                             if k == 0
-                                            else f"Imaginary function ({i+j})"
+                                            else f"Imaginary function ({i + j})"
                                             for k in range(2)
                                             for j in range(len(values))
                                         ]
@@ -724,7 +729,7 @@ class Basis(abc.ABC):
                         plot = plt.plot(grid.flatten(), func.flatten().real, **kwargs)
                     if legend:
                         plt.legend(
-                            [(f"Real function ({i+j})") for j in range(len(values))]
+                            [(f"Real function ({i + j})") for j in range(len(values))]
                         )
             case 2:
                 if complex_scatter:
@@ -732,7 +737,7 @@ class Basis(abc.ABC):
                         func_flat = func.flatten()
                         plot = plt.scatter(func_flat.real, func_flat.imag, **kwargs)
                     if legend:
-                        plt.legend([f"Function ({i+j})" for j in range(len(values))])
+                        plt.legend([f"Function ({i + j})" for j in range(len(values))])
                 else:
                     if plot_component is None:
                         plot_component = "real"
@@ -890,7 +895,7 @@ class Basis(abc.ABC):
 
         res_modes = tuple(
             slice(0, period, mode)
-            for mode, period in zip(self.modes[1:], self.periods[1:])
+            for mode, period in zip(self.modes[1:], self.periods[1:], strict=True)
         )
         if nt is None:
             nt = self.modes[0]
@@ -911,7 +916,8 @@ class Basis(abc.ABC):
 
         # since periods combine time period with spatial period, get only the spatial ones with index [1:]
         res_modes = tuple(
-            slice(0, period, mode) for mode, period in zip(self.modes, self.periods[1:])
+            slice(0, period, mode)
+            for mode, period in zip(self.modes, self.periods[1:], strict=True)
         )
         res_modes = (slice(0, self.periods[0], self.time_size), *res_modes)
         val = self.get_values(res=res_modes)
