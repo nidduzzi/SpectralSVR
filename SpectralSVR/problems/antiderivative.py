@@ -21,9 +21,8 @@ class Antiderivative(Problem):
         basis: Type[BasisSubType],
         n: int,
         modes: int | tuple[int, ...],
-        u0: float | int | complex,
-        *args,
         generator: torch.Generator | None = None,
+        u0: float | int | complex = 0.0,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         if isinstance(modes, int):
@@ -33,7 +32,7 @@ class Antiderivative(Problem):
             assert m > 0, f"number of modes m must be more than 0 at dim {i}"
         assert u0 is not None, "integration constant u0 must not be None"
         # generate solution functions
-        u = basis.generate(n, modes, *args, generator=generator, **kwargs)
+        u = basis.generate(n, modes, **{**kwargs, "generator": generator})
         assert u.coeff is not None, (
             "generated solution functions u should not have None coeff"
         )

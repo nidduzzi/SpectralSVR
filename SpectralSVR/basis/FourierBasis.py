@@ -8,7 +8,7 @@ from .__base import (
 )
 from ..utils import to_complex_coeff
 import torch
-from typing_extensions import Self, Literal, Callable, overload
+from typing_extensions import Self, Literal, Callable
 from functools import partial
 
 
@@ -43,6 +43,7 @@ class FourierBasis(Basis):
         i=0,
         n=0,
         periods: PeriodsInputType = None,
+        **kwargs,
     ) -> torch.Tensor:
         coeff = self.coeff
         assert coeff is not None, (
@@ -64,32 +65,6 @@ class FourierBasis(Basis):
             time_dependent=self.time_dependent,
         )
 
-    @overload
-    @classmethod
-    def evaluate(
-        cls,
-        coeff: torch.Tensor,
-        x: torch.Tensor,
-        t: torch.Tensor,
-        i=0,
-        n=0,
-        time_dependent: Literal[True] | bool = True,
-        periods: PeriodsInputType = None,
-    ) -> torch.Tensor: ...
-
-    @overload
-    @classmethod
-    def evaluate(
-        cls,
-        coeff: torch.Tensor,
-        x: torch.Tensor,
-        t: None = None,
-        i=0,
-        n=0,
-        time_dependent: Literal[False] | bool = False,
-        periods: PeriodsInputType = None,
-    ) -> torch.Tensor: ...
-
     @classmethod
     def evaluate(
         cls,
@@ -100,6 +75,7 @@ class FourierBasis(Basis):
         n=0,
         time_dependent: bool = False,
         periods: PeriodsInputType = None,
+        **kwargs,
     ) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
@@ -150,11 +126,14 @@ class FourierBasis(Basis):
     @staticmethod
     def fn(
         x: torch.Tensor,
-        modes: int | tuple[int, ...],
+        modes: int | tuple[int, ...] | None = None,
         periods: PeriodsInputType | None = None,
         constant=2j * torch.pi,
         transpose: bool = False,
+        **kwargs,
     ) -> torch.Tensor:
+        if modes is None:
+            raise ValueError("modes should not be None. It is required.")
         if isinstance(modes, int):
             modes = (modes,)
         periods = periodsInputType_to_tuple(periods, modes)
@@ -221,6 +200,7 @@ class FourierBasis(Basis):
         complex_funcs: bool = False,
         periods: PeriodsInputType = None,
         value_type: Literal["random", "zero"] = "random",
+        **kwargs,
     ) -> Self:
         match value_type:
             case "random":
@@ -421,6 +401,7 @@ class FourierBasis(Basis):
         periodic: bool = True,
         periods: PeriodsInputType = None,
         allow_fft: bool = True,
+        **kwargs,
     ) -> torch.Tensor:
         """
         transform
@@ -465,12 +446,13 @@ class FourierBasis(Basis):
 
     @staticmethod
     def inv_transform(
-        F: torch.Tensor,
+        f: torch.Tensor,
         res: ResType | None = None,
         periodic: bool = True,
         scale: bool = True,
         periods: PeriodsInputType = None,
         allow_fft: bool = True,
+        **kwargs,
     ):
         """
         inv_transform
@@ -490,18 +472,18 @@ class FourierBasis(Basis):
         Returns:
             torch.Tensor -- m complex valued coefficients of f
         """
-        ndims = len(F.shape)
+        ndims = len(f.shape)
         assert ndims >= 2, (
-            f"f has shape {F.shape}, It needs to have at least two dimensions with the first being m samples"
+            f"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples"
         )
-        if not torch.is_complex(F):
-            F = F * (1 + 0j)
-        periods = periodsInputType_to_tuple(periods, F.shape[1:])
+        if not torch.is_complex(f):
+            f = f * (1 + 0j)
+        periods = periodsInputType_to_tuple(periods, f.shape[1:])
         # Res should by default evaluate to the period not 1
-        res = transformResType_to_tuple(res, tuple(F.shape[1:]), periods)
+        res = transformResType_to_tuple(res, tuple(f.shape[1:]), periods)
 
         # perform 1d transform over every dimension
-        f = F
+        f = f
         for cdim in range(1, ndims):
             f = FourierBasis._ndim_transform(
                 f,
@@ -514,7 +496,7 @@ class FourierBasis(Basis):
             )
 
         if scale:
-            f = f.div(torch.tensor(F.shape[1:]).prod())
+            f = f.div(torch.tensor(f.shape[1:]).prod())
         return f
 
     def grad(self, dim: int = 0, ord: int = 1) -> Self:
@@ -531,8 +513,10 @@ class FourierBasis(Basis):
                 # disregard time dimension
                 dim = dim - 1
             k = copy.wave_number(copy.modes[dim])
-            multiplier_dims = [1 for _ in range(copy.ndim)]
-            multiplier_dims[dim] = copy.modes[dim]
+            multiplier_dims = tuple(
+                1 if i != dim else copy.modes[i] for i in range(copy.ndim)
+            )
+            # multiplier_dims[dim] = copy.modes[dim]
             if self.time_dependent:
                 multiplier_dims = (1, *multiplier_dims)
             multiplier = (
@@ -562,8 +546,10 @@ class FourierBasis(Basis):
                 # disregard time dimension
                 dim = dim - 1
             k = copy.wave_number(copy.modes[dim])
-            multiplier_dims = [1 for _ in range(copy.ndim)]
-            multiplier_dims[dim] = copy.modes[dim]
+            multiplier_dims = tuple(
+                1 if i != dim else copy.modes[i] for i in range(copy.ndim)
+            )
+            # multiplier_dims[dim] = copy.modes[dim]
             if self.time_dependent:
                 multiplier_dims = (1, *multiplier_dims)
             multiplier = (

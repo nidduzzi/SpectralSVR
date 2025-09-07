@@ -1,3 +1,3 @@
-from .__base import Problem
-from .antiderivative import Antiderivative
-from .burgers import Burgers
+from .__base import Problem as Problem
+from .antiderivative import Antiderivative as Antiderivative
+from .burgers import Burgers as Burgers

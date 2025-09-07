@@ -2,7 +2,7 @@ import torch
 import logging
 import typing
 from typing import Callable
-from torchdiffeq import odeint
+from torchdiffeq import odeint  # type: ignore
 from functools import partial
 from torchmetrics.functional.regression import (
     mean_squared_error,
@@ -157,11 +157,11 @@ class StandardScaler:
 
     def transform(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
         is_tensor_input = isinstance(xs, torch.Tensor)
-        xs = self._get_tensor_tuple(xs)
-        self._check_consistency(xs)
+        _xs = self._get_tensor_tuple(xs)
+        self._check_consistency(_xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs, strict=False)
+            for x_is_complex, x in zip(self.xs_is_complex, _xs, strict=False)
         )
         xs_transformed = tuple(
             self._translate(x, m, i=i)
@@ -188,11 +188,11 @@ class StandardScaler:
 
     def inverse(self, xs: tuple[torch.Tensor, ...] | torch.Tensor):
         is_tensor_input = isinstance(xs, torch.Tensor)
-        xs = self._get_tensor_tuple(xs)
-        self._check_consistency(xs)
+        _xs = self._get_tensor_tuple(xs)
+        self._check_consistency(_xs)
         xs_real = tuple(
             to_real_coeff(x) if x_is_complex else x
-            for x_is_complex, x in zip(self.xs_is_complex, xs, strict=False)
+            for x_is_complex, x in zip(self.xs_is_complex, _xs, strict=False)
         )
         xs_transformed = tuple(
             self._scale(x, 1.0 / s, i=i)

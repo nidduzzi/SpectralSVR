@@ -148,6 +148,97 @@ class Basis(abc.ABC):
         """
         ...
 
+    def _get_values_from_inverse_transform(
+        self,
+        i: int,
+        n: int,
+        res: tuple[slice, ...],
+        device: torch.device,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if n > 0:
+            coeff = self.coeff[i : i + n]
+        else:
+            coeff = self.coeff
+        coeff = coeff.to(device=device)
+
+        if self.time_dependent:
+            res_spatial = res[1:]
+            values = self.inv_transform(
+                coeff.flatten(0, 1),
+                res=res_spatial,
+                periodic=False,
+                periods=self.periods[1:],
+            ).unflatten(0, coeff.shape[0:2])
+            res_t = res[0]
+            t = self.grid(res_t).to(device=device)
+            index_float = t.flatten() / self.periods[0] * (values.shape[1] - 1)
+            values = self.interpolate_time_tensor(values, index_float)
+        else:
+            res_spatial = res
+            values = self.inv_transform(
+                coeff,
+                res=res_spatial,
+                periodic=False,  # TODO: handle periodicity better
+                periods=self.periods,
+            )
+
+        values = values.to(self.coeff)
+        grid = self.grid(res)
+        return values, grid
+
+    def _get_values_from_basis_eval(
+        self,
+        i: int,
+        n: int,
+        res: tuple[slice, ...],
+        device: torch.device,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if self.time_dependent:
+            assert len(res) > 1, (
+                "res list should be more than one element for time dependent coefficients"
+            )
+            res_t = res[0]
+            res = res[1:]
+
+        grid = self.grid(res)
+        grid_device = grid.to(device=device)
+        if res_t is None:
+            grid_t = None
+            grid_t_device = None
+            grid_shape = tuple(r.step for r in res)
+        else:
+            grid_t = self.grid(res_t)
+            grid_t_device = grid_t.to(device=device)
+            grid_shape = tuple(r.step for r in (res_t, *res))
+
+        values = self.__call__(
+            grid_device.flatten(0, -2), t=grid_t_device, i=i, n=n
+        ).reshape((-1, *grid_shape))
+        if res_t is not None:
+            # grid with the time coordinates for complete grid
+            grid = self.grid((res_t, *res))
+        return values, grid
+
+    def _get_res_tuple(
+        self,
+        res: ResType | None,
+    ) -> tuple[slice, ...]:
+        evaluation_dim = (self.ndim + 1) if self.time_dependent else self.ndim
+        if res is None:
+            modes = self.modes
+            periods = self.periods
+            if self.time_dependent:
+                modes = (self.time_size, *modes)
+            return tuple(
+                slice(0, period, mode)
+                for mode, period in zip(modes, periods, strict=False)
+            )
+        if isinstance(res, int):
+            return tuple(slice(0, period, res) for period in self.periods)
+        elif isinstance(res, slice):
+            return (res,) * evaluation_dim
+        return res
+
     def get_values_and_grid(
         self,
         i=0,
@@ -179,76 +270,14 @@ class Basis(abc.ABC):
             )
         if evaluation_mode == "auto":
             evaluation_mode = self.prefered_evaluation_mode()
-        evaluation_dim = (self.ndim + 1) if self.time_dependent else self.ndim
-        if res is None:
-            modes = self.modes
-            periods = self.periods
-            if self.time_dependent:
-                modes = (self.time_size, *modes)
-            res = tuple(
-                slice(0, period, mode)
-                for mode, period in zip(modes, periods, strict=False)
-            )
-        if isinstance(res, int):
-            res = tuple(slice(0, period, res) for period in self.periods)
-        elif isinstance(res, slice):
-            res = (res,) * evaluation_dim
+        fin_res = self._get_res_tuple(res)
 
         if evaluation_mode == "inverse transform":
-            if n > 0:
-                coeff = self.coeff[i : i + n]
-            else:
-                coeff = self.coeff
-            coeff = coeff.to(device=device)
-
-            if self.time_dependent:
-                res_spatial = res[1:]
-                values = self.inv_transform(
-                    coeff.flatten(0, 1),
-                    res=res_spatial,
-                    periodic=False,
-                    periods=self.periods[1:],
-                ).unflatten(0, coeff.shape[0:2])
-                res_t = res[0]
-                t = self.grid(res_t).to(device=device)
-                index_float = t.flatten() / self.periods[0] * (values.shape[1] - 1)
-                values = self.interpolate_time_tensor(values, index_float)
-            else:
-                res_spatial = res
-                values = self.inv_transform(
-                    coeff,
-                    res=res_spatial,
-                    periodic=False,  # TODO: handle periodicity better
-                    periods=self.periods,
-                )
-
-            values = values.to(self.coeff)
-            grid = self.grid(res)
+            values, grid = self._get_values_from_inverse_transform(
+                i, n, fin_res, device
+            )
         else:
-            if self.time_dependent:
-                assert len(res) > 1, (
-                    "res list should be more than one element for time dependent coefficients"
-                )
-                res_t = res[0]
-                res = res[1:]
-
-            grid = self.grid(res)
-            grid_device = grid.to(device=device)
-            if res_t is None:
-                grid_t = None
-                grid_t_device = None
-                grid_shape = tuple(r.step for r in res)
-            else:
-                grid_t = self.grid(res_t)
-                grid_t_device = grid_t.to(device=device)
-                grid_shape = tuple(r.step for r in (res_t, *res))
-
-            values = self.__call__(
-                grid_device.flatten(0, -2), t=grid_t_device, i=i, n=n
-            ).reshape((-1, *grid_shape))
-            if res_t is not None:
-                # grid with the time coordinates for complete grid
-                grid = self.grid((res_t, *res))
+            values, grid = self._get_values_from_basis_eval(i, n, fin_res, device)
 
         return values, grid
 
@@ -288,6 +317,7 @@ class Basis(abc.ABC):
     @abc.abstractmethod
     def fn(
         x: torch.Tensor,
+        **kwargs,
     ) -> torch.Tensor:
         """
         fn
@@ -306,7 +336,6 @@ class Basis(abc.ABC):
     def __call__(
         self,
         x: torch.Tensor,
-        *args,
         t: torch.Tensor | None = None,
         i: int = 0,
         n: int = 0,
@@ -337,7 +366,6 @@ class Basis(abc.ABC):
         cls,
         coeff: torch.Tensor,
         x: torch.Tensor,
-        *args,
         t: torch.Tensor,
         i=0,
         n=0,
@@ -353,7 +381,6 @@ class Basis(abc.ABC):
         cls,
         coeff: torch.Tensor,
         x: torch.Tensor,
-        *args,
         t: None = None,
         i=0,
         n=0,
@@ -368,7 +395,6 @@ class Basis(abc.ABC):
         cls,
         coeff: torch.Tensor,
         x: torch.Tensor,
-        *args,
         t: torch.Tensor | None = None,
         i: int = 0,
         n: int = 0,

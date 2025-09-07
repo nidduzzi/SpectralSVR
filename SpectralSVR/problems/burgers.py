@@ -4,8 +4,8 @@ from ..utils import (
     Number,
     SolverSignatureType,
     implicit_adams_solver,
-    to_complex_coeff,
-    to_real_coeff,
+    # to_complex_coeff,
+    # to_real_coeff,
 )
 from . import Problem
 from typing import Literal, Type
@@ -30,6 +30,7 @@ class Burgers(Problem):
         basis: Type[BasisSubType],
         n: int,
         modes: int | tuple[int, ...],
+        generator: torch.Generator | None = None,
         u0: ParamInput | BasisSubType = "random",
         f: ParamInput | BasisSubType = 0,
         nu: float = 0.01,
@@ -37,8 +38,6 @@ class Burgers(Problem):
         time_domain: slice | None = None,
         solver: SolverSignatureType = implicit_adams_solver,
         time_dependent_coeff: bool = True,
-        *args,
-        generator: torch.Generator | None = None,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         if space_domain is None:
@@ -54,11 +53,11 @@ class Burgers(Problem):
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
         L = space_domain.stop - space_domain.start
-        x = (
-            basis.grid(slice(space_domain.start, space_domain.stop, modes[0]))
-            .flatten(0, -2)
-            .to(device=device)
-        )
+        # x = (
+        #     basis.grid(slice(space_domain.start, space_domain.stop, modes[0]))
+        #     .flatten(0, -2)
+        #     .to(device=device)
+        # )
         T: float = time_domain.stop - time_domain.start
         nt = int(time_domain.step)
         # nt = int(T / (0.01 * nu) + 2)
@@ -96,135 +95,150 @@ class Burgers(Problem):
 
         else:
             # use ivp solution
+            raise NotImplementedError("numerical solver not implemented at this point")
             # TODO: use Exponential Time Differencing RK4 (ETDRK4) solver for more stable and accurate results
             # https://matematicas.uclm.es/cedya09/archive/textos/129_de-la-Hoz-Mendez-F.pdf
             #
             # ignore time modes
-            spatial_modes = modes[1:]
-            u_gen, f_gen = self.solve_numerically(
-                basis,
-                n,
-                modes,
-                nu,
-                u0,
-                f,
-                periods,
-                x,
-                t,
-                solver,
-                nt,
-                time_dependent_coeff,
-                device,
-                generator,
-                **kwargs,
-            )
+            # spatial_modes = modes[1:]
+            # u_gen, f_gen = self.solve_numerically(
+            #     basis,
+            #     n,
+            #     modes,
+            #     nu,
+            #     u0,
+            #     f,
+            #     periods,
+            #     x,
+            #     t,
+            #     solver,
+            #     nt,
+            #     time_dependent_coeff,
+            #     device,
+            #     generator,
+            #     **kwargs,
+            # )
 
         results = (u_gen, f_gen)
         return results
 
-    @classmethod
-    def solve_numerically(
-        cls,
-        basis: Type[BasisSubType],
-        n: int,
-        modes: tuple[int, ...],
-        nu: float,
-        u0: ParamInput | BasisSubType,
-        f: ParamInput | BasisSubType,
-        periods: tuple[float, ...],
-        x: torch.Tensor,
-        t: torch.Tensor,
-        solver: SolverSignatureType,
-        nt: int,
-        timedependent_solution: bool,
-        device,
-        generator,
-        **kwargs,
-    ) -> tuple[BasisSubType, BasisSubType]:
-        # Setup solution using initial condition
-        if isinstance(u0, str):
-            match u0:
-                case "random":
-                    # random first space coefficients
-                    u0 = basis.generate(
-                        n, modes, generator=generator, periods=periods, **kwargs
-                    )
-                case _:
-                    raise RuntimeError(f"parameter value of u0 ({u0}) is invalid")
-        elif isinstance(u0, Number):
-            u0_const = float(u0)
-            u0 = basis(basis.generate_empty(n, modes), periods=periods, **kwargs)
-            if u0.coeff.is_complex():
-                u0.coeff[:, ..., 0] = torch.tensor(u0_const + 0j)
-            else:
-                u0.coeff[:, ..., 0] = u0_const
-        elif isinstance(u0, torch.Tensor):
-            u0 = basis(u0).resize_modes(modes, rescale=False)
-        elif isinstance(u0, Basis):
-            u0 = u0
-        else:
-            raise RuntimeError("Invalid u0 value")
-        # Setup forcing term
-        if isinstance(f, str):
-            match f:
-                case "random":
-                    fst = basis.generate(
-                        n,
-                        (*modes, *modes),
-                        generator=generator,
-                        periods=periods,
-                        **kwargs,
-                    )
-                case _:
-                    raise RuntimeError(f"parameter value of f ({f}) is invalid")
-        elif isinstance(f, Number):
-            f_const = float(f)
-            fst = basis(basis.generate_empty(n, (1, *modes)), periods=periods, **kwargs)
-            if fst.coeff.is_complex():
-                fst.coeff[:, ..., 0] = torch.tensor(f_const + 0j)
-            else:
-                fst.coeff[:, ..., 0] = f_const
-        elif isinstance(f, torch.Tensor):
-            fst = basis(f).resize_modes((*modes, *modes), rescale=False)
-        elif isinstance(f, Basis):
-            fst = f
-        else:
-            raise RuntimeError("Invalid f value")
-
-        u0.coeff = u0.coeff.to(device=device)
-        fst.coeff = fst.coeff.to(device=device)
-        print(f"generating with {len(t)} time steps")
-
-        def f_func(t: torch.Tensor, x: torch.Tensor = x):
-            x = x.tile((1, 2))
-            x[:, 0] = t
-            return basis.transform(fst(x).reshape((-1, modes[0])))
-
-        def rhs_func(t: torch.Tensor, y0: torch.Tensor):
-            y0 = to_complex_coeff(y0)
-            return to_real_coeff(cls.rhs(basis, nu, y0, f_func(t)))
-
-        u_hat = solver(rhs_func, to_real_coeff(u0.coeff), t)
-        if basis.coeff_dtype.is_complex:
-            u_shape = u_hat.shape
-            u_hat = to_complex_coeff(u_hat.flatten(0, 1)).reshape(
-                (*u_shape[:2], *u0.coeff.shape[1:])
-            )
-
-        u_hat = u_hat.movedim(0, 1)
-        if timedependent_solution:
-            u = basis(u_hat, **kwargs, time_dependent=True)
-        else:
-            u_hat = u_hat.reshape((n * nt, modes[0]))
-            u = basis(
-                basis.transform(basis.inv_transform(u_hat).reshape((n, nt, modes[0]))),
-                **kwargs,
-            )  # .resize_modes((*modes,) * 2)
-
-        u.coeff = u.coeff.cpu()
-        fst.coeff = fst.coeff.cpu()
-        return (u, fst)
-
+    # @staticmethod
+    # def _get_initial_value(
+    #     basis: Type[BasisSubType],
+    #     n: int,
+    #     modes: tuple[int, ...],
+    #     u0: ParamInput | BasisSubType,
+    #     periods: tuple[float, ...],
+    #     generator,
+    #     **kwargs,
+    # ) -> BasisSubType:
+    #     out: BasisSubType
+    #     if isinstance(u0, str):
+    #         match u0:
+    #             case "random":
+    #                 # random first space coefficients
+    #                 out = basis.generate(
+    #                     n, modes, generator=generator, periods=periods, **kwargs
+    #                 )
+    #             case _:
+    #                 raise RuntimeError(f"parameter value of u0 ({u0}) is invalid")
+    #     elif isinstance(u0, Number):
+    #         u0_const = float(u0)
+    #         out = basis(basis.generate_empty(n, modes), periods=periods, **kwargs)
+    #         if out.coeff.is_complex():
+    #             out.coeff[:, ..., 0] = torch.tensor(u0_const + 0j)
+    #         else:
+    #             out.coeff[:, ..., 0] = u0_const
+    #     elif isinstance(u0, torch.Tensor):
+    #         out = basis(u0).resize_modes(modes, rescale=False)
+    #     elif isinstance(u0, Basis):
+    #         out = u0
+    #     else:
+    #         raise RuntimeError("Invalid u0 value")
+    #     return out
+    #
+    # @classmethod
+    # def solve_numerically(
+    #     cls,
+    #     basis: Type[BasisSubType],
+    #     n: int,
+    #     modes: tuple[int, ...],
+    #     nu: float,
+    #     _u0: ParamInput | BasisSubType,
+    #     f: ParamInput | BasisSubType,
+    #     periods: tuple[float, ...],
+    #     x: torch.Tensor,
+    #     t: torch.Tensor,
+    #     solver: SolverSignatureType,
+    #     nt: int,
+    #     timedependent_solution: bool,
+    #     device,
+    #     generator,
+    #     **kwargs,
+    # ) -> tuple[BasisSubType, BasisSubType]:
+    #     # Setup solution using initial condition
+    #     u0 = cls._get_initial_value(basis, n, modes, _u0, periods, generator, **kwargs)
+    #     # Setup forcing term
+    #     if isinstance(f, str):
+    #         match f:
+    #             case "random":
+    #                 fst = basis.generate(
+    #                     n,
+    #                     (*modes, *modes),
+    #                     generator=generator,
+    #                     periods=periods,
+    #                     **kwargs,
+    #                 )
+    #             case _:
+    #                 raise RuntimeError(f"parameter value of f ({f}) is invalid")
+    #     elif isinstance(f, Number):
+    #         f_const = float(f)
+    #         fst = basis(basis.generate_empty(n, (1, *modes)), periods=periods, **kwargs)
+    #         if fst.coeff.is_complex():
+    #             fst.coeff[:, ..., 0] = torch.tensor(f_const + 0j)
+    #         else:
+    #             fst.coeff[:, ..., 0] = f_const
+    #     elif isinstance(f, torch.Tensor):
+    #         fst = basis(f).resize_modes((*modes, *modes), rescale=False)
+    #     elif isinstance(f, Basis):
+    #         fst = f
+    #     else:
+    #         raise RuntimeError("Invalid f value")
+    #
+    #     u0.coeff = u0.coeff.to(device=device)
+    #     fst.coeff = fst.coeff.to(device=device)
+    #     print(f"generating with {len(t)} time steps")
+    #
+    #     def f_func(t: torch.Tensor, x: torch.Tensor = x):
+    #         x = x.tile((1, 2))
+    #         x[:, 0] = t
+    #         return basis.transform(fst(x).reshape((-1, modes[0])))
+    #
+    #     def rhs_func(t: torch.Tensor, y0: torch.Tensor):
+    #         y0 = to_complex_coeff(y0)
+    #         return to_real_coeff(cls.rhs(basis, nu, y0, f_func(t)))
+    #
+    #     u_hat = solver(rhs_func, to_real_coeff(u0.coeff), t)
+    #     if basis.coeff_dtype.is_complex:
+    #         u_shape = u_hat.shape
+    #         u_hat = to_complex_coeff(u_hat.flatten(0, 1)).reshape(
+    #             (*u_shape[:2], *u0.coeff.shape[1:])
+    #         )
+    #
+    #     u_hat = u_hat.movedim(0, 1)
+    #     if timedependent_solution:
+    #         u = basis(u_hat, **kwargs, time_dependent=True)
+    #     else:
+    #         u_hat = u_hat.reshape((n * nt, modes[0]))
+    #         u = basis(
+    #             basis.transform(basis.inv_transform(u_hat).reshape((n, nt, modes[0]))),
+    #             **kwargs,
+    #         )  # .resize_modes((*modes,) * 2)
+    #
+    #     u.coeff = u.coeff.cpu()
+    #     fst.coeff = fst.coeff.cpu()
+    #     return (u, fst)
+    #
     # addapted from
     # @MISC {3834917,
     #     TITLE = {Solving Viscous Burgers using spectral method},

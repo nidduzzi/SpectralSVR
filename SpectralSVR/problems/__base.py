@@ -13,7 +13,6 @@ class Problem(abc.ABC):
         basis: type[BasisSubType],
         n: int,
         modes: int | tuple[int, ...],
-        *args,
         generator: torch.Generator | None = None,
         **kwargs,
     ) -> tuple[BasisSubType, ...]:

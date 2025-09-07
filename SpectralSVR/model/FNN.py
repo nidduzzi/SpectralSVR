@@ -83,7 +83,7 @@ class FNN(MultiRegression):
         self.params.train()
         ds = TensorDataset(X, y)
         dl = DataLoader(ds, self.batch_size)
-        for epoch in range(self.MAX_EPOCH):
+        for _ in range(self.MAX_EPOCH):
             for X_batch, y_batch in dl:
                 optimizer.zero_grad()
                 preds = self.params.forward(X_batch)

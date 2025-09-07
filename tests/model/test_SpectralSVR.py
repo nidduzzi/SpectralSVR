@@ -23,7 +23,7 @@ def test_SpectralSVR():
     modes = 7
     problem = Antiderivative()
     u_fourier, f_fourier = problem.generate(
-        FourierBasis, n_coeffs, modes, 0, generator=generator
+        FourierBasis, n_coeffs, modes, generator=generator, u0=0
     )
 
     # Interpolate f & u
