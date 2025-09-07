@@ -287,9 +287,9 @@ class Burgers(Problem):
         residual = u_t + uu_x - nu_u_xx - f
         return residual
 
-    def residual(self, u: BasisSubType, f: BasisSubType, nu: float) -> BasisSubType:
-        u_val, grid = u.get_values_and_grid()
-        f_val = f.get_values()
+    def residual(self, u: BasisSubType, f: BasisSubType, nu: float, res:int = 1000) -> BasisSubType:
+        u_val, grid = u.get_values_and_grid(res=res)
+        f_val = f.get_values(res=res)
         dt = grid[1, 0, 0] - grid[0, 0, 0]
         dx = grid[0, 1, 1] - grid[0, 0, 1]
 
