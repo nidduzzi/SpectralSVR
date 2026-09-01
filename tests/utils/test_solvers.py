@@ -1,4 +1,5 @@
-"""Fuzzed + MMS tests for the ETDRK4 exponential integrator."""
+"""Fuzzed + MMS tests for the ETDRK4 exponential integrator and the
+monolithic-to-semilinear solver conversion."""
 
 import math
 
@@ -7,7 +8,12 @@ import torch
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from SpectralSVR.utils import etdrk4_solver
+from SpectralSVR.utils import (
+    as_semilinear_solver,
+    etdrk4_solver,
+    euler_solver,
+    implicit_adams_solver,
+)
 
 SETTINGS = settings(
     deadline=None, max_examples=20, suppress_health_check=[HealthCheck.too_slow]
@@ -146,3 +152,64 @@ def test_etdrk4_requires_matching_shapes():
             torch.zeros(2, 4, dtype=torch.complex128),
             torch.linspace(0, 1, 5),
         )
+
+
+# --------------------------------------------------------------------------- #
+# as_semilinear_solver
+# --------------------------------------------------------------------------- #
+@pytest.mark.oracle_consistency
+@SETTINGS
+@given(
+    N=st.integers(4, 32),
+    decay=st.floats(0.1, 2.0),
+    seed=st.integers(0, 10_000),
+)
+def test_conversion_equals_the_combined_right_hand_side(N, decay, seed):
+    generator = torch.Generator().manual_seed(seed)
+    linear = -decay * torch.arange(N, dtype=torch.float64)
+    y0 = torch.randn(3, N, dtype=torch.float64, generator=generator)
+    t = torch.linspace(0, 1.0, 11, dtype=torch.float64)
+
+    def nonlinear(ti, v):
+        return 0.1 * v.sin()
+
+    converted = as_semilinear_solver(euler_solver)(linear, nonlinear, y0, t)
+    direct = euler_solver(lambda ti, v: linear * v + nonlinear(ti, v), y0, t)
+    assert torch.equal(converted, direct)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_conversion_integrates_complex_spectral_state():
+    N = 8
+    k = torch.fft.fftfreq(N) * N
+    linear = -0.01 * k**2
+    v0 = torch.randn(
+        2, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(0)
+    )
+    t = torch.linspace(0, 1.0, 401, dtype=torch.float64)
+
+    sol = as_semilinear_solver(implicit_adams_solver)(
+        linear, lambda ti, v: torch.zeros_like(v), v0, t
+    )
+    assert sol.dtype == v0.dtype
+    assert torch.allclose(sol[-1], v0 * torch.exp(linear * 1.0), atol=1e-7)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_conversion_forwards_the_time_grid_unchanged():
+    seen = {}
+
+    def recording_solver(rhs, y0, t):
+        seen["t"] = t
+        seen["y0"] = y0
+        return y0.unsqueeze(0).expand(len(t), *y0.shape)
+
+    t = torch.linspace(0, 2.0, 7, dtype=torch.float64)
+    y0 = torch.ones(2, 3, dtype=torch.float64)
+    as_semilinear_solver(recording_solver)(
+        torch.zeros(3, dtype=torch.float64), lambda ti, v: v, y0, t
+    )
+    assert seen["t"] is t
+    assert seen["y0"] is y0

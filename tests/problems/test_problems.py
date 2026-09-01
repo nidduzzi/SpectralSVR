@@ -16,6 +16,11 @@ from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.problems import Burgers
+from SpectralSVR.utils import (
+    as_semilinear_solver,
+    etdrk4_solver,
+    implicit_adams_solver,
+)
 
 from _exact import (
     SETTINGS,
@@ -441,6 +446,50 @@ def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
     assert u.coeff.shape[0] == n and not torch.isnan(u.coeff).any()
 
 
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_manufactured_branch_rejects_a_solver():
+    with pytest.raises(ValueError, match="integrates nothing"):
+        Burgers().generate(
+            FourierBasis,
+            1,
+            (8, 8),
+            u0="random",
+            f="random",
+            nu=0.05,
+            generator=torch.Generator().manual_seed(0),
+            solver=etdrk4_solver,
+        )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_numerical_branch_uses_the_supplied_solver():
+    def build(**kwargs):
+        u, _ = Burgers().generate(
+            FourierBasis,
+            2,
+            (16, 16),
+            u0="random",
+            f=0,
+            nu=0.01,
+            time_domain=slice(0, 1, 40),
+            generator=torch.Generator().manual_seed(0),
+            **kwargs,
+        )
+        return u.coeff
+
+    assert torch.equal(build(), build(solver=etdrk4_solver))
+
+    boom = RuntimeError("solver was called")
+
+    def failing_solver(linear, nonlinear, y0, t):
+        raise boom
+
+    with pytest.raises(RuntimeError, match="solver was called"):
+        build(solver=failing_solver)
+
+
 @pytest.mark.oracle_smoke
 @SETTINGS
 @given(
@@ -602,3 +651,45 @@ def test_antiderivative_tensor_integration_constant(n, modes, seed):
     u0 = torch.randn(n, dtype=torch.complex64, generator=g)
     u, _ = Antiderivative().generate(FourierBasis, n, modes, generator=g, u0=u0)
     assert torch.allclose(u.coeff[:, 0], u0.to(u.coeff.dtype), atol=1e-5)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_independent
+def test_numerical_burgers_agrees_with_an_independent_integrator():
+    """ETDRK4 against torchdiffeq's implicit Adams, in a regime both resolve.
+
+    The two schemes share no code: ETDRK4 is implemented in this repo, implicit
+    Adams comes from torchdiffeq. Agreement is only expected while the step size
+    resolves the stiff eigenvalue, i.e. while ``h * nu * k_max**2`` is of order
+    one or below. At the literal parameters below that quantity is
+    ``(1 / 400) * 0.01 * (2 * pi * 4) ** 2``, about 0.016. Both schemes are
+    fourth order in time, so their difference is O(h^4); the bound is set from
+    that, not from the observed value, and no stiffer regime is claimed.
+    """
+    nu = 0.01
+    space_modes = 8
+    n_steps = 401
+
+    def run(solver):
+        u, _ = Burgers().generate(
+            FourierBasis,
+            2,
+            (space_modes, space_modes),
+            u0="random",
+            f=0,
+            nu=nu,
+            time_domain=slice(0, 1, n_steps),
+            generator=torch.Generator().manual_seed(7),
+            solver=solver,
+        )
+        return u.coeff.cpu()
+
+    exponential = run(etdrk4_solver)
+    adams = run(as_semilinear_solver(implicit_adams_solver))
+
+    assert not torch.equal(exponential, adams), (
+        "identical output means the solver argument was ignored, not that the "
+        "two integrators agree"
+    )
+    relative = (exponential - adams).abs().max() / exponential.abs().max()
+    assert relative < 1e-4

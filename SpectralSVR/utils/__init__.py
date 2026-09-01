@@ -462,13 +462,56 @@ def euler_solver(
 
 
 # Nonlinear term N(t, v) for a semilinear system dv/dt = L v + N(t, v).
-ExpIntNonlinearType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-# Signature of an exponential (semilinear) integrator: unlike SolverSignatureType
-# (a single rhs(t, y)), it takes the diagonal linear operator and the nonlinear
-# term separately, since ETDRK4 handles the stiff linear part exactly.
-ExpIntSolverSignatureType = Callable[
-    [torch.Tensor, ExpIntNonlinearType, torch.Tensor, torch.Tensor], torch.Tensor
+SemilinearNonlinearType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+SemilinearSolverSignatureType = Callable[
+    [torch.Tensor, SemilinearNonlinearType, torch.Tensor, torch.Tensor], torch.Tensor
 ]
+
+ExpIntNonlinearType = SemilinearNonlinearType
+ExpIntSolverSignatureType = SemilinearSolverSignatureType
+
+
+def as_semilinear_solver(solver: SolverSignatureType) -> SemilinearSolverSignatureType:
+    """Run a monolithic ``rhs(t, y)`` solver on a semilinear system.
+
+    Forms ``rhs(t, v) = linear * v + nonlinear(t, v)`` and hands it to
+    ``solver`` with the caller's ``y0`` and ``t`` unchanged -- no substituted
+    step size or tolerance -- so the result is exactly what ``solver`` returns
+    for the combined right-hand side.
+
+    There is no conversion in the other direction: ``linear`` cannot be
+    recovered from a combined right-hand side, which is why an exponential
+    integrator such as :func:`etdrk4_solver` needs the split form.
+
+    Accuracy: a solver designed for non-stiff systems loses accuracy on a stiff
+    spectral operator, where the stiff eigenvalue magnitude grows as
+    ``nu * k_max**2``. Agreement with an exponential integrator holds only while
+    the step size resolves it, i.e. while ``h * nu * k_max**2`` is of order one
+    or below; past that the wrapped solver degrades (torchdiffeq reports
+    ``Functional iteration did not converge``) and this function does not hide
+    it by adjusting the time grid.
+
+    Arguments:
+        solver {SolverSignatureType} -- integrator taking a single ``rhs(t, y)``.
+
+    Returns:
+        SemilinearSolverSignatureType -- the same integrator, callable as
+        ``(linear, nonlinear, y0, t)``.
+    """
+
+    def solve(
+        linear: torch.Tensor,
+        nonlinear: SemilinearNonlinearType,
+        y0: torch.Tensor,
+        t: torch.Tensor,
+    ) -> torch.Tensor:
+        def rhs(ti: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+            return linear * v + nonlinear(ti, v)
+
+        return solver(rhs, y0, t)
+
+    return solve
+
 
 # ETDRK4 scheme and the complex contour-integral evaluation of its weight
 # functions follow:
@@ -485,7 +528,7 @@ ExpIntSolverSignatureType = Callable[
 
 def etdrk4_solver(
     linear: torch.Tensor,
-    nonlinear: ExpIntNonlinearType,
+    nonlinear: SemilinearNonlinearType,
     y0: torch.Tensor,
     t: torch.Tensor,
     contour_points: int = 32,

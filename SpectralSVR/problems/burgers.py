@@ -3,9 +3,8 @@ from ..basis import Basis, BasisSubType
 from ..basis.sampling import samplings_to_tuple
 from ..utils import (
     Number,
-    SolverSignatureType,
+    SemilinearSolverSignatureType,
     etdrk4_solver,
-    implicit_adams_solver,
     resolve_device,
 )
 from . import Problem
@@ -44,7 +43,7 @@ class Burgers(Problem):
         nu: float = 0.01,
         space_domain: slice | None = None,
         time_domain: slice | None = None,
-        solver: SolverSignatureType = implicit_adams_solver,
+        solver: SemilinearSolverSignatureType | None = None,
         time_dependent_coeff: bool = True,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
@@ -72,10 +71,23 @@ class Burgers(Problem):
             f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1] - t[0]})"
         )
         domain = (time, space)
-        if isinstance(u0, str) and u0 == "random" and isinstance(f, str) and f == "random":
+        if (
+            isinstance(u0, str)
+            and u0 == "random"
+            and isinstance(f, str)
+            and f == "random"
+        ):
             # method of manufactured solutions: pick a band-limited solution u and
             # let the forcing be its exact Burgers residual (u0 just follows from u)
-            u_gen, f_gen = self.mms_solution(basis, n, modes, nu, domain, generator=generator)
+            if solver is not None:
+                raise ValueError(
+                    "the manufactured-solution branch (u0='random' with f='random') "
+                    "builds u analytically and integrates nothing, so a solver "
+                    "would have no effect"
+                )
+            u_gen, f_gen = self.mms_solution(
+                basis, n, modes, nu, domain, generator=generator
+            )
 
             # convert the (time, space) fields to time-dependent coefficients
             if time_dependent_coeff:
@@ -95,14 +107,23 @@ class Burgers(Problem):
                 f_gen = to_time_dependent(f_gen)
 
         else:
-            # Numerical initial-value problem: integrate viscous Burgers with a
-            # stiff-stable ETDRK4 spectral solver to produce simulated data.
             if not time_dependent_coeff:
                 raise NotImplementedError(
                     "numerical Burgers only supports time_dependent_coeff=True"
                 )
             u_gen, f_gen = self._solve_spectral(
-                basis, n, modes, nu, u0, f, domain, t, nt, device, generator
+                basis,
+                n,
+                modes,
+                nu,
+                u0,
+                f,
+                domain,
+                t,
+                nt,
+                device,
+                generator,
+                etdrk4_solver if solver is None else solver,
             )
 
         results = (u_gen, f_gen)
@@ -121,8 +142,9 @@ class Burgers(Problem):
         nt: int,
         device: torch.device,
         generator: torch.Generator | None,
+        solver: SemilinearSolverSignatureType,
     ) -> tuple[BasisSubType, BasisSubType]:
-        """Integrate 1D viscous Burgers with ETDRK4 and package the result.
+        """Integrate 1D viscous Burgers with ``solver`` and package the result.
 
         Basis-agnostic: the diagonal linear operator ``nu * d2/dx2`` and the
         spectral derivative for the nonlinear term ``0.5 (u^2)_x`` are built from
@@ -131,6 +153,10 @@ class Burgers(Problem):
         is diagonal (Fourier, spherical harmonics). Solves
         ``u_t + 0.5 (u^2)_x = nu u_xx + forcing`` on the spatial domain
         ``domain[1]`` (length ``L``) with ``ns = modes[1]`` spatial modes.
+
+        ``solver`` receives the linear operator and nonlinear term separately;
+        wrap a monolithic ``rhs(t, y)`` solver in
+        :func:`utils.as_semilinear_solver` to use one here.
         """
         if len(modes) != 2:
             raise NotImplementedError("numerical Burgers is implemented for 1D space")
@@ -141,8 +167,9 @@ class Burgers(Problem):
         d2 = basis.derivative_eigenvalues(ns, length, ord=2)
         if d1 is None or d2 is None:
             raise NotImplementedError(
-                f"{basis.__name__} differentiation is not diagonal; the ETDRK4 "
-                "solver requires a diagonally-differentiable basis (e.g. Fourier)"
+                f"{basis.__name__} differentiation is not diagonal; the "
+                "semilinear split requires a diagonally-differentiable basis "
+                "(e.g. Fourier)"
             )
         d1 = d1.to(device=device)
         linear = (nu * d2).to(device=device)  # nu * u_xx eigenvalues
@@ -180,7 +207,7 @@ class Burgers(Problem):
             u = basis.inv_transform(v).real.to(v.dtype)
             return -0.5 * d1 * basis.transform(u * u) * dealias + f_hat
 
-        sol = etdrk4_solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
+        sol = solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
         u_coeff = sol.movedim(0, 1).to(basis.coeff_dtype)  # (n, nt, ns)
         u_gen = basis(coeff=u_coeff, time_dependent=True, domain=domain)
 
@@ -271,7 +298,9 @@ class Burgers(Problem):
         residual = u_t + uu_x - nu_u_xx - f
         return residual
 
-    def residual(self, u: BasisSubType, f: BasisSubType, nu: float, res:int = 1000) -> BasisSubType:
+    def residual(
+        self, u: BasisSubType, f: BasisSubType, nu: float, res: int = 1000
+    ) -> BasisSubType:
         u_val, grid = u.get_values_and_grid(res=res)
         f_val = f.get_values(res=res)
         dt = grid[1, 0, 0] - grid[0, 0, 0]
