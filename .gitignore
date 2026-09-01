@@ -138,3 +138,7 @@ dmypy.json
 
 # unsanitized pgf
 **/tmp_*.pgf
+
+# agent tooling
+.claude/
+.codegraph/
