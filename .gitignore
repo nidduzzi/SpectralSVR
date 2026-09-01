@@ -142,3 +142,6 @@ dmypy.json
 # agent tooling
 .claude/
 .codegraph/
+
+# generated benchmark output
+results/
