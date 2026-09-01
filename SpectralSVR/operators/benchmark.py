@@ -42,13 +42,15 @@ def benchmark(
     """
     # score every operator on the same host device so the metric suite never
     # trips over a GPU-trained prediction vs a CPU target
-    target = test.targets(query).detach().cpu()
+    # contiguous: torchmetrics .view(-1) rejects strided views (e.g. a 2D
+    # basis evaluation that arrives as a permuted tensor)
+    target = test.targets(query).detach().cpu().contiguous()
     rows = []
     for op in operators:
         start = time.perf_counter()
         op.fit(train)
         fit_seconds = time.perf_counter() - start
-        pred = op.predict(test.f, query).detach().cpu()
+        pred = op.predict(test.f, query).detach().cpu().contiguous()
         rows.append(
             {"operator": op.name, "fit_seconds": fit_seconds, **get_metrics(pred, target)}
         )

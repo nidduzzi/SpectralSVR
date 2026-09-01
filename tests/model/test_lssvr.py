@@ -1,4 +1,4 @@
-"""Fuzzed + MMS tests for LSSVR."""
+"""Fuzzed tests for LSSVR."""
 
 import numpy as np
 import pytest
@@ -11,7 +11,7 @@ from SpectralSVR import LSSVR
 from _model_data import SETTINGS, linear_dataset, smooth_dataset
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     n=st.integers(30, 60),
@@ -29,7 +29,7 @@ def test_lssvr_linear_recovers_linear_map(n, d, o, seed):
     assert torch.allclose(model.predict(X.double()), y.double(), atol=1e-4)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(n=st.integers(20, 50), seed=st.integers(0, 10_000))
 def test_lssvr_rbf_interpolates_training_points(n, seed):
@@ -40,7 +40,7 @@ def test_lssvr_rbf_interpolates_training_points(n, seed):
     assert torch.allclose(model.predict(X), y, atol=3e-1)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(10, 40), d=st.integers(1, 4), o=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_lssvr_predict_numpy_roundtrips(n, d, o, seed):
@@ -53,7 +53,7 @@ def test_lssvr_predict_numpy_roundtrips(n, d, o, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 def test_lssvr_dump_load_roundtrip(tmp_path):
     X, y = linear_dataset(30, 3, 2, seed=0)
     model = LSSVR(kernel="linear", C=10.0)
@@ -68,13 +68,13 @@ def test_lssvr_dump_load_roundtrip(tmp_path):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_predict_before_fit_raises():
     with pytest.raises(AssertionError):
         LSSVR().predict(torch.randn(4, 2))
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     kernel=st.sampled_from(["linear", "poly", "rbf", "tri", "frob", "max"]),
@@ -92,14 +92,14 @@ def test_lssvr_all_kernels_fit_predict(kernel, n, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_invalid_kernel_raises():
     with pytest.raises(KeyError):
         LSSVR(kernel="bogus").fit(torch.randn(6, 2), torch.randn(6, 1))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_correlation_and_p_matrix():
     X, y = linear_dataset(20, 3, 2, seed=0)
     model = LSSVR(kernel="linear", C=10.0)
@@ -111,14 +111,14 @@ def test_lssvr_correlation_and_p_matrix():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_correlation_before_fit_raises():
     with pytest.raises(AssertionError):
         LSSVR().get_correlation_image()
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_dump_only_hyperparams(tmp_path):
     X, y = linear_dataset(20, 3, 2, seed=0)
     model = LSSVR(kernel="rbf", C=7.0)
@@ -134,7 +134,7 @@ from SpectralSVR.model import torch_json_encoder  # noqa: E402
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_kernel_property_before_fit_defaults_sigma():
     # accessing K before fit (sv_x is None) falls back to sigma=1.0
     model = LSSVR(kernel="rbf")
@@ -142,7 +142,7 @@ def test_lssvr_kernel_property_before_fit_defaults_sigma():
     assert model.kernel_params["sigma"] == 1.0
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(n=st.integers(6, 40), d=st.integers(1, 4), seed=st.integers(0, 10_000))
 def test_lssvr_batched_kernel_matches_unbatched(n, d, seed):
@@ -159,7 +159,7 @@ def test_lssvr_batched_kernel_matches_unbatched(n, d, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_load_type_mismatch_raises(tmp_path):
     import json
 
@@ -170,13 +170,13 @@ def test_lssvr_load_type_mismatch_raises(tmp_path):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_torch_json_encoder_rejects_unknown_type():
     with pytest.raises(TypeError):
         torch_json_encoder({1, 2, 3})  # not a torch object
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(6, 30), d=st.integers(1, 4), seed=st.integers(0, 10_000))
 def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
@@ -191,7 +191,7 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_lssvr_device_setter():
     model = LSSVR()
     model.device = torch.device("cpu")
@@ -199,7 +199,7 @@ def test_lssvr_device_setter():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("kernel", ["linear", "poly", "rbf", "tri", "frob", "max"])
 def test_lssvr_each_kernel_covered(kernel):
     # deterministic: every kernel function is exercised on every run
@@ -208,3 +208,39 @@ def test_lssvr_each_kernel_covered(kernel):
     model.fit(X, y)
     out = model.predict(X)
     assert out.shape == y.shape and not torch.isnan(out).any()
+
+
+@pytest.mark.oracle_independent
+@SETTINGS
+@given(
+    n=st.integers(5, 20),
+    d=st.integers(1, 4),
+    o=st.integers(1, 3),
+    c=st.floats(0.5, 100.0),
+    seed=st.integers(0, 10_000),
+)
+def test_lssvr_matches_independent_kkt_solve(n, d, o, c, seed):
+    # Independent oracle: the LS-SVM dual (Suykens & Vandewalle 1999) is the
+    # linear system  [[0, 1^T], [1, K + I/C]] [b; alpha] = [0; y]  with
+    # prediction f(x) = K(x, X) alpha + b. Solve that system inline (different
+    # code path: torch.linalg.solve on a hand-assembled matrix with an explicit
+    # linear kernel) and require LSSVR to reproduce its predictions.
+    g = torch.Generator().manual_seed(seed)
+    x = torch.randn(n, d, generator=g, dtype=torch.float64)
+    y = torch.randn(n, o, generator=g, dtype=torch.float64)
+    xq = torch.randn(7, d, generator=g, dtype=torch.float64)
+
+    k = x @ x.T  # explicit linear kernel
+    a = torch.zeros(n + 1, n + 1, dtype=torch.float64)
+    a[0, 1:] = 1
+    a[1:, 0] = 1
+    a[1:, 1:] = k + torch.eye(n, dtype=torch.float64) / c
+    rhs = torch.cat([torch.zeros(1, o, dtype=torch.float64), y])
+    sol = torch.linalg.lstsq(a, rhs).solution
+    b, alpha = sol[0], sol[1:]
+    expected = (xq @ x.T) @ alpha + b
+
+    model = LSSVR(kernel="linear", C=c, dtype=torch.float64).fit(x, y)
+    got = model.predict(xq)
+    scale = expected.abs().max().clamp(min=1.0)
+    assert torch.allclose(got, expected, atol=1e-5 * float(scale), rtol=1e-4)

@@ -14,7 +14,7 @@ SETTINGS = settings(
 )
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     N=st.integers(8, 64),
@@ -37,7 +37,7 @@ def test_etdrk4_linear_heat_matches_exact_1d(N, nu, seed):
     assert torch.allclose(sol[-1], exact, atol=1e-8)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(N=st.integers(4, 16), nu=st.floats(0.01, 0.3), seed=st.integers(0, 10_000))
 def test_etdrk4_linear_heat_matches_exact_2d(N, nu, seed):
@@ -57,7 +57,7 @@ def test_etdrk4_linear_heat_matches_exact_2d(N, nu, seed):
     assert torch.allclose(sol[-1], exact, atol=1e-8)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(N=st.sampled_from([64, 128]), seed=st.integers(0, 10_000))
 def test_etdrk4_burgers_is_stable(N, seed):
@@ -88,7 +88,7 @@ def test_etdrk4_burgers_is_stable(N, seed):
     assert ef <= e0 + 1e-6
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     mode=st.integers(1, 4),
@@ -131,7 +131,7 @@ def test_etdrk4_reproduces_forced_manufactured_solution(mode, nu, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_etdrk4_requires_matching_shapes():
     with pytest.raises(AssertionError):
         etdrk4_solver(

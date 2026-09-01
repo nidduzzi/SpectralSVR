@@ -33,7 +33,7 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=16):
     return train, test
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @given(n=st.integers(2, 8), d=st.integers(1, 2))
 def test_sensor_grid_shape(n, d):
     domain = tuple((0.0, 1.0) for _ in range(d))
@@ -44,7 +44,7 @@ def test_sensor_grid_shape(n, d):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_operator_dataset_shapes():
     train, _ = _antiderivative_split(0)
     assert train.sensors.shape == (16, 1)
@@ -54,7 +54,7 @@ def test_operator_dataset_shapes():
     assert train.targets(x).shape == (120, 25)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(seed=st.integers(0, 10_000))
 def test_spectralsvr_operator_learns_antiderivative(seed):
@@ -68,7 +68,7 @@ def test_spectralsvr_operator_learns_antiderivative(seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_predict_before_fit_raises():
     op = SpectralSVROperator(FourierBasis(), LSSVR())
     with pytest.raises(AssertionError, match="fit before predict"):
@@ -76,7 +76,7 @@ def test_predict_before_fit_raises():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_benchmark_returns_metric_table():
     train, test = _antiderivative_split(1)
     query = torch.linspace(0, 1, 40).unsqueeze(-1)
@@ -94,7 +94,7 @@ def test_benchmark_returns_metric_table():
 
 @pytest.mark.skipif(not _HAS_DEEPXDE, reason="needs the 'baselines' extra (deepxde)")
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_deeponet_operator_smoke():
     train, test = _antiderivative_split(0, n_train=40, n_test=10)
     query = torch.linspace(0, 1, 20).unsqueeze(-1)

@@ -9,7 +9,6 @@ from torchmetrics.functional.regression import (
     mean_absolute_error,
     symmetric_mean_absolute_percentage_error,
     r2_score,
-    relative_squared_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -254,19 +253,35 @@ def _safe_r2(preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     return torch.tensor(float("nan"))
 
 
+def _relative_squared_error(
+    preds: torch.Tensor, targets: torch.Tensor, squared: bool = True
+) -> torch.Tensor:
+    """Global relative squared error: SSE / SST over ALL elements.
+
+    ``rse = sum((p - t)^2) / sum((t - mean(t))^2)`` with a single global target
+    mean; ``rrse = sqrt(rse)``. Deliberately NOT torchmetrics'
+    ``relative_squared_error``, which averages per-column SSE/SST ratios -- a
+    single near-constant target column then dominates the result (observed as
+    rrse ~1e5 alongside r2 ~0.99 in the operator benchmark). The global form is
+    consistent with the flattened r2 reported here: rse = 1 - r2.
+    """
+    sse = (preds - targets).square().sum()
+    sst = (targets - targets.mean()).square().sum()
+    rse = sse / sst
+    return rse.sqrt() if not squared else rse
+
+
 # Default metric set; inject a different mapping into get_metrics to override.
-# NOTE: rse/rrse (relative squared error) are normalized by the target
-# variance, so they blow up when the targets have near-zero variance (e.g.
-# evaluating a noise-trained model against clean, nearly-constant targets).
-# This is inherent to the metric; prefer mse/rmse in that regime.
+# NOTE: rse/rrse are normalized by the (global) target variance, so they blow
+# up when the targets have near-zero variance overall; prefer mse/rmse there.
 DEFAULT_METRICS: dict[str, MetricFn] = {
     "mse": mean_squared_error,
     "rmse": partial(mean_squared_error, squared=False),
     "mae": mean_absolute_error,
     "r2": _safe_r2,
     "smape": symmetric_mean_absolute_percentage_error,
-    "rse": relative_squared_error,
-    "rrse": partial(relative_squared_error, squared=False),
+    "rse": _relative_squared_error,
+    "rrse": partial(_relative_squared_error, squared=False),
 }
 
 

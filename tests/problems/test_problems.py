@@ -49,7 +49,7 @@ def _residual_interior(problem, u, f, nu, res, ns, b):
 # Problem.axis_diff -- the finite-difference primitive, validated on its own
 # against analytic derivatives (independent of any transform/residual).
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     k=st.integers(1, 4),
@@ -76,7 +76,7 @@ def test_axis_diff_matches_analytic(k, order, periodic):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_axis_diff_rejects_bad_order():
     with pytest.raises(ValueError, match="order 1 or 2"):
         Burgers.axis_diff(torch.zeros(1, 4), 1.0, dim=1, order=3, periodic=True)
@@ -85,7 +85,7 @@ def test_axis_diff_rejects_bad_order():
 # =========================================================================== #
 # Antiderivative
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 4),
@@ -108,7 +108,7 @@ def test_antiderivative_exact_derivative_of_known_field(n, m, modes, seed):
     assert torch.allclose(du_val, analytic, atol=1e-3)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(n=st.integers(1, 5), modes=st.integers(3, 16), seed=st.integers(0, 10_000))
 def test_antiderivative_spectral_residual_is_zero(n, modes, seed):
@@ -130,7 +130,7 @@ def test_antiderivative_spectral_residual_is_zero(n, modes, seed):
 # signs -- and also assert the non-trivial output (residual of a non-solution
 # equals the known analytic residual, so an always-zero operator would fail).
 # --------------------------------------------------------------------------- #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(m=st.integers(1, 5), seed=st.integers(0, 10_000))
 def test_antiderivative_spectral_residual_matches_analytic(m, seed):
@@ -154,7 +154,7 @@ def test_antiderivative_spectral_residual_matches_analytic(m, seed):
     assert torch.allclose(r.inv_transform(r.coeff).real, ut_val, atol=1e-4)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(m=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_antiderivative_finite_diff_residual_matches_analytic(m, seed):
@@ -181,7 +181,7 @@ def test_antiderivative_finite_diff_residual_matches_analytic(m, seed):
     assert torch.allclose(rn.inv_transform(rn.coeff).real, ut_val, atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_spectral_residual_matches_analytic(nu, seed):
@@ -205,7 +205,7 @@ def test_burgers_spectral_residual_matches_analytic(nu, seed):
     assert torch.allclose(r.inv_transform(r.coeff).real, f_val, atol=1e-4)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_finite_diff_residual_matches_analytic(nu, seed):
@@ -232,7 +232,7 @@ def test_burgers_finite_diff_residual_matches_analytic(nu, seed):
     assert torch.allclose(rn.inv_transform(rn.coeff).real, f_on_grid, atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -256,7 +256,7 @@ def test_burgers_finite_diff_residual_cole_hopf(n, n_modes, nu, seed):
     assert torch.allclose(r_int, torch.zeros_like(r_int), atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -283,7 +283,7 @@ def test_burgers_finite_diff_residual_heat_mode(n, n_modes, nu, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_antiderivative_rejects_bad_sizes():
     problem = Antiderivative()
     with pytest.raises(AssertionError):
@@ -295,7 +295,7 @@ def test_antiderivative_rejects_bad_sizes():
 # =========================================================================== #
 # Burgers -- MMS path (forcing chosen so u solves the equation exactly)
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -326,7 +326,7 @@ def test_burgers_mms_solution_satisfies_equation(
     assert u.domain == domain
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     x_start=st.floats(-3.0, 3.0),
@@ -352,7 +352,7 @@ def test_burgers_generate_honors_domain_start(x_start, x_len, t_start, t_len, se
 # =========================================================================== #
 # Burgers -- numerical path (ETDRK4) reproduces an exact Cole-Hopf solution
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n_modes=st.integers(1, 3),
@@ -383,7 +383,7 @@ def test_burgers_numerical_matches_cole_hopf_exact(n_modes, seed):
     assert rel < 5e-2
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @pytest.mark.no_fuzz
 def test_burgers_numerical_solution_dissipates_energy():
     # Viscous Burgers with zero forcing must not gain energy over time.
@@ -400,7 +400,7 @@ def test_burgers_numerical_solution_dissipates_energy():
 # --------------------------------------------------------------------------- #
 # Additional coverage
 # --------------------------------------------------------------------------- #
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -418,7 +418,7 @@ def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
     assert u.coeff.shape[0] == n and not torch.isnan(u.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     u0=st.floats(-1.0, 1.0),
@@ -438,7 +438,7 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
     assert not torch.isnan(u.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -457,7 +457,7 @@ def test_burgers_numeric_residual_runs(n, space_modes, nu, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(1, 4), modes=st.integers(4, 24), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_rhs_smoke(n, modes, nu, seed):
@@ -470,7 +470,7 @@ def test_burgers_rhs_smoke(n, modes, nu, seed):
     assert not torch.isnan(out).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(n=st.integers(1, 3), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_antiderivative_complex_integration_constant(n, modes, seed):
@@ -483,7 +483,7 @@ def test_antiderivative_complex_integration_constant(n, modes, seed):
     assert torch.allclose(u.coeff[:, 0], torch.tensor(1 + 2j, dtype=u.coeff.dtype))
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(1, 4), modes=st.integers(4, 16), seed=st.integers(0, 10_000))
 def test_antiderivative_numeric_residual_runs(n, modes, seed):
@@ -495,7 +495,7 @@ def test_antiderivative_numeric_residual_runs(n, modes, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(u0=st.floats(-3.0, 3.0), n=st.integers(1, 3), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_antiderivative_float_integration_constant(u0, n, modes, seed):
@@ -507,7 +507,7 @@ def test_antiderivative_float_integration_constant(u0, n, modes, seed):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(m=st.integers(8, 16), seed=st.integers(0, 10_000))
 def test_burgers_int_modes_and_1d_ic(m, seed):
@@ -521,7 +521,7 @@ def test_burgers_int_modes_and_1d_ic(m, seed):
     assert u.coeff.shape[0] == 2 and u.coeff.shape[2] == m
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(1, 3), m=st.integers(6, 12), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_residual_non_time_dependent(n, m, nu, seed):
@@ -535,7 +535,7 @@ def test_burgers_residual_non_time_dependent(n, m, nu, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(n=st.integers(1, 3), modes=st.integers(4, 10), seed=st.integers(0, 10_000))
 def test_antiderivative_tensor_integration_constant(n, modes, seed):

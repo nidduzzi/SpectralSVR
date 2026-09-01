@@ -1,4 +1,4 @@
-"""Fuzzed + MMS + serialization tests for FNN."""
+"""Fuzzed + serialization tests for FNN."""
 
 import pytest
 import torch
@@ -10,7 +10,7 @@ from SpectralSVR.model.FNN import FNN
 from _model_data import SETTINGS, constant_dataset, linear_dataset
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(const=st.floats(-3.0, 3.0), seed=st.integers(0, 10_000))
 def test_fnn_overfits_constant_target(const, seed):
@@ -21,7 +21,7 @@ def test_fnn_overfits_constant_target(const, seed):
     assert torch.allclose(model.predict(X), y, atol=1e-1)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(8, 24),
@@ -44,7 +44,7 @@ def _tiny_trained_fnn():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 def test_fnn_dump_load_roundtrip(tmp_path):
     model, x = _tiny_trained_fnn()
     preds_before = model.predict(x)
@@ -58,7 +58,7 @@ def test_fnn_dump_load_roundtrip(tmp_path):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fnn_dump_only_hyperparams(tmp_path):
     model, _ = _tiny_trained_fnn()
     path = str(tmp_path / "fnn_hp")
@@ -71,7 +71,7 @@ def test_fnn_dump_only_hyperparams(tmp_path):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fnn_load_wrong_type_raises(tmp_path):
     path = str(tmp_path / "bad.pt")
     torch.save({"type": "LSSVR", "hyperparameters": {}}, path)
