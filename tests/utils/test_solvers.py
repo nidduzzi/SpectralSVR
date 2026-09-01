@@ -26,7 +26,9 @@ def test_etdrk4_linear_heat_matches_exact_1d(N, nu, seed):
     # ETDRK4 integrates the linear part exactly, so it must match to fp error.
     k = torch.fft.fftfreq(N) * N
     linear = -nu * k**2
-    v0 = torch.randn(3, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed))
+    v0 = torch.randn(
+        3, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed)
+    )
     t = torch.linspace(0, 1.0, 50, dtype=torch.float64)
 
     def zero_nl(ti, v):
@@ -46,7 +48,9 @@ def test_etdrk4_linear_heat_matches_exact_2d(N, nu, seed):
     kx = k.view(-1, 1)
     ky = k.view(1, -1)
     linear = -nu * (kx**2 + ky**2)
-    v0 = torch.randn(2, N, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed))
+    v0 = torch.randn(
+        2, N, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed)
+    )
     t = torch.linspace(0, 0.5, 30, dtype=torch.float64)
 
     def zero_nl(ti, v):
@@ -118,7 +122,9 @@ def test_etdrk4_reproduces_forced_manufactured_solution(mode, nu, seed):
     def nonlinear(ti, v):
         u = torch.fft.ifft(v, dim=-1).real.to(v.dtype)
         advection = -0.5j * k * torch.fft.fft(u * u, dim=-1) * dealias
-        forcing = torch.fft.fft((u_exact(float(ti)) * ux_exact(float(ti))).to(v.dtype), dim=-1)
+        forcing = torch.fft.fft(
+            (u_exact(float(ti)) * ux_exact(float(ti))).to(v.dtype), dim=-1
+        )
         return advection + forcing
 
     linear = -nu * k.flatten() ** 2

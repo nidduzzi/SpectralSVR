@@ -67,7 +67,7 @@ def test_axis_diff_matches_analytic(k, order, periodic):
         spacing = length / (N - 1)
     u = torch.sin(kx * x).view(1, -1)
     got = Burgers.axis_diff(u, spacing, dim=1, order=order, periodic=periodic)
-    analytic = (kx * torch.cos(kx * x) if order == 1 else -(kx**2) * torch.sin(kx * x))
+    analytic = kx * torch.cos(kx * x) if order == 1 else -(kx**2) * torch.sin(kx * x)
     tol = 0.02 * float(analytic.abs().max().clamp(min=1.0))
     if periodic:  # wrap-around stencil -> exact at the ends too
         assert torch.allclose(got.view(-1), analytic, atol=tol)
@@ -317,7 +317,11 @@ def test_burgers_mms_solution_satisfies_equation(
     modes = (space_modes, space_modes)
     domain = ((t_start, t_start + t_len), (x_start, x_start + x_len))
     u, f = problem.mms_solution(
-        FourierBasis, n, modes, nu=nu, domain=domain,
+        FourierBasis,
+        n,
+        modes,
+        nu=nu,
+        domain=domain,
         generator=torch.Generator().manual_seed(seed),
     )
     residual = problem.spectral_residual(u, f, nu)
@@ -340,7 +344,9 @@ def test_burgers_generate_honors_domain_start(x_start, x_len, t_start, t_len, se
     # output field's domain, not just the lengths.
     problem = Burgers()
     u_gen, _ = problem.generate(
-        FourierBasis, 2, (8, 8),
+        FourierBasis,
+        2,
+        (8, 8),
         space_domain=slice(x_start, x_start + x_len, 64),
         time_domain=slice(t_start, t_start + t_len, 16),
         generator=torch.Generator().manual_seed(seed),
@@ -374,11 +380,19 @@ def test_burgers_numerical_matches_cole_hopf_exact(n_modes, seed):
 
     problem = Burgers()
     u_gen, _ = problem.generate(
-        FourierBasis, n, (ns, ns), nu=nu, u0=u0, f=0,
-        space_domain=slice(0, length, ns), time_domain=slice(0, T, nt),
+        FourierBasis,
+        n,
+        (ns, ns),
+        nu=nu,
+        u0=u0,
+        f=0,
+        space_domain=slice(0, length, ns),
+        time_domain=slice(0, T, nt),
     )
     final = u_gen.inv_transform(u_gen.coeff[:, -1]).real.cpu()
-    exact = cole_hopf_u(x, torch.full((1,), T, dtype=torch.float64), m, a, b, nu, length)[:, 0]
+    exact = cole_hopf_u(
+        x, torch.full((1,), T, dtype=torch.float64), m, a, b, nu, length
+    )[:, 0]
     rel = (final - exact).abs().max() / exact.abs().max()
     assert rel < 5e-2
 
@@ -389,8 +403,13 @@ def test_burgers_numerical_solution_dissipates_energy():
     # Viscous Burgers with zero forcing must not gain energy over time.
     problem = Burgers()
     u, _ = problem.generate(
-        FourierBasis, 2, (64, 64), generator=torch.Generator().manual_seed(0),
-        nu=0.05, space_domain=slice(0, 1, 64), time_domain=slice(0, 1, 100),
+        FourierBasis,
+        2,
+        (64, 64),
+        generator=torch.Generator().manual_seed(0),
+        nu=0.05,
+        space_domain=slice(0, 1, 64),
+        time_domain=slice(0, 1, 100),
     )
     vals = u.get_values(res=64).real
     energy = (vals**2).mean(dim=(0, 2))
@@ -410,8 +429,12 @@ def test_burgers_numerical_solution_dissipates_energy():
 def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
     # u0="random", f="random" -> spectral manufactured-solution branch
     u, f = Burgers().generate(
-        FourierBasis, n, (space_modes, space_modes),
-        u0="random", f="random", nu=0.05,
+        FourierBasis,
+        n,
+        (space_modes, space_modes),
+        u0="random",
+        f="random",
+        nu=0.05,
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent and f.time_dependent
@@ -429,8 +452,14 @@ def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
 def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
     # constant initial condition + constant forcing exercise the Number branches
     u, f = Burgers().generate(
-        FourierBasis, 2, (space_modes, space_modes), u0=u0, f=fval, nu=0.05,
-        space_domain=slice(0, 1, space_modes), time_domain=slice(0, 1, 40),
+        FourierBasis,
+        2,
+        (space_modes, space_modes),
+        u0=u0,
+        f=fval,
+        nu=0.05,
+        space_domain=slice(0, 1, space_modes),
+        time_domain=slice(0, 1, 40),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent
@@ -449,7 +478,12 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
 def test_burgers_numeric_residual_runs(n, space_modes, nu, seed):
     problem = Burgers()
     u, f = problem.generate(
-        FourierBasis, n, (space_modes, space_modes), nu=nu, u0="random", f="random",
+        FourierBasis,
+        n,
+        (space_modes, space_modes),
+        nu=nu,
+        u0="random",
+        f="random",
         generator=torch.Generator().manual_seed(seed),
     )
     res = problem.residual(u, f, nu, res=64)
@@ -459,7 +493,12 @@ def test_burgers_numeric_residual_runs(n, space_modes, nu, seed):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(1, 4), modes=st.integers(4, 24), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
+@given(
+    n=st.integers(1, 4),
+    modes=st.integers(4, 24),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
 def test_burgers_rhs_smoke(n, modes, nu, seed):
     # rhs is the spectral RK4 right-hand side kept for future numerical solvers
     g = torch.Generator().manual_seed(seed)
@@ -476,7 +515,10 @@ def test_burgers_rhs_smoke(n, modes, nu, seed):
 def test_antiderivative_complex_integration_constant(n, modes, seed):
     # complex u0 exercises the complex integration-constant branch
     u, ut = Antiderivative().generate(
-        FourierBasis, n, modes, generator=torch.Generator().manual_seed(seed),
+        FourierBasis,
+        n,
+        modes,
+        generator=torch.Generator().manual_seed(seed),
         u0=1 + 2j,
     )
     assert u.coeff.shape[0] == n
@@ -497,7 +539,12 @@ def test_antiderivative_numeric_residual_runs(n, modes, seed):
 
 @pytest.mark.oracle_analytic
 @SETTINGS
-@given(u0=st.floats(-3.0, 3.0), n=st.integers(1, 3), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
+@given(
+    u0=st.floats(-3.0, 3.0),
+    n=st.integers(1, 3),
+    modes=st.integers(4, 12),
+    seed=st.integers(0, 10_000),
+)
 def test_antiderivative_float_integration_constant(u0, n, modes, seed):
     u, ut = Antiderivative().generate(
         FourierBasis, n, modes, generator=torch.Generator().manual_seed(seed), u0=u0
@@ -514,8 +561,14 @@ def test_burgers_int_modes_and_1d_ic(m, seed):
     # int modes -> (m, m); a 1D u0 tensor is broadcast across samples
     ic = torch.rand(m, dtype=torch.float64)
     u, _ = Burgers().generate(
-        FourierBasis, 2, m, u0=ic, f=0, nu=0.05,
-        space_domain=slice(0, 1, m), time_domain=slice(0, 1, 40),
+        FourierBasis,
+        2,
+        m,
+        u0=ic,
+        f=0,
+        nu=0.05,
+        space_domain=slice(0, 1, m),
+        time_domain=slice(0, 1, 40),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.coeff.shape[0] == 2 and u.coeff.shape[2] == m
@@ -523,7 +576,12 @@ def test_burgers_int_modes_and_1d_ic(m, seed):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(1, 3), m=st.integers(6, 12), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
+@given(
+    n=st.integers(1, 3),
+    m=st.integers(6, 12),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
 def test_burgers_residual_non_time_dependent(n, m, nu, seed):
     # residual() on a non-time-dependent 2D field exercises the else branch
     g = torch.Generator().manual_seed(seed)
