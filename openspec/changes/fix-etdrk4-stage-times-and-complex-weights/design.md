@@ -71,9 +71,11 @@ Detection is `torch.is_complex(linear) and bool(linear.imag.any())`. A dtype tes
 
 The half circle places `contour_points` (default 32) nodes over an arc of length π. The full circle uses `2 * contour_points` over 2π so node density, and therefore trapezoid-rule accuracy on the analytic integrand, matches the half-circle path. Kassam–Trefethen report 32 or 64 as ample; 64 on the full circle is the upper end of their range.
 
-### Uniform grid is asserted, with tolerance
+### Uniform grid is asserted, with tolerance scaled to the grid's precision
 
-`torch.allclose(t.diff(), t.diff()[0])` at default tolerances, raised as an `AssertionError` alongside the existing `t.ndim == 1 and len(t) > 1` assertion. `linspace` grids pass; a caller who concatenates two grids or hand-writes uneven points fails before the first step.
+Deviation of every step from the first must not exceed `8 * eps(t.dtype) * max|t|`, raised as an `AssertionError` alongside the existing `t.ndim == 1 and len(t) > 1` assertion. `linspace` grids pass; a caller who concatenates two grids or hand-writes uneven points fails before the first step.
+
+*Found during implementation:* `torch.allclose` at default tolerances (`rtol=1e-5`, `atol=1e-8`) rejected the float32 time grids `FourierBasis.grid` produces for `Burgers.generate` — consecutive differences of a float32 linspace vary by up to ~2 ulp of `|t|`, which near `t = 1` exceeds `1e-5 * h` for small `h`. Two existing Burgers tests failed on the first attempt. The tolerance is therefore expressed in units of the grid dtype's epsilon, which accepts any correctly rounded uniform grid in any float dtype while still rejecting a genuinely uneven one by many orders of magnitude.
 
 *Alternative rejected:* accept non-uniform grids by recomputing weights per step. That is a different integrator with different cost; out of scope.
 

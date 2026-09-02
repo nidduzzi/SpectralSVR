@@ -526,6 +526,47 @@ def as_semilinear_solver(solver: SolverSignatureType) -> SemilinearSolverSignatu
 #   - ETDRK4 review preprint (preprints.org), provided by the project owner.
 
 
+HALF_CIRCLE = torch.pi
+FULL_CIRCLE = 2 * torch.pi
+
+
+def _contour_nodes(count: int, arc: float, device: torch.device) -> torch.Tensor:
+    j = torch.arange(1, count + 1, device=device, dtype=torch.float64)
+    return torch.exp(1j * arc * (j - 0.5) / count)
+
+
+def _etdrk4_weights(
+    lin: torch.Tensor, h: float, contour_points: int
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Contour-averaged ``hQ, hf1, hf2, hf3`` for ``complex128`` eigenvalues ``lin``.
+
+    Real eigenvalues: ``contour_points`` nodes on the upper half circle, real
+    part of the mean. Complex eigenvalues: twice as many nodes on the full
+    circle, complex mean. Weights are shaped like ``lin``, real or complex
+    accordingly.
+    """
+    shape = lin.shape
+    if lin.imag.any():
+        nodes = _contour_nodes(2 * contour_points, FULL_CIRCLE, lin.device)
+
+        def average(expr: torch.Tensor) -> torch.Tensor:
+            return (h * expr.mean(dim=-1)).reshape(shape)
+
+    else:
+        nodes = _contour_nodes(contour_points, HALF_CIRCLE, lin.device)
+
+        def average(expr: torch.Tensor) -> torch.Tensor:
+            return (h * expr.mean(dim=-1).real).reshape(shape)
+
+    z = h * lin.reshape(-1).unsqueeze(-1) + nodes.unsqueeze(0)
+    ez = torch.exp(z)
+    Q = average((torch.exp(z / 2) - 1) / z)
+    f1 = average((-4 - z + ez * (4 - 3 * z + z**2)) / z**3)
+    f2 = average((2 + z + ez * (-2 + z)) / z**3)
+    f3 = average((-4 - 3 * z - z**2 + ez * (4 - z)) / z**3)
+    return Q, f1, f2, f3
+
+
 def etdrk4_solver(
     linear: torch.Tensor,
     nonlinear: SemilinearNonlinearType,
@@ -533,83 +574,60 @@ def etdrk4_solver(
     t: torch.Tensor,
     contour_points: int = 32,
 ) -> torch.Tensor:
-    """ETDRK4 exponential time-differencing Runge-Kutta integrator.
-
-    Integrates a semilinear system with a *diagonal* linear part::
-
-        dv/dt = L * v + N(t, v)
-
-    where ``L`` is stiff (e.g. ``-nu |k|^2`` for viscous Burgers in Fourier
-    space). The stiff linear part is handled exactly via matrix exponentials;
-    the ETDRK4 weight functions are evaluated with the Kassam-Trefethen
-    complex contour-integral trick to avoid catastrophic float cancellation
-    near ``L = 0``. This is why a generic ``torchdiffeq`` stepper struggles on
-    this stiff problem while ETDRK4 stays stable.
-
-    The scheme is applied elementwise over the mode grid, so it works for any
-    spatial dimensionality: ``linear`` carries the mode grid shape and the
-    solver broadcasts it over the leading sample axis of ``y0``.
+    """ETDRK4 for ``dv/dt = L v + N(t, v)`` with diagonal ``L``.
 
     Arguments:
-        linear {torch.Tensor} -- (*modes) eigenvalues of the diagonal linear
-            operator in the transformed (spectral) space; any mode-grid shape
-            (1D, 2D, ...).
-        nonlinear {Callable[[t, v], Nv]} -- nonlinear term in the same spectral
-            space; receives the current time and state ``v`` of shape
-            (samples, *modes) and returns ``N`` of the same shape.
-        y0 {torch.Tensor} -- (samples, *modes) initial state in spectral space.
-        t {torch.Tensor} -- (steps,) uniformly spaced time points.
+        linear {torch.Tensor} -- (*modes) eigenvalues of ``L``, real or complex.
+        nonlinear {Callable[[t, v], Nv]} -- ``N(t, v)`` on ``(samples, *modes)``,
+            called at the stage times ``t_n, t_n + h/2, t_n + h/2, t_n + h``.
+        y0 {torch.Tensor} -- (samples, *modes) initial state.
+        t {torch.Tensor} -- (steps,) uniformly spaced times; ``h = t[1] - t[0]``.
 
     Keyword Arguments:
-        contour_points {int} -- number of points on the unit circle used for
-            the contour integral (default: {32}).
+        contour_points {int} -- nodes for the weight contour integral; see
+            :func:`_etdrk4_weights` (default: {32}).
 
     Returns:
-        torch.Tensor -- (steps, samples, *modes) solution in spectral space.
+        torch.Tensor -- (steps, samples, *modes).
     """
     assert t.ndim == 1 and len(t) > 1, "t must be a 1D tensor with >1 points"
+    steps = t.diff()
+    grid_rounding = 8 * torch.finfo(t.dtype).eps * t.abs().max()
+    assert (steps - steps[0]).abs().max() <= grid_rounding, (
+        "t must be uniformly spaced; ETDRK4 precomputes its weights from one step h"
+    )
     assert y0.shape[1:] == linear.shape, (
         f"linear {tuple(linear.shape)} must match y0 mode grid {tuple(y0.shape[1:])}"
     )
     device = y0.device
     h = (t[1] - t[0]).item()
 
-    # Coefficients computed in double precision for accuracy, then cast to y0.
     lin = linear.to(device=device, dtype=torch.complex128)
     E = torch.exp(h * lin)
     E2 = torch.exp(h * lin / 2)
 
-    m = contour_points
-    j = torch.arange(1, m + 1, device=device, dtype=torch.float64)
-    r = torch.exp(1j * torch.pi * (j - 0.5) / m)  # (m,) on the unit circle
-    lr = h * lin.reshape(-1).unsqueeze(-1) + r.unsqueeze(0)  # (prod(modes), m)
-    shape = lin.shape
-
-    def _coef(expr: torch.Tensor) -> torch.Tensor:
-        return (h * expr.mean(dim=-1).real).reshape(shape)
-
-    Q = _coef((torch.exp(lr / 2) - 1) / lr)
-    f1 = _coef((-4 - lr + torch.exp(lr) * (4 - 3 * lr + lr**2)) / lr**3)
-    f2 = _coef((2 + lr + torch.exp(lr) * (-2 + lr)) / lr**3)
-    f3 = _coef((-4 - 3 * lr - lr**2 + torch.exp(lr) * (4 - lr)) / lr**3)
+    Q, f1, f2, f3 = _etdrk4_weights(lin, h, contour_points)
 
     cdtype = y0.dtype if y0.is_complex() else torch.complex64
     rdtype = torch.tensor([], dtype=cdtype).real.dtype
+    weight_dtype = cdtype if Q.is_complex() else rdtype
     E, E2 = E.to(cdtype), E2.to(cdtype)
-    Q, f1, f2, f3 = (c.to(rdtype) for c in (Q, f1, f2, f3))
+    Q, f1, f2, f3 = (c.to(weight_dtype) for c in (Q, f1, f2, f3))
 
     v = y0.to(cdtype)
     solution = torch.empty((len(t), *y0.shape), dtype=cdtype, device=device)
     solution[0] = v
     for i in range(1, len(t)):
-        ti = t[i - 1]
-        nv = nonlinear(ti, v)
+        t_start = t[i - 1]
+        t_end = t[i]
+        t_mid = (t_start + t_end) / 2
+        nv = nonlinear(t_start, v)
         a = E2 * v + Q * nv
-        na = nonlinear(ti, a)
+        na = nonlinear(t_mid, a)
         b = E2 * v + Q * na
-        nb = nonlinear(ti, b)
+        nb = nonlinear(t_mid, b)
         c = E2 * a + Q * (2 * nb - nv)
-        nc = nonlinear(ti, c)
+        nc = nonlinear(t_end, c)
         v = E * v + nv * f1 + 2 * (na + nb) * f2 + nc * f3
         solution[i] = v
     return solution

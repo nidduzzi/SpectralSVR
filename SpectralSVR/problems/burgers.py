@@ -149,8 +149,10 @@ class Burgers(Problem):
         Basis-agnostic: the diagonal linear operator ``nu * d2/dx2`` and the
         spectral derivative for the nonlinear term ``0.5 (u^2)_x`` are built from
         the basis's ``derivative_eigenvalues``; the transforms use the generic
-        ``transform``/``inv_transform``. Works for any basis whose differentiation
-        is diagonal (Fourier, spherical harmonics). Solves
+        ``transform``/``inv_transform``. Requires a basis whose differentiation
+        is diagonal so that ``nu * d2`` is a plain eigenvalue array (Fourier is
+        the tested case), and a uniform time grid, which ``generate`` builds
+        from ``time_domain``. Solves
         ``u_t + 0.5 (u^2)_x = nu u_xx + forcing`` on the spatial domain
         ``domain[1]`` (length ``L``) with ``ns = modes[1]`` spatial modes.
 
