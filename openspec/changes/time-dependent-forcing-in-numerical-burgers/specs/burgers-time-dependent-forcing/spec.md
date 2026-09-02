@@ -1,0 +1,60 @@
+## Purpose
+
+Defines what forcings the numerically integrated Burgers generator accepts, how a time-dependent forcing enters the integration, which forcing forms are rejected and why, and the forced-Burgers dataset the operator benchmark exposes so that the "forcing to solution" operator is learned from a sampled forcing prior rather than from manufactured residuals.
+
+## ADDED Requirements
+
+### Requirement: Numerical Burgers accepts a time-dependent forcing
+The numerical Burgers generator SHALL accept a forcing that can be evaluated at any time in the integration interval, in either of two forms: a callable mapping a time to the forcing's spatial spectral coefficients for every sample, or a spectral field over time and space that is fully spectral along its time axis. The forcing SHALL be evaluated at the time the integrator passes for each stage, not frozen at the start of the step.
+
+#### Scenario: Callable forcing is integrated
+- **WHEN** the generator is given a callable `f(t)` returning `(n, ns)` spectral coefficients and a random initial condition
+- **THEN** it returns a time-dependent solution field and a forcing field whose values at the output time grid equal `f` evaluated there
+
+#### Scenario: Fully spectral forcing field is integrated
+- **WHEN** the generator is given a Basis field over `(time, space)` with `time_dependent=False`, whose time domain equals the requested integration interval
+- **THEN** it integrates using that field's value at each stage time, and the returned forcing field is the input resampled onto the output time grid
+
+#### Scenario: Forcing is evaluated at stage times, not step starts
+- **WHEN** the same problem is integrated once with a forcing that varies within a step and once with that forcing frozen at each step's start
+- **THEN** the two solutions differ, and only the former converges at fourth order as the step size halves
+
+### Requirement: Per-time-slice forcing is rejected
+The generator SHALL reject a forcing field whose time axis is sampled rather than spectral (`time_dependent=True`), because the integrator evaluates the forcing between grid points and such a field cannot be evaluated there without an interpolation the caller did not choose.
+
+#### Scenario: Sampled-time field raises
+- **WHEN** a Basis field with `time_dependent=True` is passed as forcing to the numerical branch
+- **THEN** the generator raises before integrating, and the error names the accepted forms
+
+#### Scenario: Mismatched time domain raises
+- **WHEN** a fully spectral forcing field's time domain does not equal the requested `time_domain` interval
+- **THEN** the generator raises before integrating
+
+### Requirement: Constant forcing is unchanged
+A forcing given as a plain number SHALL take the path it takes today and produce the same coefficients bit for bit.
+
+#### Scenario: Constant forcing byte-identity
+- **WHEN** the numerical generator is run with a `Number` forcing at a fixed seed on this change and on its parent commit
+- **THEN** the solution and forcing coefficients are `torch.equal`
+
+### Requirement: Manufactured solutions round-trip through the integrator
+Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at fourth order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing.
+
+#### Scenario: Round-trip matches the manufactured solution
+- **WHEN** a manufactured pair is generated, and the numerical branch is run from its initial slice with its forcing at a spatial resolution that keeps `u²` inside the de-aliased band
+- **THEN** the numerical `u(T)` matches the manufactured `u(T)` within a tolerance fixed from the integrator's order at the chosen step count
+
+#### Scenario: Round-trip converges at fourth order
+- **WHEN** the round-trip is repeated at halving step sizes
+- **THEN** the measured order over the resolved range is above 3.5
+
+### Requirement: A forced-Burgers dataset is available to the benchmark
+The operator benchmark SHALL offer a dataset whose input is a sampled time-and-space forcing and whose output is the numerically integrated Burgers solution from rest, alongside the existing manufactured-solution dataset, so the two forcing distributions can be compared.
+
+#### Scenario: Forced dataset is registered
+- **WHEN** the benchmark script is listed
+- **THEN** a forced-Burgers dataset appears among its choices with a label distinguishing it from the manufactured-solution dataset
+
+#### Scenario: Forced dataset builds and scores
+- **WHEN** the benchmark is run on that dataset with the SpectralSVR operator in quick mode
+- **THEN** it completes and writes a row for the dataset with finite metrics
