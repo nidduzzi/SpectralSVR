@@ -21,24 +21,24 @@ cov *args:
 
 # lint + type-check (ruff, mypy, ty)
 lint:
-    uv run --extra lint ruff check SpectralSVR tests
-    uv run --extra lint mypy SpectralSVR
-    uv run --extra lint ty check SpectralSVR
+    uv run --extra lint ruff check SpectralSVR tests scripts
+    uv run --extra lint mypy SpectralSVR scripts
+    uv run --extra lint ty check SpectralSVR scripts
 
 # auto-format and apply ruff fixes
 fmt:
-    uv run --extra lint ruff format SpectralSVR tests
-    uv run --extra lint ruff check --fix SpectralSVR tests
+    uv run --extra lint ruff format SpectralSVR tests scripts
+    uv run --extra lint ruff check --fix SpectralSVR tests scripts
 
 # individual linters
 ruff:
-    uv run --extra lint ruff check SpectralSVR tests
+    uv run --extra lint ruff check SpectralSVR tests scripts
 
 mypy:
-    uv run --extra lint mypy SpectralSVR
+    uv run --extra lint mypy SpectralSVR scripts
 
 ty:
-    uv run --extra lint ty check SpectralSVR
+    uv run --extra lint ty check SpectralSVR scripts
 
 # everything CI should gate on
 check: lint test
