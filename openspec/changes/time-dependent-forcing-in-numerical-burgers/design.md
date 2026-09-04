@@ -14,7 +14,7 @@ What the rest of the library already provides:
 
 - `mms_solution` returns `u` and `f` as 2D Fourier fields over `(time, space)`, fully spectral in both axes (`time_dependent=False`). Such a field is evaluable at any `(t, x)` through the Basis interface, and is *periodic in time* on the integration interval — `u(0) = u(T)` by construction.
 - `u` from MMS is band-limited to half the mode budget per axis so `u²` is alias-free at that budget. The numerical path applies the Orszag 2/3 mask at its own resolution `ns`.
-- The solver, once `fix-etdrk4-stage-times-and-complex-weights` lands, calls `nonlinear` at `t_n`, `(t_n + t_{n+1})/2`, `(t_n + t_{n+1})/2`, `t_{n+1}`. The midpoints are not on the output grid.
+- The solver calls `nonlinear` at `t_n`, `(t_n + t_{n+1})/2`, `(t_n + t_{n+1})/2`, `t_{n+1}` (the stage-time fix is archived and in `main`). The midpoints are not on the output grid.
 - `OperatorDataset.from_fields` samples the input field at a sensor grid over the field's domain and keeps the output field evaluable; `SpectralSVROperator.fit` already passes `u_time_dependent=dataset.u.time_dependent`, so time-dependent output fields are a supported shape.
 - `scripts/run_benchmark.py` registers datasets as `DatasetSpec(label, build)` and already has a periodic GRF coefficient sampler (`grf_coeff`) that plugs into `FourierBasis.generate` via `random_func`.
 
@@ -87,7 +87,7 @@ Label: `"project Burgers forced (f->u, GRF forcing, from rest)"`, distinct from 
 
 ## Risks / Trade-offs
 
-- **This change is blocked on the ETDRK4 stage-time fix.** On the shipped solver the round-trip converges at first order and its rate assertion fails. → Branch is stacked on `feat/operator-baselines`; the anchor is written to expect ~4, and a first-order reading is the signal that the dependency has not been merged beneath, not that this change is wrong.
+- **This change is blocked on `align-spectral-residual-with-solver`.** `spectral_residual` builds the nonlinear term from complex values with no de-aliasing while the solver takes the real part and de-aliases, so the manufactured pair does not solve the equation being integrated and the round-trip error is flat at 2.59e-3 to 6.89e-3 at every step count. → The anchor is written to expect ~4; a flat, step-count-independent error is the signal that the dependency is missing. The Nyquist representation is *not* implicated -- a lone Nyquist coefficient evaluates to the correct cosine (1.3e-7) with derivative ratio 1.0000.
 
 - **Evaluating a Basis field four times per step is slower than the constant path.** → Data generation only. Recorded as a known cost; if it matters later, the mode-sum alternative is the optimisation.
 
@@ -99,7 +99,7 @@ Label: `"project Burgers forced (f->u, GRF forcing, from rest)"`, distinct from 
 
 ## Migration Plan
 
-1. Merge `fix-etdrk4-stage-times-and-complex-weights` into `feat/operator-baselines`, then rebase or merge this branch onto it. Nothing below is safe to assert before that.
+1. Rebase this branch onto `align-spectral-residual-with-solver`. Nothing below is safe to assert before that. Note that rebasing changes this branch's parent, so the seeded byte-identity checks in tasks 1.1 and 7.3 must be re-measured against the new parent rather than assumed to still hold -- that change does not touch `generate_coeff`, so the expectation is unchanged output, but the check must actually be re-run.
 2. `_solve_spectral`: introduce `forcing_at`, route the three input forms, keep the `Number` path's tensor unchanged. Run the suite; constant-forcing tests must still pass and the seeded byte-identity check must hold.
 3. Rejection paths and their tests.
 4. MMS round-trip anchor with rate assertion; record measured values.

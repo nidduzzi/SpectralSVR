@@ -1,6 +1,6 @@
 ## 0. Dependency gate
 
-- [ ] 0.1 Confirm `fix-etdrk4-stage-times-and-complex-weights` is merged beneath this branch: `git log --oneline` on this branch shows its implementation commit, and `etdrk4_solver`'s loop passes `t[i]` (not `ti`) to the final stage; verify before touching any task below — the round-trip anchor in group 4 reads first order otherwise
+- [ ] 0.1 Confirm `align-spectral-residual-with-solver` is merged beneath this branch: `git log --oneline` shows its implementation commit and `Burgers.spectral_residual` routes through the shared nonlinear-term helper (real part taken, de-aliasing applied); verify before touching group 4 — without it the round-trip error is flat at 2.59e-3 to 6.89e-3 at every step count and no rate exists to measure. The earlier ETDRK4 stage-time gate is satisfied: that change is archived and in `main`.
 
 ## 1. Forcing normalisation in `_solve_spectral`
 
@@ -41,4 +41,4 @@
 
 - [ ] 7.1 Run `just check`; verify clean
 - [ ] 7.2 Verify no source file gained an explanatory prose comment; the three forcing forms must read from `forcing_at`'s structure and the docstrings
-- [ ] 7.3 Re-run task 1.1's byte-identity check one final time against the parent commit; verify `torch.equal` on both coefficients
+- [ ] 7.3 Re-run task 1.1's byte-identity check against this branch's *current* parent, which changes when the branch is rebased onto `align-spectral-residual-with-solver`; verify `torch.equal` on both coefficients. That change does not touch `generate_coeff`, so unchanged output is the expectation, but re-measure rather than assume
