@@ -17,11 +17,22 @@ Measured against the *true continuous residual* on a fine grid, with the source 
 | 8 | 1.05e-1 | 3.35e-2 |
 | 16 | 2.60e-1 | 2.59e-1 |
 
+A third measurement, on a field whose product is fully resolved so every variant should agree, isolates a defect in a fourth implementation:
+
+| implementation | error vs analytic | ratio |
+| --- | --- | --- |
+| solver (2/3 mask, flux form, real part) | 2.1e-8 | 1.0000 |
+| `spectral_residual` (no de-aliasing, advective form) | 2.3e-8 | 1.0000 |
+| `Burgers.rhs` (3/2 padding, flux form) | 3.3e-1 | **0.6667** |
+
+The middle row is the control: `spectral_residual` is correct here precisely because this field has no Nyquist content and no bandwidth overrun, which is independent confirmation of the isolation above.
+
 Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its fix, and its size tracks how far the product overruns the grid. The odd-mode-count row is a control that has neither defect and reads clean under both variants.
 
 ## What Changes
 
 - `spectral_residual` forms the nonlinear term the way the solver does: take the real part of the sampled values before multiplying, and apply the same de-aliasing mask.
+- `Burgers.rhs` is deleted. It is a fourth implementation of the same term and is wrong by exactly `2/3`: it de-aliases by 3/2 padding through `resize_modes(..., rescale=False)`, which scales the function by `1/1.5` on the way up, `1/2.25` once squared, and `x1.5` on the way back — a net `0.6667`, matching the measured ratio. Its only caller is its own smoke test, which asserts shape and absence of NaN and so cannot see a factor of 1.5. Its stated purpose, "kept for future numerical solvers", is served by `_solve_spectral` with a supplied solver since `unify-solver-protocol`. Deleting it also removes the second de-aliasing strategy from the file, leaving one.
 - A new anchor checks a manufactured pair against the **true continuous residual**, evaluated off the sample grid. The existing check evaluates only on-grid, where a wrong pair still reads `0.000`, so it cannot fail for this class of defect.
 - The capability states that a manufactured pair must satisfy the continuous equation, not merely its own discrete residual.
 - The Burgers MMS `f -> u` benchmark row is regenerated.
@@ -38,7 +49,8 @@ Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its 
 
 ## Impact
 
-- `SpectralSVR/problems/burgers.py`: `spectral_residual` only.
+- `SpectralSVR/problems/burgers.py`: `spectral_residual`, and the removal of `Burgers.rhs`.
+- `tests/problems/test_problems.py`: removal of `test_burgers_rhs_smoke` along with the function it covers.
 - `tests/problems/test_problems.py`: the continuous-residual anchor plus the odd-mode-count control.
 - `results/bench_results.csv`: the Burgers MMS row changes. `generate_coeff` is untouched, so the antiderivative, numerical-Burgers and DeepONet-GRF rows are unaffected and seeded numerical Burgers output stays byte-identical.
 - Unblocks the round-trip anchor in `time-dependent-forcing-in-numerical-burgers`, which must not be claimed here — it additionally needs `Burgers.generate` to accept a Basis forcing, which is that change's own work.

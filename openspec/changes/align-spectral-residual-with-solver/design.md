@@ -18,6 +18,8 @@ Two differences, and both matter only when the field reaches the top of the grid
 | That derivative is purely imaginary *at the sample points* | `.real` before multiplying is the fix, not a coefficient change |
 | Odd mode counts have no unpaired top mode and read clean under both variants | a free control, no construction needed |
 | `spectral_residual` is used by `mms_solution` and by `Antiderivative.spectral_residual`'s sibling path | the change is confined to the Burgers method |
+| `Burgers.rhs` is a fourth implementation, wrong by 2/3, with one smoke-test caller and none in 24 notebooks | delete rather than unify |
+| the finite-difference `residual` at :328 backs five tests as a physical-space cross-check | leave it alone — see below |
 
 ## Goals / Non-Goals
 
@@ -40,6 +42,16 @@ Two differences, and both matter only when the field reaches the top of the grid
 Rather than patching `spectral_residual` to mirror the solver, both call a single helper that takes the field's spectral coefficients and the de-aliasing mask and returns the spectral nonlinear term. Two call sites cannot drift apart if there is only one implementation.
 
 *Alternative rejected:* copy `.real` and the mask into `spectral_residual`. Fixes today's divergence and leaves the same trap for the next person who edits one and not the other — which is exactly how this arose.
+
+### `Burgers.rhs` is deleted, not folded into the helper
+
+Unifying it would work, but it is unused outside its own smoke test, its de-aliasing strategy is a second way of doing what the mask already does, and its stated purpose was superseded when `unify-solver-protocol` made pluggable solvers real. Fixing an unused duplicate leaves the duplicate; removing it leaves one nonlinear term and one de-aliasing strategy in the file, which is the outcome this change is for.
+
+*Alternative rejected:* fix its scaling and route it through the helper. Correct but keeps a fourth entry point to the same computation, which is exactly the condition that produced this bug.
+
+### The physical-space residual is deliberately NOT unified
+
+`residual` at `burgers.py:328` computes the same equation by finite differences on sampled values, and five tests use it as a cross-check on the spectral path. It is arguably the only genuinely independent oracle among the implementations here, because it shares no code with the thing it checks. Collapsing it into the shared helper would destroy that independence and leave the spectral path verifying itself — the failure this whole change exists to correct.
 
 ### The de-aliasing mask comes from the basis, at the field's own mode count
 

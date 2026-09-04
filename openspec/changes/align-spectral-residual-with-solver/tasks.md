@@ -4,6 +4,12 @@
 - [ ] 1.2 Route `spectral_residual` through the same helper, taking the real part before multiplying and applying `basis.dealias_mask` at the field's own mode count; verify a basis returning `None` for the mask behaves exactly as before on both call sites
 - [ ] 1.3 Verify the existing MMS tests that assert a zero discrete residual still pass, since both sides of that check move together
 
+## 1b. Remove the fourth implementation
+
+- [ ] 1b.1 Delete `Burgers.rhs` (`burgers.py:255-270`) and `test_burgers_rhs_smoke` (`tests/problems/test_problems.py:556`); verify `grep -rn "Burgers.rhs\\|\\.rhs(" SpectralSVR/ tests/ scripts/ notebooks/` returns nothing but unrelated matches
+- [ ] 1b.2 Verify the only remaining de-aliasing strategy in `burgers.py` is the 2/3 mask, so `resize_modes` is no longer used for de-aliasing anywhere in the file
+- [ ] 1b.3 Verify `tests/test_oracle_coverage.py` still passes after removing an `oracle_smoke` test, and that the module retains at least one anchor
+
 ## 2. The off-grid anchor
 
 - [ ] 2.1 Add a helper in the problem tests that evaluates the continuous Burgers residual for a `(u, f)` pair on a grid finer than and offset from the field's sample points, using the field's own exact spectral derivatives; verify it returns a relative figure, not an absolute one
@@ -22,3 +28,4 @@
 - [ ] 4.1 Run `just check`; verify clean
 - [ ] 4.2 Verify no source file gained an explanatory prose comment; the shared helper's name must carry the intent, with any numerical rationale confined to a docstring
 - [ ] 4.3 Verify `Antiderivative.spectral_residual` either shares the convention or is documented as having no nonlinear term, so the open question in the design is closed rather than left dangling
+- [ ] 4.4 Verify the finite-difference `residual` at `burgers.py:328` is untouched and still shares no code with the spectral path, so it remains an independent cross-check rather than becoming a second view of the same computation
