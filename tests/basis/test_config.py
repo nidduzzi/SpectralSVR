@@ -10,21 +10,21 @@ from SpectralSVR.basis.strategy import DEFAULT_EVALUATION_STRATEGY
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_config_resolve_domain_broadcasts_single_pair():
     cfg = SpectralConfig(sampling=PeriodicUniform(), domain=(-1.0, 1.0))
     assert cfg.resolve_domain((8, 4)) == ((-1.0, 1.0), (-1.0, 1.0))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_config_lengths():
     cfg = SpectralConfig(sampling=PeriodicUniform(), domain=((0.0, 2.0), (1.0, 4.0)))
     assert cfg.lengths((8, 4)) == (2.0, 3.0)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_config_with_domain_is_immutable_copy():
     cfg = SpectralConfig(sampling=PeriodicUniform(), domain=(0.0, 1.0))
     other = cfg.with_domain((-1.0, 1.0))
@@ -35,7 +35,7 @@ def test_config_with_domain_is_immutable_copy():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_domain_setter_rebuilds_config():
     basis = FourierBasis(FourierBasis.generate_empty(1, (8, 4)), domain=(0.0, 1.0))
     basis.domain = ((0.0, 2.0), (0.0, 3.0))
@@ -44,14 +44,14 @@ def test_domain_setter_rebuilds_config():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_domain_malformed_pair_raises():
     with pytest.raises(ValueError, match="unpack"):
         domainInputType_to_tuple((1.0, 2.0, 3.0), (8,))  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("bad", [(1.0, 1.0), (2.0, 1.0)])
 def test_domain_degenerate_or_inverted_raises(bad):
     # zero-length or inverted intervals would divide by zero / flip frequency sign
