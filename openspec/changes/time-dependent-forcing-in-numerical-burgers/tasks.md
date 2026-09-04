@@ -4,21 +4,21 @@
 
 ## 1. Forcing normalisation in `_solve_spectral`
 
-- [ ] 1.1 Introduce a `forcing_at(t) -> (n, ns)` closure inside `_solve_spectral`; for a `Number` forcing it returns the precomputed `f_hat` tensor computed exactly as today; verify the seeded byte-identity check (`nu=0.01`, `(16,16)`, `slice(0,1,50)`, seed 1234) is `torch.equal` against a worktree at this branch's parent commit on both `u` and `f`
-- [ ] 1.2 Accept a callable forcing: `forcing_at` calls it with the stage time and asserts the result shape is `(n, ns)`; verify a callable returning a constant spectrum reproduces the `Number` path's output to `1e-12`
-- [ ] 1.3 Accept a fully spectral Basis forcing (`time_dependent=False`): `forcing_at` evaluates the field on `(t, spatial grid of ns points)` via the Basis evaluation path and applies `basis.transform` spatially; verify a forcing field built from a constant reproduces the `Number` path to `1e-10`, and one built at a different spatial resolution than `ns` still returns `(n, ns)`
-- [ ] 1.4 Replace the constant `+ f_hat` in `nonlinear(ti, v)` with `+ forcing_at(ti)`; verify `tests/problems` still passes in full
+- [x] 1.1 Introduce a `forcing_at(t) -> (n, ns)` closure inside `_solve_spectral`; for a `Number` forcing it returns the precomputed `f_hat` tensor computed exactly as today; verify the seeded byte-identity check (`nu=0.01`, `(16,16)`, `slice(0,1,50)`, seed 1234) is `torch.equal` against a worktree at this branch's parent commit on both `u` and `f`
+- [x] 1.2 Accept a callable forcing: `forcing_at` calls it with the stage time and asserts the result shape is `(n, ns)`; verify a callable returning a constant spectrum reproduces the `Number` path's output to `1e-12`
+- [x] 1.3 Accept a fully spectral Basis forcing (`time_dependent=False`): `forcing_at` evaluates the field on `(t, spatial grid of ns points)` via the Basis evaluation path and applies `basis.transform` spatially; verify a forcing field built from a constant reproduces the `Number` path to `1e-10`, and one built at a different spatial resolution than `ns` still returns `(n, ns)`
+- [x] 1.4 Replace the constant `+ f_hat` in `nonlinear(ti, v)` with `+ forcing_at(ti)`; verify `tests/problems` still passes in full
 
 ## 2. Rejection paths
 
 - [ ] 2.1 Raise when a Basis forcing has `time_dependent=True`, naming the two accepted forms in the message; verify a test asserts the raise
 - [ ] 2.2 Raise when a spectral forcing field's `domain[0]` does not equal `(time_domain.start, time_domain.stop)`; verify a test asserts the raise
-- [ ] 2.3 Remove the `NotImplementedError("numerical Burgers supports a constant forcing f")` branch; verify `grep` finds no remaining reference and `ty check SpectralSVR scripts` is clean with the widened `f` annotation on `generate`
+- [x] 2.3 Remove the `NotImplementedError("numerical Burgers supports a constant forcing f")` branch; verify `grep` finds no remaining reference and `ty check SpectralSVR scripts` is clean with the widened `f` annotation on `generate`
 
 ## 3. Returned forcing field
 
 - [ ] 3.1 For callable and spectral forcings, build the returned `f_gen` by evaluating `forcing_at` on the output time grid, giving a `(n, nt, ns)` time-dependent field like the solution; verify its values at the grid times equal the input forcing evaluated there to `1e-10`
-- [ ] 3.2 Keep the `Number` case's `f_gen` construction byte-for-byte; verify task 1.1's byte-identity check still holds after group 3
+- [x] 3.2 Keep the `Number` case's `f_gen` construction byte-for-byte; verify task 1.1's byte-identity check still holds after group 3
 
 ## 4. MMS round-trip anchor
 

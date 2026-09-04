@@ -11,9 +11,11 @@ from ..utils import (
     resolve_device,
 )
 from . import Problem
-from typing import Literal, Type
+from typing import Callable, Literal, Type
 
 ParamInput = Literal["random"] | Number | torch.Tensor
+ForcingCallable = Callable[[torch.Tensor], torch.Tensor]
+ForcingInput = ParamInput | ForcingCallable
 
 
 # References:
@@ -42,7 +44,7 @@ class Burgers(Problem):
         modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
         u0: ParamInput | BasisSubType = "random",
-        f: ParamInput | BasisSubType = 0,
+        f: ForcingInput | BasisSubType = 0,
         nu: float = 0.01,
         space_domain: slice | None = None,
         time_domain: slice | None = None,
@@ -120,7 +122,6 @@ class Burgers(Problem):
                 f,
                 domain,
                 t,
-                nt,
                 device,
                 generator,
                 etdrk4_solver if solver is None else solver,
@@ -163,10 +164,9 @@ class Burgers(Problem):
         modes: tuple[int, ...],
         nu: float,
         u0: "ParamInput | BasisSubType",
-        f: "ParamInput | BasisSubType",
+        f: "ForcingInput | BasisSubType",
         domain: tuple[tuple[float, float], ...],
         t: torch.Tensor,
-        nt: int,
         device: torch.device,
         generator: torch.Generator | None,
         solver: SemilinearSolverSignatureType,
@@ -224,23 +224,87 @@ class Burgers(Problem):
                 "numerical Burgers supports u0='random', a constant, or a value tensor"
             )
 
-        # constant forcing spectrum (0 by default)
-        if isinstance(f, Number):
-            f_field = torch.full((n, ns), float(f), device=device) + 0j
-            f_hat = basis.transform(f_field)
-        else:
-            raise NotImplementedError("numerical Burgers supports a constant forcing f")
+        forcing_at = Burgers._forcing_at(basis, f, n, ns, domain, device)
 
         def nonlinear(ti: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-            return Burgers.advection_spectrum(basis, v, d1, dealias) + f_hat
+            return Burgers.advection_spectrum(basis, v, d1, dealias) + forcing_at(ti)
 
         sol = solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
         u_coeff = sol.movedim(0, 1).to(basis.coeff_dtype)  # (n, nt, ns)
         u_gen = basis(coeff=u_coeff, time_dependent=True, domain=domain)
 
-        f_coeff = f_hat.unsqueeze(1).expand(n, nt, ns).to(basis.coeff_dtype).clone()
+        f_coeff = torch.stack([forcing_at(ti) for ti in t], dim=1).to(basis.coeff_dtype)
         f_gen = basis(coeff=f_coeff, time_dependent=True, domain=domain)
         return u_gen, f_gen
+
+    @staticmethod
+    def _forcing_at(
+        basis: Type[BasisSubType],
+        f: "ForcingInput | BasisSubType",
+        n: int,
+        ns: int,
+        domain: tuple[tuple[float, float], ...],
+        device: torch.device,
+    ) -> Callable[[torch.Tensor], torch.Tensor]:
+        """Spectral forcing ``(n, ns)`` as a function of time.
+
+        Accepts a number, a callable of time, or a field over ``(time, space)``
+        that is spectral in time (``time_dependent=False``). A field sampled per
+        time slice is rejected: the integrator asks for stage times between the
+        output grid points.
+        """
+        time_interval, space_interval = domain[0], domain[1]
+
+        if isinstance(f, Number):
+            constant = basis.transform(
+                torch.full((n, ns), float(f), device=device) + 0j
+            )
+            return lambda ti: constant
+
+        if isinstance(f, Basis):
+            if f.time_dependent:
+                raise NotImplementedError(
+                    "numerical Burgers forcing must be evaluable at any time: pass "
+                    "a callable of time or a field spectral in time "
+                    "(time_dependent=False), not a per-time-slice field"
+                )
+            if f.domain[0] != time_interval:
+                raise ValueError(
+                    f"forcing time domain {f.domain[0]} must equal the integration "
+                    f"interval {time_interval}"
+                )
+            nodes = (
+                basis.default_sampling().nodes(ns, *space_interval).to(device=device)
+            )
+
+            def forcing_field_at(ti: torch.Tensor) -> torch.Tensor:
+                query = torch.stack([torch.full_like(nodes, float(ti)), nodes], dim=-1)
+                return basis.transform(f(query).to(device=device))
+
+            return forcing_field_at
+
+        if isinstance(f, torch.Tensor):
+            raise NotImplementedError(
+                "numerical Burgers forcing as a bare tensor is not supported: pass "
+                "a number, a callable of time, or a field spectral in time"
+            )
+
+        if callable(f):
+
+            def forcing_callable_at(ti: torch.Tensor) -> torch.Tensor:
+                spectrum = f(ti)
+                assert spectrum.shape == (n, ns), (
+                    f"forcing callable must return ({n}, {ns}) spectral "
+                    f"coefficients, got {tuple(spectrum.shape)}"
+                )
+                return spectrum.to(device=device)
+
+            return forcing_callable_at
+
+        raise NotImplementedError(
+            "numerical Burgers forcing must be a number, a callable of time, or a "
+            "field spectral in time"
+        )
 
     def mms_solution(
         self,
