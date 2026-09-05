@@ -174,8 +174,14 @@ function does not change: the continuous Burgers residual moves only in its last
 digits (`1.876e-07 → 1.750e-07` at 8 modes, `2.329e-07 → 2.176e-07` at 12,
 unchanged at 16), so `align-spectral-residual-with-solver`'s anchors stay green.
 Regenerating the table is *not* a task here — `benchmark-reproducibility` owns
-the regeneration and sits above this change in the branch stack once the pending
-rebases land. Duplicating it would couple the two changes for no gain.
+the regeneration. Duplicating it would couple the two changes for no gain.
+
+*State at the time this change was implemented:* `benchmark-reproducibility`
+does **not** yet sit above this change. The stack was rebased onto the corrected
+base through `operator-harness-spec` and `time-dependent-forcing-in-numerical-burgers`,
+but `benchmark-reproducibility` was left at its original commit and still sits on
+the pre-rebase forcing commits. It must be rebased before it regenerates the
+table, or the numbers it records will describe a base that excludes this change.
 
 **`zero_coeff`'s behaviour is deliberately unchanged.** Repairing it means
 picking a rounding convention that a cutoff-based band type would delete, and
