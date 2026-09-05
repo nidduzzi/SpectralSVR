@@ -349,6 +349,9 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 range(current_mode - target_mode // 2, current_mode), dtype=torch.int
             ).to(device=device)
 
+            aliased_onto_boundary = x_resized.index_select(
+                dim, torch.tensor([target_mode // 2], dtype=torch.long).to(device)
+            )
             x_resized = torch.concat(
                 (
                     x_resized.index_select(dim, start_range),
@@ -356,6 +359,13 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 ),
                 dim,
             )
+            if target_mode % 2 == 0:
+                boundary = torch.tensor([target_mode // 2], dtype=torch.long).to(device)
+                x_resized = x_resized.index_copy(
+                    dim,
+                    boundary,
+                    x_resized.index_select(dim, boundary) + aliased_onto_boundary,
+                )
         elif target_mode > current_mode:
             start_range = torch.tensor(
                 range((current_mode - 1) // 2 + 1), dtype=torch.int

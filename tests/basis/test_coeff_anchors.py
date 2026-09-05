@@ -32,8 +32,9 @@ SETTINGS = settings(deadline=None, max_examples=20)
 def test_resize_modes_truncate_values():
     c0, c1, c2, c3 = 1.0 + 1j, 2.0 - 1j, -3.0 + 0j, 0.5 + 2j
     x = torch.tensor([[c0, c1, c2, c3]])  # freqs [0, 1, +-2, -1]
-    # target 2 modes -> keep freqs {0, -1} = bins {0, 3}
-    expected = torch.tensor([[c0, c3]])
+    # target 2 modes -> freqs {0, -1}. On a 2-point grid freqs +1 and -1 are the
+    # same sampled wave, (-1)^n, so the target's -1 bin carries c3 + c1.
+    expected = torch.tensor([[c0, c3 + c1]])
     got = resize_modes(x, 2, rescale=False)
     assert torch.equal(got, expected)
     # rescale multiplies by target/current = 2/4

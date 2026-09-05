@@ -26,9 +26,9 @@ rewrite so `just check` passes at the end of every one.
 
 ## 2. Truncation folds the boundary mode
 
-- [ ] 2.1 In `resize_modes`'s downward branch (`utils/__init__.py:334-348`), add the source's `+M/2` content to the target's `-M/2` bin when the target mode count is even, instead of discarding it; verify the two mode numbers are the ones the target grid cannot distinguish
-- [ ] 2.2 Rewrite `test_resize_modes_truncate_values` (`tests/basis/test_coeff_anchors.py:32`) by hand from the new rule, not from the function's output — it is `oracle_analytic` and that is its purpose. For `x = [c0, c1, c2, c3]` at frequencies `[0, 1, ±2, -1]` resized to 2 modes, the target holds frequencies `{0, -1}` and its `-1` bin now carries `c3 + c1`, so the expected array is `[1+1j, 2.5+1j]` rather than `[1+1j, 0.5+2j]`
-- [ ] 2.3 Run `just check`; verify clean, with the padding anchor still passing untouched
+- [x] 2.1 In `resize_modes`'s downward branch (`utils/__init__.py:334-348`), add the source's `+M/2` content to the target's `-M/2` bin when the target mode count is even, instead of discarding it; verify the two mode numbers are the ones the target grid cannot distinguish
+- [x] 2.2 Rewrite `test_resize_modes_truncate_values` (`tests/basis/test_coeff_anchors.py:32`) by hand from the new rule, not from the function's output — it is `oracle_analytic` and that is its purpose. For `x = [c0, c1, c2, c3]` at frequencies `[0, 1, ±2, -1]` resized to 2 modes, the target holds frequencies `{0, -1}` and its `-1` bin now carries `c3 + c1`, so the expected array is `[1+1j, 2.5+1j]` rather than `[1+1j, 0.5+2j]`
+- [x] 2.3 Run `just check`; verify clean, with the padding anchor still passing untouched
 
 ## 3. Padding splits the lone top coefficient
 
