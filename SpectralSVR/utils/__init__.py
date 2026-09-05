@@ -63,13 +63,28 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     if not torch.is_complex(coeff):
         logger.debug("coeff is already real")
         return coeff
-    converted_coeff = torch.empty(
-        (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
-    )
-    converted_coeff[:, ::2] = coeff.abs()
-    converted_coeff[:, 1::2] = coeff.angle()
+    converted_coeff = torch.stack((coeff.abs(), coeff.angle()), dim=-1).flatten(-2)
 
     return converted_coeff
+
+
+def from_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
+    """
+    from_mag_angle
+
+    convert rows of interleaved magnitude/phase pairs back into complex coefficients
+
+    Arguments:
+        coeff {torch.Tensor} -- m by 2p tensor where p is the number of modes
+
+    Returns:
+        torch.Tensor -- m by p tensor of elements in complex numbers
+    """
+    if torch.is_complex(coeff):
+        logger.debug("coeff is already complex")
+        return coeff
+    pairs = coeff.reshape((*coeff.shape[:-1], -1, 2))
+    return torch.polar(pairs[..., 0], pairs[..., 1])
 
 
 def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:

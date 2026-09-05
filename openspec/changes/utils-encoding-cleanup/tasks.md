@@ -52,15 +52,15 @@ rewrite so `just check` passes at the end of every one.
 
 ## 6. Polar encoding (independent of sections 1-5)
 
-- [ ] 6.1 Rewrite `to_mag_angle` (`utils/__init__.py:51`) to build its result the way `to_real_coeff` does — from a stacked magnitude/phase pair flattened over the trailing axes — rather than from a hardcoded `(shape[0], shape[1] * 2)` allocation with `[:, ::2]` writes; verify a `(2, 8, 8)` coefficient tensor converts instead of raising `expand(... size=[2, 8])`
-- [ ] 6.2 Verify the single-mode-axis result is bit-identical to the previous implementation, so `test_to_mag_angle_reconstructs` and `test_to_mag_angle_idempotent_on_real` pass untouched
-- [ ] 6.3 Verify the interleaving convention is unchanged: magnitude at even trailing positions, phase at odd, matching what the existing test reads with `[:, ::2]` and `[:, 1::2]`
-- [ ] 6.4 Ensure the result is allocated on the input's device; verify a CUDA input returns a CUDA tensor, and skip cleanly when no accelerator is present rather than failing the suite
-- [ ] 6.5 Verify the real precision corresponds to the input's complex precision at both single and double, so a complex128 input yields float64
-- [ ] 6.6 Add `from_mag_angle` implementing `mag * exp(1j * angle)` for any number of mode axes, mirroring `to_complex_coeff`'s role for the interleaved-real pair; verify it round-trips `to_mag_angle` to rounding on 2-D and 3-D inputs
-- [ ] 6.7 Export it from the package root next to `to_mag_angle`; verify `from SpectralSVR import from_mag_angle` resolves
-- [ ] 6.8 Verify the inverse is idempotent on a real input in the same way `to_mag_angle` is, so the pair behaves consistently on the no-op path
-- [ ] 6.9 Extend `tests/utils/test_utils.py` to cover multi-axis conversion, device preservation and the inverse round-trip
+- [x] 6.1 Rewrite `to_mag_angle` (`utils/__init__.py:51`) to build its result the way `to_real_coeff` does — from a stacked magnitude/phase pair flattened over the trailing axes — rather than from a hardcoded `(shape[0], shape[1] * 2)` allocation with `[:, ::2]` writes; verify a `(2, 8, 8)` coefficient tensor converts instead of raising `expand(... size=[2, 8])`
+- [x] 6.2 Verify the single-mode-axis result is bit-identical to the previous implementation, so `test_to_mag_angle_reconstructs` and `test_to_mag_angle_idempotent_on_real` pass untouched
+- [x] 6.3 Verify the interleaving convention is unchanged: magnitude at even trailing positions, phase at odd, matching what the existing test reads with `[:, ::2]` and `[:, 1::2]`
+- [x] 6.4 Ensure the result is allocated on the input's device; verify a CUDA input returns a CUDA tensor, and skip cleanly when no accelerator is present rather than failing the suite
+- [x] 6.5 Verify the real precision corresponds to the input's complex precision at both single and double, so a complex128 input yields float64
+- [x] 6.6 Add `from_mag_angle` implementing `mag * exp(1j * angle)` for any number of mode axes, mirroring `to_complex_coeff`'s role for the interleaved-real pair; verify it round-trips `to_mag_angle` to rounding on 2-D and 3-D inputs
+- [x] 6.7 Export it from the package root next to `to_mag_angle`; verify `from SpectralSVR import from_mag_angle` resolves
+- [x] 6.8 Verify the inverse is idempotent on a real input in the same way `to_mag_angle` is, so the pair behaves consistently on the no-op path
+- [x] 6.9 Extend `tests/utils/test_utils.py` to cover multi-axis conversion, device preservation and the inverse round-trip
 
 ## 7. Verification
 
