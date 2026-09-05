@@ -176,12 +176,13 @@ unchanged at 16), so `align-spectral-residual-with-solver`'s anchors stay green.
 Regenerating the table is *not* a task here — `benchmark-reproducibility` owns
 the regeneration. Duplicating it would couple the two changes for no gain.
 
-*State at the time this change was implemented:* `benchmark-reproducibility`
-does **not** yet sit above this change. The stack was rebased onto the corrected
-base through `operator-harness-spec` and `time-dependent-forcing-in-numerical-burgers`,
-but `benchmark-reproducibility` was left at its original commit and still sits on
-the pre-rebase forcing commits. It must be rebased before it regenerates the
-table, or the numbers it records will describe a base that excludes this change.
+The stack was rebased onto the corrected base so that ordering holds:
+`dtype-seam`, this change, `operator-harness-spec`,
+`time-dependent-forcing-in-numerical-burgers` and `benchmark-reproducibility`
+now form a single chain, and the table is regenerated above everything that
+moves the row. Two rows move beneath it — this change's resize repair, and the
+band type's narrowing of `mms_solution`'s band-limit — so the regeneration has
+to sit above both.
 
 **`zero_coeff`'s behaviour is deliberately unchanged.** Repairing it means
 picking a rounding convention that a cutoff-based band type would delete, and
