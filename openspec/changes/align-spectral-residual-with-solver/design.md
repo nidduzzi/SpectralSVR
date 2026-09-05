@@ -32,7 +32,7 @@ Two differences, and both matter only when the field reaches the top of the grid
 **Non-Goals:**
 
 - Any change to `enforce_hermitian`, `generate_coeff` or `resize_modes`. All three are correct; the earlier suspicion against them was a measurement artifact and is recorded here so it is not re-raised.
-- Changing what `mms_solution` band-limits to. Once both sides de-alias, the existing band-limit is consistent; narrowing it is a separate question about dataset difficulty, not correctness.
+- Tuning the band-limit for dataset difficulty. Narrowing it to `m//3` is in scope because it is required for correctness (below); choosing a *different* value to make the learning problem harder or easier is not.
 - The MMS round-trip through `Burgers.generate`. That needs a Basis forcing, which belongs to `time-dependent-forcing-in-numerical-burgers`.
 
 ## Decisions
@@ -53,6 +53,14 @@ Unifying it would work, but it is unused outside its own smoke test, its de-alia
 
 `residual` at `burgers.py:328` computes the same equation by finite differences on sampled values, and five tests use it as a cross-check on the spectral path. It is arguably the only genuinely independent oracle among the implementations here, because it shares no code with the thing it checks. Collapsing it into the shared helper would destroy that independence and leave the spectral path verifying itself — the failure this whole change exists to correct.
 
+### The band-limit narrows to `m//3`, and that is a correctness requirement
+
+*Discovered during implementation; this reverses a Non-Goal in the original design.* Aligning the two sides is necessary but not sufficient. The mask discards real content above `m/3`, so once the residual de-aliases, a pair whose product overruns the band solves the de-aliased equation but not the continuous one. Measured at `m = 16` after the alignment: `m//2` leaves `1.50e-1`, `m//2 - 1` leaves `7.56e-2`, and `m//3` reaches `3.64e-7`.
+
+The threshold is exact, not a margin: the product reaches `2*kmax`, `kmax` is about `half/2`, and the band keeps `m/3`, so `half <= m/3`. `m//2 - 1` is nowhere near it despite looking like a small step down.
+
+This also settles what parity was doing. Before the `.real` fix, odd slot counts read clean and even ones did not, which looked like the Nyquist bin being at fault. With `.real` in place, parity stops predicting anything — even counts that fit are clean, odd counts that overrun are not. The `.real` fix removed the Nyquist-derivative pollution; the band-limit removes the aliasing. Two defects, two fixes, and the earlier parity signal was the first defect showing through while the second was still present.
+
 ### The de-aliasing mask comes from the basis, at the field's own mode count
 
 `_solve_spectral` obtains it as `basis.dealias_mask(ns)`. `spectral_residual` works at the field's own resolution, so it asks for the mask at that resolution. A basis returning `None` (no de-aliasing defined) keeps today's behaviour on both sides, so no basis is newly excluded.
@@ -69,6 +77,26 @@ Tolerances are fixed from the float32 coefficient dtype rather than tuned: clean
 ### The regeneration is part of this change, not a follow-up
 
 `f` changes for the manufactured dataset, so the Burgers MMS row of the benchmark moves. Regenerating it here keeps the table and the code in one commit rather than leaving a window where the recorded numbers describe superseded behaviour. The other three rows must be shown unchanged, which doubles as evidence that `generate_coeff` really was untouched.
+
+## Measured outcome
+
+Continuous residual of the manufactured pair, before and after, with the analytic doubly-periodic pair as a positive control at `3.41e-8`:
+
+| mode count | before | after |
+| --- | --- | --- |
+| 8 | 2.53e-2 | 2.15e-7 |
+| 16 | 2.62e-2 | 2.10e-7 |
+| 32 | 2.72e-3 | 2.62e-7 |
+
+Benchmark rows, same command at the parent commit and after:
+
+| dataset | change |
+| --- | --- |
+| Burgers MMS (`f -> u`) | r2 `0.533047` -> `0.464886`, a 12.8% relative move in the metrics |
+| numerical Burgers, DeepONet GRF | bit-identical |
+| antiderivative | unchanged by this change (see below) |
+
+The antiderivative row showed a `9.06e-7` difference between the two runs, which is *not* attributable to this change: running the same pre-change code in two different worktrees differs by `4.41e-6`, while running the new code against the old in comparable environments differs by exactly `0`. The pipeline is deterministic within one environment and not across them, at the `1e-6` level that float32 permits. That is a reproducibility property of the benchmark rather than a defect here, and it is the kind of thing `benchmark-reproducibility` exists to record.
 
 ## Risks / Trade-offs
 
@@ -91,4 +119,4 @@ Rollback is a revert; no persisted state, no API change.
 
 ## Open Questions
 
-- Whether `Antiderivative.spectral_residual` has the same convention mismatch. Its nonlinear term is absent, so the `.real` and de-aliasing questions may not arise — worth a look during implementation, but it does not change this change's specs or tasks.
+*Closed during implementation.* `Antiderivative.spectral_residual` is `u.grad() - ut` with the DC mode zeroed — purely linear, no product, so neither the real-part nor the de-aliasing question arises. Nothing to align there.

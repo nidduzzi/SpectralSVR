@@ -33,6 +33,15 @@ Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its 
 
 - `spectral_residual` forms the nonlinear term the way the solver does: take the real part of the sampled values before multiplying, and apply the same de-aliasing mask.
 - `Burgers.rhs` is deleted. It is a fourth implementation of the same term and is wrong by exactly `2/3`: it de-aliases by 3/2 padding through `resize_modes(..., rescale=False)`, which scales the function by `1/1.5` on the way up, `1/2.25` once squared, and `x1.5` on the way back — a net `0.6667`, matching the measured ratio. Its only caller is its own smoke test, which asserts shape and absence of NaN and so cannot see a factor of 1.5. Its stated purpose, "kept for future numerical solvers", is served by `_solve_spectral` with a supplied solver since `unify-solver-protocol`. Deleting it also removes the second de-aliasing strategy from the file, leaving one.
+- `mms_solution` band-limits to `m//3` slots instead of `m//2`. Once both sides de-alias, a pair whose product overruns the 2/3 band cannot satisfy the continuous equation at all, because the mask discards real content. The threshold is exact: the product reaches `2*kmax` with `kmax ~ half/2`, and the band keeps `m/3`, so `half <= m/3` is the boundary rather than a margin. Measured at `m = 16`, where the band keeps `|k| <= 5`:
+
+| slots | product reaches | fits band | continuous residual |
+| --- | --- | --- | --- |
+| 8 (`m//2`, current) | 8 | no | 1.50e-1 |
+| 7 (`m//2 - 1`) | 6 | no | 7.56e-2 |
+| 5 (`m//3`) | 4 | **yes** | **3.64e-7** |
+| 4 | 4 | yes | 2.32e-7 |
+
 - A new anchor checks a manufactured pair against the **true continuous residual**, evaluated off the sample grid. The existing check evaluates only on-grid, where a wrong pair still reads `0.000`, so it cannot fail for this class of defect.
 - The capability states that a manufactured pair must satisfy the continuous equation, not merely its own discrete residual.
 - The Burgers MMS `f -> u` benchmark row is regenerated.
@@ -52,5 +61,5 @@ Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its 
 - `SpectralSVR/problems/burgers.py`: `spectral_residual`, and the removal of `Burgers.rhs`.
 - `tests/problems/test_problems.py`: removal of `test_burgers_rhs_smoke` along with the function it covers.
 - `tests/problems/test_problems.py`: the continuous-residual anchor plus the odd-mode-count control.
-- `results/bench_results.csv`: the Burgers MMS row changes. `generate_coeff` is untouched, so the antiderivative, numerical-Burgers and DeepONet-GRF rows are unaffected and seeded numerical Burgers output stays byte-identical.
+- `results/bench_results.csv`: the Burgers MMS row changes. Both `u` and `f` move, not only `f`, because the band-limit narrows the manufactured solutions — so the `f -> u` problem becomes genuinely easier, a change in the dataset's difficulty and not merely its numbers. That must be stated where the row is reported. `generate_coeff` is untouched, so the antiderivative, numerical-Burgers and DeepONet-GRF rows are unaffected and seeded numerical Burgers output stays byte-identical.
 - Unblocks the round-trip anchor in `time-dependent-forcing-in-numerical-burgers`, which must not be claimed here — it additionally needs `Burgers.generate` to accept a Basis forcing, which is that change's own work.
