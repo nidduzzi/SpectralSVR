@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines how the library represents a grid of complex spectral coefficients: the conversions between those coefficients and real-valued representations of them, and the resizing of a grid to a different mode count. States what each guarantees — the shapes it accepts, the device and precision it preserves, whether it can be inverted, and whether the array it produces still describes a real function.
+Defines how the library represents a grid of complex spectral coefficients: the conversions between those coefficients and real-valued representations of them, the resizing of a grid to a different mode count, and the band-limiting of a grid in place. States what each guarantees — the shapes it accepts, the device and precision it preserves, whether it can be inverted, and whether the array it produces still describes a real function.
 
 ## ADDED Requirements
 
@@ -69,3 +69,14 @@ Resizing a coefficient grid to a smaller mode count SHALL combine, rather than d
 #### Scenario: Enlarging then reducing returns the original
 - **WHEN** a coefficient grid is resized to a larger mode count and then back to its original mode count
 - **THEN** the result equals the original grid to rounding, for both even and odd mode counts
+
+### Requirement: An operation that cannot return a real field says so
+Where an argument makes it impossible for an operation to return a coefficient grid describing a real field, the operation's documentation SHALL state that, and SHALL state why no choice of result satisfies the request. Silently returning a grid that does not describe a real field is not acceptable, whether or not the operation's behaviour is changed.
+
+#### Scenario: The limitation is stated where the caller meets it
+- **WHEN** a caller reads the documentation for band-limiting a coefficient grid in place
+- **THEN** it states that an even count of kept modes yields a field that is not real, because a kept set describing a real field is some pairs around a lone zero mode and is therefore always odd
+
+#### Scenario: Documenting is not a substitute for a fix that exists
+- **WHEN** an operation with the same limitation can be given a result that does describe a real field without changing what the caller asked for
+- **THEN** it is repaired rather than documented, and the documentation records the rule it now follows

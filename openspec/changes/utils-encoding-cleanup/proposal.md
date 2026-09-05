@@ -86,6 +86,23 @@ shipped `mms_solution` `u.coeff`, whose band-limit is `m // 3`:
 The `16` column is the isolation control: its band-limit is the only odd one, it
 has no lone coefficient, and it is clean to the bit.
 
+### `zero_coeff` carries the same defect, and cannot be repaired the same way
+
+Band-limiting in place keeps the array's length, so the kept `-m/2` bin's
+partner at `+m/2` is the one being zeroed. Hermitian error of the filtered
+field: `1.124` at keep 4, `0.557` at 6, `0.633` at 8, and exactly `0` for every
+odd count.
+
+Folding does not help here, unlike in `resize_modes` — measured `1.111`, `0.987`
+and `0.201`, no better than leaving it alone. The reason is structural: a kept
+set that describes a real field is some `±k` pairs plus the lone mode `0`, so its
+size is always odd, and **an even keep-count has no valid answer at all**. Every
+repair is a choice of which invalid request to substitute for the one asked.
+
+That choice disappears once a band is expressed as a cutoff rather than a count,
+which is a separate stacked change. This change documents the limitation where a
+caller will meet it and leaves the behaviour alone. See design.md — Decisions.
+
 ### The `rescale` flag is undocumented
 
 `Basis.resize_modes` (`basis/__base.py:847`) documents `target_modes` and omits
@@ -114,6 +131,8 @@ is missing, and that absence produced a false-positive bug report during the
 - `resize_modes`'s `rescale` parameter is documented on both the `Basis` method
   and the underlying function, stating which of the function and the
   coefficients each setting preserves.
+- `zero_coeff`'s docstring states that an even keep-count returns a field that
+  is not real, and why no count-based repair exists. Its behaviour is unchanged.
 
 The two `resize_modes` fixes are inverses of one another and must land together.
 Splitting alone breaks the pad-then-truncate round-trip; folding alone leaves
@@ -134,7 +153,8 @@ to `8.88e-16`.
 ## Impact
 
 - `SpectralSVR/utils/__init__.py`: `to_mag_angle` and its new inverse; both
-  branches of `resize_modes`; the `rescale` documentation.
+  branches of `resize_modes`; the `rescale` documentation; `zero_coeff`'s
+  docstring only.
 - `SpectralSVR/basis/__base.py`: the `rescale` documentation.
 - `SpectralSVR/__init__.py`: export the inverse alongside the existing encoding.
 - `tests/utils/test_utils.py`: extend the existing polar tests to more axes and
@@ -156,6 +176,14 @@ unchanged at 16), so `align-spectral-residual-with-solver`'s anchors stay green.
 Regenerating the table is *not* a task here — `benchmark-reproducibility` owns
 the regeneration and sits above this change in the branch stack once the pending
 rebases land. Duplicating it would couple the two changes for no gain.
+
+**`zero_coeff`'s behaviour is deliberately unchanged.** Repairing it means
+picking a rounding convention that a cutoff-based band type would delete, and
+that would change existing notebook results silently in the meantime. The
+constructive fix — making an invalid band unrepresentable rather than repairing
+its consequences — lands in a change stacked on this one, together with
+`mms_solution`'s band derivation in `burgers.py`. Neither belongs in a utils
+repair.
 
 `align-spectral-residual-with-solver` made `resize_modes` a non-goal on the
 grounds that "the representation is right; do not touch `enforce_hermitian`".

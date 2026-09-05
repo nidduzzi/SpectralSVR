@@ -5,9 +5,9 @@ section after it. Section 6 touches a different function and depends on nothing
 here, so it may run at any point. Section 7 closes.
 
 ```
-1 rescale docs ─┐
-                ├─ 2 truncate fold ── 3 padding split ── 4 invariant anchor ── 5 evidence ── 7 verify
-6 to_mag_angle ─┘   (independent of 1 and 6; 3 depends on 2)
+1 documentation ─┐
+                 ├─ 2 truncate fold ── 3 padding split ── 4 invariant anchor ── 5 evidence ── 7 verify
+6 to_mag_angle ──┘   (independent of 1 and 6; 3 depends on 2)
 ```
 
 **Section 2 must precede section 3.** They are inverses, and only that order
@@ -17,10 +17,12 @@ first without the fold halves the coefficient on the way back down, so the
 round-trip breaks until section 2 lands. Each section carries its own anchor
 rewrite so `just check` passes at the end of every one.
 
-## 1. Document the resize flag
+## 1. Documentation
 
 - [ ] 1.1 Document `rescale` on `Basis.resize_modes` (`basis/__base.py:847`) and on the underlying `resize_modes` (`utils/__init__.py:321`): `True` preserves the represented function by compensating the transform normalisation, `False` preserves the coefficient values and therefore scales the function by the mode-count ratio raised to the dimension count; verify both docstrings state which quantity each setting preserves
 - [ ] 1.2 Verify the documented factor matches measurement: a two-dimensional doubling with `rescale=False` scales the function by `0.2500` and a quadrupling by `0.0625`
+- [ ] 1.3 Document on `zero_coeff` (`utils/__init__.py:385`) that an even keep-count returns a field that is not real, and why: a kept set describing a real field is some `±k` pairs plus the lone mode `0`, so its size is always odd, and no substitute result answers the request that was made. Verify the behaviour is unchanged — no anchor moves and `test_zero_coeff_values` passes untouched
+- [ ] 1.4 Verify the docstring does not promise a future fix by name; it states the limitation, not a roadmap
 
 ## 2. Truncation folds the boundary mode
 
