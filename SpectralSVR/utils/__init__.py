@@ -392,6 +392,16 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 ),
                 dim,
             )
+            if current_mode % 2 == 0:
+                negative = torch.tensor(
+                    [target_mode - current_mode // 2], dtype=torch.long
+                ).to(device)
+                positive = torch.tensor([current_mode // 2], dtype=torch.long).to(
+                    device
+                )
+                unpaired = x_resized.index_select(dim, negative) / 2
+                x_resized = x_resized.index_copy(dim, negative, unpaired)
+                x_resized = x_resized.index_copy(dim, positive, unpaired)
 
     if rescale:
         modes = list(x.shape[1:])

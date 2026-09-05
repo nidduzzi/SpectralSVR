@@ -48,9 +48,10 @@ def test_resize_modes_pad_values():
     c0, c1, c2, c3 = 1.0 + 1j, 2.0 - 1j, -3.0 + 0j, 0.5 + 2j
     x = torch.tensor([[c0, c1, c2, c3]])
     # target 6 modes: low block freqs {0, 1} = bins {0, 1}; high (negative)
-    # block freqs {-2, -1} = old bins {2, 3} land at new bins {4, 5}; the two
-    # new bins {2, 3} (freqs +2/3, -3) are zero-padding.
-    expected = torch.tensor([[c0, c1, 0, 0, c2, c3]])
+    # block freqs {-2, -1} = old bins {2, 3} land at new bins {4, 5}; new bin 3
+    # (freq -3) is zero-padding. c2 sat at freq -2, which the 4-mode grid held
+    # without a +2 partner; the 6-mode grid has one, so c2 halves across both.
+    expected = torch.tensor([[c0, c1, c2 / 2, 0, c2 / 2, c3]])
     got = resize_modes(x, 6, rescale=False)
     assert torch.equal(got, expected)
     got_rescaled = resize_modes(x, 6, rescale=True)

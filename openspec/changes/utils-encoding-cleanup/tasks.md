@@ -32,10 +32,10 @@ rewrite so `just check` passes at the end of every one.
 
 ## 3. Padding splits the lone top coefficient
 
-- [ ] 3.1 In `resize_modes`'s upward branch (`utils/__init__.py:349-374`), when the source mode count is even, halve the source's lone `-N/2` coefficient and write that half to both the target's `-N/2` and `+N/2` slots; verify an odd source count is left alone, having no lone coefficient
-- [ ] 3.2 Verify splitting rather than duplicating or zeroing: duplicating doubles the amplitude and breaks agreement at the original sample points by `5.357e-01`, zeroing breaks it by the same amount, and only halving leaves both the symmetry and the sampled values correct
-- [ ] 3.3 Rewrite `test_resize_modes_pad_values` (`tests/basis/test_coeff_anchors.py:46`) by hand from the new rule. For the same `x` resized to 6 modes, `c2 = -3+0j` at frequency `±2` is the lone coefficient and splits, so the expected array is `[c0, c1, -1.5, 0, -1.5, c3]` rather than `[c0, c1, 0, 0, c2, c3]`
-- [ ] 3.4 Run `just check`; verify clean
+- [x] 3.1 In `resize_modes`'s upward branch (`utils/__init__.py:349-374`), when the source mode count is even, halve the source's lone `-N/2` coefficient and write that half to both the target's `-N/2` and `+N/2` slots; verify an odd source count is left alone, having no lone coefficient
+- [x] 3.2 Verify splitting rather than duplicating or zeroing: duplicating doubles the amplitude and breaks agreement at the original sample points by `5.357e-01`, zeroing breaks it by the same amount, and only halving leaves both the symmetry and the sampled values correct
+- [x] 3.3 Rewrite `test_resize_modes_pad_values` (`tests/basis/test_coeff_anchors.py:46`) by hand from the new rule. For the same `x` resized to 6 modes, `c2 = -3+0j` at frequency `±2` is the lone coefficient and splits, so the expected array is `[c0, c1, -1.5, 0, -1.5, c3]` rather than `[c0, c1, 0, 0, c2, c3]`
+- [x] 3.4 Run `just check`; verify clean
 
 ## 4. Anchor the invariants the two fixes establish
 
