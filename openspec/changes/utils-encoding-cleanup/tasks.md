@@ -19,10 +19,10 @@ rewrite so `just check` passes at the end of every one.
 
 ## 1. Documentation
 
-- [ ] 1.1 Document `rescale` on `Basis.resize_modes` (`basis/__base.py:847`) and on the underlying `resize_modes` (`utils/__init__.py:321`): `True` preserves the represented function by compensating the transform normalisation, `False` preserves the coefficient values and therefore scales the function by the mode-count ratio raised to the dimension count; verify both docstrings state which quantity each setting preserves
-- [ ] 1.2 Verify the documented factor matches measurement: a two-dimensional doubling with `rescale=False` scales the function by `0.2500` and a quadrupling by `0.0625`
-- [ ] 1.3 Document on `zero_coeff` (`utils/__init__.py:385`) that an even keep-count returns a field that is not real, and why: a kept set describing a real field is some `±k` pairs plus the lone mode `0`, so its size is always odd, and no substitute result answers the request that was made. Verify the behaviour is unchanged — no anchor moves and `test_zero_coeff_values` passes untouched
-- [ ] 1.4 Verify the docstring does not promise a future fix by name; it states the limitation, not a roadmap
+- [x] 1.1 Document `rescale` on `Basis.resize_modes` (`basis/__base.py:847`) and on the underlying `resize_modes` (`utils/__init__.py:321`): `True` preserves the represented function by compensating the transform normalisation, `False` preserves the coefficient values and therefore scales the function by the mode-count ratio raised to the dimension count; verify both docstrings state which quantity each setting preserves
+- [x] 1.2 Verify the documented factor matches measurement: a two-dimensional doubling with `rescale=False` scales the function by `0.2500` and a quadrupling by `0.0625`
+- [x] 1.3 Document on `zero_coeff` (`utils/__init__.py:385`) that an even keep-count returns a field that is not real, and why: a kept set describing a real field is some `±k` pairs plus the lone mode `0`, so its size is always odd, and no substitute result answers the request that was made. Verify the behaviour is unchanged — no anchor moves and `test_zero_coeff_values` passes untouched
+- [x] 1.4 Verify the docstring does not promise a future fix by name; it states the limitation, not a roadmap
 
 ## 2. Truncation folds the boundary mode
 

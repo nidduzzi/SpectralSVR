@@ -319,6 +319,16 @@ def get_metrics(
 
 
 def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=True):
+    """Resize a coefficient grid to a different mode count per axis.
+
+    ``rescale`` selects which of two quantities survives, since a change of
+    mode count cannot preserve both. ``True`` preserves the represented
+    function, multiplying by ``prod(target_modes) / prod(current_modes)`` to
+    compensate the transform normalisation. ``False`` preserves the stored
+    coefficient values, which scales the function by the mode-count ratio
+    raised to the number of axes -- ``0.2500`` for a doubling in two
+    dimensions, ``0.0625`` for a quadrupling.
+    """
     current_modes = tuple(x.shape[1:])
     ncurrent_modes = len(current_modes)
     if isinstance(target_modes, int):
@@ -383,6 +393,15 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
 
 
 def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
+    """Band-limit a coefficient grid in place, keeping the lowest modes.
+
+    An even count returns a grid that does not describe a real field. Modes
+    pair as ``+-k`` around the lone mode ``0``, so a kept set whose inverse
+    transform is real is always odd-sized: keeping an even count necessarily
+    keeps one member of a pair without the other. No substitute result answers
+    the request that was made -- rounding either direction keeps a different
+    number of modes than asked for.
+    """
     if isinstance(zeroed_modes, int):
         zeroed_modes = [zeroed_modes] * len(x.shape[1:])
     assert len(x.shape[1:]) == len(zeroed_modes), (

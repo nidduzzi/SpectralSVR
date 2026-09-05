@@ -857,6 +857,12 @@ class Basis(abc.ABC):
         Arguments:
             target_modes {int | tuple[int, ...] | Basis} -- the target mode or basis mode to resize this basis to
 
+        Keyword Arguments:
+            rescale {bool} -- which quantity to preserve, since both cannot be.
+                ``True`` preserves the represented function by compensating the
+                transform normalisation; ``False`` preserves the coefficient
+                values and so scales the function by the mode-count ratio
+                raised to the number of axes (default: {True})
 
         Returns:
             Basis -- A copy of this basis with resized coefficients
