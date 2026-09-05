@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the conversions the library offers between complex spectral coefficients and real-valued representations of them, and what each guarantees: the shapes it accepts, the device and precision it preserves, and whether it can be inverted.
+Defines how the library represents a grid of complex spectral coefficients: the conversions between those coefficients and real-valued representations of them, and the resizing of a grid to a different mode count. States what each guarantees — the shapes it accepts, the device and precision it preserves, whether it can be inverted, and whether the array it produces still describes a real function.
 
 ## ADDED Requirements
 
@@ -43,3 +43,29 @@ Documentation for resizing a coefficient grid SHALL state, for each setting of i
 #### Scenario: The flag's meaning is documented
 - **WHEN** a caller reads the documentation for resizing a basis to a different mode count
 - **THEN** it states that one setting preserves the function it represents and the other preserves the coefficient values, and why they differ
+
+### Requirement: Resizing preserves the symmetry that makes a field real
+Resizing a coefficient grid to a larger mode count SHALL produce an array that is conjugate-symmetric whenever its input was. A coefficient that was exempt from the symmetry rule only because it was the highest mode the source grid could hold SHALL NOT be carried unchanged onto a grid where it is no longer the highest, since it is no longer exempt there.
+
+#### Scenario: An even-count field stays real after padding
+- **WHEN** a conjugate-symmetric coefficient grid with an even mode count is resized to a larger mode count
+- **THEN** the result is conjugate-symmetric, and the values it represents have no imaginary part beyond rounding
+
+#### Scenario: An odd-count field is unaffected
+- **WHEN** a conjugate-symmetric coefficient grid with an odd mode count is resized to a larger mode count
+- **THEN** the result is conjugate-symmetric, as it already was, and no coefficient is redistributed — an odd count has no exempt coefficient to redistribute
+
+#### Scenario: The represented function is unchanged
+- **WHEN** a coefficient grid is resized to a larger mode count
+- **THEN** the function it represents agrees with the original at the original sample points, so restoring the symmetry does not alter the field
+
+### Requirement: Resizing conserves content at the boundary mode
+Resizing a coefficient grid to a smaller mode count SHALL combine, rather than discard, the source content at the two mode numbers that the target grid cannot distinguish. On the target grid those two mode numbers describe the same sampled wave, so keeping one and dropping the other loses content that the target can represent.
+
+#### Scenario: Truncating to an even count keeps both halves
+- **WHEN** a coefficient grid is resized down to an even mode count
+- **THEN** the target's single boundary coefficient carries the combined source content at both of the mode numbers that map onto it
+
+#### Scenario: Enlarging then reducing returns the original
+- **WHEN** a coefficient grid is resized to a larger mode count and then back to its original mode count
+- **THEN** the result equals the original grid to rounding, for both even and odd mode counts
