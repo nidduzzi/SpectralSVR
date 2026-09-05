@@ -39,10 +39,10 @@ rewrite so `just check` passes at the end of every one.
 
 ## 4. Anchor the invariants the two fixes establish
 
-- [ ] 4.1 Add an anchor asserting a conjugate-symmetric input stays conjugate-symmetric after padding, over source counts `{4, 5, 8, 9, 12}` and targets `{2N, 4N}`; verify it reads `0.00e+00` and that it fails against the pre-fix padding
-- [ ] 4.2 Add an anchor asserting pad-then-truncate returns the original grid to rounding, over the same counts; verify it fails when either fix is reverted alone, which is what makes the two inseparable
-- [ ] 4.3 Include the odd source counts as the isolation control: they have no lone coefficient, so they must read clean both before and after the fix, showing the anchor is measuring the defect and not merely always-green
-- [ ] 4.4 Assert the represented function is unchanged at the original sample points, to `8.88e-16`, so the repair is shown to alter the representation and not the field
+- [x] 4.1 Add an anchor asserting a conjugate-symmetric input stays conjugate-symmetric after padding, over source counts `{4, 5, 8, 9, 12}` and targets `{2N, 4N}`; verify it reads `0.00e+00` and that it fails against the pre-fix padding
+- [x] 4.2 Add an anchor asserting pad-then-truncate returns the original grid to rounding, over the same counts; verify by ablation which anchor catches which half. *Measured, correcting this task as first written:* the round-trip anchor does not fail under either single revert. Removing the fold breaks it; removing the split does not, because naive padding writes `a` at `-N/2` and the fold reads back `a + 0`. It is the **pair** of anchors that is inseparable — the symmetry anchor catches a missing split, the round-trip anchor catches a missing fold, and neither catches the other's half
+- [x] 4.3 Include the odd source counts as the isolation control: they have no lone coefficient, so they must read clean both before and after the fix, showing the anchor is measuring the defect and not merely always-green
+- [x] 4.4 Assert the represented function is unchanged at the original sample points, to `8.88e-16`, so the repair is shown to alter the representation and not the field
 
 ## 5. Record the effect on the manufactured solution
 
