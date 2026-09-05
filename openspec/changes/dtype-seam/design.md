@@ -65,9 +65,15 @@ At `model/SpectralSVR.py:273` the interleaved real values are handed to the regr
 
 `to_complex_coeff` gains `.contiguous()` before the view, and an optional target dtype. Both are additive: existing callers pass contiguous input and rely on inference, and keep working unchanged. The `.contiguous()` is one copy on a path that already allocates.
 
+Both edits land on a function whose guarantees are stated but untested. `coefficient-encodings` binds *every* conversion to accept any number of mode axes and to preserve device and precision, and only the polar pair carries tests for it; the interleaved-real pair satisfies the requirement today with nothing defending it. The anchor therefore comes before the edit in the task order, so a regression introduced by the hardening is caught by a test that was already passing rather than by one written afterwards to match.
+
+*Alternative rejected:* leave the bridge undefended and rely on the round-trip test in group 5. That test asserts value equality at both precisions and would not notice a lost device or a wrongly inferred target precision, which are exactly what the two edits could break.
+
 ### Verification is byte-identity plus a precision round-trip
 
 The change's own proof is that nothing moved: the seeded numerical Burgers field and all four benchmark rows must be unchanged, since the default is untouched. The new capability is proved separately by constructing a double-precision basis and showing the precision survives to the regressor.
+
+A third anchor covers the bridge itself, built from a list of `(forward, inverse)` pairs rather than one test per function. The requirement it enforces is quantified over *every* conversion, so the test is quantified the same way: a conversion added to the package later is either covered by the registry or fails the anchor for being absent from it. Writing four near-identical tests would satisfy the requirement today and silently stop satisfying it the moment a fifth conversion appears.
 
 ## Risks / Trade-offs
 

@@ -10,7 +10,7 @@ Three partial seams already exist and do not meet:
 - `MultiRegression.dtype` (`model/__base.py:43`) defaults to `torch.float32` and threads to four `.to(device, dtype)` sites; `LSSVR` repeats the default at `:140`.
 - `to_real_coeff` / `to_complex_coeff` bridge complex coefficients to interleaved real pairs at ten model boundaries.
 
-The third is already sound and needs no change: it is bit-exact and dtype-transparent in both directions at 2-D and 3-D, and `StandardScaler` carries complex128 end to end with inverse error `4.4e-16`. The first two are the gap, and they are not independent — a complex128 basis feeding a default regressor **silently truncates to float32** at `model/SpectralSVR.py:273`, which passes only the device and lets the regressor's own cast do the rest.
+The third is sound in substance -- it is bit-exact and dtype-transparent in both directions at 2-D and 3-D, and `StandardScaler` carries complex128 end to end with inverse error `4.4e-16` -- but it is undefended and this change modifies it. `coefficient-encodings` requires *every* conversion to accept any number of mode axes and to preserve device and precision, and only the polar pair is enforced by tests; `to_real_coeff` and `to_complex_coeff` satisfy the requirement today and nothing would catch a regression. This change adds `.contiguous()` and a target-precision argument to `to_complex_coeff`, so the guarantee has to be anchored before it moves. The first two are the gap, and they are not independent — a complex128 basis feeding a default regressor **silently truncates to float32** at `model/SpectralSVR.py:273`, which passes only the device and lets the regressor's own cast do the rest.
 
 Torch support was probed and is complete for everything the library uses, including the one genuine third-party risk:
 
@@ -38,6 +38,7 @@ GeForce runs FP64 at a thirty-second of the FP32 rate, so the matmul-bound kerne
 - Coefficient precision becomes a field on `SpectralConfig`, resolved per instance, with `complex64` as the default so nothing moves unless asked.
 - The basis-side and model-side precisions become one decision rather than two, closing the silent downcast at the model boundary.
 - Five hardcoded bypasses fold into the seam: the class constant (`FourierBasis.py:29`), `generate_empty` (`:342`), `generate_coeff` (`:360`), the ETDRK4 fallback (`utils/__init__.py:611`), and the benchmark's GRF sampler (`scripts/run_benchmark.py:104`). The real-side defaults at `model/__base.py:43`, `model/FNN.py:35` and `model/LSSVR.py:140`, plus `wave_number`'s `torch.float`, are threaded from the same decision.
+- The encoding guarantees `coefficient-encodings` states are anchored for every conversion the package exports, not only the polar pair, so the bridge this change edits is defended before it is edited.
 - `to_complex_coeff` gains a `.contiguous()` — a transposed view currently raises `Tensor must have a last dimension with stride 1` — and an optional target dtype, since it otherwise infers from its input and a float32 detour silently lands back at complex64.
 - **The default is unchanged**, so every seeded field, every benchmark row and every byte-identity guarantee holds.
 
@@ -55,6 +56,7 @@ GeForce runs FP64 at a thirty-second of the FP32 rate, so the matmul-bound kerne
 - `SpectralSVR/basis/FourierBasis.py`: the class constant and two generator literals.
 - `SpectralSVR/model/__base.py`, `FNN.py`, `LSSVR.py`, `SpectralSVR.py`: the real-side default and the boundary cast.
 - `SpectralSVR/utils/__init__.py`: `to_complex_coeff` hardening; the ETDRK4 fallback.
+- `tests/utils/test_utils.py`: the conversion-registry anchor covering every exported conversion.
 - `scripts/run_benchmark.py`: the GRF sampler default.
 - No dependency change. No default behaviour change, so no benchmark row moves and seeded output stays byte-identical.
 - `operators/deeponet.py` stays pinned to float32 — that is deepxde's constraint and affects only the baseline.

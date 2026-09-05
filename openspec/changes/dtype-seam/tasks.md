@@ -26,6 +26,8 @@
 - [ ] 5.1 Add `test_double_precision_survives_the_model_boundary` (`oracle_consistency`, `no_fuzz`): construct a double-precision basis, convert coefficients through the bridge, and assert the values reaching the regressor are float64 and exactly equal to the source; verify it fails on the pre-change code, where the boundary truncates
 - [ ] 5.2 Add a round-trip test at both precisions over two- and three-axis coefficient grids asserting `torch.equal`; verify it passes
 - [ ] 5.3 Document the throughput and memory cost at the point the precision is chosen, per the capability requirement; verify the text names the measured penalty and the kind of work that justifies it
+- [ ] 5.4 Add a conversion-registry anchor in `tests/utils/test_utils.py` parametrised over every conversion the package exports — `to_real_coeff`/`to_complex_coeff` and `to_mag_angle`/`from_mag_angle` — asserting for each: multi-axis conversion at two, three and four axes; exact round-trip through its inverse; the real precision corresponding to the complex one at both `complex64` and `complex128`; and the device carried through, skipping cleanly when no accelerator is present. Build it from a list of `(forward, inverse)` pairs rather than one test per function, so a conversion added later is either covered or fails the anchor
+- [ ] 5.5 Verify 5.4 defends the archived `coefficient-encodings` requirements rather than restating them: those say *every* conversion accepts any number of mode axes and preserves device and precision, and before this change only the polar pair had tests. Confirm the anchor fails if `to_complex_coeff` is made to drop the device or infer the wrong precision, so it would catch a regression introduced by task 4.1 or 4.2
 
 ## 6. Verification
 

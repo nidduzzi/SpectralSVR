@@ -27,11 +27,15 @@ Selecting a precision SHALL determine both the complex precision a basis stores 
 - **THEN** the mismatch is reported rather than resolved by discarding precision
 
 ### Requirement: The interleaved-real bridge is precision-transparent and robust
-Conversion between complex coefficients and interleaved real pairs SHALL preserve values exactly in both directions at every supported precision and any number of coefficient axes. It SHALL accept an input whose memory layout is not contiguous, and SHALL allow the target precision to be stated rather than only inferred.
+Conversion between complex coefficients and interleaved real pairs SHALL preserve values exactly in both directions at every supported precision and any number of coefficient axes, and SHALL return its result on the device its input was on. It SHALL accept an input whose memory layout is not contiguous, and SHALL allow the target precision to be stated rather than only inferred.
 
 #### Scenario: Exact round-trip at both precisions
 - **WHEN** coefficients at single or double precision are converted to interleaved real pairs and back
 - **THEN** the result equals the original exactly, for two- and three-axis coefficient grids alike
+
+#### Scenario: The device is carried through
+- **WHEN** coefficients on an accelerator are converted in either direction
+- **THEN** the result is on that same accelerator, so a caller does not have to move it back
 
 #### Scenario: Non-contiguous input is accepted
 - **WHEN** the real input is a view whose last axis is not contiguous in memory
