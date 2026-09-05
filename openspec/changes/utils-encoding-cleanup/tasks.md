@@ -46,9 +46,9 @@ rewrite so `just check` passes at the end of every one.
 
 ## 5. Record the effect on the manufactured solution
 
-- [ ] 5.1 Record the Hermitian error of `mms_solution`'s `u.coeff` before and after, at mode counts 8, 12, 16 and 32 — `7.859e-01`, `2.957e+00`, `0.000e+00`, `7.392e+00` before, and zero after — noting that 16 is clean before the fix because its band-limit `16 // 3 = 5` is the only odd one
-- [ ] 5.2 Verify the continuous Burgers residual moves only in its last digits (`1.876e-07 → 1.750e-07` at 8 modes, `2.329e-07 → 2.176e-07` at 12, unchanged at 16), confirming `align-spectral-residual-with-solver`'s anchors stay green and that the field itself did not move
-- [ ] 5.3 Verify `enforce_hermitian` and `generate_coeff` are untouched, so the earlier conclusion that they are correct is not reopened
+- [x] 5.1 Record the Hermitian error of `mms_solution`'s `u.coeff` before and after, at mode counts 8, 12, 16 and 32 — `7.859e-01`, `2.957e+00`, `0.000e+00`, `7.392e+00` before, and zero after — noting that 16 is clean before the fix because its band-limit `16 // 3 = 5` is the only odd one
+- [x] 5.2 Verify the continuous Burgers residual moves only in its last digits (`1.876e-07 → 1.750e-07` at 8 modes, `2.329e-07 → 2.176e-07` at 12, unchanged at 16), confirming `align-spectral-residual-with-solver`'s anchors stay green and that the field itself did not move
+- [x] 5.3 Verify `enforce_hermitian` and `generate_coeff` are untouched, so the earlier conclusion that they are correct is not reopened
 
 ## 6. Polar encoding (independent of sections 1-5)
 
