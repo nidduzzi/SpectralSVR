@@ -683,6 +683,7 @@ def test_numerical_burgers_agrees_with_an_independent_integrator():
 MANUFACTURED_CONTINUOUS_RESIDUAL = {8: 2.151e-07, 16: 2.099e-07, 32: 2.623e-07}
 MANUFACTURED_RESIDUAL_TOLERANCE = 5e-6
 MANUFACTURED_RESIDUAL_CORRUPTED = 1.0e-2
+ANALYTIC_CONTROL_RESIDUAL = {12: 4.164e-08, 16: 3.887e-08, 32: 3.887e-08}
 
 DOMAIN_2D = ((0.0, 1.0), (0.0, 1.0))
 
@@ -693,6 +694,20 @@ def _offset_grid(nq):
     axis = torch.arange(nq, dtype=torch.float64) * step + 0.5 * step
     t, x = torch.meshgrid(axis, axis, indexing="ij")
     return torch.stack([t.flatten(), x.flatten()], dim=-1), nq
+
+
+def analytic_periodic_pair(n, nu):
+    """Doubly-periodic pair whose forcing comes from analytic derivatives.
+
+    Correct by construction and independent of the generator under test, so a
+    clean reading here shows the measurement is not simply always-red.
+    """
+    x, t = space_grid(n, 1.0), space_grid(n, 1.0)
+    u_val, f_val = burgers_periodic_manufactured(x, t, nu)
+    return (
+        FourierBasis(FourierBasis.transform(u_val + 0j), domain=DOMAIN_2D),
+        FourierBasis(FourierBasis.transform(f_val + 0j), domain=DOMAIN_2D),
+    )
 
 
 def continuous_burgers_residual(u, f, nu, nq=96):
@@ -718,6 +733,13 @@ def continuous_burgers_residual(u, f, nu, nq=96):
 @pytest.mark.oracle_analytic
 def test_manufactured_pair_satisfies_the_continuous_equation():
     nu = 0.05
+    for modes, recorded in ANALYTIC_CONTROL_RESIDUAL.items():
+        u, f = analytic_periodic_pair(modes, nu)
+        measured = continuous_burgers_residual(u, f, nu)
+        assert measured < MANUFACTURED_RESIDUAL_TOLERANCE, (
+            f"positive control modes={modes}: {measured:.3e}, recorded {recorded:.3e}"
+        )
+
     for modes, recorded in MANUFACTURED_CONTINUOUS_RESIDUAL.items():
         u, f = Burgers().mms_solution(
             FourierBasis,
