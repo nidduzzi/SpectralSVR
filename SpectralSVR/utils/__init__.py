@@ -52,13 +52,18 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     """
     to_mag_angle
 
-    convert a tensor containing rows of complex coefficient vectors into rows of real coefficient vectors
+    convert complex coefficients into interleaved magnitude/phase pairs
+
+    The trailing axis doubles; leading axes are untouched, so a grid with any
+    number of mode axes is accepted. Device and real precision follow the input.
+    A real input is returned unchanged.
 
     Arguments:
-        coeff {torch.Tensor} -- m by p complex tensor where p is the number modes
+        coeff {torch.Tensor} -- complex tensor whose trailing axis is p modes
 
     Returns:
-        torch.Tensor -- m by 2p tensor of elements in real numbers
+        torch.Tensor -- real tensor whose trailing axis is 2p, magnitude at even
+        positions and phase at odd
     """
     if not torch.is_complex(coeff):
         logger.debug("coeff is already real")
@@ -72,13 +77,18 @@ def from_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     """
     from_mag_angle
 
-    convert rows of interleaved magnitude/phase pairs back into complex coefficients
+    convert interleaved magnitude/phase pairs back into complex coefficients
+
+    The inverse of :func:`to_mag_angle`, and its mirror for any number of mode
+    axes. A complex input is returned unchanged, matching what
+    :func:`to_complex_coeff` does for the interleaved-real pair.
 
     Arguments:
-        coeff {torch.Tensor} -- m by 2p tensor where p is the number of modes
+        coeff {torch.Tensor} -- real tensor whose trailing axis is 2p, magnitude
+        at even positions and phase at odd
 
     Returns:
-        torch.Tensor -- m by p tensor of elements in complex numbers
+        torch.Tensor -- complex tensor whose trailing axis is p modes
     """
     if torch.is_complex(coeff):
         logger.debug("coeff is already complex")
