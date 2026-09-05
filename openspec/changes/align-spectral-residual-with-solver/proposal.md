@@ -13,7 +13,7 @@ Measured against the *true continuous residual* on a fine grid, with the source 
 | source slots | complex product | real product |
 | --- | --- | --- |
 | 4 (alias-free, isolates defect 1) | 9.71e-2 | **2.15e-7** |
-| 5 (odd, no Nyquist bin — control) | 3.64e-7 | 3.64e-7 |
+| 5 (odd, no Nyquist bin, and narrow enough not to overrun) | 3.64e-7 | 3.64e-7 |
 | 8 | 1.05e-1 | 3.35e-2 |
 | 16 | 2.60e-1 | 2.59e-1 |
 
@@ -27,7 +27,7 @@ A third measurement, on a field whose product is fully resolved so every variant
 
 The middle row is the control: `spectral_residual` is correct here precisely because this field has no Nyquist content and no bandwidth overrun, which is independent confirmation of the isolation above.
 
-Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its fix, and its size tracks how far the product overruns the grid. The odd-mode-count row is a control that has neither defect and reads clean under both variants.
+Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its fix, and its size tracks how far the product overruns the grid. The five-slot row is clean under both variants because it happens to carry neither defect — it is narrow enough to avoid the overrun as well as odd. That is a property of this row, not of odd counts: nine slots is also odd and still reads `4.34e-02` under the complex product, because its product overruns the grid. Parity does not select a control.
 
 ## What Changes
 
@@ -60,6 +60,6 @@ Defect 1 is isolated where no aliasing can exist. Defect 2 is what survives its 
 
 - `SpectralSVR/problems/burgers.py`: `spectral_residual`, and the removal of `Burgers.rhs`.
 - `tests/problems/test_problems.py`: removal of `test_burgers_rhs_smoke` along with the function it covers.
-- `tests/problems/test_problems.py`: the continuous-residual anchor plus the odd-mode-count control.
+- `tests/problems/test_problems.py`: the continuous-residual anchor plus its two controls — the analytic doubly-periodic pair as the positive control and a perturbed forcing as the negative one.
 - `results/bench_results.csv`: the Burgers MMS row changes. Both `u` and `f` move, not only `f`, because the band-limit narrows the manufactured solutions — so the `f -> u` problem becomes genuinely easier, a change in the dataset's difficulty and not merely its numbers. That must be stated where the row is reported. `generate_coeff` is untouched, so the antiderivative, numerical-Burgers and DeepONet-GRF rows are unaffected and seeded numerical Burgers output stays byte-identical.
 - Unblocks the round-trip anchor in `time-dependent-forcing-in-numerical-burgers`, which must not be claimed here — it additionally needs `Burgers.generate` to accept a Basis forcing, which is that change's own work.

@@ -16,7 +16,7 @@ Two differences, and both matter only when the field reaches the top of the grid
 | --- | --- |
 | A lone Nyquist coefficient evaluates to the correct cosine (1.3e-7) and its derivative is correct (ratio 1.0000) | the representation is right; do not touch `enforce_hermitian` |
 | That derivative is purely imaginary *at the sample points* | `.real` before multiplying is the fix, not a coefficient change |
-| Odd mode counts have no unpaired top mode and read clean under both variants | a free control, no construction needed |
+| ~~Odd mode counts have no unpaired top mode and read clean under both variants~~ — the first clause holds, the second does not | *disproved during this change:* nine slots is odd, has no unpaired top mode (imaginary/real `4.85e-08`) and still reads `4.34e-02` under the complex product, because its product reaches mode 8 on a grid topping out at 7. Parity does not select a control; use the analytic pair instead |
 | `spectral_residual` is used by `mms_solution` and by `Antiderivative.spectral_residual`'s sibling path | the change is confined to the Burgers method |
 | `Burgers.rhs` is a fourth implementation, wrong by 2/3, with one smoke-test caller and none in 24 notebooks | delete rather than unify |
 | the finite-difference `residual` at :328 backs five tests as a physical-space cross-check | leave it alone — see below |
@@ -70,7 +70,7 @@ This also settles what parity was doing. Before the `.real` fix, odd slot counts
 The oracle is the equation itself, evaluated where the pair was not constructed: a grid finer than and offset from the sample points, with every term obtained from the field's own exact spectral derivatives. Two controls make the reading meaningful rather than merely small.
 
 - **Negative control.** Perturb a known-good forcing by one percent; the residual must rise far above its clean value. Without this, a clean number could mean a blind instrument.
-- **Natural control.** An odd mode count has no unpaired top mode, so it reads clean under both the old and new conventions. It costs nothing to include and it shows the measurement is not simply always-clean.
+- **Positive control.** The doubly-periodic analytic pair, which satisfies the continuous equation by construction and is alias-free when kept inside `ns > 4*mx`. It reads `3.41e-8` and shows the measurement is not simply always-red on a pair independently known to be correct. An odd mode count was planned here instead, on the belief that having no unpaired top mode made it clean; that belief was wrong, because an odd count still overruns the band if it is wide enough, so it would have controlled for one defect while silently carrying the other.
 
 Tolerances are fixed from the float32 coefficient dtype rather than tuned: clean readings sit near `1e-7`, defective ones at `1e-2`, five orders apart, so the bound does not need to be delicate.
 
@@ -106,7 +106,7 @@ The antiderivative row showed a `9.06e-7` difference between the two runs, which
 
 - **Two consumers of `spectral_residual` exist** — the Burgers MMS path and the residual test helpers. → The extraction keeps the public signature unchanged, so only the internal computation moves; existing callers see a corrected result, not a different API.
 
-- **The odd-mode-count control passes today.** A control that already passes proves the measurement is not always-red, but it cannot prove the fix works. → The negative control carries that burden, and defect 1's isolation at four slots is the positive evidence.
+- **The positive control passes today.** A control that already passes cannot prove the fix works; it proves the instrument reads clean on a pair that is correct for reasons the code under test did not supply. → The negative control carries the discriminating burden, and defect 1's isolation at four slots is the positive evidence. Unlike the odd-mode-count control it replaced, this one stays informative after `utils-encoding-cleanup` repairs `resize_modes`: that change makes even counts conjugate-symmetric too, which would have left a parity-based control passing for every input and testing nothing.
 
 ## Migration Plan
 
