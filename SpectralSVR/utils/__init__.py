@@ -13,6 +13,10 @@ from torchmetrics.functional.regression import (
 
 logger = logging.getLogger(__name__)
 
+
+DEFAULT_COEFF_DTYPE = torch.complex64
+DEFAULT_REAL_DTYPE = torch.empty(0, dtype=DEFAULT_COEFF_DTYPE).real.dtype
+
 Number = int | float
 
 DeviceInput = torch.device | str | None

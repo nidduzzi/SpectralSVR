@@ -26,6 +26,7 @@ from .domain import (
 )
 from .sampling import SamplingInputType, SamplingScheme, samplings_to_tuple
 from .strategy import DEFAULT_EVALUATION_STRATEGY, EvaluationStrategy
+from ..utils import DEFAULT_COEFF_DTYPE
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,10 +83,6 @@ class SpectralConfig:
         default.
         """
         return replace(self, coeff_dtype=coeff_dtype)
-
-
-DEFAULT_COEFF_DTYPE = torch.complex64
-DEFAULT_REAL_DTYPE = torch.empty(0, dtype=DEFAULT_COEFF_DTYPE).real.dtype
 
 
 class ResolvedCoeffDtype:

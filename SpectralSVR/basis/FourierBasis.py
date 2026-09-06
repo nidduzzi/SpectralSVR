@@ -16,9 +16,9 @@ from .sampling import (
     samplings_to_tuple,
 )
 from .strategy import DEFAULT_EVALUATION_STRATEGY
-from .config import DEFAULT_COEFF_DTYPE, DEFAULT_REAL_DTYPE, ResolvedCoeffDtype
+from .config import ResolvedCoeffDtype
 from ._nufft import nufft_available, nufft_evaluate
-from ..utils import to_complex_coeff
+from ..utils import DEFAULT_COEFF_DTYPE, DEFAULT_REAL_DTYPE, to_complex_coeff
 import torch
 import math
 from typing_extensions import Self, Literal, Callable

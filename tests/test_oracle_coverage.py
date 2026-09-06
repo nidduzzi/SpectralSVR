@@ -22,7 +22,6 @@ TESTS_DIR = Path(__file__).parent
 EXEMPT = {
     "basis/test_config.py",  # SpectralConfig plumbing: immutability/validation only
     "basis/test_basis.py",  # legacy end-to-end scenario; numerics anchored in test_fourier_basis.py / test_coeff_anchors.py
-    "model/test_spectralsvr_methods.py",  # branch/shape/raises checks; numerics anchored in test_spectralsvr_anchors.py
     "model/test_SpectralSVR.py",  # legacy end-to-end scenario; numerics anchored in test_spectralsvr_anchors.py
     "model/test_fnn.py",  # NN trainer has no closed form; overfit + serialization only
     "operators/test_operators.py",  # thin adapters over anchored model/basis layers
@@ -31,11 +30,7 @@ EXEMPT = {
 
 
 def _test_modules() -> list[Path]:
-    return [
-        p
-        for p in TESTS_DIR.rglob("test_*.py")
-        if "__pycache__" not in p.parts
-    ]
+    return [p for p in TESTS_DIR.rglob("test_*.py") if "__pycache__" not in p.parts]
 
 
 def _marker_names(module: Path) -> set[str]:
@@ -141,9 +136,7 @@ def test_setup_enforcement_rejects_multiple_oracle_markers():
     from .conftest import pytest_runtest_setup
 
     with pytest.raises(Exception, match="oracle_analytic, oracle_smoke"):
-        pytest_runtest_setup(
-            _FakeItem({"no_fuzz", "oracle_analytic", "oracle_smoke"})
-        )
+        pytest_runtest_setup(_FakeItem({"no_fuzz", "oracle_analytic", "oracle_smoke"}))
 
 
 @pytest.mark.no_fuzz

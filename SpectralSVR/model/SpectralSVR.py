@@ -150,11 +150,43 @@ class SpectralSVR(Generic[B, R]):
         # interleaved real/imag pairs
         if self.output_is_complex:
             u_coeff = to_real_coeff(u_coeff)
+            self._check_precision(u_coeff, "output coefficients")
         if torch.is_complex(f):
             f = to_real_coeff(f)
+            self._check_precision(f, "input coefficients f")
         self.features = f.shape[1]
         self.regressor.fit(f, u_coeff)
         return self
+
+    def _check_precision(self, values: torch.Tensor, role: str) -> None:
+        """Report a precision the regressor does not share.
+
+        Applies to values carrying a basis's coefficient precision through the
+        interleaved-real bridge, not to real inputs a caller supplies at
+        whatever precision suits them -- those have always been cast and the
+        basis's configuration says nothing about them.
+
+        The two directions are different errors. Values wider than the
+        regressor lose information a cast cannot give back, so that is refused.
+        A regressor wider than the values loses nothing and only pays the wider
+        precision's cost, so that is reported and allowed.
+        """
+        if values.dtype == self.regressor.dtype:
+            return
+        if values.itemsize > self.regressor.dtype.itemsize:
+            raise ValueError(
+                f"{role} reaches the regressor at {values.dtype}, but the "
+                f"regressor was constructed for {self.regressor.dtype}. "
+                f"Casting would discard precision the basis was configured to "
+                f"keep; construct the regressor with dtype={values.dtype} or "
+                f"the basis at the matching precision."
+            )
+        self.logger.warning(
+            f"{role} reaches the regressor at {values.dtype}, but the regressor "
+            f"was constructed for {self.regressor.dtype}. Nothing is discarded, "
+            f"but the wider precision is paid for without the data to justify "
+            f"it; construct the regressor with dtype={values.dtype} to avoid it."
+        )
 
     def test(
         self,
@@ -172,6 +204,7 @@ class SpectralSVR(Generic[B, R]):
         if torch.is_complex(f):
             self.logger.debug("transform f to real")
             f = to_real_coeff(f)
+            self._check_precision(f, "input coefficients f")
         self.features = f.shape[1]
         u_coeff_preds = self.regressor.predict(f)
 
@@ -195,7 +228,9 @@ class SpectralSVR(Generic[B, R]):
 
         else:
             u_preds = self.basis_type.inv_transform(u_coeff_preds, res=res).flatten(1)
-            u_targets = self.basis_type.inv_transform(u_coeff_targets, res=res).flatten(1)
+            u_targets = self.basis_type.inv_transform(u_coeff_targets, res=res).flatten(
+                1
+            )
 
         if self.complex_funcs:
             u_preds = to_real_coeff(u_preds)
@@ -271,6 +306,8 @@ class SpectralSVR(Generic[B, R]):
         complex_coeff = u_coeff.is_complex()
         original_device = u_coeff.device
         u_coeff = to_real_coeff(u_coeff.flatten(1)).to(self.regressor.device)
+        if complex_coeff:
+            self._check_precision(u_coeff, "target coefficients")
 
         # inverse problem
         f_coeff_pred = (

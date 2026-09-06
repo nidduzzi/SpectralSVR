@@ -5,6 +5,8 @@ from typing import Callable, overload, Any
 
 import numpy as np
 import torch
+
+from ..utils import DEFAULT_REAL_DTYPE
 from typing_extensions import Self
 
 NumpyArrayorTensor = np.ndarray | torch.Tensor
@@ -40,7 +42,7 @@ def load_model(filepath: str = "model") -> dict[str, Any]:
 class MultiRegression(abc.ABC):
     def __init__(
         self,
-        dtype: torch.dtype = torch.float32,
+        dtype: torch.dtype = DEFAULT_REAL_DTYPE,
         device: torch.device | None = None,
         logger: logging.Logger | None = None,
     ):
