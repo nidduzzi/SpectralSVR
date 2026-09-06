@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+import torch
+
 from .domain import (
     DomainAxis,
     DomainInputType,
@@ -39,6 +41,17 @@ class SpectralConfig:
     sampling: SamplingInputType
     domain: DomainInputType = None
     strategy: EvaluationStrategy = DEFAULT_EVALUATION_STRATEGY
+    coeff_dtype: torch.dtype = torch.complex64
+
+    @property
+    def real_dtype(self) -> torch.dtype:
+        """The real precision matching ``coeff_dtype``.
+
+        Coefficients are stored complex; the real form is what the interleaved
+        bridge produces on the way to a model, so complex is the primary value
+        and this is derived from it.
+        """
+        return torch.empty(0, dtype=self.coeff_dtype).real.dtype
 
     def resolve_domain(self, modes: tuple[int, ...]) -> tuple[DomainAxis, ...]:
         """Broadcast the raw domain to one ``(start, stop)`` pair per axis."""
@@ -57,3 +70,15 @@ class SpectralConfig:
     def with_domain(self, domain: DomainInputType) -> "SpectralConfig":
         """A copy with a different domain (this object is immutable)."""
         return replace(self, domain=domain)
+
+    def with_precision(self, coeff_dtype: torch.dtype) -> "SpectralConfig":
+        """A copy storing coefficients at a different complex precision.
+
+        Double precision is substantially slower for matrix-bound work on
+        consumer hardware -- measured 16.9x on a 2048-square matmul, against
+        2.8x for a transform -- and doubles the memory each coefficient
+        occupies. Choose it for work whose accuracy demands it, such as an
+        anchor whose oracle saturates at single precision, rather than by
+        default.
+        """
+        return replace(self, coeff_dtype=coeff_dtype)

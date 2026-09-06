@@ -1,7 +1,7 @@
 ## 1. The precision field
 
-- [ ] 1.1 Add a complex-precision field to `SpectralConfig` defaulting to `torch.complex64`, with a derived real precision and a `replace`-based `with_precision`; verify the frozen dataclass still round-trips and `tests/basis/test_config.py` passes untouched
-- [ ] 1.2 Verify the full suite is unchanged at this point — nothing consumes the field yet, so any failure here is a defect in the field itself
+- [x] 1.1 Add a complex-precision field to `SpectralConfig` defaulting to `torch.complex64`, with a derived real precision and a `replace`-based `with_precision`; verify the frozen dataclass still round-trips and `tests/basis/test_config.py` passes untouched
+- [x] 1.2 Verify the full suite is unchanged at this point — nothing consumes the field yet, so any failure here is a defect in the field itself
 
 ## 2. Basis side
 

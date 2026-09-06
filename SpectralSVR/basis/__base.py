@@ -16,7 +16,7 @@ from .sampling import (
     SamplingScheme,
     samplings_to_tuple,
 )
-from .strategy import EvaluationStrategy
+from .strategy import DEFAULT_EVALUATION_STRATEGY, EvaluationStrategy
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -110,7 +110,7 @@ class Basis(abc.ABC):
         self._config = SpectralConfig(
             sampling=sampling if sampling is not None else self.default_sampling(),
             domain=domain,
-            **({} if strategy is None else {"strategy": strategy}),
+            strategy=DEFAULT_EVALUATION_STRATEGY if strategy is None else strategy,
         )
 
     @classmethod
