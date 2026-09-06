@@ -51,9 +51,9 @@ def to_complex_coeff(
 
     Keyword Arguments:
         coeff_dtype {torch.dtype | None} -- the complex precision to produce.
-        Inferred from the input when omitted, which is what every caller wants
-        unless the values passed through a stage that reduced them -- inference
-        cannot recover a precision the input no longer carries (default: {None})
+        Inference cannot recover a precision the input no longer carries, so
+        state it when the values passed through a stage that reduced them
+        (default: {None})
 
     Returns:
         torch.Tensor -- complex tensor whose trailing axis is the number of modes

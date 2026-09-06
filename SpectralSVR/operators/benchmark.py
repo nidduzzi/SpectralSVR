@@ -52,6 +52,10 @@ def benchmark(
         fit_seconds = time.perf_counter() - start
         pred = op.predict(test.f, query).detach().cpu().contiguous()
         rows.append(
-            {"operator": op.name, "fit_seconds": fit_seconds, **get_metrics(pred, target)}
+            {
+                "operator": op.name,
+                "fit_seconds": fit_seconds,
+                **get_metrics(pred, target),
+            }
         )
     return pd.DataFrame(rows).set_index("operator")

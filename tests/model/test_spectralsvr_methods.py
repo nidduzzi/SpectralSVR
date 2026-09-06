@@ -204,6 +204,26 @@ def test_boundary_allows_a_wider_regressor_but_reports_it(caplog):
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
+def test_boundary_refuses_on_every_path_that_reaches_the_regressor():
+    """train, test and forward each hand values over; all three must check."""
+    model, f, u = _precision_pair(torch.complex128, torch.float32)
+    with pytest.raises(ValueError, match="discard precision"):
+        model.train(f, u)
+
+    ok, f_ok, u_ok = _precision_pair(torch.complex64, torch.float32)
+    ok.train(f_ok, u_ok)
+    ok.regressor.dtype = torch.float32
+    wide = FourierBasis.generate_coeff(
+        6, 4, generator=torch.Generator().manual_seed(9), coeff_dtype=torch.complex128
+    )
+    with pytest.raises(ValueError, match="discard precision"):
+        ok.test(wide, u_ok)
+    with pytest.raises(ValueError, match="discard precision"):
+        ok.forward(wide, torch.linspace(0, 1, 5).unsqueeze(-1))
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
 def test_boundary_is_silent_when_the_precisions_match(caplog):
     model, f, u = _precision_pair(torch.complex64, torch.float32)
     with caplog.at_level(logging.WARNING):

@@ -106,6 +106,7 @@ class SpectralSVR(Generic[B, R]):
         # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
+            self._check_precision(f, "input coefficients f")
         coeff = self.regressor.predict(f)
         # convert to complex if the basis needs complex values so that the reshaping is correct
         if self.output_is_complex:
@@ -165,11 +166,6 @@ class SpectralSVR(Generic[B, R]):
         interleaved-real bridge, not to real inputs a caller supplies at
         whatever precision suits them -- those have always been cast and the
         basis's configuration says nothing about them.
-
-        The two directions are different errors. Values wider than the
-        regressor lose information a cast cannot give back, so that is refused.
-        A regressor wider than the values loses nothing and only pays the wider
-        precision's cost, so that is reported and allowed.
         """
         if values.dtype == self.regressor.dtype:
             return
