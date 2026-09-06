@@ -15,22 +15,34 @@
 - [ ] 3.2 Make `model/SpectralSVR.py:273` check rather than truncate: if the interleaved real precision and the regressor's precision disagree, raise naming both; verify the error text names both precisions and that the matching case is unaffected
 - [ ] 3.3 Add a test pairing a double-precision basis with a single-precision regressor and asserting the raise; verify it fails loudly rather than silently downcasting as it does today
 
-## 4. Bridge hardening
+## 4. The bridge's guarantees, anchored before they are edited
 
-- [ ] 4.1 Add `.contiguous()` inside `to_complex_coeff` before the complex view; verify a transposed float64 view converts instead of raising `Tensor must have a last dimension with stride 1`, and that contiguous input is bit-identical to before
-- [ ] 4.2 Add an optional target complex precision to `to_complex_coeff`, defaulting to inference so every existing caller is unchanged; verify float32 input with an explicit complex128 target produces complex128
-- [ ] 4.3 Route the ETDRK4 fallback (`utils/__init__.py:611`) and the GRF sampler default (`scripts/run_benchmark.py:104`) from the seam rather than their literals; verify `tests/utils/test_solvers.py` passes and `python scripts/run_benchmark.py --quick --operators spectralsvr` still writes finite metrics
+The design requires this section to precede the hardening: `coefficient-encodings`
+binds *every* exported conversion to accept any number of mode axes and to
+preserve device and precision, and only the polar pair carries tests for it. The
+interleaved-real pair satisfies the requirement today with nothing defending it,
+and section 5 edits exactly that pair. An anchor written afterwards would be
+shaped to match whatever the edit produced.
 
-## 5. Double precision end to end
+- [ ] 4.1 Add a conversion-registry anchor in `tests/utils/test_utils.py` parametrised over every conversion the package exports — `to_real_coeff`/`to_complex_coeff` and `to_mag_angle`/`from_mag_angle` — asserting for each: multi-axis conversion at two, three and four axes; exact round-trip through its inverse; the real precision corresponding to the complex one at both `complex64` and `complex128`; and the device carried through, skipping cleanly when no accelerator is present. Build it from a list of `(forward, inverse)` pairs rather than one test per function, so a conversion added later is either covered or fails the anchor. Verify the registry covers all four exported conversions by name, and that removing one from the package's exports makes the anchor fail rather than silently shrink
+- [ ] 4.2 Verify 4.1 passes against the **unmodified** bridge, so it records the guarantee as it already stands rather than as section 5 leaves it; verify it fails if `to_complex_coeff` is made to drop the device or infer the wrong precision, which is the regression sections 5.1 and 5.2 could introduce
 
-- [ ] 5.1 Add `test_double_precision_survives_the_model_boundary` (`oracle_consistency`, `no_fuzz`): construct a double-precision basis, convert coefficients through the bridge, and assert the values reaching the regressor are float64 and exactly equal to the source; verify it fails on the pre-change code, where the boundary truncates
-- [ ] 5.2 Add a round-trip test at both precisions over two- and three-axis coefficient grids asserting `torch.equal`; verify it passes
-- [ ] 5.3 Document the throughput and memory cost at the point the precision is chosen, per the capability requirement; verify the text names the measured penalty and the kind of work that justifies it
-- [ ] 5.4 Add a conversion-registry anchor in `tests/utils/test_utils.py` parametrised over every conversion the package exports — `to_real_coeff`/`to_complex_coeff` and `to_mag_angle`/`from_mag_angle` — asserting for each: multi-axis conversion at two, three and four axes; exact round-trip through its inverse; the real precision corresponding to the complex one at both `complex64` and `complex128`; and the device carried through, skipping cleanly when no accelerator is present. Build it from a list of `(forward, inverse)` pairs rather than one test per function, so a conversion added later is either covered or fails the anchor
-- [ ] 5.5 Verify 5.4 defends the archived `coefficient-encodings` requirements rather than restating them: those say *every* conversion accepts any number of mode axes and preserves device and precision, and before this change only the polar pair had tests. Confirm the anchor fails if `to_complex_coeff` is made to drop the device or infer the wrong precision, so it would catch a regression introduced by task 4.1 or 4.2
+## 5. Bridge hardening
 
-## 6. Verification
+- [ ] 5.1 Add `.contiguous()` inside `to_complex_coeff` before the complex view; verify a transposed float64 view converts instead of raising `Tensor must have a last dimension with stride 1`, and that contiguous input is bit-identical to before
+- [ ] 5.2 Add an optional target complex precision to `to_complex_coeff`, defaulting to inference so every existing caller is unchanged; verify float32 input with an explicit complex128 target produces complex128
+- [ ] 5.3 Verify the section 4 anchor still passes unchanged after both edits; it was written against the bridge as it stood, so it passing now is evidence the hardening was additive rather than a change of behaviour
+- [ ] 5.4 Route the ETDRK4 fallback (`utils/__init__.py:611`) and the GRF sampler default (`scripts/run_benchmark.py:104`) from the seam rather than their literals; verify `tests/utils/test_solvers.py` passes and `python scripts/run_benchmark.py --quick --operators spectralsvr` still writes finite metrics
 
-- [ ] 6.1 Verify all four benchmark rows are unchanged by regenerating and comparing against the committed table — the default did not move, so any difference is a defect
-- [ ] 6.2 Run `just check`; verify clean
-- [ ] 6.3 Verify no source file gained an explanatory prose comment; the precision decision must read from the config field's name and the boundary check's error text
+## 6. Double precision end to end
+
+- [ ] 6.1 Add `test_double_precision_survives_the_model_boundary` (`oracle_consistency`, `no_fuzz`): construct a double-precision basis, convert coefficients through the bridge, and assert the values reaching the regressor are float64 and exactly equal to the source; verify it fails on the pre-change code, where the boundary truncates
+- [ ] 6.2 Add a round-trip test at both precisions over two- and three-axis coefficient grids asserting `torch.equal`; verify it passes
+- [ ] 6.3 Document the throughput and memory cost at the point the precision is chosen, per the capability requirement; verify the text names the measured penalty and the kind of work that justifies it
+
+## 7. Verification
+
+- [ ] 7.1 Verify all four benchmark rows are unchanged by regenerating and comparing against the committed table — the default did not move, so any difference is a defect
+- [ ] 7.2 Verify the seeded numerical Burgers field is byte-identical to the baseline captured before any edit; record the hash on both sides
+- [ ] 7.3 Run `just check`; verify ruff, mypy and ty are clean and the suite passes
+- [ ] 7.4 Verify no source file gained an explanatory prose comment; the precision decision must read from the config field's name and the boundary check's error text
