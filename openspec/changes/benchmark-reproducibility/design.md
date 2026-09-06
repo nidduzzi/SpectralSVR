@@ -54,6 +54,21 @@ Rather than deleting the column or trying to normalise it, each operator declare
 
 Enough seeds for a spread to mean something, few enough that a full regeneration stays feasible given DeepONet's training cost per run. The set is recorded in the file rather than left to a default that might change, so an old table stays interpretable.
 
+### The harness is not run-to-run deterministic, and that is not what this change fixes
+
+Measured while implementing `dtype-seam`: six consecutive runs of identical code in the same tree vary by up to
+`2.51e-05` relative. Dataset generation is bit-identical and an isolated fit is bit-identical across processes, so
+the variation is neither seeding nor the model; pinning `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to 1 cuts it to
+`6.15e-07`, pointing at multi-threaded reductions in the solve.
+
+That floor is small enough not to matter here, and this was checked rather than assumed. Between-seed spread over
+seeds 0-4 runs `26,010x` to `180,953x` the noise floor across the four rows, with `mse` moving 242% and 454%. So the
+spread this change reports is seed variation, not measurement noise, and the two need not be separated. Stated
+because a reader can otherwise reasonably ask whether the reported spread is real.
+
+The figures are from one machine and belong in the output's provenance, not in the library. Re-measure them under
+this change's own protocol rather than carrying them forward as constants.
+
 ## Risks / Trade-offs
 
 - **Regeneration cost multiplies by the seed count.** DeepONet trains for ten thousand iterations per dataset per seed. → The long format means a partial run can be appended rather than restarting, and the quick mode stays available for smoke checks.
@@ -67,7 +82,7 @@ Enough seeds for a spread to mean something, few enough that a full regeneration
 ## Migration Plan
 
 1. Add the per-sample relative L2 to the metric suite beside the existing entries; confirm no existing metric value changes.
-2. Add provenance capture and the long output format to the benchmark script; confirm a single-seed run reproduces today's numbers on the columns that already existed.
+2. Add provenance capture and the long output format to the benchmark script; confirm a single-seed run reproduces today's numbers on the columns that already existed to within the harness's measured run-to-run noise of `2.51e-05` -- exact reproduction is not achievable and asserting it would fail for reasons unrelated to this change.
 3. Add seed aggregation and the `just` recipe.
 4. Point the notebook at the committed table.
 5. Regenerate over the full seed set, after the three dependencies have landed, and commit the result with its provenance.

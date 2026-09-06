@@ -12,11 +12,11 @@ The comparison SHALL be run over a fixed, recorded set of seeds, and SHALL repor
 - **THEN** its output is marked as such and is not the artifact the documentation points a reader at
 
 ### Requirement: Every run records what produced it
-Each set of results SHALL carry the provenance needed to reproduce or challenge it: the device, the coefficient precision, the versions of the numerical libraries used, and the revision of the code.
+Each set of results SHALL carry the provenance needed to reproduce or challenge it: the device each stage ran on, the coefficient precision, the versions of the numerical libraries used, and the revision of the code.
 
 #### Scenario: Provenance travels with the numbers
 - **WHEN** a results table is read
-- **THEN** the device, precision, library versions and code revision that produced it are available from the same artifact, not from memory
+- **THEN** the device each stage ran on, the precision, library versions and code revision that produced it are available from the same artifact, not from memory
 
 #### Scenario: A changed condition is visible
 - **WHEN** the same benchmark is run at a different precision or on a different device

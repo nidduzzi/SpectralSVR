@@ -15,7 +15,11 @@ The comparison table is the paper's headline result and is currently a single dr
 ## What Changes
 
 - The benchmark runs over a fixed set of seeds and reports a centre and a spread for every metric, so a difference can be read against the variation.
-- Each run records what produced it: device, coefficient precision, torch and deepxde versions, and the code revision.
+- Each run records what produced it: the device **each stage** ran on, coefficient precision, torch and deepxde versions, and the code revision. A single device column would misreport today's runs, which use two — `Burgers.generate` integrates on `cuda:0` via `resolve_device()` while `MultiRegression.__init__` hardcodes `cpu`.
+
+*Measured while implementing `dtype-seam`, and recorded here because it bears on what this change must do.* Six consecutive runs of identical code in the same tree vary by up to `2.51e-05` relative — the harness is not run-to-run deterministic, so a single-seed table cannot be reproduced exactly even on the machine that made it. Pinning `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to 1 cuts that to `6.15e-07`, which points at multi-threaded reductions in the solve. These figures are from one machine and should be re-measured under this change's own protocol rather than treated as constants.
+
+That noise does **not** confound the seed spread this change reports. Between-seed variation over seeds 0-4 runs `26,010x` the noise floor on the antiderivative row, `12,291x` on Burgers MMS, `96,434x` on Burgers numerical and `180,953x` on the GRF row — `mse` alone moves 242% and 454% across seeds. The single-draw problem this change exists to fix is four to five orders of magnitude larger than the measurement noise, so reporting seed spread without separating run-to-run noise is sound; it is worth stating that it was checked rather than assumed.
 - Per-sample relative L2 is reported alongside the existing global `rrse`, with both named unambiguously so neither is mistaken for the other.
 - The timing column is documented as measuring different work for different operators, or split so it is not read as like-for-like.
 - A `just` recipe regenerates the table in one command, and the comparison notebook reads the committed results instead of recomputing them.

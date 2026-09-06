@@ -10,13 +10,13 @@
 
 ## 2. Provenance
 
-- [ ] 2.1 Record device, coefficient precision, torch version, deepxde version and git revision as columns on every run row; verify each is populated in a real run rather than left empty
+- [ ] 2.1 Record the device **each stage ran on**, coefficient precision, torch version, deepxde version and git revision as columns on every run row; verify each is populated in a real run rather than left empty. A single device column is wrong today: `Burgers.generate:60` integrates on `cuda:0` through `resolve_device()` while `MultiRegression.__init__` at `model/__base.py:49` hardcodes `cpu`, so one run uses both. Verify a run whose stages differ reports both rather than one standing for the other
 - [ ] 2.2 Record whether the working tree was clean at generation time; verify a deliberately dirty tree is reported as such, so a number from uncommitted code is visible
 - [ ] 2.3 Verify the columns survive concatenating two runs made under different conditions, which is the reason they are columns rather than a file header
 
 ## 3. Seeds and output format
 
-- [ ] 3.1 Change the benchmark output to long format, one row per dataset, operator and seed; verify a single-seed run reproduces today's values on every column that already existed
+- [ ] 3.1 Change the benchmark output to long format, one row per dataset, operator and seed; verify a single-seed run reproduces today's values on every column that already existed **to within the harness's measured run-to-run noise**, not exactly. *Corrected from this task as first written:* six consecutive runs of identical code vary by up to `2.51e-05` relative, so exact reproduction is not achievable and asserting it would fail for reasons unrelated to the format change. Record the observed difference against that floor
 - [ ] 3.2 Add a fixed seed set as the default with the seeds recorded in the output; verify a partial run can be appended rather than requiring a restart, since DeepONet trains for ten thousand iterations per dataset per seed
 - [ ] 3.3 Add aggregation at read time producing a centre and spread per metric; verify the aggregate is derived from the committed long file rather than recomputed from the models
 
