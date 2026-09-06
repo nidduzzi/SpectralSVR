@@ -28,7 +28,7 @@ behaviour exactly, so the suite is green at the end of every section.
 
 ## 3. The two anchors
 
-- [ ] 3.1 Restate `test_zero_coeff_values` (`tests/basis/test_coeff_anchors.py:144`). It pins `zero_coeff(x, 4)` against a hand-written literal and is `oracle_analytic`; re-derive the expected array by hand from the bin layout for whichever band form the test now states, rather than recomputing it from the function under test
+- [ ] 3.1 Restate `test_zero_coeff_values` (`tests/basis/test_coeff_anchors.py:144`). It pins `zero_coeff(x, 4)` against a hand-written literal and is `oracle_analytic`; re-derive the expected array by hand from the bin layout for whichever band form the test now states, rather than recomputing it from the function under test. Verify the derivation was independent: the expected array is written before the new code is run against it and matches on the first run, not adjusted afterwards to agree. Verify it still discriminates by checking the restated anchor fails against a raw-count band of the same width, which is the distinction this change introduces
 - [ ] 3.2 Add a companion anchor for the cutoff form asserting conjugate symmetry is preserved, and one for the whole-grid form asserting the no-op; verify the symmetry anchor fails against a raw-count band of the same width, which is what makes it a discriminating test rather than a restatement
 - [ ] 3.3 Update `test_zero_coeff_zeros_high_modes` (`tests/utils/test_utils.py:342`), whose strategy fuzzes `keep` over `[1, 3]` and so includes the even 2; verify the marker still matches what the test anchors against
 - [ ] 3.4 Verify `tests/test_oracle_coverage.py` passes with the markers chosen
