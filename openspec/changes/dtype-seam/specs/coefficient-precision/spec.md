@@ -24,7 +24,15 @@ Selecting a precision SHALL determine both the complex precision a basis stores 
 
 #### Scenario: A mismatch is not silent
 - **WHEN** a caller pairs a double-precision basis with a regressor fixed at single precision
-- **THEN** the mismatch is reported rather than resolved by discarding precision
+- **THEN** the mismatch is refused rather than resolved by discarding precision
+
+#### Scenario: A widening mismatch proceeds but is reported
+- **WHEN** a caller pairs a single-precision basis with a regressor fixed at double precision
+- **THEN** the work proceeds, because widening discards nothing, and the mismatch is reported so the cost of the wider precision is not paid unknowingly
+
+#### Scenario: Inputs a caller supplies are not governed by the basis's precision
+- **WHEN** a caller supplies real-valued inputs at a precision of their own choosing, rather than coefficients carrying the basis's precision through the interleaved-real bridge
+- **THEN** they are converted as before without either report, because the basis's configuration makes no claim about them
 
 ### Requirement: The interleaved-real bridge is precision-transparent and robust
 Conversion between complex coefficients and interleaved real pairs SHALL preserve values exactly in both directions at every supported precision and any number of coefficient axes, and SHALL return its result on the device its input was on. It SHALL accept an input whose memory layout is not contiguous, and SHALL allow the target precision to be stated rather than only inferred.

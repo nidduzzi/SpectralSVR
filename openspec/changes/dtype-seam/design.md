@@ -53,13 +53,21 @@ The stored value is the complex dtype, with the real dtype derived from it, rath
 
 `FourierBasis.coeff_dtype` stays readable, because `model/SpectralSVR.py` and `problems/burgers.py` consult it, but it resolves through the instance's configuration rather than being a constant. A basis used purely as a template, with no coefficients, still answers — the config exists independently of coefficients, which is the reason that object was carved out.
 
-### The model boundary refuses rather than reconciles
+### The model boundary refuses in one direction and reports in the other
 
-At `model/SpectralSVR.py:273` the interleaved real values are handed to the regressor. The regressor's precision is set when it is constructed, so by the time the boundary is reached, disagreement is a construction error, not something to paper over. The boundary therefore checks and raises, naming both precisions.
+At `model/SpectralSVR.py:273` the interleaved real values are handed to the regressor. The regressor's precision is set when it is constructed, so by the time the boundary is reached, disagreement is a construction error, not something to paper over.
+
+The two directions are not the same error. Values *wider* than the regressor lose information a cast cannot give back, so that is refused, naming both precisions. A regressor *wider* than the values loses nothing — it only pays double-precision cost for single-precision data, a 16.9× matmul penalty here for no accuracy gain. That is a waste, not a loss, and a warning is proportionate to a cost in a way it is not to the destruction of a result.
+
+*Discovered during implementation.* The symmetric rule the tasks first stated breaks two anchors that are right to do what they do: `test_forward_matches_closed_form_antiderivative` and `test_inverse_recovers_known_input` pair a `complex64` basis with `LSSVR(dtype=torch.float64)`, because their closed-form comparison needs the precision in the *solve* while the basis has no reason to leave the default. The spec already permitted this — it forbids silent *truncation*, and widening truncates nothing.
+
+The guard also applies only to values carrying a basis's coefficient precision through the bridge. Real inputs a caller supplies at a precision of their own have always been cast, and the basis's configuration makes no claim about them; guarding those broke the float64 query grids in `tests/operators/test_operators.py`, which is how the distinction surfaced.
 
 *Alternative rejected:* upcast the regressor to match. Hides a configuration mistake and can silently make a run far slower than intended, which on this hardware is a 16.9× surprise.
 
-*Alternative rejected:* keep truncating but warn. A warning in a numerical library is a result nobody checks; the current silence is only worse by degree.
+*Alternative rejected:* keep truncating but warn. A warning in a numerical library is a result nobody checks; the current silence is only worse by degree. That rejection stands, and is why the lossy direction raises. It does not extend to the widening direction, where there is no wrong result to miss — only a bill to notice.
+
+*Note on convention.* The library has exactly one `logger.warning`, in the plotter. Adding a second is a deliberate departure, taken because the alternative for a merely wasteful pairing is either silence or a refusal that would reject working configurations.
 
 ### The bridge is hardened, not redesigned
 
