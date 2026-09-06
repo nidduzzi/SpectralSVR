@@ -29,10 +29,10 @@ shaped to match whatever the edit produced.
 
 ## 5. Bridge hardening
 
-- [ ] 5.1 Add `.contiguous()` inside `to_complex_coeff` before the complex view; verify a transposed float64 view converts instead of raising `Tensor must have a last dimension with stride 1`, and that contiguous input is bit-identical to before
-- [ ] 5.2 Add an optional target complex precision to `to_complex_coeff`, defaulting to inference so every existing caller is unchanged; verify float32 input with an explicit complex128 target produces complex128
-- [ ] 5.3 Verify the section 4 anchor still passes unchanged after both edits; it was written against the bridge as it stood, so it passing now is evidence the hardening was additive rather than a change of behaviour
-- [ ] 5.4 Route the ETDRK4 fallback (`utils/__init__.py:611`) and the GRF sampler default (`scripts/run_benchmark.py:104`) from the seam rather than their literals; verify `tests/utils/test_solvers.py` passes and `python scripts/run_benchmark.py --quick --operators spectralsvr` still writes finite metrics
+- [x] 5.1 Add `.contiguous()` inside `to_complex_coeff` before the complex view; verify a transposed float64 view converts instead of raising `Tensor must have a last dimension with stride 1`, and that contiguous input is bit-identical to before
+- [x] 5.2 Add an optional target complex precision to `to_complex_coeff`, defaulting to inference so every existing caller is unchanged; verify float32 input with an explicit complex128 target produces complex128
+- [x] 5.3 Verify the section 4 anchor still passes unchanged after both edits; it was written against the bridge as it stood, so it passing now is evidence the hardening was additive rather than a change of behaviour
+- [x] 5.4 Route the ETDRK4 fallback (`utils/__init__.py:611`) and the GRF sampler default (`scripts/run_benchmark.py:104`) from the seam rather than their literals; verify `tests/utils/test_solvers.py` passes and `python scripts/run_benchmark.py --quick --operators spectralsvr` still writes finite metrics
 
 ## 6. Double precision end to end
 
