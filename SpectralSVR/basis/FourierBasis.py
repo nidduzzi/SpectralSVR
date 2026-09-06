@@ -16,6 +16,7 @@ from .sampling import (
     samplings_to_tuple,
 )
 from .strategy import DEFAULT_EVALUATION_STRATEGY
+from .config import DEFAULT_COEFF_DTYPE, DEFAULT_REAL_DTYPE, ResolvedCoeffDtype
 from ._nufft import nufft_available, nufft_evaluate
 from ..utils import to_complex_coeff
 import torch
@@ -26,7 +27,7 @@ from functools import partial
 
 ## Fourier basis
 class FourierBasis(Basis):
-    coeff_dtype = torch.complex64
+    coeff_dtype = ResolvedCoeffDtype()
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class FourierBasis(Basis):
         time_dependent: bool = False,
         sampling: FourierAcceptableScheme | None = None,
         strategy: EvaluationStrategy | None = None,
+        coeff_dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__(
             coeff,
@@ -44,6 +46,7 @@ class FourierBasis(Basis):
             domain=domain,
             sampling=sampling,
             strategy=strategy,
+            coeff_dtype=coeff_dtype,
         )
 
     @staticmethod
@@ -276,7 +279,9 @@ class FourierBasis(Basis):
         return basis
 
     @staticmethod
-    def wave_number(modes: int, target: torch.dtype | torch.Tensor = torch.float):
+    def wave_number(modes: int, target: torch.dtype | torch.Tensor | None = None):
+        if target is None:
+            target = DEFAULT_REAL_DTYPE
         N = (modes - 1) // 2 + 1
         n = modes // 2
         k1 = torch.arange(0, N)
@@ -285,9 +290,7 @@ class FourierBasis(Basis):
         return k
 
     @staticmethod
-    def derivative_eigenvalues(
-        modes: int, length: float, ord: int = 1
-    ) -> torch.Tensor:
+    def derivative_eigenvalues(modes: int, length: float, ord: int = 1) -> torch.Tensor:
         # differentiation is diagonal in Fourier space: multiply by (2*pi*i*k/L)
         k = FourierBasis.wave_number(modes).flatten()
         return (2 * torch.pi * 1j * k / length) ** ord
@@ -337,12 +340,14 @@ class FourierBasis(Basis):
         cls,
         n: int,
         modes: int | tuple[int, ...],
+        coeff_dtype: torch.dtype | None = None,
     ) -> torch.Tensor:
         if isinstance(modes, int):
             modes = (modes,)
         n_modes = len(modes)
         assert n_modes > 0, "modes should have at least one dimension"
-        coeff = torch.zeros((n, *modes), dtype=torch.complex64)
+        resolved = DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype
+        coeff = torch.zeros((n, *modes), dtype=resolved)
         return coeff
 
     @classmethod
@@ -354,13 +359,15 @@ class FourierBasis(Basis):
         random_func: Callable[..., torch.Tensor] = torch.randn,
         complex_funcs: bool = False,
         scale: bool = True,
+        coeff_dtype: torch.dtype | None = None,
     ) -> torch.Tensor:
         if isinstance(modes, int):
             modes = (modes,)
         n_modes = len(modes)
         assert n_modes > 0, "modes should have at least one element"
         random_func = partial(random_func, generator=generator)
-        coeff = random_func((n, *modes), dtype=torch.complex64)
+        resolved = DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype
+        coeff = random_func((n, *modes), dtype=resolved)
         if not complex_funcs:
             # Real-valued functions need a conjugate-symmetric spectrum.
             coeff = cls.enforce_hermitian(coeff)

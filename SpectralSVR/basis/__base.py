@@ -3,7 +3,7 @@ import abc
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
 from ..utils import resize_modes, interpolate_tensor, resolve_device
-from .config import SpectralConfig
+from .config import DEFAULT_COEFF_DTYPE, SpectralConfig
 from .domain import (
     DomainAxis,
     DomainInputType,
@@ -96,6 +96,7 @@ class Basis(abc.ABC):
         time_dependent: bool = False,
         sampling: SamplingInputType = None,
         strategy: "EvaluationStrategy | None" = None,
+        coeff_dtype: torch.dtype | None = None,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -111,6 +112,7 @@ class Basis(abc.ABC):
             sampling=sampling if sampling is not None else self.default_sampling(),
             domain=domain,
             strategy=DEFAULT_EVALUATION_STRATEGY if strategy is None else strategy,
+            coeff_dtype=DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype,
         )
 
     @classmethod
@@ -133,6 +135,7 @@ class Basis(abc.ABC):
             domain=config.domain,
             sampling=config.sampling,
             strategy=config.strategy,
+            coeff_dtype=config.coeff_dtype,
             time_dependent=time_dependent,
             complex_funcs=complex_funcs,
         )

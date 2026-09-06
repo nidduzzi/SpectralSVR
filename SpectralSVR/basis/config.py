@@ -82,3 +82,23 @@ class SpectralConfig:
         default.
         """
         return replace(self, coeff_dtype=coeff_dtype)
+
+
+DEFAULT_COEFF_DTYPE = torch.complex64
+DEFAULT_REAL_DTYPE = torch.empty(0, dtype=DEFAULT_COEFF_DTYPE).real.dtype
+
+
+class ResolvedCoeffDtype:
+    """Reads the coefficient precision from a basis's configuration.
+
+    Accessed on the class it answers the default, so consumers holding a basis
+    type rather than an instance keep working. Accessed on an instance it reads
+    through to that instance's configuration, so the value cannot go stale when
+    the configuration is replaced.
+    """
+
+    def __get__(
+        self, instance: object | None, owner: type | None = None
+    ) -> torch.dtype:
+        config = getattr(instance, "_config", None) if instance is not None else None
+        return DEFAULT_COEFF_DTYPE if config is None else config.coeff_dtype

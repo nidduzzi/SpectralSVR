@@ -5,9 +5,9 @@
 
 ## 2. Basis side
 
-- [ ] 2.1 Resolve `FourierBasis.coeff_dtype` through the instance configuration instead of the class constant, keeping the attribute readable for `model/SpectralSVR.py` and `problems/burgers.py`; verify a basis with no coefficients still answers, since the config is coefficient-independent
-- [ ] 2.2 Route `generate_empty` (`FourierBasis.py:342`) and `generate_coeff` (`:360`) through the resolved precision instead of their `torch.complex64` literals; verify the seeded numerical Burgers field (`nu=0.01`, `(16,16)`, `slice(0,1,50)`, seed 1234) is `torch.equal` to a worktree at this branch's parent commit
-- [ ] 2.3 Route `FourierBasis.wave_number`'s `torch.float` default from the resolved real precision; verify `tests/basis` passes in full
+- [x] 2.1 Resolve `FourierBasis.coeff_dtype` through the instance configuration instead of the class constant, keeping the attribute readable for `model/SpectralSVR.py` and `problems/burgers.py`; verify a basis with no coefficients still answers, since the config is coefficient-independent
+- [x] 2.2 Route `generate_empty` (`FourierBasis.py:342`) and `generate_coeff` (`:360`) through the resolved precision instead of their `torch.complex64` literals; verify the seeded numerical Burgers field (`nu=0.01`, `(16,16)`, `slice(0,1,50)`, seed 1234) is `torch.equal` to a worktree at this branch's parent commit
+- [x] 2.3 Route `FourierBasis.wave_number`'s `torch.float` default from the resolved real precision; verify `tests/basis` passes in full
 
 ## 3. Model side and the boundary
 
