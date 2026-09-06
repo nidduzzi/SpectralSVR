@@ -81,6 +81,8 @@ Both edits land on a function whose guarantees are stated but untested. `coeffic
 
 The change's own proof is that nothing moved: the seeded numerical Burgers field and all four benchmark rows must be unchanged, since the default is untouched. The new capability is proved separately by constructing a double-precision basis and showing the precision survives to the regressor.
 
+*The benchmark cannot serve as the byte-identity check, and this was measured rather than assumed.* Six consecutive runs of identical code in the same tree vary by up to `2.51e-05` relative, against a base-vs-head difference of `8.91e-06` for this change — the harness moves further against itself than this change moves it. Dataset generation is bit-identical and an isolated fit-and-predict is bit-identical within and across processes, so the variation is neither seeding nor the model; pinning `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to 1 cuts it to `6.15e-07`, which points at multi-threaded reductions in the solve. That is a property of the harness, not of this change, and `benchmark-reproducibility` is the change that addresses it. The seeded field hash is what binds here.
+
 A third anchor covers the bridge itself, built from a list of `(forward, inverse)` pairs rather than one test per function. The requirement it enforces is quantified over *every* conversion, so the test is quantified the same way: a conversion added to the package later is either covered by the registry or fails the anchor for being absent from it. Writing four near-identical tests would satisfy the requirement today and silently stop satisfying it the moment a fifth conversion appears.
 
 ## Risks / Trade-offs

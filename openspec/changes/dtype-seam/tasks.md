@@ -42,7 +42,7 @@ shaped to match whatever the edit produced.
 
 ## 7. Verification
 
-- [ ] 7.1 Verify all four benchmark rows are unchanged by regenerating and comparing against the committed table — the default did not move, so any difference is a defect
-- [ ] 7.2 Verify the seeded numerical Burgers field is byte-identical to the baseline captured before any edit; record the hash on both sides
-- [ ] 7.3 Run `just check`; verify ruff, mypy and ty are clean and the suite passes
-- [ ] 7.4 Verify no source file gained an explanatory prose comment; the precision decision must read from the config field's name and the boundary check's error text
+- [x] 7.1 Regenerate all four benchmark rows and record them against the harness's measured run-to-run noise, not as a byte-identity check. *Restated from this task as first written, which asked for a comparison against "the committed table" treating "any difference" as a defect.* Neither half is available: `results/` is gitignored and the `bench_results.csv` at the repo root predates the script, so no committed table exists; and six consecutive runs of identical code in the same tree vary by up to `2.51e-05` relative, which is roughly three times **larger** than this change's base-vs-head difference of `8.91e-06`. The comparison therefore cannot distinguish a defect from a re-run in either direction. Verify by recording both figures and stating that the benchmark corroborates rather than proves
+- [x] 7.2 Verify the seeded numerical Burgers field is byte-identical to the baseline captured before any edit; record the hash on both sides
+- [x] 7.3 Run `just check`; verify ruff, mypy and ty are clean and the suite passes
+- [x] 7.4 Verify no source file gained an explanatory prose comment; the precision decision must read from the config field's name and the boundary check's error text
