@@ -16,6 +16,7 @@ from SpectralSVR import (
     FourierBasis,
     LSSVR,
     SpectralSVR,
+    to_complex_coeff,
     to_real_coeff,
 )
 
@@ -208,3 +209,37 @@ def test_boundary_is_silent_when_the_precisions_match(caplog):
     with caplog.at_level(logging.WARNING):
         model.train(f, u)
     assert not [r for r in caplog.records if "reaches the regressor" in r.message]
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_consistency
+def test_double_precision_survives_the_model_boundary():
+    """A double-precision basis reaches the regressor undiminished."""
+    generator = torch.Generator().manual_seed(5)
+    coeff = FourierBasis.generate_coeff(
+        6, 4, generator=generator, coeff_dtype=torch.complex128
+    )
+    assert coeff.dtype == torch.complex128
+
+    interleaved = to_real_coeff(coeff)
+    assert interleaved.dtype == torch.float64
+    assert torch.equal(to_complex_coeff(interleaved), coeff)
+
+    model = SpectralSVR(
+        FourierBasis(coeff_dtype=torch.complex128),
+        LSSVR(kernel="linear", C=1.0, dtype=torch.float64),
+    )
+    model.train(coeff, coeff)
+    assert model.regressor.dtype == torch.float64
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_bridge_round_trips_exactly_at_both_precisions():
+    generator = torch.Generator().manual_seed(6)
+    for complex_dtype in (torch.complex64, torch.complex128):
+        for shape in ((5, 9), (2, 8, 8)):
+            c = torch.randn(*shape, dtype=complex_dtype, generator=generator)
+            assert torch.equal(to_complex_coeff(to_real_coeff(c)), c), (
+                f"{complex_dtype} {shape}"
+            )

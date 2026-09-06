@@ -36,9 +36,9 @@ shaped to match whatever the edit produced.
 
 ## 6. Double precision end to end
 
-- [ ] 6.1 Add `test_double_precision_survives_the_model_boundary` (`oracle_consistency`, `no_fuzz`): construct a double-precision basis, convert coefficients through the bridge, and assert the values reaching the regressor are float64 and exactly equal to the source; verify it fails on the pre-change code, where the boundary truncates
-- [ ] 6.2 Add a round-trip test at both precisions over two- and three-axis coefficient grids asserting `torch.equal`; verify it passes
-- [ ] 6.3 Document the throughput and memory cost at the point the precision is chosen, per the capability requirement; verify the text names the measured penalty and the kind of work that justifies it
+- [x] 6.1 Add `test_double_precision_survives_the_model_boundary` (`oracle_consistency`, `no_fuzz`): construct a double-precision basis, convert coefficients through the bridge, and assert the values reaching the regressor are float64 and exactly equal to the source; verify it fails on the pre-change code, where the boundary truncates
+- [x] 6.2 Add a round-trip test at both precisions over two- and three-axis coefficient grids asserting `torch.equal`; verify it passes
+- [x] 6.3 Document the throughput and memory cost at the point the precision is chosen, per the capability requirement; verify the text names the measured penalty and the kind of work that justifies it
 
 ## 7. Verification
 

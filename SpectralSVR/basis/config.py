@@ -37,6 +37,12 @@ class SpectralConfig:
     every axis, or one per axis -- and resolved to a concrete per-axis tuple only
     on demand, against an explicit mode count. (A domain may be periodic on one
     axis and not another, so node placement is per-axis too.)
+
+    ``coeff_dtype`` is the complex precision coefficients are stored in, with the
+    real precision the model boundary consumes derived from it. Double precision
+    is substantially slower for matrix-bound work on consumer hardware --
+    measured 16.9x on a 2048-square matmul, against 2.8x for a transform -- and
+    doubles the memory each coefficient occupies; see :meth:`with_precision`.
     """
 
     sampling: SamplingInputType
