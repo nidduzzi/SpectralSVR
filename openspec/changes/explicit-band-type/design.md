@@ -68,6 +68,33 @@ tensor slicing, which is worse than a named form with a stated contract.
 count at run time catches the defect but leaves it expressible, and gives a
 caller with a non-symmetric grid no way to say what they mean.
 
+### The type is a closed sum, not a base class with constructors
+
+Decided during implementation. The first cut was an abstract `Band` with
+`up_to_wavenumber` / `whole_grid` / `exact_count` static constructors returning
+private subclasses. That hides the variants but leaves the type *open*: a fourth
+subclass can be written that keeps an even count while claiming to be real,
+which is the exact state this change exists to remove.
+
+So the three forms are public frozen dataclasses and the type is their union:
+
+```
+RealBand = WavenumberCutoff | WholeGrid
+Band     = RealBand | ExactModeCount
+```
+
+The union is closed, so enumerating its members is exhaustive rather than a
+sample. `RealBand` is the constructive half of the realness guarantee: an
+operation that must return a real field annotates `RealBand`, and passing
+`ExactModeCount` is then a type error at the call site rather than a runtime
+check or a docstring warning. `mypy` and `ty` both reject it, and the runtime
+`TypeError` in `zero_coeff` remains only for untyped callers such as notebooks.
+
+What stays a runtime check is a negative width. Python has no natural-number
+type, so `WavenumberCutoff(-1)` and `ExactModeCount(-1)` raise from
+`__post_init__` — a smart constructor, which is the boundary where the type
+system stops helping.
+
 ### The raw form is a peer, not a deprecated path
 
 It is not a migration shim. Truncating a non-symmetric grid is a real operation
