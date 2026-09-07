@@ -30,6 +30,21 @@ A band that guarantees a real-valued result SHALL be constructible only in forms
 - **WHEN** a caller tries to state a real-guaranteeing band that would keep an even number of modes short of the whole grid
 - **THEN** no such band can be constructed, rather than one being constructed and silently returning a grid that is not conjugate-symmetric
 
+### Requirement: An operation can require a band that guarantees a real result
+An operation that must return a coefficient grid describing a real field SHALL be able to require a band that guarantees one, and a band making no such guarantee SHALL be refused where the call is written rather than discovered in the result. The guarantee SHALL be carried by the band itself, so an operation states the requirement once and needs no check of its own.
+
+#### Scenario: A guaranteeing band is accepted
+- **WHEN** an operation that must return a real field is passed a band stated by the highest magnitude it keeps, or the band that keeps everything
+- **THEN** it is accepted, because both keep a set closed under negation
+
+#### Scenario: A band without the guarantee is refused where it is passed
+- **WHEN** that same operation is passed a band stated as an exact number of modes
+- **THEN** it is refused at the call site, rather than after the operation has produced a grid that is not conjugate-symmetric
+
+#### Scenario: Band-limiting itself does not require the guarantee
+- **WHEN** a caller band-limits a coefficient grid that was never conjugate-symmetric
+- **THEN** the operation still accepts a band stated as an exact number of modes, because truncating such a grid is a legitimate request rather than a defect
+
 ### Requirement: Truncation without a realness promise remains available
 A band form that keeps an exact number of modes SHALL remain available, and SHALL state that its result is not guaranteed to describe a real field. Coefficient grids that are not conjugate-symmetric are legitimate — a predicted grid is not symmetrised — so an operation that truncates one is not defective merely because its result is complex.
 

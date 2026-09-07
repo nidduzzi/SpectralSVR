@@ -15,7 +15,7 @@ behaviour exactly, so the suite is green at the end of every section.
 - [x] 1.2 Add a whole-grid form; verify it keeps every bin of the array it is applied to, including the self-paired boundary bin on an even-sized grid, and that this is the case a cutoff cannot express — on 16 bins the cutoff forms give 1, 3, … 15 and never 16
 - [x] 1.3 Add a raw-count form keeping exactly `m` modes, whose docstring states the result is not guaranteed to be conjugate-symmetric and names the cutoff form as the alternative when a real result is required; verify the wording states the limitation without promising a future change
 - [x] 1.4 Verify no form of the type can express an even kept set that claims to be real: the cutoff form yields only odd sizes, the whole-grid form yields the grid size, and the raw form makes no claim
-- [x] 1.5 Export the type from the package root beside `zero_coeff`; verify it imports
+- [x] 1.5 Export the band forms and both aliases from the package root beside `zero_coeff` — five names, since the type is a closed union rather than one class; verify they import
 
 ## 2. `zero_coeff` takes a band
 
@@ -35,7 +35,7 @@ behaviour exactly, so the suite is green at the end of every section.
 
 ## 4. The notebooks
 
-- [x] 4.1 Convert the four `zero_coeff` call sites in `notebooks/spectralsvr_inv.ipynb`, `notebooks/spectralsvr_2d ls_coeff.ipynb`, `notebooks/spectralsvr_hf_lf.ipynb` and `notebooks/spectralsvr_wave2d.ipynb`; for each, record whether the original count was even or odd, since an even one was silently producing a complex field
+- [x] 4.1 Convert the four `zero_coeff` call sites — they sit two apiece in `notebooks/spectralsvr_inv.ipynb` and `notebooks/spectralsvr_hf_lf.ipynb`, while `notebooks/spectralsvr_2d ls_coeff.ipynb` and `notebooks/spectralsvr_wave2d.ipynb` import the name without ever calling it; for each call, record whether the original count was even or odd, since an even one was silently producing a complex field
 - [x] 4.2 Choose each call's band form by what that notebook is doing rather than mechanically: a cutoff where the field is real and the intent is band-limiting, the raw form where the count was load-bearing for a downstream shape. Verify the choice is recorded per call site
 - [x] 4.3 Verify each converted notebook still executes, or record why it cannot be run and what was checked instead — the notebooks may be outdated independently of this change
 

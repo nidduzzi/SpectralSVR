@@ -33,22 +33,28 @@ modes *kept*. `zero_coeff(x, 4)` keeps four.
 
 ## What Changes
 
-- A band type is introduced with several constructors, so a caller names the
-  intent rather than passing a bare integer whose meaning is ambiguous:
-  - a **cutoff** form keeping every `|k| <= K`, yielding `2K + 1` modes, real by
-    construction;
-  - a **full-grid** form keeping the whole array including the self-paired
-    boundary bin, also real;
-  - a **raw-count** form keeping exactly `m` modes, carrying a documented
-    contract that the result is *not* necessarily real.
+- A band becomes a closed sum type, so a caller names the intent rather than
+  passing a bare integer whose meaning is ambiguous:
+  - `WavenumberCutoff(K)` keeps every `|k| <= K`, yielding `2K + 1` modes, real
+    by construction;
+  - `WholeGrid()` keeps the whole array including the self-paired boundary bin,
+    also real;
+  - `ExactModeCount(m)` keeps exactly `m` modes, carrying a stated contract that
+    the result is *not* necessarily real.
+
+  The first two are aliased `RealBand`; `Band` is their union with the third.
+  The union is closed, so no fourth form can be written that keeps an even count
+  while claiming to be real — and an operation that must return a real field can
+  take `RealBand`, which refuses the third at the call site rather than in the
+  result.
 - **BREAKING**: `zero_coeff` takes that type instead of an `int | list[int]`.
-  Four notebooks and two tests call it and are updated.
+  Two notebooks and three test modules call it and are updated.
 - Keeping the whole grid stops raising and becomes the no-op it should be.
 - The invalid state — an even count silently believed to be real — becomes
-  unconstructible. Producing it now requires naming the raw form and accepting
-  its stated contract.
+  unconstructible. Producing it now requires naming `ExactModeCount` and
+  accepting its stated contract.
 
-The raw form is deliberate, not a loophole. A cutoff-only type would be too
+`ExactModeCount` is deliberate, not a loophole. A cutoff-only type would be too
 strong for two measured reasons. It cannot express the full grid on an
 even-sized array: on 16 bins the valid symmetric kept sets are 1, 3, … 15 *and
 also 16*, because at the grid's own edge the bin at `-N/2` is self-paired and
@@ -77,18 +83,24 @@ realness requirement on callers who never asked for one.
 
 ## Impact
 
-- `SpectralSVR/utils/__init__.py`: the band type and `zero_coeff`'s signature and
-  body.
-- `SpectralSVR/__init__.py`: export the type beside `zero_coeff`.
+- `SpectralSVR/utils/__init__.py`: the three band forms, the two aliases, and
+  `zero_coeff`'s signature and body.
+- `SpectralSVR/__init__.py`: export all five names beside `zero_coeff`.
 - `tests/basis/test_coeff_anchors.py:144`: `test_zero_coeff_values` pins an even
   count of 4 by hand-written literal and is restated in terms of a band.
 - `tests/utils/test_utils.py:342`: `test_zero_coeff_zeros_high_modes` fuzzes
   `keep` over `[1, 3]`, which includes the even 2.
-- `notebooks/`: `spectralsvr_inv.ipynb`, `spectralsvr_2d ls_coeff.ipynb`,
-  `spectralsvr_hf_lf.ipynb`, `spectralsvr_wave2d.ipynb` all call `zero_coeff`.
-- **No reported number moves.** `zero_coeff` has no callers inside
-  `SpectralSVR/` — only notebooks and tests — so no benchmark row and no seeded
-  field can change through it.
+- `tests/utils/test_band.py`: new, holding the type's own contract.
+- `notebooks/`: the four `zero_coeff` call sites sit two apiece in
+  `spectralsvr_inv.ipynb` and `spectralsvr_hf_lf.ipynb`.
+  `spectralsvr_2d ls_coeff.ipynb` and `spectralsvr_wave2d.ipynb` import the name
+  and never call it.
+- **No reported number moves — and the benchmark table is not what shows it.**
+  `zero_coeff` has no callers inside `SpectralSVR/` — only notebooks and tests —
+  so no numerical path reaches it. The claim is carried by that call-graph fact
+  and by the seeded numerical Burgers field, which is deterministic and hashes
+  identically. The four benchmark rows are not evidence either way: they move as
+  much between two runs of identical code as they do between base and head.
 
 `mms_solution`'s band derivation in `problems/burgers.py`, which computes
 `band_limited = tuple(max(1, m // 3) for m in modes)` and can therefore be even,
