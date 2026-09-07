@@ -14,7 +14,13 @@ from hypothesis import strategies as st
 
 from tests._anchors import half_open_grid, single_mode_spectrum
 from SpectralSVR import FourierBasis
-from SpectralSVR.utils import resize_modes, zero_coeff
+from SpectralSVR.utils import (
+    ExactModeCount,
+    WavenumberCutoff,
+    WholeGrid,
+    resize_modes,
+    zero_coeff,
+)
 
 SETTINGS = settings(deadline=None, max_examples=20)
 
@@ -144,11 +150,48 @@ def test_padding_preserves_the_function_at_the_original_sample_points():
 def test_zero_coeff_values():
     x = (
         torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
-    )  # bins 0..7
-    # keep 4 modes -> keep freqs {0, 1, -2, -1} = bins {0, 1, 6, 7}; zero the
-    # high-|frequency| middle block bins {2, 3, 4, 5}
-    expected = torch.tensor([[1, 2, 0, 0, 0, 0, 7, 8]], dtype=torch.complex64)
-    assert torch.equal(zero_coeff(x, 4), expected)
+    )  # bins 0..7 = freqs [0, 1, 2, 3, -4, -3, -2, -1]
+    # |k| <= 2 keeps freqs {0, 1, 2, -2, -1} = bins {0, 1, 2, 6, 7}; zero the
+    # high-|frequency| middle block bins {3, 4, 5}
+    expected = torch.tensor([[1, 2, 3, 0, 0, 0, 7, 8]], dtype=torch.complex64)
+    assert torch.equal(zero_coeff(x, WavenumberCutoff(2)), expected)
+    # the same numeral as a raw count is a different band: 2 modes, freqs
+    # {0, -1} = bins {0, 7}
+    assert torch.equal(
+        zero_coeff(x, ExactModeCount(2)),
+        torch.tensor([[1, 0, 0, 0, 0, 0, 0, 8]], dtype=torch.complex64),
+    )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_zero_coeff_cutoff_preserves_conjugate_symmetry():
+    for n in RESIZE_SOURCE_MODES:
+        source = hermitian_spectrum(n, seed=n)
+        assert hermitian_error(source) == 0.0, f"n={n}: source is not Hermitian"
+        for cutoff in range(n):
+            measured = hermitian_error(zero_coeff(source, WavenumberCutoff(cutoff)))
+            assert measured == 0.0, f"n={n}, |k|<={cutoff}: {measured:.3e}"
+    # the raw form one mode narrower keeps an even count, which no result can
+    # make real -- this is what makes the assertion above discriminating
+    source = hermitian_spectrum(16, seed=16)
+    for cutoff in range(1, 8):
+        measured = hermitian_error(zero_coeff(source, ExactModeCount(2 * cutoff)))
+        assert measured > 0.0, f"exact count {2 * cutoff} was already Hermitian"
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_zero_coeff_keeping_everything_is_a_no_op():
+    for n in RESIZE_SOURCE_MODES:
+        source = hermitian_spectrum(n, seed=n)
+        for band in (
+            WholeGrid(),
+            WavenumberCutoff(n),
+            ExactModeCount(n),
+            ExactModeCount(n + 5),
+        ):
+            assert torch.equal(zero_coeff(source, band), source), f"n={n}, {band}"
 
 
 # --------------------------------------------------------------------------- #

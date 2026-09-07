@@ -1,6 +1,7 @@
 import torch
 import logging
 import typing
+from dataclasses import dataclass
 from typing import Callable, TypedDict, cast, overload
 from torchdiffeq import odeint
 from functools import partial
@@ -457,26 +458,102 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
     return x_resized
 
 
-def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
-    """Band-limit a coefficient grid in place, keeping the lowest modes.
+@dataclass(frozen=True)
+class WavenumberCutoff:
+    """Keep every mode with ``|k| <= cutoff``, so ``2 * cutoff + 1`` modes.
 
-    An even count returns a grid that does not describe a real field. Modes
-    pair as ``+-k`` around the lone mode ``0``, so a kept set whose inverse
-    transform is real is always odd-sized: keeping an even count necessarily
-    keeps one member of a pair without the other. No substitute result answers
-    the request that was made -- rounding either direction keeps a different
-    number of modes than asked for.
+    The kept set is closed under negation, so a conjugate-symmetric grid
+    band-limited through it is still conjugate-symmetric. A cutoff reaching
+    past the grid keeps the whole grid.
     """
-    if isinstance(zeroed_modes, int):
-        zeroed_modes = [zeroed_modes] * len(x.shape[1:])
-    assert len(x.shape[1:]) == len(zeroed_modes), (
-        f"x and max_modes should be the same dimensions after the first dimension of x, x has shape {x.shape} and max_modes is {zeroed_modes}"
+
+    cutoff: int
+
+    def __post_init__(self) -> None:
+        if self.cutoff < 0:
+            raise ValueError(f"cutoff must be non-negative, got {self.cutoff}")
+
+    def mode_count(self, dim_len: int) -> int:
+        return min(2 * self.cutoff + 1, dim_len)
+
+
+@dataclass(frozen=True)
+class WholeGrid:
+    """Keep every bin, so band-limiting is a no-op.
+
+    On an even-sized grid this includes the self-paired boundary bin, the real
+    kept set no :class:`WavenumberCutoff` short of the grid can express.
+    """
+
+    def mode_count(self, dim_len: int) -> int:
+        return dim_len
+
+
+@dataclass(frozen=True)
+class ExactModeCount:
+    """Keep exactly ``modes`` modes, whatever the parity of ``modes``.
+
+    The result is not guaranteed to be conjugate-symmetric: an even count keeps
+    one member of a ``+-k`` pair without the other, and no result satisfies
+    that request. State a :data:`RealBand` where the result must describe a
+    real field.
+    """
+
+    modes: int
+
+    def __post_init__(self) -> None:
+        if self.modes < 0:
+            raise ValueError(f"modes must be non-negative, got {self.modes}")
+
+    def mode_count(self, dim_len: int) -> int:
+        return min(self.modes, dim_len)
+
+
+RealBand = WavenumberCutoff | WholeGrid
+"""A band whose kept set is closed under negation.
+
+Band-limiting a conjugate-symmetric grid through one yields a grid that is
+still conjugate-symmetric, so an operation that must return a real field takes
+this rather than :data:`Band`.
+"""
+
+Band = RealBand | ExactModeCount
+"""Which modes an operation keeps when it band-limits a coefficient grid."""
+
+
+def zero_coeff(x: torch.Tensor, band: Band | list[Band]) -> torch.Tensor:
+    """Band-limit a coefficient grid, keeping the modes the band names.
+
+    Arguments:
+        x {torch.Tensor} -- coefficient grid whose axes after the first are
+        mode axes
+
+        band {Band | list[Band]} -- one band applied to every mode axis, or one
+        per axis. A :data:`RealBand` keeps a set closed under negation, so the
+        result is conjugate-symmetric whenever ``x`` is; an
+        :class:`ExactModeCount` keeps a stated number of modes without that
+        guarantee
+
+    Returns:
+        torch.Tensor -- a copy of ``x`` with the modes outside the band zeroed
+    """
+    if isinstance(band, Band):
+        bands = [band] * len(x.shape[1:])
+    elif isinstance(band, list) and all(isinstance(axis, Band) for axis in band):
+        bands = band
+    else:
+        raise TypeError(
+            f"zero_coeff takes a Band, or one Band per mode axis, got {band!r}"
+        )
+    assert len(x.shape[1:]) == len(bands), (
+        f"x and bands should be the same dimensions after the first dimension of x, x has shape {x.shape} and bands is {bands}"
     )
     x_zeroed = x.clone()
-    for dim, max_mode in enumerate(zeroed_modes, 1):
+    for dim, axis_band in enumerate(bands, 1):
         dim_len = x.shape[dim]
-        zero_range = torch.tensor(
-            range((max_mode - 1) // 2 + 1, dim_len - max_mode // 2)
+        max_mode = axis_band.mode_count(dim_len)
+        zero_range = torch.arange(
+            (max_mode - 1) // 2 + 1, dim_len - max_mode // 2, dtype=torch.long
         )
         x_zeroed.index_fill_(dim, zero_range, torch.zeros((1,), dtype=x.dtype)[0])
 
