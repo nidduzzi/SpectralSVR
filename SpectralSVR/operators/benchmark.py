@@ -10,16 +10,15 @@ import torch
 
 from ..utils import get_metrics
 from .__base import Operator
-from .dataset import OperatorDataset
+from .dataset import Split
 
 
 def benchmark(
     operators: Sequence[Operator],
-    train: OperatorDataset,
-    test: OperatorDataset,
+    split: Split,
     query: torch.Tensor,
 ) -> pd.DataFrame:
-    """Fit each operator on ``train`` and score it on ``test`` at ``query``.
+    """Fit each operator on ``split.train`` and score it on ``split.test`` at ``query``.
 
     Every operator is scored with the project's shared metric suite
     (:func:`utils.get_metrics`) against the same targets, so the columns are
@@ -31,10 +30,9 @@ def benchmark(
     ----------
     operators : Sequence[Operator]
         The baselines to compare (e.g. ``SpectralSVROperator``, ``DeepONetOperator``).
-    train, test : OperatorDataset
-        Train / test splits (same problem, same sensors). They must share no
-        functions; this is the caller's to supply and is not verified here, so
-        an overlapping split scores optimistically with no warning.
+    split : Split
+        The training and scoring halves of one source. ``Split.partition`` is the
+        only way to build one, so they share no functions by construction.
     query : torch.Tensor
         Shape ``(Q, d)`` points to evaluate the predicted output functions at.
 
@@ -48,16 +46,16 @@ def benchmark(
     # trips over a GPU-trained prediction vs a CPU target
     # contiguous: torchmetrics .view(-1) rejects strided views (e.g. a 2D
     # basis evaluation that arrives as a permuted tensor)
-    target = test.targets(query).detach().cpu().contiguous()
+    target = split.test.targets(query).detach().cpu().contiguous()
     rows = []
     for op in operators:
         start = time.perf_counter()
-        op.fit(train)
+        fitted = op.fit(split.train)
         fit_seconds = time.perf_counter() - start
-        pred = op.predict(test.f, query).detach().cpu().contiguous()
+        pred = fitted.predict(split.test.f, query).detach().cpu().contiguous()
         rows.append(
             {
-                "operator": op.name,
+                "operator": fitted.name,
                 "fit_seconds": fit_seconds,
                 **get_metrics(pred, target),
             }

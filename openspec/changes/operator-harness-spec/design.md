@@ -161,6 +161,48 @@ and holding two fitted values, or keeping the unfitted operator alive alongside
 its fitted result. Neither is harmful here — `fit` has no side effect on the
 operator — so the encoding buys the ordering guarantee and stops there.
 
+Both protocols carry `@runtime_checkable`, which makes the typestate assertable
+by name: `isinstance(op, FittedOperator)` is `False` before fitting and `True`
+after, which is what a test should say rather than poking at `hasattr`. Three
+limits of that decorator are worth stating, all measured on 3.13 rather than
+assumed:
+
+- It checks only that members are *present*. Signatures are not checked, so a
+  zero-argument `predict` satisfies `FittedOperator`.
+- `issubclass` is unavailable for `Operator`, which raises
+  `TypeError: Protocols with non-method members don't support issubclass()`
+  because of `name`. `isinstance` works; `issubclass` must not be written.
+- A one-method protocol discriminates badly here. `predict` is the most common
+  method name in the repository, so `{predict}` alone is satisfied by `LSSVR`
+  and `FNN`. `FittedOperator` therefore carries `name` as well as `predict`,
+  which measures clean: neither regressor has a `name`, so `{name, predict}`
+  matches the fitted value and nothing else. `benchmark` labels its row from
+  `fitted.name` as a result, rather than reaching back to the unfitted operator.
+
+### What actually enforces the ordering, and in which layer
+
+Three mechanisms, and they are not interchangeable:
+
+| layer | mechanism | what it catches |
+| --- | --- | --- |
+| static | `mypy` and `ty` in `just lint` | `predict` on an unfitted operator, and wrong signatures |
+| behavioural | the harness tests | a `predict` that returns the wrong thing |
+| runtime | `isinstance` against the protocols | presence of members, nothing more |
+
+The static layer is the one that carries the guarantee; `@runtime_checkable`
+only buys the test a better spelling than `hasattr`. It is deliberately the
+weakest of the three and nothing should lean on it.
+
+*Alternative rejected — a concrete `FittedOperator` dataclass.* Nominal, exact,
+no structural collisions at all. It also turns every adapter's trained state
+into a closure and costs the fitted value its own type, which is the reason the
+generic-wrapper shape was turned down when this was decided.
+
+*Alternative rejected — `beartype` or `typeguard`.* These are the tools that
+genuinely enforce signatures at run time. They are also a new runtime dependency
+on the surface a reader of the paper reproduces from, bought for one assertion
+the static checkers already make. Not worth the `pyproject.toml` entry.
+
 *Alternative rejected — an abstract `FittedOperator` base.* It delivers the same
 ordering guarantee, but forces every adapter through an inheritance chain for a
 single method, and makes third-party adapters depend on our class rather than on

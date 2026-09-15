@@ -61,6 +61,18 @@ class OperatorDataset:
     f: torch.Tensor
     u: Basis
 
+    def __post_init__(self) -> None:
+        if self.f.shape[1] != self.sensors.shape[0]:
+            raise ValueError(
+                f"inputs are sampled at {self.f.shape[1]} points but the dataset "
+                f"carries {self.sensors.shape[0]} sensors"
+            )
+        if self.f.shape[0] != len(self.u):
+            raise ValueError(
+                f"{self.f.shape[0]} input functions against {len(self.u)} output "
+                "functions; every input needs the output it maps to"
+            )
+
     @property
     def n_functions(self) -> int:
         return self.f.shape[0]
@@ -89,3 +101,43 @@ class OperatorDataset:
     def targets(self, x: torch.Tensor) -> torch.Tensor:
         """Ground-truth output values ``u(x)`` at query points ``x`` -> ``(N, Q)``."""
         return self.u(x).real.to(torch.float64)
+
+
+@dataclass(frozen=True)
+class Split:
+    """A training and a scoring half of one source, disjoint by construction.
+
+    Only :meth:`partition` builds one, so a pair sharing functions cannot be
+    stated and an operation handed a ``Split`` needs no check of its own.
+
+    Attributes
+    ----------
+    train, test : OperatorDataset
+        Disjoint halves of the fields ``partition`` was given.
+    """
+
+    train: OperatorDataset
+    test: OperatorDataset
+
+    @classmethod
+    def partition(
+        cls,
+        input_field: Basis,
+        output_field: Basis,
+        n_train: int,
+        n_sensors: int,
+    ) -> "Split":
+        """Cut one pair of fields at ``n_train`` into a training and a scoring half."""
+        if not 0 < n_train < len(input_field):
+            raise ValueError(
+                f"n_train must leave both halves non-empty: got {n_train} "
+                f"for {len(input_field)} functions"
+            )
+        return cls(
+            train=OperatorDataset.from_fields(
+                input_field[:n_train], output_field[:n_train], n_sensors=n_sensors
+            ),
+            test=OperatorDataset.from_fields(
+                input_field[n_train:], output_field[n_train:], n_sensors=n_sensors
+            ),
+        )

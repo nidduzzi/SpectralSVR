@@ -12,8 +12,9 @@ from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
     DeepONetOperator,
+    FittedOperator,
     Operator,
-    OperatorDataset,
+    Split,
     SpectralSVROperator,
     benchmark,
     sensor_grid,
@@ -37,9 +38,7 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=SENSORS):
     u, ut = Antiderivative().generate(
         FourierBasis, n_train + n_test, modes, generator=g, u0=0
     )
-    train = OperatorDataset.from_fields(ut[:n_train], u[:n_train], n_sensors=modes)
-    test = OperatorDataset.from_fields(ut[n_train:], u[n_train:], n_sensors=modes)
-    return train, test
+    return Split.partition(ut, u, n_train, n_sensors=modes)
 
 
 @pytest.mark.oracle_smoke
@@ -55,7 +54,7 @@ def test_sensor_grid_shape(n, d):
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 def test_operator_dataset_shapes():
-    train, _ = _antiderivative_split(0)
+    train = _antiderivative_split(0).train
     assert train.sensors.shape == (16, 1)
     assert train.f.shape == (120, 16)
     assert train.n_functions == 120
@@ -74,8 +73,10 @@ def test_spectralsvr_operator_learns_antiderivative():
     x_query = QUERY.squeeze(-1)
     unit = torch.cos(2 * math.pi * x_sensors).norm()
     for seed in range(5):
-        train, _ = _antiderivative_split(seed)
-        op = SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)).fit(train)
+        train = _antiderivative_split(seed).train
+        fitted = SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)).fit(
+            train
+        )
         amp = float(train.f.norm(dim=1).mean() / unit)
 
         probes = torch.stack(
@@ -87,7 +88,7 @@ def test_spectralsvr_operator_learns_antiderivative():
                 for m in PROBE_MODES
             ]
         )
-        pred = op.predict(probes, QUERY).cpu().to(torch.float64)
+        pred = fitted.predict(probes, QUERY).cpu().to(torch.float64)
         assert pred.shape == exact.shape
 
         rel = (pred - exact).norm(dim=1) / exact.norm(dim=1)
@@ -106,21 +107,27 @@ def test_spectralsvr_operator_learns_antiderivative():
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_predict_before_fit_raises():
+def test_an_unfitted_operator_cannot_predict():
+    # the scenario the old assertion covered, moved to the type level: fitting is
+    # the only transition, and it does not run backwards
     op = SpectralSVROperator(FourierBasis(), LSSVR())
-    with pytest.raises(AssertionError, match="fit before predict"):
-        op.predict(torch.randn(2, 16), torch.linspace(0, 1, 10).unsqueeze(-1))
+    assert isinstance(op, Operator)
+    assert not isinstance(op, FittedOperator)
+    assert not hasattr(op, "predict")
+
+    fitted = op.fit(_antiderivative_split(0, n_train=20, n_test=5).train)
+    assert isinstance(fitted, FittedOperator)
+    assert not isinstance(fitted, Operator)
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 def test_benchmark_returns_metric_table():
-    train, test = _antiderivative_split(1)
+    split = _antiderivative_split(1)
     query = torch.linspace(0, 1, 40).unsqueeze(-1)
     df = benchmark(
         [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0))],
-        train,
-        test,
+        split,
         query,
     )
     assert list(df.index) == ["SpectralSVR"]
@@ -129,46 +136,47 @@ def test_benchmark_returns_metric_table():
     assert df.loc["SpectralSVR", "r2"] > 0.5
 
 
-class _Exploding(Operator):
+class _Exploding:
     name = "Exploding"
 
     def fit(self, dataset):
         raise RuntimeError("fit blew up")
 
-    def predict(self, f, x):
-        return torch.zeros(f.shape[0], x.shape[0], dtype=torch.float64)
 
-
-class _Constant(Operator):
+class _FittedConstant:
     """Predicts one number everywhere, chosen from the data it was fitted on."""
 
     name = "Constant"
 
-    def fit(self, dataset):
-        self.value = float(dataset.targets(QUERY).mean())
-        return self
+    def __init__(self, value):
+        self.value = value
 
     def predict(self, f, x):
         return torch.full((f.shape[0], x.shape[0]), self.value, dtype=torch.float64)
 
 
+class _Constant:
+    name = "Constant"
+
+    def fit(self, dataset):
+        return _FittedConstant(float(dataset.targets(QUERY).mean()))
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 def test_benchmark_propagates_a_failing_operator():
-    train, test = _antiderivative_split(0, n_train=20, n_test=5)
+    split = _antiderivative_split(0, n_train=20, n_test=5)
     with pytest.raises(RuntimeError, match="fit blew up"):
-        benchmark([_Exploding()], train, test, QUERY)
+        benchmark([_Exploding()], split, QUERY)
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_consistency
 def test_benchmark_scores_two_operators_against_the_same_targets():
-    train, test = _antiderivative_split(1, n_train=40, n_test=10)
-    constant = _Constant()
+    split = _antiderivative_split(1, n_train=40, n_test=10)
     df = benchmark(
-        [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)), constant],
-        train,
-        test,
+        [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)), _Constant()],
+        split,
         QUERY,
     )
     assert list(df.index) == ["SpectralSVR", "Constant"]
@@ -177,8 +185,8 @@ def test_benchmark_scores_two_operators_against_the_same_targets():
     # the benchmark scored against: test.targets(QUERY), not anything per
     # operator. Self-referential by construction -- the check is which library
     # output was used, so the library supplies both sides
-    target = test.targets(QUERY)
-    expected_mse = float(((target - constant.value) ** 2).mean())
+    target = split.test.targets(QUERY)
+    expected_mse = float(((target - float(split.train.targets(QUERY).mean())) ** 2).mean())
     assert df.loc["Constant", "mse"] == pytest.approx(expected_mse, rel=1e-9)
 
 
@@ -186,9 +194,9 @@ def test_benchmark_scores_two_operators_against_the_same_targets():
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 def test_deeponet_operator_smoke():
-    train, test = _antiderivative_split(0, n_train=40, n_test=10)
+    split = _antiderivative_split(0, n_train=40, n_test=10)
     query = torch.linspace(0, 1, 20).unsqueeze(-1)
-    op = DeepONetOperator(trunk=query, iterations=20, seed=0).fit(train)
-    pred = op.predict(test.f, query)
-    assert pred.shape == (test.n_functions, query.shape[0])
+    fitted = DeepONetOperator(trunk=query, iterations=20, seed=0).fit(split.train)
+    pred = fitted.predict(split.test.f, query)
+    assert pred.shape == (split.test.n_functions, query.shape[0])
     assert not torch.isnan(pred).any()
