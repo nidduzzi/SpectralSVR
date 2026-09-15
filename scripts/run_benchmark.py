@@ -14,7 +14,21 @@ Usage
     ... --quick                                 # small sizes, few iterations
 
 DeepONet needs the optional ``baselines`` extra (deepxde); it is skipped with a
-warning when unavailable.
+warning when unavailable, so the table can carry fewer rows than were asked for.
+
+What the table establishes
+--------------------------
+The harness holds the data and the metrics fixed: every operator is fitted on
+the same sensor-sampled inputs and scored against the same targets at the same
+query points through one metric suite. It does not hold the tuning fixed: the
+hyperparameters on both sides are fixed defaults, chosen once and not tuned per
+dataset, and each figure comes from a single seed (``--seed``, default 0). The table therefore demonstrates that the harness
+works; it is not a controlled comparison of the methods.
+
+``fit_seconds`` is not like-for-like either. ``DeepONetOperator.fit`` calls
+``_import_deepxde()`` -- a lazy import paid on its first call -- and converts the
+dataset to numpy; ``SpectralSVROperator.fit`` does neither. Read the column as
+the cost of each adapter as written, not of each method.
 """
 
 from __future__ import annotations

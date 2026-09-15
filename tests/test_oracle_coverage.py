@@ -24,7 +24,6 @@ EXEMPT = {
     "basis/test_basis.py",  # legacy end-to-end scenario; numerics anchored in test_fourier_basis.py / test_coeff_anchors.py
     "model/test_SpectralSVR.py",  # legacy end-to-end scenario; numerics anchored in test_spectralsvr_anchors.py
     "model/test_fnn.py",  # NN trainer has no closed form; overfit + serialization only
-    "operators/test_operators.py",  # thin adapters over anchored model/basis layers
     "test_oracle_coverage.py",  # this guard
 }
 

@@ -2,9 +2,10 @@
 
 Built from a problem's generated function pair, it holds the input functions
 sampled at fixed sensor locations plus the output functions as an evaluable
-basis field. Every adapter reads what it needs from the same object -- so
+basis field. Every adapter reads the view it needs from the same object -- so
 SpectralSVR (which wants the output coefficients) and DeepONet (which wants the
-output sampled at trunk points) compare on identical data.
+output sampled at trunk points) draw from one stored field, and a difference
+between two rows is a difference of method rather than of data.
 """
 
 from __future__ import annotations

@@ -20,6 +20,10 @@ class Operator(abc.ABC):
 
     Subclasses adapt a concrete method (SpectralSVR, DeepONet, ...) to this
     interface. ``name`` labels the operator in comparison tables.
+
+    ``fit`` precedes ``predict``, and ``predict`` evaluates at arbitrary query
+    points rather than only the training grid. Adapters enforce the order with
+    an assertion, so that message is a development-time guarantee.
     """
 
     name: str

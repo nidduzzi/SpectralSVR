@@ -23,14 +23,18 @@ def benchmark(
 
     Every operator is scored with the project's shared metric suite
     (:func:`utils.get_metrics`) against the same targets, so the columns are
-    directly comparable across methods.
+    directly comparable across methods. ``fit_seconds`` brackets ``fit`` alone,
+    excluding dataset construction and prediction. An operator that raises is
+    not caught: a failure stops the run rather than dropping a row.
 
     Parameters
     ----------
     operators : Sequence[Operator]
         The baselines to compare (e.g. ``SpectralSVROperator``, ``DeepONetOperator``).
     train, test : OperatorDataset
-        Disjoint train / test splits (same problem, same sensors).
+        Train / test splits (same problem, same sensors). They must share no
+        functions; this is the caller's to supply and is not verified here, so
+        an overlapping split scores optimistically with no warning.
     query : torch.Tensor
         Shape ``(Q, d)`` points to evaluate the predicted output functions at.
 
