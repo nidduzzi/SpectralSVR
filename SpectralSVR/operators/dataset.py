@@ -41,7 +41,7 @@ def sensor_grid(domain: tuple[DomainAxis, ...], n_per_axis: int) -> torch.Tensor
     return torch.stack([g.flatten() for g in mesh], dim=-1)
 
 
-@dataclass
+@dataclass(frozen=True)
 class OperatorDataset:
     """Input functions at sensors + output functions as an evaluable field.
 

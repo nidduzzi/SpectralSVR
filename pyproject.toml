@@ -47,6 +47,9 @@ test = [
     "hypothesis>=6.156.6,<7",
     "coverage>=7.15.0,<8",
 ]
+mutation = [
+    "cosmic-ray>=8.7.0",
+]
 
 [tool.uv.sources]
 torch = [
