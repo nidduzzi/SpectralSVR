@@ -69,6 +69,13 @@ because a reader can otherwise reasonably ask whether the reported spread is rea
 The figures are from one machine and belong in the output's provenance, not in the library. Re-measure them under
 this change's own protocol rather than carrying them forward as constants.
 
+`2.51e-05` is an upper bound observed on some comparisons, not a floor every comparison reaches. Measured later in
+this stack: `explicit-band-type`'s base-against-head comparison came back at `2.512e-05`, while two separate
+base-against-head comparisons for `operator-harness-spec` were byte-identical at `0.000e+00`. Which rows move, and
+whether any move at all, shifts between batches. Treating `2.51e-05` as a constant to compare against would make a
+clean comparison look anomalous and a noisy one look acceptable; it is a bound to read a difference *against*, not a
+value to expect.
+
 ## Risks / Trade-offs
 
 - **Regeneration cost multiplies by the seed count.** DeepONet trains for ten thousand iterations per dataset per seed. → The long format means a partial run can be appended rather than restarting, and the quick mode stays available for smoke checks.

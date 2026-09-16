@@ -15,7 +15,7 @@ The comparison table is the paper's headline result and is currently a single dr
 ## What Changes
 
 - The benchmark runs over a fixed set of seeds and reports a centre and a spread for every metric, so a difference can be read against the variation.
-- Each run records what produced it: the device **each stage** ran on, coefficient precision, torch and deepxde versions, and the code revision. A single device column would misreport today's runs, which use two — `Burgers.generate` integrates on `cuda:0` via `resolve_device()` while `MultiRegression.__init__` hardcodes `cpu`.
+- Each run records what produced it: the device **each stage** ran on, coefficient precision, torch and deepxde versions, and the code revision. A single device column would misreport today's runs, which use two — `Burgers.generate:62` integrates on `cuda:0` via `resolve_device()` while `MultiRegression.__init__` at `model/__base.py:49` hardcodes `cpu` — both verified still true on this branch.
 
 *Measured while implementing `dtype-seam`, and recorded here because it bears on what this change must do.* Six consecutive runs of identical code in the same tree vary by up to `2.51e-05` relative — the harness is not run-to-run deterministic, so a single-seed table cannot be reproduced exactly even on the machine that made it. Pinning `OMP_NUM_THREADS` and `MKL_NUM_THREADS` to 1 cuts that to `6.15e-07`, which points at multi-threaded reductions in the solve. These figures are from one machine and should be re-measured under this change's own protocol rather than treated as constants.
 
@@ -29,7 +29,19 @@ That noise does **not** confound the seed spread this change reports. Between-se
 ## Capabilities
 
 ### Modified Capabilities
-- `operator-comparison`: the table gains a reproducibility contract — repeated seeds, recorded provenance, an unambiguous error statistic, and a stated limit on what the timing column supports. The existing requirement that the harness fixes data and metrics but not tuning stays; this change removes the single-seed caveat and keeps the tuning one.
+- `operator-comparison`: the table gains a reproducibility contract — repeated seeds, recorded provenance, and an unambiguous error statistic. Two of these are **modifications rather than additions**, because `operator-harness-spec` specified this capability after this change was drafted:
+  - *The table states what it does and does not establish* is rewritten. As landed it requires documentation saying results come from a single seed; this change makes that false, so it supersedes the requirement rather than contradicting it from a second one. The tuning caveat stays, because tuning is still uncontrolled.
+  - *A row says how its forcing was obtained* is rewritten so "the rows already reported are unchanged" is checked by comparing each metric's centre and spread over the same seed set. Once a row is a distribution rather than a draw, comparing single values would fail for reasons unrelated to the change being checked.
+
+  **Ordering dependency.** The second modification targets a requirement that
+  `burgers-forced-benchmark` introduces, so it only resolves once that change is
+  archived and synced. `openspec validate` says so today:
+  `Archive would refuse this delta: operator-comparison MODIFIED failed for
+  header "### Requirement: A row says how its forcing was obtained" - not found`.
+  The stack order already satisfies this — that change sits directly beneath —
+  but archiving out of order would fail rather than silently drop the edit.
+
+  A planned requirement about the timing column was **dropped**: the landed *Fit times are qualified* scenario already contracts the same behaviour, in almost the same words, and `test_the_benchmark_script_states_what_its_table_establishes` already covers it.
 
 ## Impact
 
