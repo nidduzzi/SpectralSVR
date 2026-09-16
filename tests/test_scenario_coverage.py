@@ -37,9 +37,7 @@ EXEMPT: dict[str, str] = {
     "Mismatched time domain raises": IN_FLIGHT,
     "Constant forcing byte-identity": IN_FLIGHT,
     "Round-trip matches the manufactured solution": IN_FLIGHT,
-    "Round-trip converges at fourth order": IN_FLIGHT,
-    "Forced dataset is registered": IN_FLIGHT,
-    "Forced dataset builds and scores": IN_FLIGHT,
+    "Round-trip converges at the integrator's order": IN_FLIGHT,
     # numerical-anchor-tests (time-dependent-forcing-in-numerical-burgers, in flight)
     "Exact solution reached within time-stepping error": IN_FLIGHT,
     "Rate, not just size, is asserted": IN_FLIGHT,
