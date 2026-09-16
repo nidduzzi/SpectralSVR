@@ -4,9 +4,10 @@ Context for coding agents working on SpectralSVR. Follows the
 [AGENTS.md](https://agents.md/) convention: a predictable place for the build
 steps, tests and conventions that would clutter a README.
 
-These are project-wide conventions. They describe how work is done here, not what
-any one change in flight is doing — a change's own reasoning belongs in
-`openspec/changes/<name>/`, not in this file.
+This is a guide, not a log. It states the conventions the repository holds to as
+it stands: when a change introduces a tool or a rule that outlives it, add the
+rule to the section it belongs in, on the branch that introduces it. Reasoning
+about a particular change belongs in `openspec/changes/<name>/` instead.
 
 ## What this project is
 
@@ -29,7 +30,6 @@ just check         # THE GATE: lint (ruff + mypy + ty) then the full test suite
 just test -k name  # a subset; extra args pass through to pytest
 just cov           # suite with a missing-lines report
 just fmt           # ruff format + ruff check --fix
-just mutate        # cosmic-ray mutation run (slow)
 ```
 
 `just check` is the gate. Run it before claiming work is done, and report its
@@ -59,36 +59,6 @@ Marking honestly matters more than marking favourably. A test comparing a value
 against the library's own output is `oracle_consistency` even when the arithmetic
 around it was hand-derived.
 
-### Every stated scenario is checkable
-
-A scenario in a spec is a claim, so `tests/test_scenario_coverage.py` requires one
-of two things for each: a test naming it with `@pytest.mark.scenario("...")`, or an
-entry in `EXEMPT` giving the reason no test can. It reads the main specs *and* the
-deltas of changes still in flight, which is what keeps it watching a contract at
-the moment that contract becomes permanent.
-
-`EXEMPT` is debt, not furniture. Entries are keyed per scenario rather than per
-capability, so a scenario added later to an exempt area is still caught, and a
-second test refuses any entry that has quietly gained a test. Shrink the list; do
-not grow it.
-
-Scenarios that range over inputs are fuzzed rather than pinned to one literal.
-Where a requirement constrains what stays true *across* a sequence rather than
-within one call, model it with a `RuleBasedStateMachine` — single-shot cases
-cannot reach the states a sequence produces.
-
-### A test that cannot fail is worth nothing
-
-Mutation testing (`just mutate`, cosmic-ray) reports which mutants of the source
-survive the suite. Hand-picked mutations test what the author expected to matter;
-this enumerates them instead.
-
-Read the survivors rather than counting them. Some are equivalent mutants that no
-test can kill, and recognising one is a result worth recording. The rest are real
-gaps, and they are often asymmetric: a suite that only ever moves a quantity in
-one direction leaves the opposite comparison alive until both directions are
-covered.
-
 ## Numerical discipline
 
 **Measure before you bound.** A tolerance, a convergence order, an error
@@ -108,15 +78,6 @@ works when nothing executable changed; otherwise build a base run from a detache
 worktree **with its own environment** and compare. A `PYTHONPATH` override loses
 to an editable install, which silently benchmarks the wrong library — print the
 signature of what loaded before trusting the numbers.
-
-**Precision is configuration, not a constant.** Coefficient dtype is carried by
-configuration rather than a module-level constant, and a basis and the model
-consuming it move together. Precision boundary checks are deliberately
-asymmetric: converting to a *lower* precision than the consumer expects raises,
-because it silently discards information the caller asked to keep; converting to
-a *higher* one warns, because it only wastes memory. Double precision costs twice
-the memory for the coefficient grid — choose it for work whose accuracy demands
-it, not by default.
 
 ## Planning lives in openspec/
 
@@ -156,19 +117,6 @@ explanatory prose comments in source do not. Where a rule can be carried by a
 type rather than a runtime check, prefer the type: structural `Protocol`s over
 inheritance, frozen value types over mutable ones, and a constructor that refuses
 an invalid argument over a check that notices it later.
-
-Where a set of alternatives is genuinely closed, model it as a closed union of
-frozen dataclasses rather than an abstract base. Enumerating such a union is
-exhaustive rather than a sample, so no further member can be written that claims a
-guarantee it does not deliver, and an operation needing the guarantee annotates
-the narrower alias so the type checker refuses the rest at the call site.
-
-Two limits are worth knowing before reaching for a `Protocol`. A member written
-as `name: str` demands a *settable* attribute, which a frozen dataclass cannot
-satisfy — declare it as a read-only property instead. And `@runtime_checkable`
-checks member presence only, never signatures, so a one-method protocol is a weak
-runtime discriminator where that method name is common; the static checkers carry
-the guarantee, `isinstance` only spells it.
 
 ## Do not
 
