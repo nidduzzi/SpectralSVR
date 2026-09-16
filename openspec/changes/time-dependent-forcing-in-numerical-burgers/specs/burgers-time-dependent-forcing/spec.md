@@ -38,23 +38,12 @@ A forcing given as a plain number SHALL take the path it takes today and produce
 - **THEN** the solution and forcing coefficients are `torch.equal`
 
 ### Requirement: Manufactured solutions round-trip through the integrator
-Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at fourth order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing.
+Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at the integrator's design order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing. The order SHALL be measured before any bound is asserted, and the bound SHALL sit beneath the measurement rather than being predicted from the scheme's nominal order.
 
 #### Scenario: Round-trip matches the manufactured solution
 - **WHEN** a manufactured pair is generated, and the numerical branch is run from its initial slice with its forcing at a spatial resolution that keeps `u²` inside the de-aliased band
 - **THEN** the numerical `u(T)` matches the manufactured `u(T)` within a tolerance fixed from the integrator's order at the chosen step count
 
-#### Scenario: Round-trip converges at fourth order
+#### Scenario: Round-trip converges at the integrator's order
 - **WHEN** the round-trip is repeated at halving step sizes
-- **THEN** the measured order over the resolved range is above 3.5
-
-### Requirement: A forced-Burgers dataset is available to the benchmark
-The operator benchmark SHALL offer a dataset whose input is a sampled time-and-space forcing and whose output is the numerically integrated Burgers solution from rest, alongside the existing manufactured-solution dataset, so the two forcing distributions can be compared.
-
-#### Scenario: Forced dataset is registered
-- **WHEN** the benchmark script is listed
-- **THEN** a forced-Burgers dataset appears among its choices with a label distinguishing it from the manufactured-solution dataset
-
-#### Scenario: Forced dataset builds and scores
-- **WHEN** the benchmark is run on that dataset with the SpectralSVR operator in quick mode
-- **THEN** it completes and writes a row for the dataset with finite metrics
+- **THEN** the measured order over the resolved range is recorded, and the asserted bound sits beneath what was measured, so a rate that degrades is a failure rather than a number the bound was lowered to accommodate

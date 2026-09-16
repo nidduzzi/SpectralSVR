@@ -14,15 +14,15 @@ Two consequences, one scientific and one already paid for:
 - `Burgers.generate`'s numerical branch accepts a forcing evaluable at arbitrary time: a callable `f(t) -> (n, ns)` spatial spectral coefficients, or a Basis field that is fully spectral in time (the `time_dependent_coeff=False` form the MMS branch already produces). Per-time-slice fields (`time_dependent_coeff=True`) are rejected as forcing, because the integrator evaluates at stage midpoints that fall between grid points.
 - `nonlinear` evaluates the forcing spectrum at the stage time the solver passes: `-½ D1 F(u²) · dealias + f_hat(t)`.
 - A constant `Number` forcing keeps today's path and output byte-for-byte.
-- A new anchor: the MMS round-trip. Manufacture `u`, derive `f(t, x)`, integrate numerically from `u(0)` with that `f`, and compare to the manufactured `u(T)`. Also its convergence rate as `h` halves, which reads ~4 once the manufactured pair is a true solution of the equation the solver integrates.
-- A new benchmark dataset in `scripts/run_benchmark.py`: sampled forcing (a Gaussian random field in time and space) → numerically solved `u` from rest, so "f -> u" means what a reader expects.
+- A new anchor: the MMS round-trip. Manufacture `u`, derive `f(t, x)`, integrate numerically from `u(0)` with that `f`, and compare to the manufactured `u(T)`. Also its convergence rate as `h` halves, which is **measured before any bound is written** — no rate has ever been observed on this path, so the expected ~4 is a prediction until the measurement exists.
+- The forced-Burgers benchmark dataset this capability makes possible is **not** built here. It adds a reported row, and every other change in this stack has been able to claim that no reported number moves; it lands as its own change stacked directly above this one, so that claim survives here and the new row arrives where reporting is the subject.
 - **Hard dependency:** `align-spectral-residual-with-solver` must land first. `spectral_residual` and the solver form the nonlinear term differently -- one takes the real part and de-aliases, the other does not -- so the manufactured pair is not a solution of the equation the solver integrates. Until that is fixed the round-trip error is flat at 2.59e-3 to 6.89e-3 regardless of step count, and no rate can be measured. (The earlier ETDRK4 stage-time dependency is satisfied: that change is archived and in `main`.)
 - `etdrk4_solver` is not modified here.
 
 ## Capabilities
 
 ### New Capabilities
-- `burgers-time-dependent-forcing`: what forcings the numerical Burgers generator accepts, how they are evaluated during integration, what is rejected and why, and the forced-Burgers dataset the benchmark exposes.
+- `burgers-time-dependent-forcing`: what forcings the numerical Burgers generator accepts, how they are evaluated during integration, and what is rejected and why.
 
 ### Modified Capabilities
 - `numerical-anchor-tests`: adds the MMS round-trip as an anchor for the numerical path — the first test in the suite where the integrator is checked against an exact solution *with* time-dependent forcing, rather than against Cole–Hopf (unforced) or the spectral residual (no integration).
@@ -30,7 +30,6 @@ Two consequences, one scientific and one already paid for:
 ## Impact
 
 - `SpectralSVR/problems/burgers.py`: `_solve_spectral` forcing handling and the `nonlinear` closure; `generate`'s type and docstring for `f`.
-- `scripts/run_benchmark.py`: one new `DatasetSpec`.
 - `tests/problems/test_problems.py`: round-trip anchor, convergence rate, rejection of per-slice forcing, constant-forcing byte-identity.
 - No change to `SpectralSVR/utils`. No API removal. Existing callers passing a `Number` are unaffected; callers passing a Basis forcing today get `NotImplementedError` and will instead get a result.
 - Blocked on `align-spectral-residual-with-solver`: the round-trip anchor cannot pass until the manufactured pair is a true continuous solution. A flat, step-count-independent error is the signal that dependency is missing; a first-order reading would mean something else.
