@@ -112,9 +112,9 @@ Ruff for lint and format, mypy and ty for types, all wired into `just lint`.
 
 Express intent through names and structure. Contracts belong in docstrings;
 explanatory prose comments in source do not. Where a rule can be carried by a
-type rather than a runtime check, prefer the type — the library uses closed unions
-and validated constructors so that invalid states cannot be built, rather than
-being detected after the fact.
+type rather than a runtime check, prefer the type: structural `Protocol`s over
+inheritance, frozen value types over mutable ones, and a constructor that refuses
+an invalid argument over a check that notices it later.
 
 ## Do not
 
