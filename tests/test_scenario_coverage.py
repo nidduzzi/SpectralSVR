@@ -29,6 +29,10 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
+    "The derived and drawn forcings are distinguishable": IN_FLIGHT,
+    "Adding a row leaves the others alone": IN_FLIGHT,
+    "Forced dataset is registered": IN_FLIGHT,
+    "Forced dataset builds and scores": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
