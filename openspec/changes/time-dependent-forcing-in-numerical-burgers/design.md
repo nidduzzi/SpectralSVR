@@ -13,7 +13,7 @@ nonlinear(ti, v) = -0.5 * d1 * transform(inv_transform(v).real ** 2) * dealias +
 What the rest of the library already provides:
 
 - `mms_solution` returns `u` and `f` as 2D Fourier fields over `(time, space)`, fully spectral in both axes (`time_dependent=False`). Such a field is evaluable at any `(t, x)` through the Basis interface, and is *periodic in time* on the integration interval — `u(0) = u(T)` by construction.
-- `u` from MMS is band-limited to half the mode budget per axis so `u²` is alias-free at that budget. The numerical path applies the Orszag 2/3 mask at its own resolution `ns`.
+- `u` from MMS is band-limited to a third of the mode budget per axis (`band_limited = m // 3`), so `u²` is alias-free at that budget. The numerical path applies the Orszag 2/3 mask at its own resolution `ns`.
 - The solver calls `nonlinear` at `t_n`, `(t_n + t_{n+1})/2`, `(t_n + t_{n+1})/2`, `t_{n+1}` (the stage-time fix is archived and in `main`). The midpoints are not on the output grid.
 
 ## Goals / Non-Goals
@@ -60,9 +60,11 @@ A spectral forcing field's `domain[0]` must equal `(time_domain.start, time_doma
 
 ### The round-trip anchor runs at higher spatial resolution than the manufactured field
 
-`mms_solution` band-limits `u` to `|k| ≤ m/4`, so `u²` reaches `|k| ≤ m/2`. The solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`. For the numerical `N` to equal the `N` that produced `f`, `u²` must sit inside the kept band: `m/2 ≤ ns/3`, i.e. `ns ≥ 1.5 m`. The anchor solves at `ns = 2m` — the manufactured `u(0)` and `f` are resampled to `2m` spatial modes on the way in — so the only error left is time-stepping. This is what makes a fourth-order rate observable rather than an aliasing floor.
+`mms_solution` band-limits `u` to a third of the mode budget (`band_limited = m // 3`), so its highest wavenumber is `|k| ≤ m/6` and `u²` reaches `|k| ≤ m/3`. The solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`. For the numerical `N` to equal the `N` that produced `f`, `u²` must sit inside the kept band: `m/3 ≤ ns/3`, i.e. `ns ≥ m`.
 
-*Alternative rejected:* manufacture `u` at a third of the budget. Also works, but changes `mms_solution`'s contract, which the MMS tests and the existing "f -> u" dataset rely on.
+That condition is *tight* — at `ns = m` the product fills the kept band exactly, with slack only from the `//` floor. The anchor therefore solves at `ns = 2m`, resampling the manufactured `u(0)` and `f` on the way in, not because the inequality demands it but because the measured order must not depend on where the band sits. `manufactured-band-derivation`, directly beneath this change, replaces the `m // 3` grid size with a stated cutoff satisfying `2K ≤ m/3`; a margin of two puts the aliasing floor far enough away that the rate recorded here survives that replacement rather than having to be re-measured after it. What is left at `2m` is time-stepping error, which is what makes a fourth-order rate observable rather than an aliasing floor.
+
+*Alternative superseded:* manufacture `u` at a third of the budget. Recorded here as rejected when the band was `m/4`; `align-spectral-residual-with-solver` has since made it the actual band, which is why the derivation above starts from `m // 3`. It is no longer an alternative to anything.
 
 *Alternative rejected:* disable de-aliasing for the anchor. Tests a code path the benchmark never uses.
 
@@ -97,4 +99,4 @@ Rollback is a revert on this branch alone; the bugfix beneath is untouched.
 
 ## Open Questions
 
-- Whether `mms_solution` should expose its band-limit fraction so the round-trip anchor can request `|k| ≤ m/6` directly instead of solving at `2m`. Deferrable: the `2m` route needs no API change.
+None. The band-limit question this section carried — whether `mms_solution` should expose its band so the anchor can request a cutoff rather than oversolve — is answered by `manufactured-band-derivation`, which states the band as a cutoff satisfying `2K ≤ m/3`. The `2m` margin here is kept deliberately, for the reason the resolution decision records, and is not a workaround for a missing accessor.
