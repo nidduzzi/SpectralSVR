@@ -27,12 +27,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    # manufactured-solutions (manufactured-band-derivation, in flight)
-    "The generated field is conjugate-symmetric at every mode count": IN_FLIGHT,
-    "The bandwidth the caller can state is visible": IN_FLIGHT,
-    "The band cannot be stated in a form that breaks symmetry": IN_FLIGHT,
-    "Self-consistency is not accepted in place of the guarantee": IN_FLIGHT,
-
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
@@ -66,7 +60,6 @@ EXEMPT: dict[str, str] = {
 
     # manufactured-solutions
     "Residual vanishes off the sample grid": PREDATES,
-    "Bandwidth that overruns the grid is rejected or resolved": PREDATES,
     "Real part taken before multiplying": PREDATES,
     "Same de-aliasing on both sides": PREDATES,
     "A wrong pair is caught": PREDATES,

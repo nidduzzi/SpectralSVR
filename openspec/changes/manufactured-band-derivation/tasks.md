@@ -154,11 +154,65 @@ to show is reproduced and larger: five orders of magnitude, not four.
 
 ## 3. Anchors
 
-- [ ] 3.1 Add an anchor asserting the generated field is conjugate-symmetric at every supported mode count with the resize boundary rule disabled; verify it fails against the pre-change derivation, which is what makes it a test of this change rather than of the one beneath it
-- [ ] 3.2 Add an anchor asserting an overrunning stated band raises, and that the widest admissible band does not; verify the boundary between them is exactly `2K <= m / 3` rather than one off it
-- [ ] 3.3 Update `MANUFACTURED_CONTINUOUS_RESIDUAL` in `tests/problems/test_problems.py` with the re-measured values; verify they are recorded from measurement and that no tolerance was widened to accommodate them
-- [ ] 3.4 Verify the analytic positive control and the corrupted-forcing negative control both still behave — the control pair is independent of the band, so a change in either indicates this change reached further than intended
-- [ ] 3.5 Verify `tests/test_oracle_coverage.py` passes with the markers chosen
+- [x] 3.1 Add an anchor asserting the generated field is conjugate-symmetric at every supported mode count with the resize boundary rule disabled; verify it fails against the pre-change derivation, which is what makes it a test of this change rather than of the one beneath it
+- [x] 3.2 Add an anchor asserting an overrunning stated band raises, and that the widest admissible band does not; verify the boundary between them is exactly `2K <= m / 3` rather than one off it
+- [x] 3.3 Update `MANUFACTURED_CONTINUOUS_RESIDUAL` in `tests/problems/test_problems.py` with the re-measured values; verify they are recorded from measurement and that no tolerance was widened to accommodate them
+- [x] 3.4 Verify the analytic positive control and the corrupted-forcing negative control both still behave — the control pair is independent of the band, so a change in either indicates this change reached further than intended
+- [x] 3.5 Verify `tests/test_oracle_coverage.py` passes with the markers chosen
+
+### Measured, section 3
+
+Three anchors in `tests/problems/test_problems.py`, suite 303 → 306:
+
+| test | oracle | fuzzed |
+| --- | --- | --- |
+| `test_manufactured_field_is_conjugate_symmetric_as_generated` | `oracle_invariant` | mode counts 6–40, seeds |
+| `test_stated_band_narrows_the_manufactured_field` | `oracle_analytic` | `no_fuzz`, every cutoff below the default at `m = 32` |
+| `test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent` | `oracle_analytic` | mode counts 12–40 |
+
+**The symmetry anchor discriminates** (3.1). Run against the pre-change
+count-based band over mode counts 6–40, it fails on 18 of 35 — all 18 on the
+odd-kept-set assertion alone, before the Hermitian measurement is reached. The
+other 17 are the counts where `m // 3` is already odd, which is the same
+population as the 85/180 in section 1. It also carries its own control: an
+even-sized band read through the same repair-disabled path must read nonzero, so
+a blind measurement fails rather than passes.
+
+**The refusal boundary is exact** (3.2). Over mode counts 12–40, all 29 have
+`2K <= m/3` for the widest admissible cutoff and `2(K+1) > m/3` for the next one
+up, so the anchor sits on the boundary rather than one off it. The anchor also
+rebuilds the refused pair by hand and asserts its de-aliased residual is below
+`1e-10` while its continuous residual exceeds the tolerance — the self-consistency
+point, asserted rather than only recorded.
+
+**`MANUFACTURED_CONTINUOUS_RESIDUAL` re-recorded** (3.3) from the section 1
+measurement: `{8: 2.565e-07, 16: 1.999e-07, 32: 2.954e-07}`, from
+`{8: 2.151e-07, 16: 2.099e-07, 32: 2.623e-07}`. `MANUFACTURED_RESIDUAL_TOLERANCE`
+stays `5e-6` and `MANUFACTURED_RESIDUAL_CORRUPTED` stays `1.0e-2`; no tolerance
+moved, only the documentary values the assertion messages quote.
+
+**Both controls are unmoved** (3.4), confirming the change did not reach past the
+manufactured band:
+
+| control | recorded | measured |
+| --- | --- | --- |
+| analytic positive, modes 12 | 4.164e-08 | 4.164e-08 |
+| analytic positive, modes 16 | 3.887e-08 | 3.887e-08 |
+| analytic positive, modes 32 | 3.887e-08 | 3.887e-08 |
+| corrupted forcing, negative | detected above 1e-02 | 5.000e-02, detected |
+
+`tests/test_oracle_coverage.py` passes with those markers (3.5).
+
+**Added scope, surfaced rather than absorbed.** Writing these anchors let five
+entries leave `tests/test_scenario_coverage.py`'s `EXEMPT` list. Four are this
+change's own `IN_FLIGHT` debt, which the tasks imply. The fifth,
+`Bandwidth that overruns the grid is rejected or resolved`, was marked `PREDATES`
+and is not named in any task — but task 3.2's anchor asserts exactly it, so
+leaving the entry would have been a scenario that quietly gained a test, which
+the guard's stale-exemption check exists to refuse. Removed, and recorded here
+because no task asked for it.
+
+`just check`: 306 passed, ruff/mypy/ty clean.
 
 ## 4. Verification
 
