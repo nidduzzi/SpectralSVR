@@ -13,7 +13,7 @@ nonlinear(ti, v) = -0.5 * d1 * transform(inv_transform(v).real ** 2) * dealias +
 What the rest of the library already provides:
 
 - `mms_solution` returns `u` and `f` as 2D Fourier fields over `(time, space)`, fully spectral in both axes (`time_dependent=False`). Such a field is evaluable at any `(t, x)` through the Basis interface, and is *periodic in time* on the integration interval — `u(0) = u(T)` by construction.
-- `u` from MMS is band-limited to a third of the mode budget per axis (`band_limited = m // 3`), so `u²` is alias-free at that budget. The numerical path applies the Orszag 2/3 mask at its own resolution `ns`.
+- `u` from MMS is band-limited by a stated cutoff `K = m // 6` per axis (`widest_manufactured_band`, from `manufactured-band-derivation`), so `u²` reaches `|k| ≤ 2K ≤ m/3` and is alias-free at that budget. The numerical path applies the Orszag 2/3 mask at its own resolution `ns`.
 - The solver calls `nonlinear` at `t_n`, `(t_n + t_{n+1})/2`, `(t_n + t_{n+1})/2`, `t_{n+1}` (the stage-time fix is archived and in `main`). The midpoints are not on the output grid.
 
 ## Goals / Non-Goals
@@ -60,11 +60,11 @@ A spectral forcing field's `domain[0]` must equal `(time_domain.start, time_doma
 
 ### The round-trip anchor runs at higher spatial resolution than the manufactured field
 
-`mms_solution` band-limits `u` to a third of the mode budget (`band_limited = m // 3`), so its highest wavenumber is `|k| ≤ m/6` and `u²` reaches `|k| ≤ m/3`. The solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`. For the numerical `N` to equal the `N` that produced `f`, `u²` must sit inside the kept band: `m/3 ≤ ns/3`, i.e. `ns ≥ m`.
+`manufactured-band-derivation`, now archived beneath this change, states the manufactured band as a cutoff rather than a count: `widest_manufactured_band(m)` returns `WavenumberCutoff(m // 6)`. So `u` reaches `|k| ≤ K` with `K = m // 6`, and `u²` reaches `|k| ≤ 2K`. The solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`. For the numerical `N` to equal the `N` that produced `f`, `u²` must sit inside the kept band: `2K ≤ ns/3`, i.e. **`ns ≥ 6K`**. Since `6 (m // 6) ≤ m`, the choice `ns = m` always satisfies it — which is where this section's earlier `ns ≥ m` reading came from, and it remains true, but it is a consequence of the derivation rather than the derivation itself.
 
-That condition is *tight* — at `ns = m` the product fills the kept band exactly, with slack only from the `//` floor. The anchor therefore solves at `ns = 2m`, resampling the manufactured `u(0)` and `f` on the way in, not because the inequality demands it but because the measured order must not depend on where the band sits. `manufactured-band-derivation`, directly beneath this change, replaces the `m // 3` grid size with a stated cutoff satisfying `2K ≤ m/3`; a margin of two puts the aliasing floor far enough away that the rate recorded here survives that replacement rather than having to be re-measured after it. What is left at `2m` is time-stepping error, which is what makes a fourth-order rate observable rather than an aliasing floor.
+The anchor nevertheless solves at `ns = 2m`, resampling the manufactured `u(0)` and `f` on the way in. That was originally reasoned as insurance: the condition looked tight at `ns = m`, and the measured order must not depend on where the band sits. The insurance has since been cashed in and found unnecessary. Measured across `m ∈ {12, 18, 24, 36}` and `ns ∈ {m, 2m, 3m}` over the sweep `nt ∈ {25, 50, 100}` — shorter than the table below, run only to compare resolutions against one another — the orders agree to within 0.1 and the errors to about 5%. At `m = 24, ns = m` that sweep reads errors `8.998e-04`, `5.096e-05`, `3.456e-06`, so orders 4.14 and 3.88: already fourth order with no margin at all. At `m = 24, ns = 2m` the same sweep reads 4.16 and 4.02. The margin stays because it costs nothing, not because the rate needs it. What makes the anchor sound is the derivation above, not the factor of two.
 
-*Alternative superseded:* manufacture `u` at a third of the budget. Recorded here as rejected when the band was `m/4`; `align-spectral-residual-with-solver` has since made it the actual band, which is why the derivation above starts from `m // 3`. It is no longer an alternative to anything.
+*Alternative superseded:* manufacture `u` at a third of the budget. Recorded here as rejected when the band was `m/4`; `align-spectral-residual-with-solver` made it the actual band, and `manufactured-band-derivation` then replaced the count with the cutoff the derivation above uses. It is no longer an alternative to anything.
 
 *Alternative rejected:* disable de-aliasing for the anchor. Tests a code path the benchmark never uses.
 
@@ -74,9 +74,23 @@ The manufactured `u` is periodic in time, so `u(T) = u(0)`. The round-trip there
 
 ### Rate assertion over the resolved range, with a recorded tolerance
 
-Step counts `nt ∈ {50, 100, 200, 400}` on `[0, 1]`. The order is **measured first and the bound set beneath it**, rather than predicted from the scheme's nominal order and checked afterwards.
+The order is **measured first and the bound set beneath it**, rather than predicted from the scheme's nominal order and checked afterwards. Measured at `m = 24`, `ns = 2m`, `nu = 0.01`, `n = 2`, seed 1234, on `[0, 1]`:
 
-The reasoning that produced the original `> 3.5` still stands as an expectation — the nonlinear problem is rougher than the scalar test in the ETDRK4 change, and the reference is itself band-limited, so 3.9 would be optimistic. But it remains an expectation: no rate has ever been observed on this path, because until `align-spectral-residual-with-solver` landed the error was flat at 2.59e-3 to 6.89e-3 at every step count. A measured order materially under 4 is a finding to chase — de-aliasing resolution, stage times — not a number to assert beneath. The absolute tolerance at `nt = 400` is likewise fixed one order of magnitude above the measured value, and every measured order is recorded in both `tasks.md` and the test.
+| `nt` | relative error | order |
+| --- | --- | --- |
+| 13 | 1.401947e-02 | — |
+| 25 | 9.606420e-04 | 3.867 |
+| 50 | 5.373642e-05 | 4.160 |
+| 100 | 3.306715e-06 | 4.022 |
+| 200 | 1.523207e-06 | 1.118 |
+| 400 | 1.476252e-06 | 0.045 |
+| 800 | 2.700269e-06 | -0.871 |
+
+Fourth order, so the expectation behind the original `> 3.5` was sound — the nonlinear problem is rougher than the scalar test in the ETDRK4 change and the reference is itself band-limited, and 4.0 to 4.2 is what that reasoning would have allowed. The step counts that expectation arrived with were not sound: this section first named `nt ∈ {50, 100, 200, 400}`, whose last two rows both read the floor — leaving two of the three orders that sweep yields as floor artefacts rather than rates.
+
+**The resolved range is bounded above as well as below.** Coefficients are stored at `SpectralConfig.coeff_dtype`, complex64 by default, and the round-trip reaches a round-off floor near `1.5e-6` relative by `nt = 200`, rising again to `2.7e-6` by `nt = 800`. The rise is what identifies it: a fixed spatial-truncation floor sits flat, accumulating round-off does not. `torch.set_default_dtype(torch.float64)` does not move it, so the floor is the stored coefficient precision and not the default dtype. Raising the anchor to double would mean widening `generate`, which takes the basis as a *class* and constructs from it, leaving no seam to pass a precision through; that is out of scope here, and `numerical-anchor-tests` already carries the scenario distinguishing saturation from order loss.
+
+The asserted range is therefore `nt ∈ {13, 25, 50, 100}`, and the bound sits beneath the **minimum** order measured across it (3.867) rather than beneath the last pair — keyed to the last pair, any sweep reaching the floor asserts against saturation. A measured order materially under 4 is a finding to chase — de-aliasing resolution, stage times — not a number to assert beneath. The absolute tolerance at `nt = 100` is likewise fixed one order of magnitude above the measured `3.307e-06`, and every measured order is recorded in both `tasks.md` and the test.
 
 ## Risks / Trade-offs
 
