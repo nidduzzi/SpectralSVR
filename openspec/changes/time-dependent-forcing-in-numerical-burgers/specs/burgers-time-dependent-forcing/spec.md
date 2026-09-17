@@ -20,7 +20,7 @@ The numerical Burgers generator SHALL accept a forcing that can be evaluated at 
 - **THEN** the two solutions differ, and only the former converges at fourth order as the step size halves
 
 ### Requirement: Per-time-slice forcing is rejected
-The generator SHALL reject a forcing field whose time axis is sampled rather than spectral (`time_dependent=True`), because the integrator evaluates the forcing between grid points and such a field cannot be evaluated there without an interpolation the caller did not choose.
+The generator SHALL reject a forcing field whose time axis is sampled rather than spectral (`time_dependent=True`), because the integrator evaluates the forcing between grid points and such a field cannot be evaluated there without an interpolation the caller did not choose. It SHALL likewise reject a field whose time or space domain does not equal the interval being integrated: the field is sampled on the integration grid, so a field carrying either axis on another interval describes a different function at the points read from it.
 
 #### Scenario: Sampled-time field raises
 - **WHEN** a Basis field with `time_dependent=True` is passed as forcing to the numerical branch
@@ -30,6 +30,10 @@ The generator SHALL reject a forcing field whose time axis is sampled rather tha
 - **WHEN** a fully spectral forcing field's time domain does not equal the requested `time_domain` interval
 - **THEN** the generator raises before integrating
 
+#### Scenario: Mismatched space domain raises
+- **WHEN** a fully spectral forcing field's space domain does not equal the requested `space_domain` interval
+- **THEN** the generator raises before integrating, naming both intervals, rather than sampling the field at points that mean something else on its own period
+
 ### Requirement: Constant forcing is unchanged
 A forcing given as a plain number SHALL take the path it takes today and produce the same coefficients bit for bit.
 
@@ -38,7 +42,7 @@ A forcing given as a plain number SHALL take the path it takes today and produce
 - **THEN** the solution and forcing coefficients are `torch.equal`
 
 ### Requirement: Manufactured solutions round-trip through the integrator
-Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at the integrator's design order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing. The order SHALL be measured before any bound is asserted, and the bound SHALL sit beneath the measurement rather than being predicted from the scheme's nominal order.
+Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at the integrator's design order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing and the error remains above the floor set by the stored coefficient precision. Beneath that floor the reading is saturation rather than a rate, which `numerical-anchor-tests` already requires be distinguished from order loss; the range the order is asserted over SHALL therefore be bounded above as well as below. The order SHALL be measured before any bound is asserted, and the bound SHALL sit beneath the measurement rather than being predicted from the scheme's nominal order.
 
 #### Scenario: Round-trip matches the manufactured solution
 - **WHEN** a manufactured pair is generated, and the numerical branch is run from its initial slice with its forcing at a spatial resolution that keeps `u²` inside the de-aliased band

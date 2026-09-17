@@ -33,8 +33,6 @@ EXEMPT: dict[str, str] = {
     "Callable forcing is integrated": IN_FLIGHT,
     "Fully spectral forcing field is integrated": IN_FLIGHT,
     "Forcing is evaluated at stage times, not step starts": IN_FLIGHT,
-    "Sampled-time field raises": IN_FLIGHT,
-    "Mismatched time domain raises": IN_FLIGHT,
     "Constant forcing byte-identity": IN_FLIGHT,
     "Round-trip matches the manufactured solution": IN_FLIGHT,
     "Round-trip converges at the integrator's order": IN_FLIGHT,

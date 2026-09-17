@@ -15,7 +15,8 @@ from typing import Callable, Literal, Type
 
 ParamInput = Literal["random"] | Number | torch.Tensor
 ForcingCallable = Callable[[torch.Tensor], torch.Tensor]
-ForcingInput = ParamInput | ForcingCallable
+NumericalForcing = Number | ForcingCallable
+ForcingInput = Literal["random"] | NumericalForcing
 
 
 # References:
@@ -119,7 +120,7 @@ class Burgers(Problem):
                 modes,
                 nu,
                 u0,
-                f,
+                self._numerical_forcing(f),
                 domain,
                 t,
                 device,
@@ -164,7 +165,7 @@ class Burgers(Problem):
         modes: tuple[int, ...],
         nu: float,
         u0: "ParamInput | BasisSubType",
-        f: "ForcingInput | BasisSubType",
+        f: "NumericalForcing | BasisSubType",
         domain: tuple[tuple[float, float], ...],
         t: torch.Tensor,
         device: torch.device,
@@ -240,7 +241,7 @@ class Burgers(Problem):
     @staticmethod
     def _forcing_at(
         basis: Type[BasisSubType],
-        f: "ForcingInput | BasisSubType",
+        f: "NumericalForcing | BasisSubType",
         n: int,
         ns: int,
         domain: tuple[tuple[float, float], ...],
@@ -252,6 +253,13 @@ class Burgers(Problem):
         that is spectral in time (``time_dependent=False``). A field sampled per
         time slice is rejected: the integrator asks for stage times between the
         output grid points.
+
+        A callable receives the stage time as a zero-dimensional tensor and
+        returns ``(n, ns)`` spectral coefficients, not sampled values.
+
+        A field is sampled on the integration grid, so both its axes must span
+        the integration intervals; a field carrying either axis on another
+        interval describes a different function at the points read from it.
         """
         time_interval, space_interval = domain[0], domain[1]
 
@@ -263,7 +271,7 @@ class Burgers(Problem):
 
         if isinstance(f, Basis):
             if f.time_dependent:
-                raise NotImplementedError(
+                raise ValueError(
                     "numerical Burgers forcing must be evaluable at any time: pass "
                     "a callable of time or a field spectral in time "
                     "(time_dependent=False), not a per-time-slice field"
@@ -272,6 +280,13 @@ class Burgers(Problem):
                 raise ValueError(
                     f"forcing time domain {f.domain[0]} must equal the integration "
                     f"interval {time_interval}"
+                )
+            if f.domain[1] != space_interval:
+                raise ValueError(
+                    f"forcing space domain {f.domain[1]} must equal the integration "
+                    f"interval {space_interval}; the field is sampled on the "
+                    "integration grid, so another interval reads its values at "
+                    "points that mean something else on its own period"
                 )
             nodes = (
                 basis.default_sampling().nodes(ns, *space_interval).to(device=device)
@@ -305,6 +320,26 @@ class Burgers(Problem):
             "numerical Burgers forcing must be a number, a callable of time, or a "
             "field spectral in time"
         )
+
+    @staticmethod
+    def _numerical_forcing(
+        f: "ForcingInput | BasisSubType",
+    ) -> "NumericalForcing | BasisSubType":
+        """Narrow ``generate``'s forcing to the forms the numerical branch takes.
+
+        ``f="random"`` names the manufactured branch's forcing, which is derived
+        from the field rather than supplied; reaching the integrator with it
+        means the caller asked for a manufactured pair without a manufactured
+        initial condition.
+        """
+        if isinstance(f, str):
+            raise ValueError(
+                "f='random' manufactures a forcing from the field and is only "
+                "meaningful with u0='random'; the numerical branch integrates a "
+                "forcing it is given, so pass a number, a callable of time, or a "
+                "field spectral in time"
+            )
+        return f
 
     def mms_solution(
         self,

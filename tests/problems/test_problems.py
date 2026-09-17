@@ -1003,3 +1003,114 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
         f"modes={modes}: the refused pair leaves {refused_continuous:.3e} against "
         f"{admitted:.3e} admitted, so the refusal has little to prevent"
     )
+
+
+# ---------------------------------------------------------------------------
+# Burgers -- forcings the numerical branch refuses
+# (time-dependent-forcing-in-numerical-burgers)
+# ---------------------------------------------------------------------------
+def _integrate_with_forcing(f, space_modes, nt=20, space_domain=slice(0, 1, 200)):
+    return Burgers().generate(
+        FourierBasis,
+        2,
+        (nt, space_modes),
+        u0=0.0,
+        f=f,
+        nu=0.01,
+        space_domain=space_domain,
+        time_domain=slice(0, 1, nt),
+        generator=torch.Generator().manual_seed(0),
+    )
+
+
+def _spectral_forcing(space_modes, time=(0.0, 1.0), space=(0.0, 1.0), seed=0):
+    """A (time, space) field spectral in both axes, on the stated intervals."""
+    return FourierBasis.generate(
+        2,
+        (space_modes, space_modes),
+        domain=(time, space),
+        generator=torch.Generator().manual_seed(seed),
+    )
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Sampled-time field raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(6, 20),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_per_time_slice_field(space_modes, nt, seed):
+    values = torch.rand(
+        2, nt, space_modes, generator=torch.Generator().manual_seed(seed)
+    )
+    sampled = _time_dependent_field(values, 1.0, 1.0)
+    with pytest.raises(ValueError, match="per-time-slice"):
+        _integrate_with_forcing(sampled, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Mismatched time domain raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    offset=st.floats(0.1, 3.0),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_mismatched_time_domain(
+    space_modes, offset, seed
+):
+    shifted = _spectral_forcing(
+        space_modes, time=(offset, offset + 1.0), seed=seed
+    )
+    with pytest.raises(ValueError, match="forcing time domain"):
+        _integrate_with_forcing(shifted, space_modes)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Mismatched space domain raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    stretch=st.floats(0.1, 3.0),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_mismatched_space_domain(
+    space_modes, stretch, seed
+):
+    stretched = _spectral_forcing(
+        space_modes, space=(0.0, 1.0 + stretch), seed=seed
+    )
+    with pytest.raises(ValueError, match="forcing space domain"):
+        _integrate_with_forcing(stretched, space_modes)
+
+    matching = _spectral_forcing(space_modes, seed=seed)
+    u, _ = _integrate_with_forcing(matching, space_modes)
+    assert not torch.isnan(u.coeff).any()
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), seed=st.integers(0, 10_000))
+def test_numerical_forcing_rejects_a_bare_tensor(space_modes, seed):
+    values = torch.rand(2, space_modes, generator=torch.Generator().manual_seed(seed))
+    with pytest.raises(NotImplementedError, match="bare tensor"):
+        _integrate_with_forcing(values, space_modes)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), u0=st.floats(-1.0, 1.0))
+def test_numerical_branch_rejects_a_manufactured_forcing(space_modes, u0):
+    with pytest.raises(ValueError, match="manufactures a forcing"):
+        Burgers().generate(
+            FourierBasis,
+            2,
+            (20, space_modes),
+            u0=u0,
+            f="random",
+            nu=0.01,
+            time_domain=slice(0, 1, 20),
+            generator=torch.Generator().manual_seed(0),
+        )
