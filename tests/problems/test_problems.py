@@ -790,6 +790,11 @@ def test_continuous_residual_detects_a_corrupted_forcing():
 def _pad_without_boundary_repair(coeff, target_modes, rescale=True):
     """``resize_modes`` with the even-source boundary repair cut out.
 
+    Stands in for ``resize_modes`` everywhere ``mms_solution`` reaches it,
+    including the no-op resizes ``Basis``'s arithmetic performs at
+    ``rescale=True``, so it takes the same arguments and rescales the same way.
+    Only the boundary repair differs.
+
     That repair is what makes a padded even-sized band conjugate-symmetric
     downstream. Removing it is what distinguishes a field generated symmetric
     from one corrected afterwards.
@@ -815,6 +820,9 @@ def _pad_without_boundary_repair(coeff, target_modes, rescale=True):
             ),
             dim,
         )
+    if rescale:
+        source = torch.tensor(list(coeff.shape[1:])).prod()
+        padded = padded * torch.tensor(target_modes).prod() / source
     return padded
 
 
@@ -964,7 +972,7 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
     )
 
     over = WavenumberCutoff(widest.cutoff + over_by)
-    with pytest.raises(ValueError, match=r"overruns|needs"):
+    with pytest.raises(ValueError, match=r"past the|more than"):
         manufacture(over)
 
     if 2 * over.cutoff + 1 > modes:

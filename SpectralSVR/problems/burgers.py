@@ -329,7 +329,12 @@ class Burgers(Problem):
 
     @staticmethod
     def highest_frequency(band: RealBand, modes: int) -> int:
-        """Highest wavenumber ``band`` keeps on a grid of ``modes`` modes."""
+        """Largest ``|k|`` ``band`` keeps on a grid of ``modes`` modes.
+
+        A wavenumber, not a mode count. :class:`WholeGrid` keeps every bin, so
+        on an even grid its largest is the self-paired Nyquist bin at
+        ``modes // 2``.
+        """
         match band:
             case WavenumberCutoff(cutoff=cutoff):
                 return cutoff
@@ -338,20 +343,26 @@ class Burgers(Problem):
 
     @classmethod
     def _check_band(cls, band: RealBand, modes: int) -> None:
-        kept = band.mode_count(modes)
-        stated = cls.highest_frequency(band, modes)
-        if 2 * stated + 1 > modes:
+        """Refuse a band the grid cannot hold or the de-aliasing mask would cut.
+
+        Only a stated cutoff can ask for more modes than the grid has;
+        :class:`WholeGrid` is bounded by the grid by definition, so it can reach
+        only the second refusal.
+        """
+        if isinstance(band, WavenumberCutoff) and 2 * band.cutoff + 1 > modes:
             raise ValueError(
-                f"band {band!r} keeps |k| <= {stated}, which needs "
-                f"{2 * stated + 1} modes on a grid of {modes}"
+                f"a cutoff keeping |k| <= {band.cutoff} needs "
+                f"{2 * band.cutoff + 1} modes, more than the {modes} this grid has"
             )
         widest = cls.widest_manufactured_band(modes)
+        stated = cls.highest_frequency(band, modes)
         if stated > widest.cutoff:
             raise ValueError(
-                f"band {band!r} keeps |k| <= {stated} in {kept} modes, whose "
-                f"product reaches {2 * stated} and overruns the {modes / 3:.6g} "
-                f"the de-aliasing mask keeps; the widest {modes} modes admit is "
-                f"|k| <= {widest.cutoff} in {widest.mode_count(modes)} modes"
+                f"a band keeping |k| <= {stated} squares to a product reaching "
+                f"|k| <= {2 * stated}, past the |k| <= {modes / 3:.6g} the "
+                f"de-aliasing mask keeps at {modes} modes; the widest admissible "
+                f"band keeps |k| <= {widest.cutoff}, which is "
+                f"{widest.mode_count(modes)} modes"
             )
 
     def spectral_residual(

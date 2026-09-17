@@ -107,15 +107,32 @@ specific message is the useful one:
 
 ```
 WavenumberCutoff(-1)   cutoff must be non-negative, got -1          (the type)
-WholeGrid() at m=16    band WholeGrid() keeps |k| <= 8, which needs
-                       17 modes on a grid of 16                     (structural)
-WavenumberCutoff(20)   ... keeps |k| <= 20, which needs 41 modes
-                       on a grid of 16                              (structural)
-WavenumberCutoff(3)    band WavenumberCutoff(cutoff=3) keeps |k| <= 3 in 7
-                       modes, whose product reaches 6 and overruns the 5.33333
-                       the de-aliasing mask keeps; the widest 16 modes admit
-                       is |k| <= 2 in 5 modes                       (threshold)
+WavenumberCutoff(20)   a cutoff keeping |k| <= 20 needs 41 modes,
+                       more than the 16 this grid has               (structural)
+WholeGrid() at m=16    a band keeping |k| <= 8 squares to a product reaching
+                       |k| <= 16, past the |k| <= 5.33333 the de-aliasing mask
+                       keeps at 16 modes; the widest admissible band keeps
+                       |k| <= 2, which is 5 modes                   (threshold)
+WavenumberCutoff(3)    a band keeping |k| <= 3 squares to a product reaching
+                       |k| <= 6, past the ... (as above)            (threshold)
 ```
+
+**Corrected after review.** This table first recorded `WholeGrid()` at `m = 16`
+taking the *structural* refusal, reporting that it "needs 17 modes on a grid of
+16". That was wrong in its reasoning even though the refusal was right:
+`WholeGrid` keeps exactly the 16 modes the grid has, so it is never structurally
+impossible. It failed the structural test only because
+`highest_frequency(WholeGrid(), 16)` is the Nyquist bin at 8 and `2 * 8 + 1 = 17`
+exceeds 16 — an artefact of applying a cutoff's arithmetic to a band that is not
+a cutoff. Odd grids were unaffected and already took the threshold refusal, so
+the defect showed only at even mode counts.
+
+The structural check now applies only to a stated `WavenumberCutoff`, the one
+band form that can ask for more modes than the grid has. `WholeGrid` reaches only
+the threshold refusal, at both parities, which is the true reason it is refused:
+it always squares past the mask. Both messages were rewritten to state every
+quantity as a wavenumber, so the band, its product, the threshold and the remedy
+are in the same units.
 
 The threshold message names both numbers the task required: the stated bandwidth
 and the widest the mode count admits.
