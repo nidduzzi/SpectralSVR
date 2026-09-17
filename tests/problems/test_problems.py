@@ -908,8 +908,6 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
     with pytest.raises(ValueError, match=r"overruns"):
         manufacture(over)
 
-    # the refused pair, built by hand: its own de-aliased equation is satisfied
-    # exactly, which is why nothing downstream can detect what generation refuses
     coeff = FourierBasis.generate_coeff(
         1, (over.mode_count(modes),) * 2, generator=torch.Generator().manual_seed(3)
     )
@@ -924,10 +922,15 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
         FourierBasis(FourierBasis.generate_empty(1, (modes, modes)), domain=DOMAIN_2D),
         nu,
     )
-    assert (
-        float(Burgers().spectral_residual(u_over, f_over, nu).coeff.abs().max()) < 1e-10
+    refused_discrete = float(
+        Burgers().spectral_residual(u_over, f_over, nu).coeff.abs().max()
     )
-    assert (
-        continuous_burgers_residual(u_over, f_over, nu)
-        > MANUFACTURED_RESIDUAL_TOLERANCE
+    refused_continuous = continuous_burgers_residual(u_over, f_over, nu)
+    assert refused_discrete < 1e-10, (
+        f"modes={modes}: the refused pair fails its own de-aliased equation at "
+        f"{refused_discrete:.3e}, so this is not the self-consistency case"
+    )
+    assert refused_continuous > MANUFACTURED_RESIDUAL_TOLERANCE, (
+        f"modes={modes}: the refused pair satisfies the continuous equation at "
+        f"{refused_continuous:.3e}, so the refusal has nothing to prevent"
     )
