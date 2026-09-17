@@ -4,6 +4,7 @@ from ..basis.sampling import samplings_to_tuple
 from ..utils import (
     Number,
     SemilinearSolverSignatureType,
+    WavenumberCutoff,
     etdrk4_solver,
     resolve_device,
 )
@@ -259,18 +260,19 @@ class Burgers(Problem):
         ``u_t + u u_x - nu u_xx = f`` by construction, so ``spectral_residual``
         of the returned pair is zero to machine precision.
 
-        ``u`` is band-limited to a third of the mode budget, which is the
-        threshold set by the de-aliasing band rather than a chosen margin:
-        multiplication doubles the highest frequency, so the product reaches
-        ``2 * kmax`` while the Orszag 2/3 mask keeps ``m / 3``. Any wider and
-        the mask discards content the product genuinely has, and the pair then
-        solves the de-aliased equation but not the continuous one.
+        ``u`` is band-limited through :meth:`widest_manufactured_band`, the
+        widest cutoff whose nonlinear product survives the de-aliasing band. Any
+        wider and the mask discards content the product genuinely has, and the
+        pair then solves the de-aliased equation but not the continuous one.
 
         Returned as non-time-dependent 2D (time, space) Fourier fields.
         """
         if len(modes) != 2:
             raise NotImplementedError("MMS Burgers is implemented for 1D space")
-        band_limited = tuple(max(1, m // 3) for m in modes)
+        band = tuple(self.widest_manufactured_band(m) for m in modes)
+        band_limited = tuple(
+            cutoff.mode_count(m) for cutoff, m in zip(band, modes, strict=True)
+        )
         u = basis.generate(
             n, band_limited, domain=domain, generator=generator
         ).resize_modes(modes, rescale=False)
@@ -278,6 +280,17 @@ class Burgers(Problem):
         zero_forcing = basis(basis.generate_empty(n, modes), domain=domain)
         f = self.spectral_residual(u, zero_forcing, nu)
         return u, f
+
+    @staticmethod
+    def widest_manufactured_band(modes: int) -> WavenumberCutoff:
+        """Widest cutoff a manufactured field may use at ``modes`` modes.
+
+        Multiplication doubles the highest frequency, so a cutoff ``K`` produces
+        a product reaching ``2 K`` while the Orszag 2/3 mask keeps ``modes / 3``.
+        The widest admissible cutoff is therefore the largest ``K`` satisfying
+        ``2 K <= modes / 3``.
+        """
+        return WavenumberCutoff(modes // 6)
 
     def spectral_residual(
         self, u: BasisSubType, f: BasisSubType, nu: float
