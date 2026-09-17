@@ -72,13 +72,85 @@ passed, ruff/mypy/ty clean.
 
 ## 2. The band as a stated argument
 
-- [ ] 2.1 Add an optional band parameter to `mms_solution`, defaulting to the derived cutoff; verify every existing call site is unaffected
-- [ ] 2.2 Thread it through `Burgers.generate` as an explicit named parameter beside `nu` and `solver` — **not** through `**kwargs`, which `Burgers.generate` never reads (`ty` reports it unused at `burgers.py:50`) and would silently discard it. Verify the parameter is explicit rather than absorbed: a band stated through `Burgers.generate` reaches `mms_solution` and changes the generated field's width against the default, while the same value passed under an unrecognised keyword leaves the width at the default — the second case is the silent discard this task exists to prevent
-- [ ] 2.3 Validate a stated band against `2K <= m / 3` and raise when it overruns, naming both the stated bandwidth and the widest the mode count admits; verify the message contains both numbers
-- [ ] 2.4 Verify the refusal is justified by measurement rather than caution: a band at `m//2` leaves a continuous residual of `1.50e-1` and `m//2 - 1` leaves `7.56e-2`, against `3.64e-7` inside the threshold. Record that an overrunning pair is still self-consistent, which is why refusing at generation is the only place it can be caught
-- [ ] 2.5 Make the numerical branch of `Burgers.generate` reject a band, mirroring how the manufactured branch already rejects `solver` at `burgers.py:84`; verify the error says why it cannot act rather than ignoring it
-- [ ] 2.6 Verify a band that is structurally impossible — not positive, or wider than the grid — is refused separately from one that merely overruns the threshold, since they are different errors
-- [ ] 2.7 Run `just check`; verify clean
+- [x] 2.1 Add an optional band parameter to `mms_solution`, defaulting to the derived cutoff; verify every existing call site is unaffected
+- [x] 2.2 Thread it through `Burgers.generate` as an explicit named parameter beside `nu` and `solver` — **not** through `**kwargs`, which `Burgers.generate` never reads (`ty` reports it unused at `burgers.py:50`) and would silently discard it. Verify the parameter is explicit rather than absorbed: a band stated through `Burgers.generate` reaches `mms_solution` and changes the generated field's width against the default, while the same value passed under an unrecognised keyword leaves the width at the default — the second case is the silent discard this task exists to prevent
+- [x] 2.3 Validate a stated band against `2K <= m / 3` and raise when it overruns, naming both the stated bandwidth and the widest the mode count admits; verify the message contains both numbers
+- [x] 2.4 Verify the refusal is justified by measurement rather than caution: a band at `m//2` leaves a continuous residual of `1.50e-1` and `m//2 - 1` leaves `7.56e-2`, against `3.64e-7` inside the threshold. Record that an overrunning pair is still self-consistent, which is why refusing at generation is the only place it can be caught
+- [x] 2.5 Make the numerical branch of `Burgers.generate` reject a band, mirroring how the manufactured branch already rejects `solver` at `burgers.py:84`; verify the error says why it cannot act rather than ignoring it
+- [x] 2.6 Verify a band that is structurally impossible — not positive, or wider than the grid — is refused separately from one that merely overruns the threshold, since they are different errors
+- [x] 2.7 Run `just check`; verify clean
+
+### Measured, section 2
+
+The parameter is typed `RealBand | None`, not `Band | None`. `ExactModeCount`
+cannot describe a real field and the spec requires a band that cannot select one
+member of a conjugate pair, so the type refuses it at the call site rather than a
+runtime check reporting it later.
+
+`band=None` and `band=widest_manufactured_band(m)` produce `torch.equal`
+coefficients, so every existing call site is unaffected (2.1).
+
+**The parameter is explicit, not absorbed** (2.2). At `m = 16`, default width 5:
+
+| call | width |
+| --- | --- |
+| `generate(..., band=WavenumberCutoff(1))` | 3 |
+| `generate(..., bandwidth=WavenumberCutoff(1))` — unrecognised keyword | 5 |
+
+The named parameter reaches `mms_solution` and narrows the field; the same value
+under an unrecognised keyword is swallowed by `**kwargs` and leaves the default.
+The second row is the silent discard the task exists to prevent.
+
+**The two refusals are different errors** (2.3, 2.6). Structural is checked
+first, since a band past the grid also overruns the threshold and the more
+specific message is the useful one:
+
+```
+WavenumberCutoff(-1)   cutoff must be non-negative, got -1          (the type)
+WholeGrid() at m=16    band WholeGrid() keeps |k| <= 8, which needs
+                       17 modes on a grid of 16                     (structural)
+WavenumberCutoff(20)   ... keeps |k| <= 20, which needs 41 modes
+                       on a grid of 16                              (structural)
+WavenumberCutoff(3)    band WavenumberCutoff(cutoff=3) keeps |k| <= 3 in 7
+                       modes, whose product reaches 6 and overruns the 5.33333
+                       the de-aliasing mask keeps; the widest 16 modes admit
+                       is |k| <= 2 in 5 modes                       (threshold)
+```
+
+The threshold message names both numbers the task required: the stated bandwidth
+and the widest the mode count admits.
+
+The numerical branch refuses a band (2.5): *"the numerical branch integrates a
+given initial condition and forcing rather than manufacturing a field, so a band
+would have nothing to limit"*, mirroring the manufactured branch's refusal of
+`solver`. Both rejections now sit in one `_reject_inapplicable` helper — ruff's
+C901 put `generate` at 11 > 10 once the second was added inline, and the two are
+one rule stated twice, so they were extracted rather than the limit raised.
+
+**The refusal is justified by measurement, not caution** (2.4). `m = 16`,
+`nu = 0.05`, seed 3. "discrete" is `spectral_residual`, the de-aliased equation
+the pair is built from; "continuous" evaluates every term off the sample grid:
+
+| kept modes | cutoff | `2K` | vs `m/3` | discrete | continuous | |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 | 2 | 4 | 5.33 | 0.000e+00 | 1.999e-07 | admitted |
+| 7 | 3 | 6 | 5.33 | 0.000e+00 | 1.608e-02 | refused |
+| 8 | 3 | 6 | 5.33 | 0.000e+00 | 3.631e-02 | refused |
+| 9 | 4 | 8 | 5.33 | 0.000e+00 | 7.064e-02 | refused |
+
+The discrete residual reads **exactly zero for every band, including the refused
+ones**, because forcing and solver de-alias alike. The continuous residual jumps
+five orders of magnitude the moment the band overruns. A pair that checks itself
+can never catch this, which is why generation is the only place it can be
+refused — the point 2.4 asked to be recorded.
+
+The task quotes `1.50e-1` at `m//2` and `7.56e-2` at `m//2 - 1` against `3.64e-7`.
+Those came from a differently parameterised measurement during
+`align-spectral-residual-with-solver` — count-based bands and its own seed — so
+the magnitudes differ from the table above. The ratio the numbers were recorded
+to show is reproduced and larger: five orders of magnitude, not four.
+
+`just check`: 303 passed, ruff/mypy/ty clean.
 
 ## 3. Anchors
 
