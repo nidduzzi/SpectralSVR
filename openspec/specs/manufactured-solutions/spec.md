@@ -6,15 +6,34 @@ Defines what a manufactured solution pair guarantees: that the chosen field toge
 ## Requirements
 
 ### Requirement: The manufactured pair satisfies the continuous equation
-A manufactured `(u, f)` pair SHALL satisfy the governing equation as a continuous statement, so that evaluating every term at points that are not sample points leaves a residual at the level of floating-point rounding.
+A manufactured `(u, f)` pair SHALL satisfy the governing equation as a continuous statement, so that evaluating every term at points that are not sample points leaves a residual at the level of floating-point rounding. Where a choice of bandwidth would break that, the generator SHALL refuse the choice rather than produce a pair that is only self-consistent.
 
 #### Scenario: Residual vanishes off the sample grid
 - **WHEN** a manufactured pair is generated and every term of the equation is evaluated on a grid finer than and offset from the field's own sample points
 - **THEN** the residual relative to the magnitude of the equation's left-hand side is at rounding level, not at a level that would be mistaken for a physical effect
 
 #### Scenario: Bandwidth that overruns the grid is rejected or resolved
-- **WHEN** the chosen field's bandwidth is such that its nonlinear term cannot be represented on the mode grid
-- **THEN** the manufactured forcing is still the residual of the equation the solver integrates, because both apply the same de-aliasing
+- **WHEN** a caller states a bandwidth whose nonlinear term cannot be represented within the band the solver keeps
+- **THEN** it is rejected: the generator raises, naming the stated bandwidth and the widest one the mode count admits. Resolving it by letting both sides de-alias alike would leave a pair satisfying the de-aliased equation but not the continuous one, which this requirement forbids
+
+#### Scenario: Self-consistency is not accepted in place of the guarantee
+- **WHEN** a pair whose product overruns the kept band would still be internally consistent, since the forcing and the solver apply the same de-aliasing
+- **THEN** that is not sufficient: the requirement is satisfaction of the continuous equation, and a pair meeting only the discrete condition is refused at generation rather than returned
+
+### Requirement: The manufactured field is real by construction
+The field a manufactured pair is built from SHALL describe a real function as generated, not as repaired. Its band SHALL be stated in a form that cannot select one member of a conjugate pair without the other, so the field is conjugate-symmetric before any resizing is applied to it.
+
+#### Scenario: The generated field is conjugate-symmetric at every mode count
+- **WHEN** a manufactured pair is generated at any supported mode count
+- **THEN** the field's coefficients are conjugate-symmetric, and remain so with any downstream repair of resizing disabled, showing the field was generated correctly rather than corrected afterwards
+
+#### Scenario: The band cannot be stated in a form that breaks symmetry
+- **WHEN** the generator derives or accepts a band
+- **THEN** it is a band that keeps a magnitude and its negative together with the zero mode, so no derivation or caller choice can produce an unpaired highest coefficient
+
+#### Scenario: The bandwidth the caller can state is visible
+- **WHEN** a caller generates a manufactured problem and wants a narrower field than the default
+- **THEN** the bandwidth is a stated argument rather than an internal constant, so the difficulty of the manufactured problem is visible at the call site
 
 ### Requirement: The forcing uses the solver's nonlinear-term convention
 The nonlinear term used to derive a manufactured forcing SHALL be formed the same way the numerical solver forms it: from the real part of the sampled field, and through the same de-aliasing mask. A manufactured pair derived under a different convention is not an oracle for that solver.
