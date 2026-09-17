@@ -261,3 +261,58 @@ this change's four exemption entries. All four are now gone, so on this branch
 the constant is defined and unused. It is kept rather than removed because the
 branches stacked above consume it for their own in-flight scenarios, and removing
 it here would break them on rebase for no gain.
+
+### Strengthening pass over the tests this change introduced
+
+Each of the three anchors was re-read against what it actually proves, then
+rewritten. All three are now fuzzed and all three are checked against deliberate
+mutations of the thing they guard.
+
+**The symmetry anchor was not testing the generator.** As first written it
+rebuilt the band by hand from `FourierBasis.generate_coeff` and padded it, so it
+anchored the arithmetic `2K + 1` rather than `mms_solution`. It would have passed
+unchanged if the generator had stopped calling `widest_manufactured_band`
+entirely — the change's headline claim, unguarded. It now calls `mms_solution`
+and measures its returned field, with `resize_modes` replaced by the
+repair-disabled variant through `unittest.mock.patch` rather than the
+`monkeypatch` fixture, which Hypothesis refuses to reset between generated
+inputs.
+
+**A rounding floor was found while adding a value-space assertion.** The
+coefficients are *exactly* Hermitian — `0.0` in all 210 cases swept over mode
+counts 6–40 and seeds 0–5 — but the inverse transform's imaginary part is not
+exactly zero, because the transform itself rounds in float32. Measured worst
+`|imag| / |real|` is **9.550e-08** at modes 36, seed 3, against a float32 eps of
+1.192e-07: the imaginary part sits at the rounding floor, not above it.
+`MANUFACTURED_IMAGINARY_FLOOR = 1e-6` is set one order of magnitude above the
+measurement, not tuned to pass.
+
+**The stated-band anchor was checking a proxy.** It counted non-zero
+coefficients at one mode count under `no_fuzz`. A count does not say the
+non-zeros are the *right* ones. It now fuzzes mode count, seed and how far below
+the default the stated cutoff sits, and asserts the support directly: every
+coefficient at `|k| > K` is exactly zero, the kept count is `2K + 1`, and a band
+narrower than the default actually changes the field rather than silently
+matching it.
+
+**The refusal anchor tested one overrunning band.** Seed was pinned and only
+`widest + 1` was tried. It now fuzzes the seed and the overrun by 1–6 cutoffs,
+and adds the assertion the whole derivation exists for: the *admitted* band's
+continuous residual is inside `MANUFACTURED_RESIDUAL_TOLERANCE`, and the refused
+pair's exceeds it by more than a factor of 100 while its own de-aliased residual
+stays below `1e-10`.
+
+Mutation check — each mutant replaces `widest_manufactured_band`, then the three
+anchors run:
+
+| mutant | caught by |
+| --- | --- |
+| pre-change count-based band, `max(1, m // 3)` | all 3 |
+| one cutoff too wide, `m // 6 + 1`, breaching `2K <= m/3` | 2 of 3 |
+| always-even count, `2 * (m // 6)` | all 3 |
+
+The survivor in the middle row is the stated-band support anchor, and correctly
+so: its scenario is about bands the *caller* states, and a wrong default is the
+other two anchors' subject. No mutant survives all three.
+
+`just check`: 306 passed, ruff/mypy/ty clean.
