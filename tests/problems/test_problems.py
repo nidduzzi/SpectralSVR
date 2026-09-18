@@ -494,7 +494,14 @@ def test_numerical_branch_uses_the_supplied_solver():
         build(solver=failing_solver)
 
 
-@pytest.mark.oracle_smoke
+# A spatially constant field has u_x = u_xx = 0, so viscous Burgers under a
+# constant forcing reduces to u_t = f and the solution is u(t) = u0 + f t
+# exactly. Measured max |u - (u0 + f t)| over u0 in [-1, 1], f in [0.05, 0.5]
+# and 8 to 24 modes: 1.192e-07 to 2.861e-06.
+CONSTANT_FORCING_CLOSED_FORM_TOLERANCE = 3e-5
+
+
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     u0=st.floats(-1.0, 1.0),
@@ -503,7 +510,7 @@ def test_numerical_branch_uses_the_supplied_solver():
     seed=st.integers(0, 10_000),
 )
 def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
-    # constant initial condition + constant forcing exercise the Number branches
+    steps = 40
     u, f = Burgers().generate(
         FourierBasis,
         2,
@@ -512,12 +519,19 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
         f=fval,
         nu=0.05,
         space_domain=slice(0, 1, space_modes),
-        time_domain=slice(0, 1, 40),
+        time_domain=slice(0, 1, steps),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent
-    assert f.coeff.abs().max() > 0  # non-zero constant forcing
+    assert f.coeff.abs().max() > 0
     assert not torch.isnan(u.coeff).any()
+
+    t = FourierBasis.grid(slice(0, 1, steps)).flatten().to(u.coeff.device)
+    values = FourierBasis.inv_transform(u.coeff.flatten(0, 1)).real.reshape(
+        2, steps, space_modes
+    )
+    closed_form = (u0 + fval * t)[None, :, None].expand(2, steps, space_modes)
+    assert (values - closed_form).abs().max() < CONSTANT_FORCING_CLOSED_FORM_TOLERANCE
 
 
 @pytest.mark.oracle_smoke
