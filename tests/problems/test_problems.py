@@ -1157,6 +1157,21 @@ def test_a_forcing_the_grid_cannot_represent_is_refused(space_modes, nt, wider):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    wrong=st.integers(1, 8),
+)
+def test_numerical_forcing_rejects_a_wrong_shaped_callable(space_modes, nt, wrong):
+    def misshaped(t):
+        return FourierBasis.transform(torch.zeros(2, space_modes + wrong) + 0j)
+
+    with pytest.raises(ValueError, match="forcing callable must return"):
+        _integrate_with_forcing(SpectralForcing(misshaped), space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
 @given(space_modes=st.integers(8, 24), seed=st.integers(0, 10_000))
 def test_numerical_forcing_rejects_a_bare_tensor(space_modes, seed):
     values = torch.rand(2, space_modes, generator=torch.Generator().manual_seed(seed))

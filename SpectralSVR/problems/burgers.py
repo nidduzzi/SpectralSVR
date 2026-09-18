@@ -345,10 +345,11 @@ class Burgers(Problem):
 
             def declared_forcing_at(t: torch.Tensor) -> torch.Tensor:
                 spectrum = declared.spectrum(basis, t)
-                assert spectrum.shape == (n, ns), (
-                    f"forcing callable must return ({n}, {ns}), got "
-                    f"{tuple(spectrum.shape)}"
-                )
+                if spectrum.shape != (n, ns):
+                    raise ValueError(
+                        f"forcing callable must return ({n}, {ns}), got "
+                        f"{tuple(spectrum.shape)}"
+                    )
                 return spectrum.to(device=device)
 
             return declared_forcing_at
