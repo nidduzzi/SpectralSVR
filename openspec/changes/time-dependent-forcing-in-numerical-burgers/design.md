@@ -76,21 +76,23 @@ The manufactured `u` is periodic in time, so `u(T) = u(0)`. The round-trip there
 
 The order is **measured first and the bound set beneath it**, rather than predicted from the scheme's nominal order and checked afterwards. Measured at `m = 24`, `ns = 2m`, `nu = 0.01`, `n = 2`, seed 1234, on `[0, 1]`:
 
-| `nt` | relative error | order |
-| --- | --- | --- |
-| 13 | 1.401947e-02 | — |
-| 25 | 9.606420e-04 | 3.867 |
-| 50 | 5.373642e-05 | 4.160 |
-| 100 | 3.306715e-06 | 4.022 |
-| 200 | 1.523207e-06 | 1.118 |
-| 400 | 1.476252e-06 | 0.045 |
-| 800 | 2.700269e-06 | -0.871 |
+| `nt` | `h = 1/(nt-1)` | relative error | order |
+| --- | --- | --- | --- |
+| 13 | 1/12 | 1.401947e-02 | — |
+| 25 | 1/24 | 9.606420e-04 | 3.867 |
+| 49 | 1/48 | 5.935034e-05 | 4.017 |
+| 97 | 1/96 | 3.342465e-06 | 4.150 |
+| 193 | 1/192 | 1.594647e-06 | 1.068 |
+| 385 | 1/384 | 1.416505e-06 | 0.171 |
+| 769 | 1/768 | 2.284473e-06 | -0.690 |
 
-Fourth order, so the expectation behind the original `> 3.5` was sound — the nonlinear problem is rougher than the scalar test in the ETDRK4 change and the reference is itself band-limited, and 4.0 to 4.2 is what that reasoning would have allowed. The step counts that expectation arrived with were not sound: this section first named `nt ∈ {50, 100, 200, 400}`, whose last two rows both read the floor — leaving two of the three orders that sweep yields as floor artefacts rather than rates.
+The step counts halve `h = 1/(nt - 1)` exactly. This matters because the order is only `log2` of the error ratio when the step ratio is two: an earlier sweep here used `nt ∈ {13, 25, 50, 100}`, whose step ratios are 2.000, 2.042 and 2.020, and reading it as `log2` inflated two orders to 4.160 and 4.022 against ratio-corrected values of 4.040 and 3.964. The conclusion was unchanged — fourth order either way — but the figures were wrong as stated, and the scenario asks for halving step sizes rather than approximately halving ones.
+
+Fourth order, so the expectation behind the original `> 3.5` was sound — the nonlinear problem is rougher than the scalar test in the ETDRK4 change and the reference is itself band-limited, and 4.0 to 4.2 is what that reasoning would have allowed. The step counts that expectation arrived with were not sound: this section first named `nt ∈ {50, 100, 200, 400}`, whose last two rows read the floor — leaving two of its three orders as floor artefacts rather than rates.
 
 **The resolved range is bounded above as well as below.** Coefficients are stored at `SpectralConfig.coeff_dtype`, complex64 by default, and the round-trip reaches a round-off floor near `1.5e-6` relative by `nt = 200`, rising again to `2.7e-6` by `nt = 800`. The rise is what identifies it: a fixed spatial-truncation floor sits flat, accumulating round-off does not. `torch.set_default_dtype(torch.float64)` does not move it, so the floor is the stored coefficient precision and not the default dtype. Raising the anchor to double would mean widening `generate`, which takes the basis as a *class* and constructs from it, leaving no seam to pass a precision through; that is out of scope here, and `numerical-anchor-tests` already carries the scenario distinguishing saturation from order loss.
 
-The asserted range is therefore `nt ∈ {13, 25, 50, 100}`, and the bound sits beneath the **minimum** order measured across it (3.867) rather than beneath the last pair — keyed to the last pair, any sweep reaching the floor asserts against saturation. A measured order materially under 4 is a finding to chase — de-aliasing resolution, stage times — not a number to assert beneath. The absolute tolerance at `nt = 100` is likewise fixed one order of magnitude above the measured `3.307e-06`, and every measured order is recorded in both `tasks.md` and the test.
+The asserted range is therefore `nt ∈ {13, 25, 49, 97}`, and the bound sits beneath the **minimum** order measured across it (3.867) rather than beneath the last pair — keyed to the last pair, any sweep reaching the floor asserts against saturation. A measured order materially under 4 is a finding to chase — de-aliasing resolution, stage times — not a number to assert beneath. The absolute tolerance at `nt = 97` is likewise fixed one order of magnitude above the measured `3.342465e-06`, and every measured order is recorded in both `tasks.md` and the test.
 
 ## Risks / Trade-offs
 

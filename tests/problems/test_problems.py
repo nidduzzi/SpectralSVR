@@ -1216,20 +1216,23 @@ def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, value)
 # Burgers -- the manufactured round trip through the integrator
 # (time-dependent-forcing-in-numerical-burgers)
 # ---------------------------------------------------------------------------
-# Measured at m = 24, ns = 2m, nu = 0.01, n = 2, seed 1234 on [0, 1]:
-#   nt=13 1.401947e-02 | 25 9.606420e-04 (3.867) | 50 5.373642e-05 (4.160)
-#   nt=100 3.306715e-06 (4.022) | 200 1.523207e-06 (1.118) | 400 1.476252e-06
-# nt >= 200 reads a complex64 round-off floor near 1.5e-6 that rises again by
-# nt = 800, so the resolved range stops at 100. The bound sits beneath the
+# Measured at m = 24, ns = 2m, nu = 0.01, n = 2, seed 1234 on [0, 1]. The step
+# counts are chosen so h = 1/(nt - 1) halves exactly -- 1/12, 1/24, 1/48, 1/96:
+#   nt=13  1.401947e-02        | nt=25  9.606420e-04  4  3.867
+#   nt=49  5.935034e-05  4.017 | nt=97  3.342465e-06     4.150
+#   nt=193 1.594647e-06  1.068 | nt=385 1.416505e-06     0.171
+#   nt=769 2.284473e-06 -0.690
+# nt >= 193 reads a complex64 round-off floor near 1.5e-6 that rises again by
+# nt = 769, so the resolved range stops at 97. The bound sits beneath the
 # minimum measured order; the measured orders sit above the bound.
 MANUFACTURED_ROUND_TRIP_MODES = 24
-MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 50, 100)
-MANUFACTURED_ROUND_TRIP_ERROR = 3.306715e-06
+MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 49, 97)
+MANUFACTURED_ROUND_TRIP_ERROR = 3.342465e-06
 MANUFACTURED_ROUND_TRIP_TOLERANCE = 3e-5
-MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.160, 4.022)
+MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.017, 4.150)
 MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
 # The same sweep with every stage of a step reading the step's start time.
-FROZEN_FORCING_ORDERS = (1.165, 1.719, 0.471)
+FROZEN_FORCING_ORDERS = (1.165, 1.012, 0.942)
 FROZEN_FORCING_ORDER_CEILING = 2.0
 
 
@@ -1269,8 +1272,18 @@ def _manufactured_round_trip(nt, freeze=False, nu=0.01, n=2, seed=1234):
     return float((final - exact).abs().max() / exact.abs().max())
 
 
-def _observed_orders(errors):
-    return [math.log2(a / b) for a, b in zip(errors, errors[1:], strict=False)]
+def _observed_orders(errors, steps):
+    """Convergence order between consecutive runs, from the step sizes used.
+
+    ``nt`` counts grid points, so the step is ``1 / (nt - 1)`` and consecutive
+    counts need not halve it exactly; the ratio is taken from the steps rather
+    than assumed to be two.
+    """
+    h = [1.0 / (nt - 1) for nt in steps]
+    return [
+        math.log(a / b) / math.log(ha / hb)
+        for a, b, ha, hb in zip(errors, errors[1:], h, h[1:], strict=False)
+    ]
 
 
 @pytest.mark.no_fuzz
@@ -1289,7 +1302,7 @@ def test_numerical_burgers_reproduces_manufactured_solution():
 @pytest.mark.scenario("Rate, not just size, is asserted")
 def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
     errors = [_manufactured_round_trip(nt) for nt in MANUFACTURED_ROUND_TRIP_STEPS]
-    orders = _observed_orders(errors)
+    orders = _observed_orders(errors, MANUFACTURED_ROUND_TRIP_STEPS)
     assert orders == pytest.approx(list(MANUFACTURED_ROUND_TRIP_ORDERS), abs=0.15)
     assert min(orders) > MANUFACTURED_ROUND_TRIP_ORDER_BOUND, (
         f"measured orders {orders} against a bound of "
@@ -1306,7 +1319,7 @@ def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
         _manufactured_round_trip(nt, freeze=True)
         for nt in MANUFACTURED_ROUND_TRIP_STEPS
     ]
-    orders = _observed_orders(frozen)
+    orders = _observed_orders(frozen, MANUFACTURED_ROUND_TRIP_STEPS)
     assert orders == pytest.approx(list(FROZEN_FORCING_ORDERS), abs=0.15)
     assert max(orders) < FROZEN_FORCING_ORDER_CEILING < min(
         MANUFACTURED_ROUND_TRIP_ORDERS
