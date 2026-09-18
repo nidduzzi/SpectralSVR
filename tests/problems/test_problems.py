@@ -1009,10 +1009,10 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
 # Burgers -- forcings the numerical branch refuses
 # (time-dependent-forcing-in-numerical-burgers)
 # ---------------------------------------------------------------------------
-def _integrate_with_forcing(f, space_modes, nt=20, space_domain=slice(0, 1, 200)):
+def _integrate_with_forcing(f, space_modes, nt=20, n=2, space_domain=slice(0, 1, 200)):
     return Burgers().generate(
         FourierBasis,
-        2,
+        n,
         (nt, space_modes),
         u0=0.0,
         f=f,
@@ -1147,21 +1147,22 @@ def _analytic_on_grid(nt, ns, n):
 @given(
     space_modes=st.integers(8, 32),
     nt=st.integers(12, 40),
+    n=st.integers(1, 3),
     seed=st.integers(0, 10_000),
 )
-def test_callable_forcing_is_integrated_and_returned(space_modes, nt, seed):
+def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
     nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
 
     def forcing(ti):
         values = _travelling_forcing(torch.as_tensor(float(ti)), nodes)
-        return FourierBasis.transform(values.expand(2, space_modes) + 0j)
+        return FourierBasis.transform(values.expand(n, space_modes) + 0j)
 
-    u, f = _integrate_with_forcing(forcing, space_modes, nt)
+    u, f = _integrate_with_forcing(forcing, space_modes, nt, n=n)
 
     assert u.time_dependent and f.time_dependent
-    assert f.coeff.shape == (2, nt, space_modes)
-    on_grid = _forcing_values_on_grid(f, 2, nt, space_modes)
-    want = _analytic_on_grid(nt, space_modes, 2).to(on_grid.device)
+    assert f.coeff.shape == (n, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, n, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, n).to(on_grid.device)
     assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
 
 
@@ -1172,25 +1173,26 @@ def test_callable_forcing_is_integrated_and_returned(space_modes, nt, seed):
     space_modes=st.integers(12, 32),
     nt=st.integers(12, 40),
     field_modes=st.integers(8, 32),
+    n=st.integers(1, 3),
 )
 def test_spectral_forcing_field_is_integrated_and_resampled(
-    space_modes, nt, field_modes
+    space_modes, nt, field_modes, n
 ):
     t_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
     x_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
     values = _travelling_forcing(t_nodes[:, None], x_nodes[None, :]) + 0j
     coeff = FourierBasis.transform(values.reshape(1, nt, field_modes))
     field = FourierBasis(
-        coeff=coeff.expand(2, nt, field_modes).clone(),
+        coeff=coeff.expand(n, nt, field_modes).clone(),
         domain=((0.0, 1.0), (0.0, 1.0)),
     )
 
-    _, f = _integrate_with_forcing(field, space_modes, nt)
+    _, f = _integrate_with_forcing(field, space_modes, nt, n=n)
 
     # the field is resampled to the solver's mode count, not carried at its own
-    assert f.coeff.shape == (2, nt, space_modes)
-    on_grid = _forcing_values_on_grid(f, 2, nt, space_modes)
-    want = _analytic_on_grid(nt, space_modes, 2).to(on_grid.device)
+    assert f.coeff.shape == (n, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, n, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, n).to(on_grid.device)
     assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
 
 
@@ -1200,13 +1202,14 @@ def test_spectral_forcing_field_is_integrated_and_resampled(
 @given(
     space_modes=st.integers(8, 32),
     nt=st.integers(12, 40),
+    n=st.integers(1, 3),
     value=st.floats(-2.0, 2.0),
 )
-def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, value):
-    _, f = _integrate_with_forcing(value, space_modes, nt)
+def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, n, value):
+    _, f = _integrate_with_forcing(value, space_modes, nt, n=n)
 
     expected = FourierBasis.transform(
-        torch.full((2, space_modes), value, device=f.coeff.device) + 0j
+        torch.full((n, space_modes), value, device=f.coeff.device) + 0j
     ).to(f.coeff.dtype)
     for step in range(nt):
         assert torch.equal(f.coeff[:, step, :], expected)

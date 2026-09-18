@@ -1,6 +1,6 @@
 ## 0. Dependency gate
 
-- [ ] 0.1 Confirm `align-spectral-residual-with-solver` is merged beneath this branch: `git log --oneline` shows its implementation commit and `Burgers.spectral_residual` routes through the shared nonlinear-term helper (real part taken, de-aliasing applied); verify before touching group 4 — without it the round-trip error is flat at 2.59e-3 to 6.89e-3 at every step count and no rate exists to measure. The earlier ETDRK4 stage-time gate is satisfied: that change is archived and in `main`.
+- [x] 0.1 Confirm `align-spectral-residual-with-solver` is merged beneath this branch: `git log --oneline` shows its implementation commit and `Burgers.spectral_residual` routes through the shared nonlinear-term helper (real part taken, de-aliasing applied); verify before touching group 4 — without it the round-trip error is flat at 2.59e-3 to 6.89e-3 at every step count and no rate exists to measure. The earlier ETDRK4 stage-time gate is satisfied: that change is archived and in `main`.
 
 ## 1. Forcing normalisation in `_solve_spectral`
 
@@ -46,8 +46,8 @@
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `Burgers.generate`'s docstring for `f`: the three accepted forms, the rejected per-slice form and why, and that the forcing is evaluated at the integrator's stage times; verify the text matches the rejection messages in group 2
-- [ ] 5.2 Update `_solve_spectral`'s docstring to describe `forcing_at` and the resolution condition for de-alias-free manufactured forcing, derived rather than asserted: the manufactured cutoff is `K = m // 6`, so the product reaches `|k| ≤ 2K` while the solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`, giving `ns ≥ 6K`, which is at most `m`. Verify the condition stated matches design.md's derivation and that task 4.1's `ns = 2m` reads as headroom above it, not as the condition
+- [x] 5.1 Update `Burgers.generate`'s docstring for `f`: the three accepted forms, the rejected per-slice form and why, and that the forcing is evaluated at the integrator's stage times; verify the text matches the rejection messages in group 2
+- [x] 5.2 Update `_solve_spectral`'s docstring to describe `forcing_at` and the resolution condition for de-alias-free manufactured forcing, derived rather than asserted: the manufactured cutoff is `K = m // 6`, so the product reaches `|k| ≤ 2K` while the solver's 2/3 mask at `ns` keeps `|k| ≤ ns/3`, giving `ns ≥ 6K`, which is at most `m`. Verify the condition stated matches design.md's derivation and that task 4.1's `ns = 2m` reads as headroom above it, not as the condition
 
 ## 6. Scenario coverage
 
@@ -61,12 +61,28 @@ and the debt visibly shrinks.
 - [x] 6.1 As group 2 completes, mark `Sampled-time field raises` and `Mismatched time domain raises` with `@pytest.mark.scenario` and remove their `IN_FLIGHT` entries; verify the stale-exemption test forces the removal rather than tolerating it. Task 2.4's `Mismatched space domain raises` is stated and covered in one commit, so it never enters `EXEMPT` and has nothing to remove here
 - [x] 6.2 As group 3 completes, mark `Callable forcing is integrated`, `Fully spectral forcing field is integrated` and `Constant forcing byte-identity`, and remove their entries. `Constant forcing byte-identity` as first written compared this change against its parent commit, which no test can do; its scenario is restated as the in-suite guarantee it stands for -- the `Number` path returns exactly the constant spectrum, `torch.equal` with no tolerance -- and the cross-commit check stays a task-level verification in 1.1 and 7.3
 - [x] 6.3 As group 4 completes, mark `Round-trip matches the manufactured solution` (4.1), `Round-trip converges at the integrator's order` (4.3), `Forcing is evaluated at stage times, not step starts` (4.4 — the control run is what discharges it; no other test reaches that scenario), `Exact solution reached within time-stepping error` (4.1) and `Rate, not just size, is asserted` (4.3), and remove their `IN_FLIGHT` entries
-- [ ] 6.4 Fuzz the scenarios that range over inputs rather than pinning one case: the forcing-form acceptance over mode counts, sample counts and step counts, and the rejection paths over the shapes that should be refused. Verify each property fails under a mutation of the behaviour it describes
-- [ ] 6.5 Decide and record whether the round-trip warrants a `RuleBasedStateMachine`. Its point is a measured rate at specific `nt` values, which is a fixed-design anchor rather than a sequence invariant — if no sequence is being constrained, record that reasoning rather than adding a machine to satisfy the letter of the rule
-- [ ] 6.6 Verify no `IN_FLIGHT` entry for this change remains, and that the two scenarios belonging to the forced-dataset change moved with it rather than being dropped
+- [x] 6.4 Fuzz the scenarios that range over inputs rather than pinning one case: the forcing-form acceptance over mode counts, sample counts and step counts, and the rejection paths over the shapes that should be refused. Verify each property fails under a mutation of the behaviour it describes.
+
+  The acceptance properties fuzz `space_modes`, `nt`, the sample count `n` and, for a field forcing, the field's own spatial mode count independently of the solver's. The rejection properties fuzz the offending domain offset alongside the mode and step counts, and the space-domain property also integrates the same field on a matching domain so it cannot pass by refusing everything. The anchors in group 4 stay `no_fuzz`: each is a measured rate at stated step counts, which is a fixed-design anchor rather than a property over a range.
+
+  Nine mutations run against the properties, each restored afterwards. All nine killed, no survivors:
+
+  | mutation | property | result |
+  | --- | --- | --- |
+  | space-domain check removed | `mismatched_space_domain` | killed |
+  | time-domain check removed | `mismatched_time_domain` | killed |
+  | per-slice rejection removed | `per_time_slice_field` | killed |
+  | bare tensor accepted | `rejects_a_bare_tensor` | killed |
+  | manufactured forcing let through | `rejects_a_manufactured_forcing` | killed |
+  | callable branch returns zero | `callable_forcing_is_integrated` | killed |
+  | field branch pinned at `t = 0` | `spectral_forcing_field_is_integrated` | killed |
+  | constant spectrum doubled | `constant_forcing_is_the_exact` | killed |
+  | stages read the step start | `frozen_at_step_start` | killed |
+- [x] 6.5 Decide and record whether the round-trip warrants a `RuleBasedStateMachine`. **No.** The rule applies where a requirement constrains what stays true *across* a sequence rather than within one call. The round-trip sweep looks like a sequence and is not one: each `nt` is an independent integration from the same initial slice, nothing carries between them, and any order is admissible as a starting point. What is constrained is the *rate* relating their errors, which is a single derived quantity over a fixed design, not an invariant a sequence of operations must preserve. A machine here would generate orderings that cannot differ and states that do not exist. The sequences this change does produce — the integrator's own stage calls within a step — are internal to `etdrk4_solver`, which this change does not modify and whose own capability owns them
+- [x] 6.6 Verify no `IN_FLIGHT` entry for this change remains, and that the two scenarios belonging to the forced-dataset change moved with it rather than being dropped
 
 ## 7. Verification
 
-- [ ] 7.1 Run `just check`; verify clean
-- [ ] 7.2 Verify no source file gained an explanatory prose comment; the three forcing forms must read from `forcing_at`'s structure and the docstrings
-- [ ] 7.3 Re-run task 1.1's byte-identity check against this branch's *current* parent, which changes when the branch is rebased; verify `torch.equal` on both coefficients. The changes beneath do not touch `generate_coeff`, so unchanged output is the expectation, but re-measure rather than assume. Re-run task 4.2's order sweep in the same pass and confirm the recorded table still holds, or re-record it: the order depends on the manufactured band, which `manufactured-band-derivation` sets beneath this branch, and a table measured against a parent nobody re-checked is a bound sitting on an assumption
+- [x] 7.1 Run `just check`; verify clean
+- [x] 7.2 Verify no source file gained an explanatory prose comment; the three forcing forms must read from `forcing_at`'s structure and the docstrings
+- [x] 7.3 Re-run task 1.1's byte-identity check against this branch's *current* parent, which changes when the branch is rebased; verify `torch.equal` on both coefficients. Run against parent `9bb25ea` (`feat/manufactured-band-derivation`) in a detached worktree with its own `uv sync` environment, printing each side's loaded `SpectralSVR.__file__` to confirm which library produced the numbers. At `n=4`, `modes=(16, 16)`, `nu=0.01`, `time_domain=slice(0, 1, 50)`, seed 1234, `f=0`: `torch.equal` **True** on both `u` and `f`, `max|delta| = 0.000e+00`. The changes beneath do not touch `generate_coeff`, so unchanged output is the expectation, but re-measure rather than assume. Re-run task 4.2's order sweep in the same pass and confirm the recorded table still holds, or re-record it: the order depends on the manufactured band, which `manufactured-band-derivation` sets beneath this branch, and a table measured against a parent nobody re-checked is a bound sitting on an assumption

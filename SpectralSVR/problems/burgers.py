@@ -54,6 +54,28 @@ class Burgers(Problem):
         time_dependent_coeff: bool = True,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
+        """Generate a Burgers ``(u, f)`` pair, manufactured or integrated.
+
+        ``u0="random"`` with ``f="random"`` manufactures a pair analytically and
+        integrates nothing; any other combination integrates ``u0`` forward
+        under ``f``. ``band`` belongs to the first, ``solver`` to the second,
+        and each is refused on the other.
+
+        The integrated branch accepts three forcings, evaluated at the times the
+        integrator asks for rather than held at the step's start:
+
+        - a :data:`Number`, constant in time and space;
+        - a callable taking the stage time as a zero-dimensional tensor and
+          returning ``(n, modes[1])`` spectral coefficients;
+        - a basis field over ``(time, space)`` that is spectral in time
+          (``time_dependent=False``), spanning the integration intervals on
+          both axes.
+
+        A field sampled per time slice (``time_dependent=True``) is refused: the
+        integrator evaluates between output grid points, and reading one there
+        needs an interpolation the caller did not choose. So is a bare tensor,
+        which states values without saying at what times they hold.
+        """
         if space_domain is None:
             space_domain = slice(0, 1, 200)
         if time_domain is None:
@@ -187,6 +209,18 @@ class Burgers(Problem):
         ``solver`` receives the linear operator and nonlinear term separately;
         wrap a monolithic ``rhs(t, y)`` solver in
         :func:`utils.as_semilinear_solver` to use one here.
+
+        The forcing is normalised to :meth:`_forcing_at`, a function of time
+        that every stage calls, so a forcing varying within a step is seen at
+        the stage times rather than frozen at the step's start.
+
+        A manufactured forcing stays free of aliasing only where the grid
+        resolves its nonlinear term. :meth:`widest_manufactured_band` limits a
+        manufactured field at ``m`` modes to ``|k| <= K`` with ``K = m // 6``,
+        so its product reaches ``2 K`` while the 2/3 mask here keeps
+        ``|k| <= ns / 3``; the two agree when ``ns >= 6 K``, which ``ns = m``
+        already satisfies since ``6 (m // 6) <= m``. Solving above that is
+        headroom, not a condition.
         """
         if len(modes) != 2:
             raise NotImplementedError("numerical Burgers is implemented for 1D space")
