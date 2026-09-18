@@ -8,6 +8,7 @@ solutions for every path.
 """
 
 import math
+from typing import NamedTuple
 from unittest.mock import patch
 
 import pytest
@@ -1220,59 +1221,93 @@ def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, n, val
 # (time-dependent-forcing-in-numerical-burgers)
 # ---------------------------------------------------------------------------
 # Measured at m = 24, ns = 2m, nu = 0.01, n = 2, seed 1234 on [0, 1]. The step
-# counts are chosen so h = 1/(nt - 1) halves exactly -- 1/12, 1/24, 1/48, 1/96:
-#   nt=13  1.401947e-02        | nt=25  9.606420e-04  4  3.867
-#   nt=49  5.935034e-05  4.017 | nt=97  3.342465e-06     4.150
-#   nt=193 1.594647e-06  1.068 | nt=385 1.416505e-06     0.171
-#   nt=769 2.284473e-06 -0.690
+# counts halve h = 1/(nt - 1) exactly: 1/12, 1/24, 1/48, 1/96.
+#   endpoint error   13 1.401947e-02 | 25 9.606420e-04 | 49 5.935034e-05
+#                    97 3.342465e-06 | 193 1.594647e-06 | 385 1.416505e-06
+#   endpoint order      25 3.867 | 49 4.017 | 97 4.150
+#   worst over path  13 1.104960e-02 | 25 6.930412e-04 | 49 4.358854e-05
+#                    97 3.422348e-06
 # nt >= 193 reads a complex64 round-off floor near 1.5e-6 that rises again by
-# nt = 769, so the resolved range stops at 97. The bound sits beneath the
-# minimum measured order; the measured orders sit above the bound.
+# nt = 769, so the resolved range stops at 97.
 MANUFACTURED_ROUND_TRIP_MODES = 24
 MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 49, 97)
-MANUFACTURED_ROUND_TRIP_ERROR = 3.342465e-06
+MANUFACTURED_ROUND_TRIP_WORST_ERROR = 3.422348e-06
 MANUFACTURED_ROUND_TRIP_TOLERANCE = 3e-5
 MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.017, 4.150)
 MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
+# How far the manufactured solution departs from its own initial slice. The
+# field is periodic, so u(T) returns to u(0) and the endpoint alone cannot tell
+# an integrator from a solver that stands still; this is the distance the
+# trajectory comparison requires the solver to have travelled.
+MANUFACTURED_ROUND_TRIP_TRAVEL = 1.1738
+MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR = 1.0
+STANDING_STILL_WORST_ERROR = 1.173838e00
 # The same sweep with every stage of a step reading the step's start time.
 FROZEN_FORCING_ORDERS = (1.165, 1.012, 0.942)
 FROZEN_FORCING_ORDER_CEILING = 2.0
 
 
-def _manufactured_round_trip(nt, freeze=False, nu=0.01, n=2, seed=1234):
-    """Relative error of integrating a manufactured pair over one period."""
-    m = MANUFACTURED_ROUND_TRIP_MODES
+class RoundTrip(NamedTuple):
+    endpoint_error: float
+    worst_error: float
+    travel_from_initial: float
+
+
+def _stand_still_solver(linear, nonlinear, y0, t):
+    return y0.unsqueeze(0).expand(t.shape[0], *y0.shape).clone()
+
+
+def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1234):
+    """Integrate a manufactured pair over one period and measure the error.
+
+    ``endpoint_error`` compares the final slice, ``worst_error`` every output
+    time, and ``travel_from_initial`` is how far the manufactured solution moves
+    from its own initial slice. All three are relative to the solution's scale.
+    """
+    modes = MANUFACTURED_ROUND_TRIP_MODES
     problem = Burgers()
     domain = ((0.0, 1.0), (0.0, 1.0))
-    u, f = problem.mms_solution(
-        FourierBasis, n, (m, m), nu, domain,
+    exact_field, forcing_field = problem.mms_solution(
+        FourierBasis, n, (modes, modes), nu, domain,
         generator=torch.Generator().manual_seed(seed),
     )
-    ns = 2 * m
+    ns = 2 * modes
     nodes = FourierBasis.default_sampling().nodes(ns, 0.0, 1.0)
 
-    def at(field, time):
+    def sample(field, time):
         query = torch.stack([torch.full_like(nodes, float(time)), nodes], dim=-1)
         return field(query)
 
     step = 1.0 / (nt - 1)
 
-    def frozen_at_step_start(ti):
-        start = math.floor(float(ti) / step + 1e-9) * step
-        return FourierBasis.transform(at(f, start))
+    def frozen_at_step_start(t):
+        start = math.floor(float(t) / step + 1e-9) * step
+        return FourierBasis.transform(sample(forcing_field, start))
 
     solution, _ = problem.generate(
         FourierBasis, n, (nt, ns),
-        u0=at(u, 0.0).real,
-        f=frozen_at_step_start if freeze else f,
+        u0=sample(exact_field, 0.0).real,
+        f=frozen_at_step_start if freeze else forcing_field,
         nu=nu,
         space_domain=slice(0.0, 1.0, 200),
         time_domain=slice(0.0, 1.0, nt),
         generator=torch.Generator().manual_seed(seed),
+        **({} if solver is None else {"solver": solver}),
     )
-    final = FourierBasis.inv_transform(solution.coeff[:, -1, :])
-    exact = at(u, 1.0).to(final.device)
-    return float((final - exact).abs().max() / exact.abs().max())
+    grid = FourierBasis.grid(slice(0.0, 1.0, nt)).flatten()
+    numeric = FourierBasis.inv_transform(solution.coeff.flatten(0, 1)).reshape(
+        n, nt, ns
+    )
+    exact = torch.stack(
+        [sample(exact_field, float(time)) for time in grid], dim=1
+    ).to(numeric.device)
+    scale = exact.abs().max()
+    initial = exact[:, 0, :].unsqueeze(1)
+    return RoundTrip(
+        endpoint_error=float((numeric[:, -1, :] - exact[:, -1, :]).abs().max() / scale),
+        worst_error=float((numeric - exact).abs().max() / scale),
+        travel_from_initial=float((exact - initial).abs().max() / scale),
+    )
 
 
 def _observed_orders(errors, steps):
@@ -1294,9 +1329,32 @@ def _observed_orders(errors, steps):
 @pytest.mark.scenario("Round-trip matches the manufactured solution")
 @pytest.mark.scenario("Exact solution reached within time-stepping error")
 def test_numerical_burgers_reproduces_manufactured_solution():
-    error = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
-    assert error == pytest.approx(MANUFACTURED_ROUND_TRIP_ERROR, rel=0.2)
-    assert error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+    result = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
+    assert result.travel_from_initial == pytest.approx(
+        MANUFACTURED_ROUND_TRIP_TRAVEL, rel=0.05
+    )
+    assert result.travel_from_initial > MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR
+    assert result.worst_error == pytest.approx(
+        MANUFACTURED_ROUND_TRIP_WORST_ERROR, rel=0.2
+    )
+    assert result.worst_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("The round-trip comparison is not satisfied by standing still")
+def test_round_trip_is_not_satisfied_by_a_solver_that_stands_still():
+    standing = _manufactured_round_trip(
+        MANUFACTURED_ROUND_TRIP_STEPS[-1], solver=_stand_still_solver
+    )
+    integrating = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
+
+    assert standing.endpoint_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert standing.endpoint_error < integrating.endpoint_error
+
+    assert standing.worst_error == pytest.approx(STANDING_STILL_WORST_ERROR, rel=0.2)
+    assert standing.worst_error > MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert integrating.worst_error < standing.worst_error / 1e4
 
 
 @pytest.mark.no_fuzz
@@ -1304,7 +1362,10 @@ def test_numerical_burgers_reproduces_manufactured_solution():
 @pytest.mark.scenario("Round-trip converges at the integrator's order")
 @pytest.mark.scenario("Rate, not just size, is asserted")
 def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
-    errors = [_manufactured_round_trip(nt) for nt in MANUFACTURED_ROUND_TRIP_STEPS]
+    errors = [
+        _manufactured_round_trip(nt).endpoint_error
+        for nt in MANUFACTURED_ROUND_TRIP_STEPS
+    ]
     orders = _observed_orders(errors, MANUFACTURED_ROUND_TRIP_STEPS)
     assert orders == pytest.approx(list(MANUFACTURED_ROUND_TRIP_ORDERS), abs=0.15)
     assert min(orders) > MANUFACTURED_ROUND_TRIP_ORDER_BOUND, (
@@ -1319,7 +1380,7 @@ def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
 @pytest.mark.scenario("Forcing is evaluated at stage times, not step starts")
 def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
     frozen = [
-        _manufactured_round_trip(nt, freeze=True)
+        _manufactured_round_trip(nt, freeze=True).endpoint_error
         for nt in MANUFACTURED_ROUND_TRIP_STEPS
     ]
     orders = _observed_orders(frozen, MANUFACTURED_ROUND_TRIP_STEPS)
