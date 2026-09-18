@@ -1210,3 +1210,105 @@ def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, value)
     ).to(f.coeff.dtype)
     for step in range(nt):
         assert torch.equal(f.coeff[:, step, :], expected)
+
+
+# ---------------------------------------------------------------------------
+# Burgers -- the manufactured round trip through the integrator
+# (time-dependent-forcing-in-numerical-burgers)
+# ---------------------------------------------------------------------------
+# Measured at m = 24, ns = 2m, nu = 0.01, n = 2, seed 1234 on [0, 1]:
+#   nt=13 1.401947e-02 | 25 9.606420e-04 (3.867) | 50 5.373642e-05 (4.160)
+#   nt=100 3.306715e-06 (4.022) | 200 1.523207e-06 (1.118) | 400 1.476252e-06
+# nt >= 200 reads a complex64 round-off floor near 1.5e-6 that rises again by
+# nt = 800, so the resolved range stops at 100. The bound sits beneath the
+# minimum measured order; the measured orders sit above the bound.
+MANUFACTURED_ROUND_TRIP_MODES = 24
+MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 50, 100)
+MANUFACTURED_ROUND_TRIP_ERROR = 3.306715e-06
+MANUFACTURED_ROUND_TRIP_TOLERANCE = 3e-5
+MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.160, 4.022)
+MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
+# The same sweep with every stage of a step reading the step's start time.
+FROZEN_FORCING_ORDERS = (1.165, 1.719, 0.471)
+FROZEN_FORCING_ORDER_CEILING = 2.0
+
+
+def _manufactured_round_trip(nt, freeze=False, nu=0.01, n=2, seed=1234):
+    """Relative error of integrating a manufactured pair over one period."""
+    m = MANUFACTURED_ROUND_TRIP_MODES
+    problem = Burgers()
+    domain = ((0.0, 1.0), (0.0, 1.0))
+    u, f = problem.mms_solution(
+        FourierBasis, n, (m, m), nu, domain,
+        generator=torch.Generator().manual_seed(seed),
+    )
+    ns = 2 * m
+    nodes = FourierBasis.default_sampling().nodes(ns, 0.0, 1.0)
+
+    def at(field, time):
+        query = torch.stack([torch.full_like(nodes, float(time)), nodes], dim=-1)
+        return field(query)
+
+    step = 1.0 / (nt - 1)
+
+    def frozen_at_step_start(ti):
+        start = math.floor(float(ti) / step + 1e-9) * step
+        return FourierBasis.transform(at(f, start))
+
+    solution, _ = problem.generate(
+        FourierBasis, n, (nt, ns),
+        u0=at(u, 0.0).real,
+        f=frozen_at_step_start if freeze else f,
+        nu=nu,
+        space_domain=slice(0.0, 1.0, 200),
+        time_domain=slice(0.0, 1.0, nt),
+        generator=torch.Generator().manual_seed(seed),
+    )
+    final = FourierBasis.inv_transform(solution.coeff[:, -1, :])
+    exact = at(u, 1.0).to(final.device)
+    return float((final - exact).abs().max() / exact.abs().max())
+
+
+def _observed_orders(errors):
+    return [math.log2(a / b) for a, b in zip(errors, errors[1:], strict=False)]
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Round-trip matches the manufactured solution")
+@pytest.mark.scenario("Exact solution reached within time-stepping error")
+def test_numerical_burgers_reproduces_manufactured_solution():
+    error = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
+    assert error == pytest.approx(MANUFACTURED_ROUND_TRIP_ERROR, rel=0.2)
+    assert error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Round-trip converges at the integrator's order")
+@pytest.mark.scenario("Rate, not just size, is asserted")
+def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
+    errors = [_manufactured_round_trip(nt) for nt in MANUFACTURED_ROUND_TRIP_STEPS]
+    orders = _observed_orders(errors)
+    assert orders == pytest.approx(list(MANUFACTURED_ROUND_TRIP_ORDERS), abs=0.15)
+    assert min(orders) > MANUFACTURED_ROUND_TRIP_ORDER_BOUND, (
+        f"measured orders {orders} against a bound of "
+        f"{MANUFACTURED_ROUND_TRIP_ORDER_BOUND}; an order materially under 4 is "
+        "a finding to chase, not a bound to lower"
+    )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Forcing is evaluated at stage times, not step starts")
+def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
+    frozen = [
+        _manufactured_round_trip(nt, freeze=True)
+        for nt in MANUFACTURED_ROUND_TRIP_STEPS
+    ]
+    orders = _observed_orders(frozen)
+    assert orders == pytest.approx(list(FROZEN_FORCING_ORDERS), abs=0.15)
+    assert max(orders) < FROZEN_FORCING_ORDER_CEILING < min(
+        MANUFACTURED_ROUND_TRIP_ORDERS
+    )
+    assert frozen[-1] > MANUFACTURED_ROUND_TRIP_TOLERANCE

@@ -29,13 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    # burgers-time-dependent-forcing (time-dependent-forcing-in-numerical-burgers, in flight)
-    "Forcing is evaluated at stage times, not step starts": IN_FLIGHT,
-    "Round-trip matches the manufactured solution": IN_FLIGHT,
-    "Round-trip converges at the integrator's order": IN_FLIGHT,
-    # numerical-anchor-tests (time-dependent-forcing-in-numerical-burgers, in flight)
-    "Exact solution reached within time-stepping error": IN_FLIGHT,
-    "Rate, not just size, is asserted": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
