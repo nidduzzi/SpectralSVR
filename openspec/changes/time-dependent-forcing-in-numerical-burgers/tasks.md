@@ -19,7 +19,7 @@
 
 ## 3. Returned forcing field
 
-- [ ] 3.1 For callable and spectral forcings, build the returned `f_gen` by evaluating `forcing_at` on the output time grid, giving a `(n, nt, ns)` time-dependent field like the solution; verify its values at the grid times equal the input forcing evaluated there to `1e-10`
+- [x] 3.1 For callable and spectral forcings, build the returned `f_gen` by evaluating `forcing_at` on the output time grid, giving a `(n, nt, ns)` time-dependent field like the solution; verify its values at the grid times equal the input forcing evaluated there to `5e-6`, recorded as `FORCING_ROUND_TRIP_TOLERANCE`. The `1e-10` this task first named is unreachable rather than merely tight: coefficients are stored at complex64, and the transform round trip measures `2.384e-07` to `3.576e-07` across `ns ∈ {16, 24, 32}` and `nt ∈ {20, 40, 60}`, so the bound sits one order above the measurement. The same tests cover the spatial resampling a forcing field at a different mode count receives, which no task named and nothing checked
 - [x] 3.2 Keep the `Number` case's `f_gen` construction byte-for-byte; verify task 1.1's byte-identity check still holds after group 3
 
 ## 4. MMS round-trip anchor
@@ -57,7 +57,7 @@ group completes**, not in one pass at the end, so the guard is green throughout
 and the debt visibly shrinks.
 
 - [x] 6.1 As group 2 completes, mark `Sampled-time field raises` and `Mismatched time domain raises` with `@pytest.mark.scenario` and remove their `IN_FLIGHT` entries; verify the stale-exemption test forces the removal rather than tolerating it. Task 2.4's `Mismatched space domain raises` is stated and covered in one commit, so it never enters `EXEMPT` and has nothing to remove here
-- [ ] 6.2 As group 3 completes, mark `Callable forcing is integrated`, `Fully spectral forcing field is integrated` and `Constant forcing byte-identity`, and remove their entries
+- [x] 6.2 As group 3 completes, mark `Callable forcing is integrated`, `Fully spectral forcing field is integrated` and `Constant forcing byte-identity`, and remove their entries. `Constant forcing byte-identity` as first written compared this change against its parent commit, which no test can do; its scenario is restated as the in-suite guarantee it stands for -- the `Number` path returns exactly the constant spectrum, `torch.equal` with no tolerance -- and the cross-commit check stays a task-level verification in 1.1 and 7.3
 - [ ] 6.3 As group 4 completes, mark `Round-trip matches the manufactured solution` (4.1), `Round-trip converges at the integrator's order` (4.3), `Forcing is evaluated at stage times, not step starts` (4.4 — the control run is what discharges it; no other test reaches that scenario), `Exact solution reached within time-stepping error` (4.1) and `Rate, not just size, is asserted` (4.3), and remove their `IN_FLIGHT` entries
 - [ ] 6.4 Fuzz the scenarios that range over inputs rather than pinning one case: the forcing-form acceptance over mode counts, sample counts and step counts, and the rejection paths over the shapes that should be refused. Verify each property fails under a mutation of the behaviour it describes
 - [ ] 6.5 Decide and record whether the round-trip warrants a `RuleBasedStateMachine`. Its point is a measured rate at specific `nt` values, which is a fixed-design anchor rather than a sequence invariant — if no sequence is being constrained, record that reasoning rather than adding a machine to satisfy the letter of the rule

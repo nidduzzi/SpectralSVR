@@ -1114,3 +1114,99 @@ def test_numerical_branch_rejects_a_manufactured_forcing(space_modes, u0):
             time_domain=slice(0, 1, 20),
             generator=torch.Generator().manual_seed(0),
         )
+
+
+# ---------------------------------------------------------------------------
+# Burgers -- forcings the numerical branch integrates
+# (time-dependent-forcing-in-numerical-burgers)
+# ---------------------------------------------------------------------------
+# Measured max |f_gen - analytic| over ns in {16, 24, 32} and nt in {20, 40, 60}:
+# 2.384e-07 to 3.576e-07, a complex64 transform round trip. The task planned
+# 1e-10, which float32 cannot reach; the bound sits one order above measurement.
+FORCING_ROUND_TRIP_TOLERANCE = 5e-6
+
+
+def _travelling_forcing(t, x):
+    return torch.sin(2 * math.pi * x) * torch.cos(2 * math.pi * t)
+
+
+def _forcing_values_on_grid(f_gen, n, nt, ns):
+    flat = FourierBasis.inv_transform(f_gen.coeff.flatten(0, 1))
+    return flat.real.reshape(n, nt, ns)
+
+
+def _analytic_on_grid(nt, ns, n):
+    t = FourierBasis.grid(slice(0.0, 1.0, nt)).flatten()
+    x = FourierBasis.default_sampling().nodes(ns, 0.0, 1.0).to(t.dtype)
+    return _travelling_forcing(t[None, :, None], x[None, None, :]).expand(n, nt, ns)
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Callable forcing is integrated")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 32),
+    nt=st.integers(12, 40),
+    seed=st.integers(0, 10_000),
+)
+def test_callable_forcing_is_integrated_and_returned(space_modes, nt, seed):
+    nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
+
+    def forcing(ti):
+        values = _travelling_forcing(torch.as_tensor(float(ti)), nodes)
+        return FourierBasis.transform(values.expand(2, space_modes) + 0j)
+
+    u, f = _integrate_with_forcing(forcing, space_modes, nt)
+
+    assert u.time_dependent and f.time_dependent
+    assert f.coeff.shape == (2, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, 2, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, 2).to(on_grid.device)
+    assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Fully spectral forcing field is integrated")
+@SETTINGS
+@given(
+    space_modes=st.integers(12, 32),
+    nt=st.integers(12, 40),
+    field_modes=st.integers(8, 32),
+)
+def test_spectral_forcing_field_is_integrated_and_resampled(
+    space_modes, nt, field_modes
+):
+    t_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
+    x_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
+    values = _travelling_forcing(t_nodes[:, None], x_nodes[None, :]) + 0j
+    coeff = FourierBasis.transform(values.reshape(1, nt, field_modes))
+    field = FourierBasis(
+        coeff=coeff.expand(2, nt, field_modes).clone(),
+        domain=((0.0, 1.0), (0.0, 1.0)),
+    )
+
+    _, f = _integrate_with_forcing(field, space_modes, nt)
+
+    # the field is resampled to the solver's mode count, not carried at its own
+    assert f.coeff.shape == (2, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, 2, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, 2).to(on_grid.device)
+    assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Constant forcing byte-identity")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 32),
+    nt=st.integers(12, 40),
+    value=st.floats(-2.0, 2.0),
+)
+def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, value):
+    _, f = _integrate_with_forcing(value, space_modes, nt)
+
+    expected = FourierBasis.transform(
+        torch.full((2, space_modes), value, device=f.coeff.device) + 0j
+    ).to(f.coeff.dtype)
+    for step in range(nt):
+        assert torch.equal(f.coeff[:, step, :], expected)

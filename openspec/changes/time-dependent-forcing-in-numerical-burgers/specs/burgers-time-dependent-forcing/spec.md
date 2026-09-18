@@ -38,8 +38,8 @@ The generator SHALL reject a forcing field whose time axis is sampled rather tha
 A forcing given as a plain number SHALL take the path it takes today and produce the same coefficients bit for bit.
 
 #### Scenario: Constant forcing byte-identity
-- **WHEN** the numerical generator is run with a `Number` forcing at a fixed seed on this change and on its parent commit
-- **THEN** the solution and forcing coefficients are `torch.equal`
+- **WHEN** the numerical generator is run with a `Number` forcing
+- **THEN** the returned forcing is exactly the constant spectrum at every output time, `torch.equal` with no tolerance, so the closure that replaced the precomputed tensor changed no arithmetic. The further check that a seeded run is `torch.equal` to the same run on this branch's parent commit is recorded in this change's tasks rather than stated here, because a test cannot reach another commit
 
 ### Requirement: Manufactured solutions round-trip through the integrator
 Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at the integrator's design order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing and the error remains above the floor set by the stored coefficient precision. Beneath that floor the reading is saturation rather than a rate, which `numerical-anchor-tests` already requires be distinguished from order loss; the range the order is asserted over SHALL therefore be bounded above as well as below. The order SHALL be measured before any bound is asserted, and the bound SHALL sit beneath the measurement rather than being predicted from the scheme's nominal order.
