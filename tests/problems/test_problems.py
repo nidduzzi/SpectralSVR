@@ -1016,10 +1016,6 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
     )
 
 
-# ---------------------------------------------------------------------------
-# Burgers -- forcings the numerical branch refuses
-# (time-dependent-forcing-in-numerical-burgers)
-# ---------------------------------------------------------------------------
 def _integrate_with_forcing(f, space_modes, nt=20, n=2, space_domain=slice(0, 1, 200)):
     return Burgers().generate(
         FourierBasis,
@@ -1185,10 +1181,6 @@ def test_numerical_branch_rejects_a_manufactured_forcing(space_modes, u0):
         )
 
 
-# ---------------------------------------------------------------------------
-# Burgers -- forcings the numerical branch integrates
-# (time-dependent-forcing-in-numerical-burgers)
-# ---------------------------------------------------------------------------
 FORCING_ROUND_TRIP_TOLERANCE = 5e-6
 
 
@@ -1289,10 +1281,6 @@ def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, n, val
         assert torch.equal(f.coeff[:, step, :], expected)
 
 
-# ---------------------------------------------------------------------------
-# Burgers -- the manufactured round trip through the integrator
-# (time-dependent-forcing-in-numerical-burgers)
-# ---------------------------------------------------------------------------
 MANUFACTURED_ROUND_TRIP_MODES = 24
 MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 49, 97)
 MANUFACTURED_ROUND_TRIP_WORST_ERROR = 3.422348e-06
