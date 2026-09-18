@@ -417,12 +417,14 @@ class Burgers(Problem):
                     "deliberately -- resize the field yourself, or pass "
                     "BandLimited(field) to have the generator truncate it"
                 )
-            field = field.resize_modes((time_modes, ns))
+            representable = field.resize_modes((time_modes, ns))
+        else:
+            representable = field
         nodes = basis.default_sampling().nodes(ns, *space_interval).to(device=device)
 
         def forcing_field_at(t: torch.Tensor) -> torch.Tensor:
             query = torch.stack([torch.full_like(nodes, float(t)), nodes], dim=-1)
-            return basis.transform(field(query).to(device=device))
+            return basis.transform(representable(query).to(device=device))
 
         return forcing_field_at
 

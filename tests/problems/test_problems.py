@@ -494,10 +494,6 @@ def test_numerical_branch_uses_the_supplied_solver():
         build(solver=failing_solver)
 
 
-# A spatially constant field has u_x = u_xx = 0, so viscous Burgers under a
-# constant forcing reduces to u_t = f and the solution is u(t) = u0 + f t
-# exactly. Measured max |u - (u0 + f t)| over u0 in [-1, 1], f in [0.05, 0.5]
-# and 8 to 24 modes: 1.192e-07 to 2.861e-06.
 CONSTANT_FORCING_CLOSED_FORM_TOLERANCE = 3e-5
 
 
@@ -1156,7 +1152,6 @@ def test_a_forcing_the_grid_cannot_represent_is_refused(space_modes, nt, wider):
     with pytest.raises(ValueError, match="fold its highest wavenumbers"):
         _integrate_with_forcing(field, space_modes, nt)
 
-    # the escape hatch does exactly what resizing the field by hand does
     _, by_hatch = _integrate_with_forcing(BandLimited(field), space_modes, nt)
     _, by_hand = _integrate_with_forcing(
         field.resize_modes((nt, space_modes)), space_modes, nt
@@ -1194,9 +1189,6 @@ def test_numerical_branch_rejects_a_manufactured_forcing(space_modes, u0):
 # Burgers -- forcings the numerical branch integrates
 # (time-dependent-forcing-in-numerical-burgers)
 # ---------------------------------------------------------------------------
-# Measured max |f_gen - analytic| over ns in {16, 24, 32} and nt in {20, 40, 60}:
-# 2.384e-07 to 3.576e-07, a complex64 transform round trip. The task planned
-# 1e-10, which float32 cannot reach; the bound sits one order above measurement.
 FORCING_ROUND_TRIP_TOLERANCE = 5e-6
 
 
@@ -1257,7 +1249,7 @@ def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
     narrower=st.integers(0, 4),
     n=st.integers(1, 3),
 )
-def test_spectral_forcing_field_is_integrated_and_resampled(
+def test_spectral_forcing_field_is_integrated_and_upsampled(
     space_modes, nt, narrower, n
 ):
     field_modes = max(8, space_modes - narrower)
@@ -1301,29 +1293,15 @@ def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, n, val
 # Burgers -- the manufactured round trip through the integrator
 # (time-dependent-forcing-in-numerical-burgers)
 # ---------------------------------------------------------------------------
-# Measured at m = 24, ns = 2m, nu = 0.01, n = 2, seed 1234 on [0, 1]. The step
-# counts halve h = 1/(nt - 1) exactly: 1/12, 1/24, 1/48, 1/96.
-#   endpoint error   13 1.401947e-02 | 25 9.606420e-04 | 49 5.935034e-05
-#                    97 3.342465e-06 | 193 1.594647e-06 | 385 1.416505e-06
-#   endpoint order      25 3.867 | 49 4.017 | 97 4.150
-#   worst over path  13 1.104960e-02 | 25 6.930412e-04 | 49 4.358854e-05
-#                    97 3.422348e-06
-# nt >= 193 reads a complex64 round-off floor near 1.5e-6 that rises again by
-# nt = 769, so the resolved range stops at 97.
 MANUFACTURED_ROUND_TRIP_MODES = 24
 MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 49, 97)
 MANUFACTURED_ROUND_TRIP_WORST_ERROR = 3.422348e-06
 MANUFACTURED_ROUND_TRIP_TOLERANCE = 3e-5
 MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.017, 4.150)
 MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
-# How far the manufactured solution departs from its own initial slice. The
-# field is periodic, so u(T) returns to u(0) and the endpoint alone cannot tell
-# an integrator from a solver that stands still; this is the distance the
-# trajectory comparison requires the solver to have travelled.
 MANUFACTURED_ROUND_TRIP_TRAVEL = 1.1738
 MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR = 1.0
 STANDING_STILL_WORST_ERROR = 1.173838e00
-# The same sweep with every stage of a step reading the step's start time.
 FROZEN_FORCING_ORDERS = (1.165, 1.012, 0.942)
 FROZEN_FORCING_ORDER_CEILING = 2.0
 
@@ -1429,9 +1407,36 @@ def test_numerical_burgers_reproduces_manufactured_solution():
     assert result.worst_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
 
 
+MANUFACTURED_TIME_PERIODICITY = 1e-5
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("The manufactured field returns to its initial slice")
+@SETTINGS
+@given(modes=st.integers(12, 40), seed=st.integers(0, 10_000))
+def test_manufactured_field_returns_to_its_initial_slice(modes, seed):
+    u, _ = Burgers().mms_solution(
+        FourierBasis,
+        2,
+        (modes, modes),
+        0.05,
+        DOMAIN_2D,
+        generator=torch.Generator().manual_seed(seed),
+    )
+    nodes = FourierBasis.default_sampling().nodes(modes, 0.0, 1.0)
+
+    def slice_at(time):
+        query = torch.stack([torch.full_like(nodes, time), nodes], dim=-1)
+        return u(query)
+
+    start, end = slice_at(0.0), slice_at(1.0)
+    assert (end - start).abs().max() / start.abs().max() < MANUFACTURED_TIME_PERIODICITY
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
 @pytest.mark.scenario("The round-trip comparison is not satisfied by standing still")
+@pytest.mark.scenario("A full-period comparison states what the solver had to do")
 def test_round_trip_is_not_satisfied_by_a_solver_that_stands_still():
     standing = _manufactured_round_trip(
         MANUFACTURED_ROUND_TRIP_STEPS[-1], solver=_stand_still_solver
