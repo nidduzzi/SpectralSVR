@@ -5,15 +5,19 @@ Defines what forcings the numerically integrated Burgers generator accepts, how 
 ## ADDED Requirements
 
 ### Requirement: Numerical Burgers accepts a time-dependent forcing
-The numerical Burgers generator SHALL accept a forcing that can be evaluated at any time in the integration interval, in either of two forms: a callable mapping a time to the forcing's spatial spectral coefficients for every sample, or a spectral field over time and space that is fully spectral along its time axis. The forcing SHALL be evaluated at the time the integrator passes for each stage, not frozen at the start of the step.
+The numerical Burgers generator SHALL accept a forcing that can be evaluated at any time in the integration interval, in either of two forms: a callable of time, or a spectral field over time and space that is fully spectral along its time axis. A callable SHALL declare whether it returns spectral coefficients or sampled values, because the two are indistinguishable by shape and produce different physics; a callable that does not declare its form SHALL be refused rather than assumed. The forcing SHALL be evaluated at the time the integrator passes for each stage, not frozen at the start of the step.
 
 #### Scenario: Callable forcing is integrated
 - **WHEN** the generator is given a callable `f(t)` returning `(n, ns)` spectral coefficients and a random initial condition
 - **THEN** it returns a time-dependent solution field and a forcing field whose values at the output time grid equal `f` evaluated there
 
 #### Scenario: Fully spectral forcing field is integrated
-- **WHEN** the generator is given a Basis field over `(time, space)` with `time_dependent=False`, whose time domain equals the requested integration interval
-- **THEN** it integrates using that field's value at each stage time, and the returned forcing field is the input resampled onto the output time grid
+- **WHEN** the generator is given a Basis field over `(time, space)` with `time_dependent=False`, whose time domain equals the requested integration interval and whose spatial content the integration grid can represent
+- **THEN** it integrates using that field's value at each stage time, and the returned forcing field is the input sampled onto the output time grid
+
+#### Scenario: A forcing the grid cannot represent is refused
+- **WHEN** a forcing field carries spatial modes the integration grid cannot represent, so sampling it there would fold that content onto lower wavenumbers
+- **THEN** the generator raises rather than aliasing silently, names both mode counts, and names the explicit way to proceed: band-limit the field deliberately, either by resizing it or by wrapping it so the generator does it on the caller's instruction
 
 #### Scenario: Forcing is evaluated at stage times, not step starts
 - **WHEN** the same problem is integrated once with a forcing that varies within a step and once with that forcing frozen at each step's start
@@ -46,7 +50,11 @@ Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically 
 
 #### Scenario: Round-trip matches the manufactured solution
 - **WHEN** a manufactured pair is generated, and the numerical branch is run from its initial slice with its forcing at a spatial resolution that keeps `u²` inside the de-aliased band
-- **THEN** the numerical `u(T)` matches the manufactured `u(T)` within a tolerance fixed from the integrator's order at the chosen step count
+- **THEN** the numerical solution matches the manufactured one at **every** output time within a tolerance fixed from the integrator's order at the chosen step count
+
+#### Scenario: The round-trip comparison is not satisfied by standing still
+- **WHEN** the manufactured solution is periodic over the integration interval, so its final slice equals its initial one
+- **THEN** the comparison SHALL NOT be made against the final slice alone, and the distance the manufactured solution travels from its initial slice SHALL be asserted alongside the error, so a solver returning its initial condition unchanged fails rather than passes
 
 #### Scenario: Round-trip converges at the integrator's order
 - **WHEN** the round-trip is repeated at halving step sizes

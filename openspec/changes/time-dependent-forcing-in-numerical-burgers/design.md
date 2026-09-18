@@ -68,9 +68,15 @@ The anchor nevertheless solves at `ns = 2m`, resampling the manufactured `u(0)` 
 
 *Alternative rejected:* disable de-aliasing for the anchor. Tests a code path the benchmark never uses.
 
-### Time periodicity of MMS is a feature of the anchor, not a flaw
+### Time periodicity of MMS is a trap for the endpoint comparison
 
-The manufactured `u` is periodic in time, so `u(T) = u(0)`. The round-trip therefore checks that integrating for one full period with the manufactured forcing returns the initial condition. The forcing is genuinely time-varying throughout, so the stage-time behaviour is fully exercised; the periodicity only makes the target easy to state.
+The manufactured `u` is periodic in time, so `u(T) = u(0)`. This section originally recorded that as "a feature of the anchor, not a flaw", reasoning that the forcing is genuinely time-varying throughout so the stage-time behaviour is exercised regardless, and the periodicity only makes the target easy to state.
+
+That is wrong for an endpoint comparison, and it was measured wrong after the fact. If the target equals the initial condition, a solver that returns `y0` unchanged reproduces the target exactly: measured, a no-op solver scores `6.899509e-07` relative against the anchor's `3e-5` tolerance, which is *better* than the real ETDRK4 run's `3.342465e-06`. An anchor a no-op passes is not an anchor.
+
+The comparison is therefore made over the whole output trajectory, where the same no-op reads `1.173838e+00`, and the distance the manufactured solution travels from its initial slice is asserted alongside -- `1.1738` relative at `t = 0.115` -- so the anchor states what the solver had to do rather than assuming it.
+
+The periodicity remains useful for the *rate* test, which the no-op already fails (orders `0.000` at every halving) because a constant error has no rate at all.
 
 ### Rate assertion over the resolved range, with a recorded tolerance
 
