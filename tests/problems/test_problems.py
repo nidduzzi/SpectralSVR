@@ -1059,12 +1059,8 @@ def test_numerical_forcing_rejects_a_per_time_slice_field(space_modes, nt, seed)
     offset=st.floats(0.1, 3.0),
     seed=st.integers(0, 10_000),
 )
-def test_numerical_forcing_rejects_a_mismatched_time_domain(
-    space_modes, offset, seed
-):
-    shifted = _spectral_forcing(
-        space_modes, time=(offset, offset + 1.0), seed=seed
-    )
+def test_numerical_forcing_rejects_a_mismatched_time_domain(space_modes, offset, seed):
+    shifted = _spectral_forcing(space_modes, time=(offset, offset + 1.0), seed=seed)
     with pytest.raises(ValueError, match="forcing time domain"):
         _integrate_with_forcing(shifted, space_modes)
 
@@ -1080,9 +1076,7 @@ def test_numerical_forcing_rejects_a_mismatched_time_domain(
 def test_numerical_forcing_rejects_a_mismatched_space_domain(
     space_modes, stretch, seed
 ):
-    stretched = _spectral_forcing(
-        space_modes, space=(0.0, 1.0 + stretch), seed=seed
-    )
+    stretched = _spectral_forcing(space_modes, space=(0.0, 1.0 + stretch), seed=seed)
     with pytest.raises(ValueError, match="forcing space domain"):
         _integrate_with_forcing(stretched, space_modes)
 
@@ -1110,9 +1104,7 @@ def test_numerical_forcing_rejects_a_bare_callable(space_modes, nt):
 
     def undeclared(t):
         return FourierBasis.transform(
-            _travelling_forcing(torch.as_tensor(float(t)), nodes).expand(
-                2, space_modes
-            )
+            _travelling_forcing(torch.as_tensor(float(t)), nodes).expand(2, space_modes)
             + 0j
         )
 
@@ -1266,7 +1258,6 @@ def test_spectral_forcing_field_is_integrated_and_resampled(
 
     _, f = _integrate_with_forcing(field, space_modes, nt, n=n)
 
-    # the field is resampled to the solver's mode count, not carried at its own
     assert f.coeff.shape == (n, nt, space_modes)
     on_grid = _forcing_values_on_grid(f, n, nt, space_modes)
     want = _analytic_on_grid(nt, space_modes, n).to(on_grid.device)
@@ -1344,7 +1335,11 @@ def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1
     problem = Burgers()
     domain = ((0.0, 1.0), (0.0, 1.0))
     exact_field, forcing_field = problem.mms_solution(
-        FourierBasis, n, (modes, modes), nu, domain,
+        FourierBasis,
+        n,
+        (modes, modes),
+        nu,
+        domain,
         generator=torch.Generator().manual_seed(seed),
     )
     ns = 2 * modes
@@ -1363,7 +1358,9 @@ def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1
     frozen_forcing = SpectralForcing(frozen_at_step_start)
 
     solution, _ = problem.generate(
-        FourierBasis, n, (nt, ns),
+        FourierBasis,
+        n,
+        (nt, ns),
         u0=sample(exact_field, 0.0).real,
         f=frozen_forcing if freeze else forcing_field,
         nu=nu,
@@ -1376,9 +1373,9 @@ def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1
     numeric = FourierBasis.inv_transform(solution.coeff.flatten(0, 1)).reshape(
         n, nt, ns
     )
-    exact = torch.stack(
-        [sample(exact_field, float(time)) for time in grid], dim=1
-    ).to(numeric.device)
+    exact = torch.stack([sample(exact_field, float(time)) for time in grid], dim=1).to(
+        numeric.device
+    )
     scale = exact.abs().max()
     initial = exact[:, 0, :].unsqueeze(1)
     return RoundTrip(
@@ -1463,7 +1460,7 @@ def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
     ]
     orders = _observed_orders(frozen, MANUFACTURED_ROUND_TRIP_STEPS)
     assert orders == pytest.approx(list(FROZEN_FORCING_ORDERS), abs=0.15)
-    assert max(orders) < FROZEN_FORCING_ORDER_CEILING < min(
-        MANUFACTURED_ROUND_TRIP_ORDERS
+    assert (
+        max(orders) < FROZEN_FORCING_ORDER_CEILING < min(MANUFACTURED_ROUND_TRIP_ORDERS)
     )
     assert frozen[-1] > MANUFACTURED_ROUND_TRIP_TOLERANCE

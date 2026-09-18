@@ -122,8 +122,6 @@ class Burgers(Problem):
 
         device = resolve_device()
 
-        # per-axis (start, stop) intervals -- generation now honours a nonzero
-        # (or negative) start on either axis, not just the lengths.
         space = (float(space_domain.start), float(space_domain.stop))
         time = (float(time_domain.start), float(time_domain.stop))
         T: float = time[1] - time[0]
@@ -145,13 +143,10 @@ class Burgers(Problem):
         )
         self._reject_inapplicable(manufactured, solver, band)
         if manufactured:
-            # method of manufactured solutions: pick a band-limited solution u and
-            # let the forcing be its exact Burgers residual (u0 just follows from u)
             u_gen, f_gen = self.mms_solution(
                 basis, n, modes, nu, domain, generator=generator, band=band
             )
 
-            # convert the (time, space) fields to time-dependent coefficients
             if time_dependent_coeff:
                 spatial_modes = modes[1:]
                 res_modes = tuple(
@@ -251,13 +246,8 @@ class Burgers(Problem):
         that every stage calls, so a forcing varying within a step is seen at
         the stage times rather than frozen at the step's start.
 
-        A manufactured forcing stays free of aliasing only where the grid
-        resolves its nonlinear term. :meth:`widest_manufactured_band` limits a
-        manufactured field at ``m`` modes to ``|k| <= K`` with ``K = m // 6``,
-        so its product reaches ``2 K`` while the 2/3 mask here keeps
-        ``|k| <= ns / 3``; the two agree when ``ns >= 6 K``, which ``ns = m``
-        already satisfies since ``6 (m // 6) <= m``. Solving above that is
-        headroom, not a condition.
+        A manufactured forcing at cutoff ``K`` is alias-free where
+        ``ns >= 6 K``, which ``ns = m`` already satisfies.
         """
         if len(modes) != 2:
             raise NotImplementedError("numerical Burgers is implemented for 1D space")
@@ -277,7 +267,6 @@ class Burgers(Problem):
         mask = basis.dealias_mask(ns)
         dealias = mask.to(device=device) if mask is not None else 1.0
 
-        # initial condition: random smooth field, a constant, or explicit values
         if isinstance(u0, str) and u0 == "random":
             v0 = basis.generate_coeff(n, ns, generator=generator).to(device=device)
         elif isinstance(u0, Number):
@@ -298,14 +287,18 @@ class Burgers(Problem):
 
         forcing_at = Burgers._forcing_at(basis, f, n, ns, domain, device)
 
-        def nonlinear(ti: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-            return Burgers.advection_spectrum(basis, v, d1, dealias) + forcing_at(ti)
+        def nonlinear(t: torch.Tensor, u_coeff: torch.Tensor) -> torch.Tensor:
+            return Burgers.advection_spectrum(basis, u_coeff, d1, dealias) + forcing_at(
+                t
+            )
 
         sol = solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
         u_coeff = sol.movedim(0, 1).to(basis.coeff_dtype)  # (n, nt, ns)
         u_gen = basis(coeff=u_coeff, time_dependent=True, domain=domain)
 
-        f_coeff = torch.stack([forcing_at(ti) for ti in t], dim=1).to(basis.coeff_dtype)
+        f_coeff = torch.stack([forcing_at(step) for step in t], dim=1).to(
+            basis.coeff_dtype
+        )
         f_gen = basis(coeff=f_coeff, time_dependent=True, domain=domain)
         return u_gen, f_gen
 
@@ -472,11 +465,7 @@ class Burgers(Problem):
         of the returned pair is zero to machine precision.
 
         ``band`` states how wide the manufactured field is, defaulting to
-        :meth:`widest_manufactured_band` and refused when it exceeds it. Any
-        wider and the mask discards content the product genuinely has, and the
-        pair then solves the de-aliased equation but not the continuous one --
-        self-consistently, since forcing and solver de-alias alike, which is why
-        it is refused here rather than detected later.
+        :meth:`widest_manufactured_band` and refused when it exceeds it.
 
         A :data:`RealBand` keeps a magnitude and its negative together, so the
         manufactured field is conjugate-symmetric as generated.
@@ -505,10 +494,8 @@ class Burgers(Problem):
     def widest_manufactured_band(modes: int) -> WavenumberCutoff:
         """Widest cutoff a manufactured field may use at ``modes`` modes.
 
-        Multiplication doubles the highest frequency, so a cutoff ``K`` produces
-        a product reaching ``2 K`` while the Orszag 2/3 mask keeps ``modes / 3``.
-        The widest admissible cutoff is therefore the largest ``K`` satisfying
-        ``2 K <= modes / 3``.
+        The largest ``K`` satisfying ``2 K <= modes / 3``, so the product stays
+        inside the de-aliasing mask.
         """
         return WavenumberCutoff(modes // 6)
 
