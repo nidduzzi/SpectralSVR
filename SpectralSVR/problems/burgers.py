@@ -390,6 +390,11 @@ class Burgers(Problem):
         field first, and is reached only through :class:`BandLimited`.
         """
         time_interval, space_interval = domain[0], domain[1]
+        if field.coeff.ndim != 3:
+            raise ValueError(
+                f"forcing field must span (time, space), so its coefficients are "
+                f"(samples, time, space); got {field.coeff.ndim - 1} axes"
+            )
         if field.time_dependent:
             raise ValueError(
                 "numerical Burgers forcing must be evaluable at any time: pass "

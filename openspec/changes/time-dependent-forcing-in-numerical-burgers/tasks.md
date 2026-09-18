@@ -112,6 +112,16 @@ so the scenarios keyed to it were not in fact covered.
 
   Marking honestly matters more than marking favourably, so a suggestion that would have raised the anchor count by restating an existing oracle is recorded as rejected rather than taken. Verify `tests/test_oracle_coverage.py` passes and the module still carries its anchors
 
+## 10. Fourth review round
+
+A fourth sweep, scoped to the fixes the previous rounds produced, which nothing
+had reviewed. Two reviewers found nothing; the mutation sweeps killed every
+mutation they tried. Three items came out of it.
+
+- [x] 10.1 The anchor no longer states the precision it runs at. `numerical-anchor-tests` requires that "where an anchor's measurement would otherwise saturate at the default precision, the test SHALL state which precision it runs at and why", and the comment that said so was deleted in 9.6. Stating it in prose is what drifted twice; state it as an assertion instead. `COMPLEX64_ROUND_OFF_FLOOR = 1.5e-6`, and both the round-trip anchor and the rate test assert their errors sit **above** it, so the tests prove they measure the method rather than round-off. Verified by simulating the future edit the guard exists to catch -- extending the sweep to `nt = 193` fails with `finest error 9.175907e-07 is at or beneath the complex64 floor 1.500000e-06`, instead of the confusing order failure it would have produced before
+- [x] 10.2 A forcing field with one axis raised `IndexError: tuple index out of range` from `field.coeff.shape[-2]` -- safe, but unreadable. `_field_forcing_at` now checks the field spans `(time, space)` before reading its shape and raises `ValueError` naming the axis count, matching the four checks beside it. A fuzzed test covers it
+- [x] 10.3 `SampledForcing.spectrum`'s `+ 0j` was reported as untested defensive code. Measured, it is a **no-op**: `FourierBasis.transform(real)` and `transform(real + 0j)` are byte-identical, `max|delta| 0.0`. The test's sampled callable now returns a real tensor, which is what a caller would supply, so the real-input path is exercised end to end. Recording what this does **not** achieve: `+ 0j` is still not killable by mutation, because this basis's `transform` accepts real input. It is defensive for a basis whose `transform` is stricter, and the coverage is of the path rather than of the promotion. Keeping it is a decision about other bases, not a claim that a test pins it
+
 ## 9. Second review round
 
 A second adversarial review after 35/35. Nothing it found makes a test unable to

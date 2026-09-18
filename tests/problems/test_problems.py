@@ -1172,6 +1172,20 @@ def test_numerical_forcing_rejects_a_wrong_shaped_callable(space_modes, nt, wron
 
 @pytest.mark.oracle_smoke
 @SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_field_without_a_time_axis(space_modes, nt, seed):
+    values = torch.randn(2, space_modes, generator=torch.Generator().manual_seed(seed))
+    one_axis = FourierBasis(FourierBasis.transform(values + 0j), domain=(0.0, 1.0))
+    with pytest.raises(ValueError, match="must span .time, space."):
+        _integrate_with_forcing(one_axis, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
 @given(space_modes=st.integers(8, 24), seed=st.integers(0, 10_000))
 def test_numerical_forcing_rejects_a_bare_tensor(space_modes, seed):
     values = torch.rand(2, space_modes, generator=torch.Generator().manual_seed(seed))
@@ -1232,7 +1246,7 @@ def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
 
     def values_at(t):
         values = _travelling_forcing(torch.as_tensor(float(t)), nodes)
-        return values.expand(n, space_modes) + 0j
+        return values.expand(n, space_modes)
 
     u, f = _integrate_with_forcing(
         SpectralForcing(coefficients_at), space_modes, nt, n=n
@@ -1304,6 +1318,7 @@ MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.017, 4.150)
 MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
 MANUFACTURED_ROUND_TRIP_TRAVEL = 1.1738
 MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR = 1.0
+COMPLEX64_ROUND_OFF_FLOOR = 1.5e-6
 STANDING_STILL_WORST_ERROR = 1.173838e00
 FROZEN_FORCING_ORDERS = (1.165, 1.012, 0.942)
 FROZEN_FORCING_ORDER_CEILING = 2.0
@@ -1408,6 +1423,7 @@ def test_numerical_burgers_reproduces_manufactured_solution():
         MANUFACTURED_ROUND_TRIP_WORST_ERROR, rel=0.2
     )
     assert result.worst_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert result.worst_error > COMPLEX64_ROUND_OFF_FLOOR
 
 
 MANUFACTURED_TIME_PERIODICITY = 1e-5
@@ -1463,6 +1479,11 @@ def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
         _manufactured_round_trip(nt).endpoint_error
         for nt in MANUFACTURED_ROUND_TRIP_STEPS
     ]
+    assert min(errors) > COMPLEX64_ROUND_OFF_FLOOR, (
+        f"finest error {min(errors):.6e} is at or beneath the complex64 floor "
+        f"{COMPLEX64_ROUND_OFF_FLOOR:.6e}; the sweep is measuring round-off, not "
+        "the method, so the orders below are saturation rather than a rate"
+    )
     orders = _observed_orders(errors, MANUFACTURED_ROUND_TRIP_STEPS)
     assert orders == pytest.approx(list(MANUFACTURED_ROUND_TRIP_ORDERS), abs=0.15)
     assert min(orders) > MANUFACTURED_ROUND_TRIP_ORDER_BOUND, (
