@@ -11,11 +11,42 @@ from ..utils import (
     resolve_device,
 )
 from . import Problem
+from dataclasses import dataclass
 from typing import Callable, Literal, Type
 
 ParamInput = Literal["random"] | Number | torch.Tensor
 ForcingCallable = Callable[[torch.Tensor], torch.Tensor]
-NumericalForcing = Number | ForcingCallable
+
+
+@dataclass(frozen=True)
+class SpectralForcing:
+    """A callable returning ``(n, ns)`` spectral coefficients at a time."""
+
+    at_time: ForcingCallable
+
+    def spectrum(self, basis: Type[BasisSubType], t: torch.Tensor) -> torch.Tensor:
+        return self.at_time(t)
+
+
+@dataclass(frozen=True)
+class SampledForcing:
+    """A callable returning ``(n, ns)`` sampled values at a time."""
+
+    at_time: ForcingCallable
+
+    def spectrum(self, basis: Type[BasisSubType], t: torch.Tensor) -> torch.Tensor:
+        return basis.transform(self.at_time(t) + 0j)
+
+
+@dataclass(frozen=True)
+class BandLimited:
+    """A forcing field the generator may truncate to the integration grid."""
+
+    field: Basis
+
+
+DeclaredForcing = SpectralForcing | SampledForcing
+NumericalForcing = Number | DeclaredForcing | BandLimited
 ForcingInput = Literal["random"] | NumericalForcing
 
 
@@ -61,20 +92,23 @@ class Burgers(Problem):
         under ``f``. ``band`` belongs to the first, ``solver`` to the second,
         and each is refused on the other.
 
-        The integrated branch accepts three forcings, evaluated at the times the
-        integrator asks for rather than held at the step's start:
+        The integrated branch evaluates its forcing at the integrator's stage
+        times and accepts:
 
         - a :data:`Number`, constant in time and space;
-        - a callable taking the stage time as a zero-dimensional tensor and
-          returning ``(n, modes[1])`` spectral coefficients;
-        - a basis field over ``(time, space)`` that is spectral in time
-          (``time_dependent=False``), spanning the integration intervals on
-          both axes.
+        - :class:`SpectralForcing` or :class:`SampledForcing` wrapping a callable
+          of the stage time, which say whether it returns ``(n, modes[1])``
+          coefficients or values;
+        - a basis field over ``(time, space)`` spectral in time
+          (``time_dependent=False``), spanning the integration intervals on both
+          axes and within the grid's spatial resolution;
+        - :class:`BandLimited` wrapping such a field, truncating it to the grid
+          on the caller's instruction.
 
-        A field sampled per time slice (``time_dependent=True``) is refused: the
-        integrator evaluates between output grid points, and reading one there
-        needs an interpolation the caller did not choose. So is a bare tensor,
-        which states values without saying at what times they hold.
+        Refused: a field sampled per time slice, which the integrator cannot
+        read between grid points; a bare tensor, which states values without
+        saying when they hold; a bare callable, which does not say whether its
+        result is coefficients or values.
         """
         if space_domain is None:
             space_domain = slice(0, 1, 200)
@@ -94,6 +128,9 @@ class Burgers(Problem):
         time = (float(time_domain.start), float(time_domain.stop))
         T: float = time[1] - time[0]
         nt = int(time_domain.step)
+        assert nt > 1, (
+            f"time_domain needs at least two grid points to have a step, got {nt}"
+        )
         dt = T / (nt - 1)
         t = basis.grid(time_domain).flatten().to(device=device)
         assert t[1].sub(t[0]).isclose(torch.tensor(dt)), (
@@ -283,77 +320,118 @@ class Burgers(Problem):
     ) -> Callable[[torch.Tensor], torch.Tensor]:
         """Spectral forcing ``(n, ns)`` as a function of time.
 
-        Accepts a number, a callable of time, or a field over ``(time, space)``
-        that is spectral in time (``time_dependent=False``). A field sampled per
-        time slice is rejected: the integrator asks for stage times between the
-        output grid points.
-
-        A callable receives the stage time as a zero-dimensional tensor and
-        returns ``(n, ns)`` spectral coefficients, not sampled values.
-
-        A field is sampled on the integration grid, so both its axes must span
-        the integration intervals; a field carrying either axis on another
-        interval describes a different function at the points read from it.
+        Accepts a number, a :class:`SpectralForcing` or :class:`SampledForcing`
+        wrapping a callable of time, a field over ``(time, space)`` that is
+        spectral in time, or that field wrapped in :class:`BandLimited`.
         """
-        time_interval, space_interval = domain[0], domain[1]
+        if isinstance(f, bool):
+            raise ValueError(
+                "a bool is not a forcing: True and False satisfy Number because "
+                "bool subclasses int, so they would force with 1.0 and 0.0 "
+                "without saying so; pass the number meant"
+            )
 
         if isinstance(f, Number):
-            constant = basis.transform(
+            constant_spectrum = basis.transform(
                 torch.full((n, ns), float(f), device=device) + 0j
             )
-            return lambda ti: constant
+            return lambda t: constant_spectrum
 
-        if isinstance(f, Basis):
-            if f.time_dependent:
-                raise ValueError(
-                    "numerical Burgers forcing must be evaluable at any time: pass "
-                    "a callable of time or a field spectral in time "
-                    "(time_dependent=False), not a per-time-slice field"
-                )
-            if f.domain[0] != time_interval:
-                raise ValueError(
-                    f"forcing time domain {f.domain[0]} must equal the integration "
-                    f"interval {time_interval}"
-                )
-            if f.domain[1] != space_interval:
-                raise ValueError(
-                    f"forcing space domain {f.domain[1]} must equal the integration "
-                    f"interval {space_interval}; the field is sampled on the "
-                    "integration grid, so another interval reads its values at "
-                    "points that mean something else on its own period"
-                )
-            nodes = (
-                basis.default_sampling().nodes(ns, *space_interval).to(device=device)
+        if isinstance(f, BandLimited):
+            return Burgers._field_forcing_at(
+                basis, f.field, ns, domain, device, truncate=True
             )
 
-            def forcing_field_at(ti: torch.Tensor) -> torch.Tensor:
-                query = torch.stack([torch.full_like(nodes, float(ti)), nodes], dim=-1)
-                return basis.transform(f(query).to(device=device))
+        if isinstance(f, Basis):
+            return Burgers._field_forcing_at(
+                basis, f, ns, domain, device, truncate=False
+            )
 
-            return forcing_field_at
+        if isinstance(f, DeclaredForcing):
+            declared = f
+
+            def declared_forcing_at(t: torch.Tensor) -> torch.Tensor:
+                spectrum = declared.spectrum(basis, t)
+                assert spectrum.shape == (n, ns), (
+                    f"forcing callable must return ({n}, {ns}), got "
+                    f"{tuple(spectrum.shape)}"
+                )
+                return spectrum.to(device=device)
+
+            return declared_forcing_at
 
         if isinstance(f, torch.Tensor):
             raise NotImplementedError(
                 "numerical Burgers forcing as a bare tensor is not supported: pass "
-                "a number, a callable of time, or a field spectral in time"
+                "a number, a declared callable, or a field spectral in time"
             )
 
         if callable(f):
-
-            def forcing_callable_at(ti: torch.Tensor) -> torch.Tensor:
-                spectrum = f(ti)
-                assert spectrum.shape == (n, ns), (
-                    f"forcing callable must return ({n}, {ns}) spectral "
-                    f"coefficients, got {tuple(spectrum.shape)}"
-                )
-                return spectrum.to(device=device)
-
-            return forcing_callable_at
+            raise ValueError(
+                "a bare callable does not say whether it returns spectral "
+                "coefficients or sampled values; both have shape (n, ns) and mean "
+                "different forcings, so wrap it in SpectralForcing or "
+                "SampledForcing"
+            )
 
         raise NotImplementedError(
-            "numerical Burgers forcing must be a number, a callable of time, or a "
-            "field spectral in time"
+            "numerical Burgers forcing must be a number, a declared callable, or "
+            "a field spectral in time"
         )
+
+    @staticmethod
+    def _field_forcing_at(
+        basis: Type[BasisSubType],
+        field: Basis,
+        ns: int,
+        domain: tuple[tuple[float, float], ...],
+        device: torch.device,
+        truncate: bool,
+    ) -> Callable[[torch.Tensor], torch.Tensor]:
+        """Sample a ``(time, space)`` forcing field on the integration grid.
+
+        Both axes must span the integration intervals, and the grid must be able
+        to represent the field's spatial content: sampling content above
+        ``ns // 2`` folds it onto lower wavenumbers. ``truncate`` band-limits the
+        field first, and is reached only through :class:`BandLimited`.
+        """
+        time_interval, space_interval = domain[0], domain[1]
+        if field.time_dependent:
+            raise ValueError(
+                "numerical Burgers forcing must be evaluable at any time: pass "
+                "a declared callable of time or a field spectral in time "
+                "(time_dependent=False), not a per-time-slice field"
+            )
+        if field.domain[0] != time_interval:
+            raise ValueError(
+                f"forcing time domain {field.domain[0]} must equal the integration "
+                f"interval {time_interval}"
+            )
+        if field.domain[1] != space_interval:
+            raise ValueError(
+                f"forcing space domain {field.domain[1]} must equal the integration "
+                f"interval {space_interval}; the field is sampled on the "
+                "integration grid, so another interval reads its values at "
+                "points that mean something else on its own period"
+            )
+        time_modes, field_modes = field.coeff.shape[-2], field.coeff.shape[-1]
+        if field_modes > ns:
+            if not truncate:
+                raise ValueError(
+                    f"forcing field has {field_modes} spatial modes and the "
+                    f"integration grid has {ns}, so sampling it there would fold "
+                    "its highest wavenumbers onto lower ones; band-limit it "
+                    "deliberately -- resize the field yourself, or pass "
+                    "BandLimited(field) to have the generator truncate it"
+                )
+            field = field.resize_modes((time_modes, ns))
+        nodes = basis.default_sampling().nodes(ns, *space_interval).to(device=device)
+
+        def forcing_field_at(t: torch.Tensor) -> torch.Tensor:
+            query = torch.stack([torch.full_like(nodes, float(t)), nodes], dim=-1)
+            return basis.transform(field(query).to(device=device))
+
+        return forcing_field_at
 
     @staticmethod
     def _numerical_forcing(

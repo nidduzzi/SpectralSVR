@@ -29,8 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    # burgers-time-dependent-forcing (time-dependent-forcing-in-numerical-burgers, review findings in flight)
-    "A forcing the grid cannot represent is refused": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

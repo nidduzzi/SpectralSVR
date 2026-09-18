@@ -17,7 +17,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis
-from SpectralSVR.problems import Burgers
+from SpectralSVR.problems import BandLimited, Burgers, SampledForcing, SpectralForcing
 from SpectralSVR.basis import __base as base_module
 from SpectralSVR.utils import (
     WavenumberCutoff,
@@ -1091,6 +1091,73 @@ def test_numerical_forcing_rejects_a_mismatched_space_domain(
     assert not torch.isnan(u.coeff).any()
 
 
+def _forcing_field(space_modes, nt, field_modes, n=2):
+    time_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
+    space_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
+    values = _travelling_forcing(time_nodes[:, None], space_nodes[None, :]) + 0j
+    coeff = FourierBasis.transform(values.reshape(1, nt, field_modes))
+    return FourierBasis(
+        coeff=coeff.expand(n, nt, field_modes).clone(),
+        domain=((0.0, 1.0), (0.0, 1.0)),
+    )
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), nt=st.integers(12, 24))
+def test_numerical_forcing_rejects_a_bare_callable(space_modes, nt):
+    nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
+
+    def undeclared(t):
+        return FourierBasis.transform(
+            _travelling_forcing(torch.as_tensor(float(t)), nodes).expand(
+                2, space_modes
+            )
+            + 0j
+        )
+
+    with pytest.raises(ValueError, match="SpectralForcing or SampledForcing"):
+        _integrate_with_forcing(undeclared, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), nt=st.integers(12, 24), flag=st.booleans())
+def test_numerical_forcing_rejects_a_bool(space_modes, nt, flag):
+    with pytest.raises(ValueError, match="bool is not a forcing"):
+        _integrate_with_forcing(flag, space_modes, nt)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_generate_rejects_a_time_domain_without_a_step():
+    with pytest.raises(AssertionError, match="at least two grid points"):
+        _integrate_with_forcing(0.0, 16, nt=1)
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("A forcing the grid cannot represent is refused")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    wider=st.integers(1, 12),
+)
+def test_a_forcing_the_grid_cannot_represent_is_refused(space_modes, nt, wider):
+    field_modes = space_modes + wider
+    field = _forcing_field(space_modes, nt, field_modes)
+
+    with pytest.raises(ValueError, match="fold its highest wavenumbers"):
+        _integrate_with_forcing(field, space_modes, nt)
+
+    # the escape hatch does exactly what resizing the field by hand does
+    _, by_hatch = _integrate_with_forcing(BandLimited(field), space_modes, nt)
+    _, by_hand = _integrate_with_forcing(
+        field.resize_modes((nt, space_modes)), space_modes, nt
+    )
+    assert torch.equal(by_hatch.coeff, by_hand.coeff)
+
+
 @pytest.mark.oracle_smoke
 @SETTINGS
 @given(space_modes=st.integers(8, 24), seed=st.integers(0, 10_000))
@@ -1154,11 +1221,19 @@ def _analytic_on_grid(nt, ns, n):
 def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
     nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
 
-    def forcing(ti):
-        values = _travelling_forcing(torch.as_tensor(float(ti)), nodes)
+    def coefficients_at(t):
+        values = _travelling_forcing(torch.as_tensor(float(t)), nodes)
         return FourierBasis.transform(values.expand(n, space_modes) + 0j)
 
-    u, f = _integrate_with_forcing(forcing, space_modes, nt, n=n)
+    def values_at(t):
+        values = _travelling_forcing(torch.as_tensor(float(t)), nodes)
+        return values.expand(n, space_modes) + 0j
+
+    u, f = _integrate_with_forcing(
+        SpectralForcing(coefficients_at), space_modes, nt, n=n
+    )
+    _, same = _integrate_with_forcing(SampledForcing(values_at), space_modes, nt, n=n)
+    assert torch.allclose(f.coeff, same.coeff, atol=1e-6)
 
     assert u.time_dependent and f.time_dependent
     assert f.coeff.shape == (n, nt, space_modes)
@@ -1173,12 +1248,13 @@ def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
 @given(
     space_modes=st.integers(12, 32),
     nt=st.integers(12, 40),
-    field_modes=st.integers(8, 32),
+    narrower=st.integers(0, 4),
     n=st.integers(1, 3),
 )
 def test_spectral_forcing_field_is_integrated_and_resampled(
-    space_modes, nt, field_modes, n
+    space_modes, nt, narrower, n
 ):
+    field_modes = max(8, space_modes - narrower)
     t_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
     x_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
     values = _travelling_forcing(t_nodes[:, None], x_nodes[None, :]) + 0j
@@ -1284,10 +1360,12 @@ def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1
         start = math.floor(float(t) / step + 1e-9) * step
         return FourierBasis.transform(sample(forcing_field, start))
 
+    frozen_forcing = SpectralForcing(frozen_at_step_start)
+
     solution, _ = problem.generate(
         FourierBasis, n, (nt, ns),
         u0=sample(exact_field, 0.0).real,
-        f=frozen_at_step_start if freeze else forcing_field,
+        f=frozen_forcing if freeze else forcing_field,
         nu=nu,
         space_domain=slice(0.0, 1.0, 200),
         time_domain=slice(0.0, 1.0, nt),
