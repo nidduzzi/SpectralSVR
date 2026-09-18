@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines what forcings the numerically integrated Burgers generator accepts, how a time-dependent forcing enters the integration, which forcing forms are rejected and why, and the forced-Burgers dataset the operator benchmark exposes so that the "forcing to solution" operator is learned from a sampled forcing prior rather than from manufactured residuals.
+Defines what forcings the numerically integrated Burgers generator accepts, how a time-dependent forcing enters the integration, and which forcing forms are rejected and why. Accepting a forcing that varies in time is what makes a dataset solved from a sampled forcing prior possible, rather than one whose forcing is whatever a random field leaves behind; building such a dataset belongs to the capability that reports it.
 
 ## ADDED Requirements
 
@@ -43,7 +43,7 @@ A forcing given as a plain number SHALL take the path it takes today and produce
 
 #### Scenario: Constant forcing byte-identity
 - **WHEN** the numerical generator is run with a `Number` forcing
-- **THEN** the returned forcing is exactly the constant spectrum at every output time, `torch.equal` with no tolerance, so the closure that replaced the precomputed tensor changed no arithmetic. The further check that a seeded run is `torch.equal` to the same run on this branch's parent commit is recorded in this change's tasks rather than stated here, because a test cannot reach another commit
+- **THEN** the returned forcing is exactly the constant spectrum at every output time, `torch.equal` with no tolerance, so normalising the forcing to a function of time changed no arithmetic on this path. Whether a seeded run is `torch.equal` to the same run before that normalisation is a comparison between two versions of the library, which a test cannot make; it belongs to the record of the change that makes such a claim
 
 ### Requirement: Manufactured solutions round-trip through the integrator
 Given a manufactured `(u, f)` pair from the MMS branch, integrating numerically from `u(0)` with forcing `f` SHALL reproduce `u` at the final time to within time-stepping error, and that error SHALL shrink at the integrator's design order as the step size halves, provided the spatial resolution resolves the nonlinear term without aliasing and the error remains above the floor set by the stored coefficient precision. Beneath that floor the reading is saturation rather than a rate, which `numerical-anchor-tests` already requires be distinguished from order loss; the range the order is asserted over SHALL therefore be bounded above as well as below. The order SHALL be measured before any bound is asserted, and the bound SHALL sit beneath the measurement rather than being predicted from the scheme's nominal order.

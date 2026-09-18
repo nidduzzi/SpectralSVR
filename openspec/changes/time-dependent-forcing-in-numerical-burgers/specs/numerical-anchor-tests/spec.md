@@ -5,7 +5,7 @@ The numerically integrated Burgers path SHALL be tested against a manufactured s
 
 #### Scenario: Exact solution reached within time-stepping error
 - **WHEN** the round-trip is run at a fixed seed with spatial modes chosen so the manufactured `u²` lies inside the de-aliased band
-- **THEN** the numerical `u(T)` matches the manufactured `u(T)` within a tolerance fixed in advance from the integrator's order, not tuned to pass
+- **THEN** the numerical solution matches the manufactured one at every output time within a tolerance fixed in advance from the integrator's order, not tuned to pass. The final time alone is not sufficient: the manufactured field is periodic over the interval, so its final slice is its initial one and a solver that does not advance the state reproduces it exactly
 
 #### Scenario: Rate, not just size, is asserted
 - **WHEN** the round-trip error is measured at a sequence of halving step sizes
