@@ -2,6 +2,7 @@ import torch
 from ..basis import Basis, BasisSubType
 from ..basis.sampling import samplings_to_tuple
 from ..utils import (
+    DeviceInput,
     Number,
     RealBand,
     SemilinearSolverSignatureType,
@@ -83,6 +84,8 @@ class Burgers(Problem):
         solver: SemilinearSolverSignatureType | None = None,
         band: RealBand | None = None,
         time_dependent_coeff: bool = True,
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         """Generate a Burgers ``(u, f)`` pair, manufactured or integrated.
@@ -120,7 +123,7 @@ class Burgers(Problem):
         for dim, m in enumerate(modes):
             assert m > 0, f"number of modes m must be more than 0 at dim {dim}"
 
-        device = resolve_device()
+        resolved_device = resolve_device(device)
 
         space = (float(space_domain.start), float(space_domain.stop))
         time = (float(time_domain.start), float(time_domain.stop))
@@ -130,7 +133,7 @@ class Burgers(Problem):
             f"time_domain needs at least two grid points to have a step, got {nt}"
         )
         dt = T / (nt - 1)
-        t = basis.grid(time_domain).flatten().to(device=device)
+        t = basis.grid(time_domain).flatten().to(device=resolved_device)
         assert t[1].sub(t[0]).isclose(torch.tensor(dt)), (
             f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1] - t[0]})"
         )
@@ -144,7 +147,14 @@ class Burgers(Problem):
         self._reject_inapplicable(manufactured, solver, band)
         if manufactured:
             u_gen, f_gen = self.mms_solution(
-                basis, n, modes, nu, domain, generator=generator, band=band
+                basis,
+                n,
+                modes,
+                nu,
+                domain,
+                generator=generator,
+                band=band,
+                device=device,
             )
 
             if time_dependent_coeff:
@@ -177,7 +187,7 @@ class Burgers(Problem):
                 self._numerical_forcing(f),
                 domain,
                 t,
-                device,
+                resolved_device,
                 generator,
                 etdrk4_solver if solver is None else solver,
             )
@@ -463,6 +473,8 @@ class Burgers(Problem):
         domain: tuple[tuple[float, float], ...],
         generator: torch.Generator | None = None,
         band: RealBand | None = None,
+        *,
+        device: DeviceInput = None,
     ) -> tuple[BasisSubType, BasisSubType]:
         """Method of Manufactured Solutions for 1D viscous Burgers.
 
@@ -491,10 +503,12 @@ class Burgers(Problem):
             axis_band.mode_count(m) for axis_band, m in zip(bands, modes, strict=True)
         )
         u = basis.generate(
-            n, band_limited, domain=domain, generator=generator
+            n, band_limited, domain=domain, generator=generator, device=device
         ).resize_modes(modes, rescale=False)
         u = basis(coeff=u.coeff, domain=domain)
-        zero_forcing = basis(basis.generate_empty(n, modes), domain=domain)
+        zero_forcing = basis(
+            basis.generate_empty(n, modes, device=device), domain=domain
+        )
         f = self.spectral_residual(u, zero_forcing, nu)
         return u, f
 

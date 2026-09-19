@@ -1,6 +1,7 @@
 import torch
 from ..basis import BasisSubType
 from ..basis.sampling import samplings_to_tuple
+from ..utils import DeviceInput
 from . import Problem
 from typing import Type
 
@@ -24,6 +25,8 @@ class Antiderivative(Problem):
         modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
         u0: float | int | complex = 0.0,
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         if isinstance(modes, int):
@@ -33,7 +36,7 @@ class Antiderivative(Problem):
             assert m > 0, f"number of modes m must be more than 0 at dim {i}"
         assert u0 is not None, "integration constant u0 must not be None"
         # generate solution functions
-        u = basis.generate(n, modes, generator=generator, **kwargs)
+        u = basis.generate(n, modes, generator=generator, device=device, **kwargs)
         assert u.coeff is not None, (
             "generated solution functions u should not have None coeff"
         )

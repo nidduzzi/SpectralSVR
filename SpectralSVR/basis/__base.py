@@ -2,7 +2,7 @@ import torch
 import abc
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
-from ..utils import resize_modes, interpolate_tensor, resolve_device
+from ..utils import resize_modes, interpolate_tensor, resolve_device, DeviceInput
 from .config import DEFAULT_COEFF_DTYPE, SpectralConfig
 from .domain import (
     DomainAxis,
@@ -606,6 +606,8 @@ class Basis(abc.ABC):
         random_func=torch.randn,
         complex_funcs: bool = False,
         domain: DomainInputType = None,
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> Self:
         """
@@ -622,6 +624,7 @@ class Basis(abc.ABC):
             random_func {callable} -- random function that generates the coefficients (default: {torch.randn})
             complex_funcs {bool} -- whether the functions generated should be complex or not (default: {False})
             domain {tuple[float,float] | sequence[tuple[float,float]] | None} -- the per-axis (start, stop) interval the coefficients apply to (default: {None}, i.e. the unit interval (0, 1) on every axis)
+            device {torch.device | str | None} -- where the coefficients are placed (default: {None}, i.e. the process default)
 
         Returns:
             Basis -- n sets of functions with coefficients with the shape (n, modes)
