@@ -31,13 +31,9 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 EXEMPT: dict[str, str] = {
     # device-selection (follow-the-stated-device, in flight)
     "A source the library builds for itself agrees by construction": IN_FLIGHT,
-    "A stated device is used": IN_FLIGHT,
-    "A process-wide setting is followed": IN_FLIGHT,
-    "The host is not overridden": IN_FLIGHT,
     "Parts of a workload are directed separately": IN_FLIGHT,
     "Generating a problem can be directed": IN_FLIGHT,
     "Generating coefficients can be directed": IN_FLIGHT,
-    "Naming the accelerator is a statement, not a search": IN_FLIGHT,
     "A mismatched random source names both devices": IN_FLIGHT,
     "An agreeing random source is unremarkable": IN_FLIGHT,
     # coefficient-encodings

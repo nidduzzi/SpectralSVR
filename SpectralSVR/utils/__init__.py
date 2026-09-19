@@ -24,14 +24,24 @@ DeviceInput = torch.device | str | None
 
 
 def resolve_device(device: DeviceInput = None) -> torch.device:
-    """Resolve a device, defaulting to CUDA when available else CPU.
+    """The stated device, or the process default where none is stated.
 
-    Centralizes device selection so it can be injected/overridden in one place
-    instead of duplicating ``cuda if available`` checks across the codebase.
+    The library holds no preference of its own: naming nothing asks the
+    surrounding process to decide, and its answer is used as given.
     """
     if device is None:
-        return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        return torch.get_default_device()
     return torch.device(device)
+
+
+def accelerator() -> torch.device:
+    """The platform's accelerator, or the process default where none exists.
+
+    Names whichever accelerator is present rather than testing for a vendor, so
+    a caller states "the fast one here" without knowing which it is.
+    """
+    present = torch.accelerator.current_accelerator()
+    return torch.get_default_device() if present is None else present
 
 
 def to_complex_coeff(

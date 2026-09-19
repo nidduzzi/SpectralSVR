@@ -7,6 +7,7 @@ from hypothesis.extra import numpy as hnp
 
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
+    accelerator,
     ExactModeCount,
     StandardScaler,
     WavenumberCutoff,
@@ -83,18 +84,50 @@ def test_complex_invertible(rows, cols, seed):
     assert torch.equal(to_complex_coeff(to_real_coeff(c)), c)
 
 
-@pytest.mark.no_fuzz
+STATABLE_DEVICES = ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
+
+
 @pytest.mark.oracle_smoke
-def test_resolve_device_explicit():
-    assert resolve_device("cpu") == torch.device("cpu")
-    assert resolve_device(torch.device("cpu")) == torch.device("cpu")
+@pytest.mark.scenario("A stated device is used")
+@SETTINGS
+@given(name=st.sampled_from(STATABLE_DEVICES))
+def test_resolve_device_uses_the_stated_device(name):
+    assert resolve_device(name) == torch.device(name)
+    assert resolve_device(torch.device(name)) == torch.device(name)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A process-wide setting is followed")
+@SETTINGS
+@given(name=st.sampled_from(STATABLE_DEVICES))
+def test_resolve_device_follows_the_process_default(name):
+    torch.set_default_device(name)
+    assert resolve_device(None) == torch.get_default_device()
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_resolve_device_default_matches_availability():
-    expected = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    assert resolve_device(None) == expected
+@pytest.mark.scenario("Naming the accelerator is a statement, not a search")
+def test_accelerator_names_whichever_one_is_present():
+    named = accelerator()
+    if torch.accelerator.is_available():
+        assert named == torch.accelerator.current_accelerator()
+        assert torch.zeros(1, device=named).device.type == named.type
+    else:
+        assert named == torch.get_default_device()
+    assert resolve_device(named) == named
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("The host is not overridden")
+def test_a_stated_host_survives_an_available_accelerator():
+    if not torch.accelerator.is_available():
+        pytest.skip(
+            "an accelerator must be present for the host to be overridable at all"
+        )
+    torch.set_default_device("cpu")
+    assert resolve_device(None) == torch.device("cpu")
 
 
 @pytest.mark.oracle_smoke
