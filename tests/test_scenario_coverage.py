@@ -31,8 +31,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 EXEMPT: dict[str, str] = {
     # device-selection (follow-the-stated-device, in flight)
     "A source the library builds for itself agrees by construction": IN_FLIGHT,
-    "A mismatched random source names both devices": IN_FLIGHT,
-    "An agreeing random source is unremarkable": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

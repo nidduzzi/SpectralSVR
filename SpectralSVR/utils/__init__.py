@@ -44,6 +44,33 @@ def accelerator() -> torch.device:
     return torch.get_default_device() if present is None else present
 
 
+def refuse_a_generator_placed_elsewhere(
+    generator: torch.Generator | None, device: DeviceInput = None
+) -> None:
+    """Raise where a caller's random source and the work disagree on device.
+
+    Both generators are the same type and the device is a runtime attribute, so
+    no checker can see the disagreement. The message carries what the type
+    cannot: both devices, and that the source is what moves. Moving it instead
+    would draw different numbers from the same seed, which is the caller's
+    decision to make.
+
+    Compares device type rather than index, as torch itself does, so a source on
+    ``cuda:0`` agrees with work placed on ``cuda``.
+    """
+    if generator is None:
+        return
+    placement = resolve_device(device)
+    if generator.device.type == placement.type:
+        return
+    raise RuntimeError(
+        f"the random source is on {generator.device} and the work is placed on "
+        f"{placement}; move the source with "
+        f"torch.Generator(device='{placement}'), or place the work on "
+        f"{generator.device}"
+    )
+
+
 def to_complex_coeff(
     coeff: torch.Tensor, coeff_dtype: torch.dtype | None = None
 ) -> torch.Tensor:
