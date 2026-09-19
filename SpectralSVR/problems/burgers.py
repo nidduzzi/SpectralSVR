@@ -278,7 +278,7 @@ class Burgers(Problem):
         dealias = mask.to(device=device) if mask is not None else 1.0
 
         if isinstance(u0, str) and u0 == "random":
-            v0 = basis.generate_coeff(n, ns, generator=generator).to(device=device)
+            v0 = basis.generate_coeff(n, ns, generator=generator, device=device)
         elif isinstance(u0, Number):
             field = torch.full((n, ns), float(u0), device=device) + 0j
             v0 = basis.transform(field)

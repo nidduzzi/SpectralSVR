@@ -3,7 +3,7 @@ from typing_extensions import Self, override
 
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE
+from ..utils import DEFAULT_REAL_DTYPE, DeviceInput
 from torch import nn
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
@@ -32,15 +32,14 @@ class FNN(MultiRegression):
         lr: float = 0.001,
         batch_size: int = 4,
         activation: type[nn.Module] = nn.Softplus,
-        n_hidden: int = 3,  # number of hidden layers
-        w_hidden: int = 100,  # width of hidden layers
+        n_hidden: int = 3,
+        w_hidden: int = 100,
         dtype: torch.dtype = DEFAULT_REAL_DTYPE,
-        device: torch.device | None = None,
+        device: DeviceInput = None,
         logger: logging.Logger | None = None,
     ):
-        super().__init__(dtype, device, logger)  # base resolves device=None -> cpu
+        super().__init__(dtype, device, logger)
 
-        # Hyperparameters
         self.batch_size: int = batch_size
         self.MAX_EPOCH: int = MAX_EPOCH
         self.lr: float = lr
