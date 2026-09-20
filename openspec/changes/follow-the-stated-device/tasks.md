@@ -54,4 +54,18 @@
 
 - [x] 8.1 Run `just check`; verify clean. **337 passed**, ruff, mypy and ty clean; `openspec validate follow-the-stated-device --strict` passes
 - [x] 8.2 Verify no source file gained an explanatory prose comment, and that prose was removed from what this change touched rather than merely not added. **Verified by diff over the whole change:** zero comment lines added. Eight removed: the `# ensure the indexing results in...` at the index site, `# Hyperparameters`, `# inverse problem`, `# converting to tensors and passing to GPU`, the two `# base resolves device=None -> cpu` notes, and the two hidden-layer width annotations, each replaced by the name or the structure that already said it. Docstring lines were added only where they state a contract: the new `device` parameters and the refusal's rule
-- [ ] 8.3 Verify the superseded change is withdrawn rather than left live: `align-device-resolution`'s branch and artifacts are removed, and everything carried from it -- the device-versus-precision asymmetry, the measured noise floor, the stale-comment cleanup -- is present here
+- [x] 8.3 Verify the superseded change is withdrawn rather than left live: `align-device-resolution`'s branch and artifacts are removed, and everything carried from it -- the device-versus-precision asymmetry, the measured noise floor, the stale-comment cleanup -- is present here.
+
+  **Withdrawn:** the branch `feat/align-device-resolution` is deleted. It held three commits, recorded here so the withdrawal is auditable rather than silent:
+
+  ```
+  ce8903e docs(openspec): record the import that answers the device question first
+  1e03a78 test(scenarios): record align-device-resolution's scenarios as debt
+  2f82060 docs(openspec): propose align-device-resolution
+  ```
+
+  Nothing of theirs is lost. Its `MultiRegression` fix landed in `5e9d104`; its `LSSVR.py:147` comment went with it; its device-versus-precision asymmetry and its measured noise floor (`2.51e-05` relative, against a seed spread of 26,010x to 180,953x) are carried in design.md. Its own scenario-debt entries go with its spec, which no longer exists. Its central decision -- one rule everywhere, resolved through a `resolve_device` it recorded as correct -- is drift and is deliberately not carried; proposal.md states why.
+
+  Its task 3.4, per-stage provenance in the benchmark table, is not absorbed here and is not lost either: it belongs to `benchmark-reproducibility`, which owns the table.
+
+  **Still reachable:** `feat/ratchet-code-prose` is stacked above the deleted branch, so those three commits remain in its history until it is replayed onto this branch. The replay of the stack is the step that finishes the removal
