@@ -1,5 +1,6 @@
 import torch
 import logging
+import math
 import typing
 from dataclasses import dataclass
 from typing import Callable, TypedDict, cast, overload
@@ -488,9 +489,7 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
 
     if rescale:
         modes = list(x.shape[1:])
-        x_resized = (
-            x_resized * torch.tensor(target_modes).prod() / torch.tensor(modes).prod()
-        )
+        x_resized = x_resized * math.prod(target_modes) / math.prod(modes)
 
     return x_resized
 
@@ -590,9 +589,14 @@ def zero_coeff(x: torch.Tensor, band: Band | list[Band]) -> torch.Tensor:
         dim_len = x.shape[dim]
         max_mode = axis_band.mode_count(dim_len)
         zero_range = torch.arange(
-            (max_mode - 1) // 2 + 1, dim_len - max_mode // 2, dtype=torch.long
+            (max_mode - 1) // 2 + 1,
+            dim_len - max_mode // 2,
+            dtype=torch.long,
+            device=x.device,
         )
-        x_zeroed.index_fill_(dim, zero_range, torch.zeros((1,), dtype=x.dtype)[0])
+        x_zeroed.index_fill_(
+            dim, zero_range, torch.zeros((1,), dtype=x.dtype, device=x.device)[0]
+        )
 
     return x_zeroed
 

@@ -157,7 +157,7 @@ class FourierBasis(Basis):
                 coeff, x, modes, domain_tuple, strategy
             )
 
-        scaling = 1.0 / torch.prod(torch.Tensor(modes))
+        scaling = 1.0 / math.prod(modes)
         return scaling * sum_coeff_x_basis
 
     @classmethod
@@ -387,7 +387,7 @@ class FourierBasis(Basis):
         if scale:
             # Heuristic amplitude so generated functions have O(1) magnitude
             # regardless of mode count (the inverse DFT sums prod(modes) terms).
-            scaler = torch.tensor(modes).sum() * 0.2
+            scaler = torch.tensor(modes, device=coeff.device).sum() * 0.2
             coeff = coeff.mul(scaler)
         return coeff
 
@@ -613,7 +613,7 @@ class FourierBasis(Basis):
             )
 
         if scale:
-            f = f.div(torch.tensor(modes).prod())
+            f = f.div(math.prod(modes))
         return f
 
     def _diff_multiplier(self, dim: int, ord: int) -> torch.Tensor:

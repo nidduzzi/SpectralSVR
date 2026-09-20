@@ -935,8 +935,7 @@ class Basis(abc.ABC):
 
     def __getitem__(self, indices):
         copy = self.copy()
-        idx = torch.arange(len(copy))[indices].reshape(-1)
-        # ensure the indexing results in list of coefficients (0th dimension is the list index)
+        idx = torch.arange(len(copy), device=copy.coeff.device)[indices].reshape(-1)
         copy.coeff = copy.coeff[idx, ...]
         return copy
 

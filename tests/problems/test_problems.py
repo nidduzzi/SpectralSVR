@@ -1560,3 +1560,21 @@ def test_generating_a_problem_is_placed_where_it_is_told(space_modes, nt, seed):
         generator=torch.Generator().manual_seed(seed),
     )
     assert stayed.coeff.device == torch.get_default_device()
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Parts of a workload are directed separately")
+def test_generation_survives_a_process_default_pointing_elsewhere():
+    if not torch.accelerator.is_available():
+        pytest.skip("two device types must be present for them to disagree")
+    torch.set_default_device(accelerator())
+    generator = torch.Generator(device="cpu").manual_seed(0)
+    u, ut = Antiderivative().generate(
+        FourierBasis, 8, 8, generator=generator, u0=0, device="cpu"
+    )
+    assert u.coeff.device.type == "cpu"
+    assert ut.coeff.device.type == "cpu"
+    assert u[:4].coeff.shape[0] == 4
+    values = u.get_values(res=8, device=torch.device("cpu"))[0]
+    assert values.device.type == "cpu"

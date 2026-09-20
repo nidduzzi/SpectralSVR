@@ -134,7 +134,7 @@ class Burgers(Problem):
         )
         dt = T / (nt - 1)
         t = basis.grid(time_domain).flatten().to(device=resolved_device)
-        assert t[1].sub(t[0]).isclose(torch.tensor(dt)), (
+        assert t[1].sub(t[0]).isclose(torch.tensor(dt, device=t.device)), (
             f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1] - t[0]})"
         )
         domain = (time, space)

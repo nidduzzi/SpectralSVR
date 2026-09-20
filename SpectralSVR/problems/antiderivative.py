@@ -48,14 +48,14 @@ class Antiderivative(Problem):
         )
         if isinstance(u0, complex):
             if u.coeff.is_complex():
-                u.coeff[:, 0] = torch.tensor(u0)
+                u.coeff[:, 0] = torch.tensor(u0, device=u.coeff.device)
             else:  # pragma: no cover  (a complex-coeff basis is always complex)
-                u.coeff[:, 0] = torch.tensor(u0).real
+                u.coeff[:, 0] = torch.tensor(u0, device=u.coeff.device).real
         elif isinstance(u0, float) or isinstance(u0, int):
             if u.coeff.is_complex():
-                u.coeff[:, 0] = torch.tensor(u0 + 0j)
+                u.coeff[:, 0] = torch.tensor(u0 + 0j, device=u.coeff.device)
             else:  # pragma: no cover  (a complex-coeff basis is always complex)
-                u.coeff[:, 0] = torch.tensor(u0)
+                u.coeff[:, 0] = torch.tensor(u0, device=u.coeff.device)
         else:
             u.coeff[:, 0] = u0
 
