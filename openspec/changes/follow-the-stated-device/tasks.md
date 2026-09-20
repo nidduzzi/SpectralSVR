@@ -46,12 +46,12 @@
 
 ## 7. Scenario coverage
 
-- [ ] 7.1 Mark each scenario of the `device-selection` delta with `@pytest.mark.scenario` as its task completes and remove its `IN_FLIGHT` entry in the same commit. All eight enter `EXEMPT` when the change is proposed, because artifacts land before implementation and a stated scenario with neither a test nor an entry leaves the suite red; verify the stale-exemption test forces each removal rather than tolerating it
-- [ ] 7.2 Fuzz what ranges over inputs rather than pinning one case: the precedence over stated devices and process settings, and the refusal over the device pairs that should be refused. Verify each property fails under a mutation of the behaviour it describes
-- [ ] 7.3 Verify no scenario of this capability sits in `EXEMPT` at the end
+- [x] 7.1 Mark each scenario of the `device-selection` delta with `@pytest.mark.scenario` as its task completes and remove its `IN_FLIGHT` entry in the same commit. All eight enter `EXEMPT` when the change is proposed, because artifacts land before implementation and a stated scenario with neither a test nor an entry leaves the suite red; verify the stale-exemption test forces each removal rather than tolerating it. The delta states **ten** scenarios, not eight; all ten are marked and none remains in `EXEMPT`. The `IN_FLIGHT` label itself stays defined, unused: it is part of the guard's stated vocabulary alongside `PREDATES`, `DECISION` and `POLICY`, and the next change in flight needs it
+- [x] 7.2 Fuzz what ranges over inputs rather than pinning one case: the precedence over stated devices and process settings, and the refusal over the device pairs that should be refused. Verify each property fails under a mutation of the behaviour it describes. Precedence was mutation-verified in tasks 1.1 and 1.2. Inverting the refusal's comparison to `!=` fails both fuzzed generator properties, the refusing one and the agreeing one
+- [x] 7.3 Verify no scenario of this capability sits in `EXEMPT` at the end
 
 ## 8. Verification
 
-- [ ] 8.1 Run `just check`; verify clean
-- [ ] 8.2 Verify no source file gained an explanatory prose comment, and that prose was removed from what this change touched rather than merely not added
+- [x] 8.1 Run `just check`; verify clean. **337 passed**, ruff, mypy and ty clean; `openspec validate follow-the-stated-device --strict` passes
+- [x] 8.2 Verify no source file gained an explanatory prose comment, and that prose was removed from what this change touched rather than merely not added. **Verified by diff over the whole change:** zero comment lines added. Eight removed: the `# ensure the indexing results in...` at the index site, `# Hyperparameters`, `# inverse problem`, `# converting to tensors and passing to GPU`, the two `# base resolves device=None -> cpu` notes, and the two hidden-layer width annotations, each replaced by the name or the structure that already said it. Docstring lines were added only where they state a contract: the new `device` parameters and the refusal's rule
 - [ ] 8.3 Verify the superseded change is withdrawn rather than left live: `align-device-resolution`'s branch and artifacts are removed, and everything carried from it -- the device-versus-precision asymmetry, the measured noise floor, the stale-comment cleanup -- is present here
