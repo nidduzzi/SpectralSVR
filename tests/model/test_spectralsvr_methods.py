@@ -16,6 +16,7 @@ from SpectralSVR import (
     FourierBasis,
     LSSVR,
     SpectralSVR,
+    accelerator,
     to_complex_coeff,
     to_real_coeff,
 )
@@ -25,11 +26,13 @@ SETTINGS = settings(
 )
 
 
-def _trained_model(n=80, modes=8, seed=42, kernel="rbf"):
+def _trained_model(n=80, modes=8, seed=42, kernel="rbf", device=None):
     g = torch.Generator().manual_seed(seed)
     u, ut = Antiderivative().generate(FourierBasis, n, modes, generator=g, u0=0)
     f = to_real_coeff(ut.coeff)  # real input features
-    model = SpectralSVR(FourierBasis(domain=(0.0, 1.0)), LSSVR(kernel=kernel, C=10.0))
+    model = SpectralSVR(
+        FourierBasis(domain=(0.0, 1.0)), LSSVR(kernel=kernel, C=10.0, device=device)
+    )
     model.train(f, u.coeff)
     return model, f, u
 
@@ -263,3 +266,25 @@ def test_bridge_round_trips_exactly_at_both_precisions():
             assert torch.equal(to_complex_coeff(to_real_coeff(c)), c), (
                 f"{complex_dtype} {shape}"
             )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A source the library builds for itself agrees by construction")
+def test_the_inverse_builds_its_own_source_where_the_work_is():
+    if not torch.accelerator.is_available():
+        pytest.skip("an accelerator must be present for the work to be placed off host")
+    model, _, u = _trained_model(device=accelerator())
+    out = model.inverse_coeff(u.coeff, epochs=3)
+    assert out.shape == u.coeff.shape
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A mismatched random source names both devices")
+def test_the_inverse_refuses_a_source_placed_elsewhere():
+    if not torch.accelerator.is_available():
+        pytest.skip("two device types must be present for them to disagree")
+    model, _, u = _trained_model(device=accelerator())
+    with pytest.raises(RuntimeError, match="move the source"):
+        model.inverse_coeff(u.coeff, epochs=3, generator=torch.Generator())

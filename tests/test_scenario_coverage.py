@@ -29,8 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    # device-selection (follow-the-stated-device, in flight)
-    "A source the library builds for itself agrees by construction": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

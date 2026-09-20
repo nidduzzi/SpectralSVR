@@ -5,7 +5,12 @@ import torch.utils.data.dataset
 import torch
 from ..basis import Basis, DomainInputType, ResType, SpectralConfig
 from .__base import MultiRegression
-from ..utils import to_complex_coeff, to_real_coeff, get_metrics
+from ..utils import (
+    get_metrics,
+    refuse_a_generator_placed_elsewhere,
+    to_complex_coeff,
+    to_real_coeff,
+)
 from typing import Callable
 from torchmetrics.functional.regression import (  # type: ignore[import-not-found]
     mean_squared_error,
@@ -257,8 +262,6 @@ class SpectralSVR(Generic[B, R]):
         gain=0.2,
         **optimizer_params,
     ):
-        if generator is None:
-            generator = torch.Generator().manual_seed(42)
         # TODO: add logic for multidimensional functions (2D+)
         f_coeff_pred = self.inverse_coeff(
             u_coeff,
@@ -289,8 +292,6 @@ class SpectralSVR(Generic[B, R]):
         gain=0.05,
         **optimizer_params,
     ):
-        if generator is None:
-            generator = torch.Generator().manual_seed(42)
         # TODO: add logic for multidimensional functions (2D+)
         if not self.regressor.trained:
             raise RuntimeError("Regressor has not been trained, no support vectors")
@@ -305,9 +306,12 @@ class SpectralSVR(Generic[B, R]):
         if complex_coeff:
             self._check_precision(u_coeff, "target coefficients")
 
-        # inverse problem
+        placement = self.regressor.device
+        refuse_a_generator_placed_elsewhere(generator, placement)
+        if generator is None:
+            generator = torch.Generator(device=placement).manual_seed(42)
         f_coeff_pred = (
-            torch.randn(f_shape, generator=generator).to(self.regressor.device) * gain
+            torch.randn(f_shape, generator=generator, device=placement) * gain
         )
         f_coeff_pred.requires_grad_()
         optim = torch.optim.Adam([f_coeff_pred], **optimizer_params)
