@@ -98,10 +98,18 @@ reproduce a figure; it should reproduce a winner and a rough ratio.
   it builds for itself.
 - `scripts/run_benchmark.py`: states its device.
 - One test is replaced: it asserts the preference being removed.
-- **Not touched:** the bare tensor factory calls. They already follow the default
-  and are the only part of the library obeying the rule this change states.
-  Pinning them would break it. An entry point that gains a device argument
-  forwards it to them rather than resolving it first.
+- **Not touched:** the factory calls that materialise a caller's data. They
+  already follow the default and are the only part of the library obeying the
+  rule this change states. Pinning them would break it. An entry point that
+  gains a device argument forwards it to them rather than resolving it first.
+- **Corrected mid-change:** the claim above was first written of *every* bare
+  tensor factory, and that was wrong. A factory that materialises a caller's
+  data is right to follow the process; one that derives a value for data that
+  already exists -- an index, a scale factor, a comparison constant -- must
+  follow that data instead. Asking the process again is only correct while
+  everything follows the process. Eight such sites failed once placement became
+  statable and are fixed here; the requirement that now states the distinction
+  was added after they were found, not before.
 - **Not touched:** the notebooks. Five sites there write
   `torch.device("cuda:0" if torch.cuda.is_available() else "cpu")` — the
   duplication `accelerator()` exists to remove, and each would quietly move to

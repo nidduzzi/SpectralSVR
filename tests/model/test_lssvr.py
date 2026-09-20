@@ -190,7 +190,7 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
     assert out.shape[0] == n
 
 
-@pytest.mark.oracle_smoke
+@pytest.mark.oracle_independent
 @pytest.mark.scenario("A process-wide setting is followed")
 @SETTINGS
 @given(
@@ -200,7 +200,7 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
 )
 def test_lssvr_follows_the_process_default(name):
     torch.set_default_device(name)
-    assert LSSVR().device == torch.get_default_device()
+    assert LSSVR().device == torch.zeros(1).device
 
 
 @pytest.mark.no_fuzz

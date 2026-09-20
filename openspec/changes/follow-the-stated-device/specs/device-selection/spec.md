@@ -18,6 +18,10 @@ This is a deliberate refusal to be clever. A per-component preference cannot be 
 - **WHEN** no device is given at the call site and the process has set one
 - **THEN** work is placed on the process's device, for every device the platform supports rather than only the one the library was written against
 
+#### Scenario: Stating a device does not change what is drawn
+- **WHEN** the same seed and the same device are used, once by naming the device at the call site and once by setting it as the process default
+- **THEN** the values drawn are identical, so a caller may move between the two ways of saying where work goes without changing a result
+
 #### Scenario: The host is not overridden
 - **WHEN** the process states the host as its device and an accelerator is present
 - **THEN** work is placed on the host, because a stated preference is not a gap to be filled
@@ -36,6 +40,15 @@ Every entry point that places work SHALL accept a device, so that a caller can d
 #### Scenario: Generating coefficients can be directed
 - **WHEN** a caller generates coefficients directly, without going through a problem
 - **THEN** the generation is placed where they state, so the lower entry point is directable on the same terms as the higher one rather than reachable only by moving the whole process
+
+### Requirement: Work derived for placed data follows that data
+Where the library builds a value for data that already exists -- an index, a scale factor, a comparison constant -- it SHALL take the device from that data rather than from the process default. Asking the process again is only correct while everything follows the process; once placement is statable, the answer can name a device the data is not on.
+
+This is distinct from a factory that materialises a caller's data. Such a factory correctly follows the process default when the caller states nothing, and SHALL keep doing so.
+
+#### Scenario: A workload placed against the process default still runs
+- **WHEN** a caller states one device for their work while the process default names another
+- **THEN** generation, indexing, evaluation and resizing all complete, because each derived value is built where the data it meets already is
 
 ### Requirement: The accelerator is named, not detected ad hoc
 The library SHALL expose one way to name the platform's accelerator, resolving to the host where none is present. Callers SHALL NOT be expected to write their own availability check, and the library SHALL NOT contain more than one.

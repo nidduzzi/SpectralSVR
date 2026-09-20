@@ -1141,3 +1141,27 @@ def test_generating_coefficients_is_placed_where_it_is_told(rows, modes):
     assert field.coeff.device.type == elsewhere.type
 
     assert FourierBasis.generate_empty(rows, modes).device == torch.get_default_device()
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Stating a device does not change what is drawn")
+@settings(deadline=None, max_examples=15)
+@given(rows=st.integers(1, 3), modes=st.integers(4, 16), seed=st.integers(0, 10_000))
+def test_how_a_device_is_stated_does_not_change_the_draw(rows, modes, seed):
+    if not torch.accelerator.is_available():
+        pytest.skip("the two ways of stating a device differ only when a second exists")
+
+    def drawn_on_the_host(state_it: bool) -> torch.Tensor:
+        generator = torch.Generator(device="cpu").manual_seed(seed)
+        if state_it:
+            return FourierBasis.generate_coeff(
+                rows, modes, generator=generator, device="cpu"
+            )
+        return FourierBasis.generate_coeff(rows, modes, generator=generator)
+
+    torch.set_default_device(accelerator())
+    stated_at_the_call = drawn_on_the_host(True)
+    torch.set_default_device("cpu")
+    followed_the_process = drawn_on_the_host(False)
+
+    assert torch.equal(stated_at_the_call, followed_the_process)

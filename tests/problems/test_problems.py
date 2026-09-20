@@ -1564,7 +1564,7 @@ def test_generating_a_problem_is_placed_where_it_is_told(space_modes, nt, seed):
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-@pytest.mark.scenario("Parts of a workload are directed separately")
+@pytest.mark.scenario("A workload placed against the process default still runs")
 def test_generation_survives_a_process_default_pointing_elsewhere():
     if not torch.accelerator.is_available():
         pytest.skip("two device types must be present for them to disagree")

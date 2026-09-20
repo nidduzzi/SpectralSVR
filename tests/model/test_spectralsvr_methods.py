@@ -275,8 +275,10 @@ def test_the_inverse_builds_its_own_source_where_the_work_is():
     if not torch.accelerator.is_available():
         pytest.skip("an accelerator must be present for the work to be placed off host")
     model, _, u = _trained_model(device=accelerator())
+    assert model.regressor.device.type == accelerator().type
     out = model.inverse_coeff(u.coeff, epochs=3)
     assert out.shape == u.coeff.shape
+    assert out.device == u.coeff.device
 
 
 @pytest.mark.no_fuzz
