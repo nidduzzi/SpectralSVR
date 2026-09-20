@@ -56,13 +56,18 @@ def refuse_a_generator_placed_elsewhere(
     would draw different numbers from the same seed, which is the caller's
     decision to make.
 
-    Compares device type rather than index, as torch itself does, so a source on
-    ``cuda:0`` agrees with work placed on ``cuda``.
+    An unstated index means "whichever one this process is using", so a source on
+    ``cuda:0`` agrees with work placed on ``cuda``. Two stated indices that
+    differ are a disagreement like any other: ``cuda:0`` and ``cuda:1`` are
+    separate memories, and a tensor drawn on one cannot be read from the other.
     """
     if generator is None:
         return
     placement = resolve_device(device)
-    if generator.device.type == placement.type:
+    source = generator.device
+    same_kind = source.type == placement.type
+    an_index_is_unstated = source.index is None or placement.index is None
+    if same_kind and (an_index_is_unstated or source.index == placement.index):
         return
     raise RuntimeError(
         f"the random source is on {generator.device} and the work is placed on "

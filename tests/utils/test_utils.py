@@ -98,13 +98,13 @@ def test_resolve_device_uses_the_stated_device(name):
     assert resolve_device(torch.device(name)) == torch.device(name)
 
 
-@pytest.mark.oracle_smoke
+@pytest.mark.oracle_independent
 @pytest.mark.scenario("A process-wide setting is followed")
 @SETTINGS
 @given(name=st.sampled_from(STATABLE_DEVICES))
 def test_resolve_device_follows_the_process_default(name):
     torch.set_default_device(name)
-    assert resolve_device(None) == torch.get_default_device()
+    assert resolve_device(None) == torch.zeros(1).device
 
 
 @pytest.mark.no_fuzz
@@ -138,6 +138,26 @@ DISAGREEING_PAIRS = (
 )
 
 
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A stated index is part of the statement")
+def test_two_stated_indices_that_differ_are_a_disagreement():
+    if not torch.cuda.is_available():
+        pytest.skip("an indexed accelerator is needed to state two of them")
+    with pytest.raises(RuntimeError, match="move the source"):
+        refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda:1")
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A stated index is part of the statement")
+def test_an_unstated_index_agrees_with_a_stated_one():
+    if not torch.cuda.is_available():
+        pytest.skip("an indexed accelerator is needed for an index to be unstated")
+    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda")
+    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda"), "cuda:0")
+
+
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A mismatched random source names both devices")
 @SETTINGS
@@ -161,7 +181,8 @@ def test_a_misplaced_random_source_names_both_devices(pair):
 def test_a_random_source_device_is_invisible_to_a_type_checker():
     host = torch.Generator()
     assert type(host) is type(torch.Generator(device=accelerator()))
-    assert host.device != accelerator() or not torch.accelerator.is_available()
+    if torch.accelerator.is_available():
+        assert host.device != accelerator()
 
 
 @pytest.mark.oracle_smoke

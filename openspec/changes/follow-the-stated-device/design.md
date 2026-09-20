@@ -37,6 +37,14 @@ heuristic.
 **A generator's device is invisible to a type checker.**
 `type(torch.Generator()) is type(torch.Generator(device="cuda"))` is `True`.
 
+**An unstated index is not the same as a stated one.** `torch.device("cuda")`
+carries `index=None`; `torch.get_default_device()` under a `cuda` pin returns
+`cuda:0`, so the two are not `==`. The refusal therefore compares type first and
+indices only where both are stated: `cuda:0` agrees with `cuda`, and `cuda:0`
+disagrees with `cuda:1`. Comparing type alone admitted the second pairing, which
+is a real disagreement -- separate memories, and a draw on one unreadable from
+the other.
+
 **The test harness already neutralises the condition.** `tests/conftest.py`
 carries an autouse fixture that snapshots and restores the process default around
 every test, and its docstring names the cause: importing deepxde sets the default

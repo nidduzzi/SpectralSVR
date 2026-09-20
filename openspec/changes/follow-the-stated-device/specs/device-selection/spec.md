@@ -59,6 +59,10 @@ Where the library builds a random source for itself, because the caller supplied
 - **WHEN** a caller supplies a random source on one device while work is placed on another
 - **THEN** the generation is refused before any work is done, and the message names the device the source is on, the device the work is on, and that the source is what moves
 
+#### Scenario: A stated index is part of the statement
+- **WHEN** the source and the work both name an index and the two differ
+- **THEN** the generation is refused, because they are separate memories and a draw on one cannot be read from the other; where either leaves its index unstated, the two agree, since an unstated index means whichever the process is using
+
 #### Scenario: An agreeing random source is unremarkable
 - **WHEN** the random source and the placement agree
 - **THEN** generation proceeds with no diagnostic, whether they agree because the caller stated both or because both followed the process
