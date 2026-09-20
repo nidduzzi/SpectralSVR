@@ -35,8 +35,14 @@
 
 ## 6. The application states its device
 
-- [ ] 6.1 The benchmark script states the device it runs on rather than inheriting whatever the last import left. Verify it runs with all four datasets and both operators -- the configuration that fails today with `RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'`, because an operator import sets a process default the script never asked for
-- [ ] 6.2 Verify the metrics are unchanged within what was measured: identical to about six significant figures, `r2` moving in its last digit only (0.081452 against 0.081453). A larger move is a finding to chase, not a tolerance to widen
+- [x] 6.1 The benchmark script states the device it runs on rather than inheriting whatever the last import left. Verify it runs with all four datasets and both operators -- the configuration that fails today with `RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'`, because an operator import sets a process default the script never asked for. **Verified:** all four datasets and both operators complete, on `--device cpu` and again on `--device cuda`.
+
+  **Correction to the approach:** stating the device once with `torch.set_default_device` at startup does not survive the run. `deepxde` is imported lazily inside `DeepONetOperator.fit`, so it resets the process default *after* the first dataset is built, and the second dataset is then generated on `cuda:0` against a host generator. The script therefore states the device by passing it -- to every generator it builds, every `generate` call and every query grid -- and sets no process default at all, so no later import can move it.
+
+  Three defects surfaced only under this run and are fixed here: the benchmark's own GRF sampler took no `device`, and the library built several derived intermediates from the process default rather than from the data they meet
+- [x] 6.2 Verify the metrics are unchanged within what was measured: identical to about six significant figures, `r2` moving in its last digit only (0.081452 against 0.081453). A larger move is a finding to chase, not a tolerance to widen. **Verified on `--device cpu`:** `mse` 0.001031, 0.026906 and 0.000202 all unchanged, and `r2` reads 0.081452, one of the two values the measurement recorded. No metric moved.
+
+  **`--device cuda` is not a reproduction of that table and must not be read as one.** The same seed on a different device draws different numbers, so it generates a different dataset: `mse` moves to 0.001446, 0.019587 and 0.001126, and one `r2` reads -12.44 against 0.081452. That is a different sample of the same problem, not a regression, and the seed spread recorded in design.md is the scale it should be judged against. Anything reported in the paper must state the device it was generated on
 
 ## 7. Scenario coverage
 

@@ -12,6 +12,7 @@ Usage
     ... --datasets antiderivative burgers-mms   # subset
     ... --operators spectralsvr                 # skip the neural baseline
     ... --quick                                 # small sizes, few iterations
+    ... --device cuda                           # place every stage on an accelerator
 
 DeepONet needs the optional ``baselines`` extra (deepxde). Requesting it without
 that extra fails rather than producing a table short of a row; pass
@@ -25,6 +26,13 @@ query points through one metric suite. It does not hold the tuning fixed: the
 hyperparameters on both sides are fixed defaults, chosen once and not tuned per
 dataset, and each figure comes from a single seed (``--seed``, default 0). The table therefore demonstrates that the harness
 works; it is not a controlled comparison of the methods.
+
+A table is reproducible only against the same ``--device``. The device is
+passed to every generator, every ``generate`` call and every query grid rather
+than set as a process default, so no later import can move it -- an optional
+baseline sets one on import. But a generator on another device draws different
+numbers from the same seed, so ``--device cuda`` builds a different dataset
+rather than reproducing the host table. Report the device alongside any figure.
 
 ``fit_seconds`` is not like-for-like either. ``DeepONetOperator.fit`` calls
 ``_import_deepxde()`` -- a lazy import paid on its first call -- and converts the
@@ -53,7 +61,7 @@ from SpectralSVR.operators import (
     SpectralSVROperator,
     benchmark,
 )
-from SpectralSVR.utils import DEFAULT_COEFF_DTYPE, etdrk4_solver
+from SpectralSVR.utils import DEFAULT_COEFF_DTYPE, etdrk4_solver, resolve_device
 
 DEFAULT_OUT = Path("results") / "bench_results.csv"
 
@@ -65,7 +73,7 @@ class BenchmarkCase(NamedTuple):
     query: torch.Tensor
 
 
-CaseBuilder = Callable[[int, bool], BenchmarkCase]
+CaseBuilder = Callable[[int, bool, torch.device], BenchmarkCase]
 
 
 class DatasetSpec(NamedTuple):
@@ -78,8 +86,8 @@ class DatasetSpec(NamedTuple):
 # --------------------------------------------------------------------------- #
 # query grids
 # --------------------------------------------------------------------------- #
-def line_query(n: int) -> torch.Tensor:
-    return torch.linspace(0, 1, n, dtype=torch.float64).unsqueeze(-1)
+def line_query(n: int, device: torch.device) -> torch.Tensor:
+    return torch.linspace(0, 1, n, dtype=torch.float64, device=device).unsqueeze(-1)
 
 
 def tensor_product_query(*axes: torch.Tensor) -> torch.Tensor:
@@ -90,8 +98,8 @@ def tensor_product_query(*axes: torch.Tensor) -> torch.Tensor:
 # --------------------------------------------------------------------------- #
 # input-function sampling
 # --------------------------------------------------------------------------- #
-def signed_mode_numbers(size: int) -> torch.Tensor:
-    return torch.fft.fftfreq(size) * size
+def signed_mode_numbers(size: int, device: torch.device) -> torch.Tensor:
+    return torch.fft.fftfreq(size, device=device) * size
 
 
 def grf_coeff(
@@ -117,10 +125,11 @@ def grf_coeff(
         size: tuple[int, ...],
         dtype: torch.dtype = DEFAULT_COEFF_DTYPE,
         generator: torch.Generator | None = None,
+        device: torch.device | str | None = None,
     ) -> torch.Tensor:
-        white = torch.randn(size, dtype=dtype, generator=generator)
+        white = torch.randn(size, dtype=dtype, generator=generator, device=device)
         for axis, n_modes in enumerate(size[1:], start=1):
-            modes = signed_mode_numbers(n_modes)
+            modes = signed_mode_numbers(n_modes, white.device)
             amplitude = torch.exp(
                 -(math.pi**2) * length_scale**2 * modes.square() / domain_length**2
             )
@@ -142,12 +151,12 @@ def spatial_field_at(field: Basis, time_index: int) -> FourierBasis:
 
 
 def antiderivative_case(
-    seed: int, quick: bool, random_func=torch.randn
+    seed: int, quick: bool, device: torch.device, random_func=torch.randn
 ) -> BenchmarkCase:
     """ut -> u: integrate a band-limited derivative back to its antiderivative."""
     n_train, n_test = (40, 10) if quick else (120, 30)
     modes = 16
-    generator = torch.Generator().manual_seed(seed)
+    generator = torch.Generator(device=device).manual_seed(seed)
     u, ut = Antiderivative().generate(
         FourierBasis,
         n_train + n_test,
@@ -155,21 +164,26 @@ def antiderivative_case(
         generator=generator,
         u0=0,
         random_func=random_func,
+        device=device,
     )
     split = Split.partition(ut, u, n_train, n_sensors=modes)
-    return BenchmarkCase(split, line_query(40))
+    return BenchmarkCase(split, line_query(40, device))
 
 
-def antiderivative_grf_case(seed: int, quick: bool) -> BenchmarkCase:
+def antiderivative_grf_case(
+    seed: int, quick: bool, device: torch.device
+) -> BenchmarkCase:
     """Same operator as :func:`antiderivative_case`, GRF-sampled inputs."""
-    return antiderivative_case(seed, quick, random_func=grf_coeff(length_scale=0.2))
+    return antiderivative_case(
+        seed, quick, device, random_func=grf_coeff(length_scale=0.2)
+    )
 
 
-def burgers_mms_case(seed: int, quick: bool) -> BenchmarkCase:
+def burgers_mms_case(seed: int, quick: bool, device: torch.device) -> BenchmarkCase:
     """f -> u on manufactured viscous-Burgers solutions, over time and space."""
     n_train, n_test = (24, 6) if quick else (60, 15)
     modes = 8 if quick else 12
-    generator = torch.Generator().manual_seed(seed)
+    generator = torch.Generator(device=device).manual_seed(seed)
     u, f = Burgers().generate(
         FourierBasis,
         n_train + n_test,
@@ -179,19 +193,22 @@ def burgers_mms_case(seed: int, quick: bool) -> BenchmarkCase:
         f="random",
         nu=0.01,
         time_dependent_coeff=False,
+        device=device,
     )
     split = Split.partition(f, u, n_train, n_sensors=modes)
-    time_axis = torch.linspace(0, 1, 12, dtype=torch.float64)
-    space_axis = torch.linspace(0, 1, 12, dtype=torch.float64)
+    time_axis = torch.linspace(0, 1, 12, dtype=torch.float64, device=device)
+    space_axis = torch.linspace(0, 1, 12, dtype=torch.float64, device=device)
     return BenchmarkCase(split, tensor_product_query(time_axis, space_axis))
 
 
-def burgers_numerical_case(seed: int, quick: bool) -> BenchmarkCase:
+def burgers_numerical_case(
+    seed: int, quick: bool, device: torch.device
+) -> BenchmarkCase:
     """u0 -> u(T): the ETDRK4-simulated final state from the initial condition."""
     n_train, n_test = (16, 4) if quick else (40, 10)
     modes = 16
     n_steps = 40 if quick else 100
-    generator = torch.Generator().manual_seed(seed)
+    generator = torch.Generator(device=device).manual_seed(seed)
     u, _ = Burgers().generate(
         FourierBasis,
         n_train + n_test,
@@ -202,11 +219,12 @@ def burgers_numerical_case(seed: int, quick: bool) -> BenchmarkCase:
         nu=0.01,
         time_domain=slice(0, 1, n_steps),
         solver=etdrk4_solver,
+        device=device,
     )
     initial = spatial_field_at(u, 0)
     final = spatial_field_at(u, -1)
     split = Split.partition(initial, final, n_train, n_sensors=modes)
-    return BenchmarkCase(split, line_query(40))
+    return BenchmarkCase(split, line_query(40, device))
 
 
 DATASETS: dict[str, DatasetSpec] = {
@@ -275,6 +293,14 @@ def main() -> None:
         default=["spectralsvr", "deeponet"],
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        help=(
+            "device every stage runs on; stated rather than inherited, because "
+            "importing an optional baseline sets the process default itself"
+        ),
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--allow-missing-operators",
@@ -291,12 +317,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    device = resolve_device(args.device)
+    print(f"running on {device}")
+
     iterations = 200 if args.quick else args.iterations
     frames = []
     for key in args.datasets:
         spec = DATASETS[key]
         print(f"[{key}] building...")
-        case = spec.build(args.seed, args.quick)
+        case = spec.build(args.seed, args.quick, device)
         operators = build_operators(
             args.operators,
             case.query,
