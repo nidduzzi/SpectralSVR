@@ -22,6 +22,7 @@ from ..utils import (
     DEFAULT_COEFF_DTYPE,
     DEFAULT_REAL_DTYPE,
     DeviceInput,
+    refuse_a_generator_placed_elsewhere,
     to_complex_coeff,
 )
 import torch
@@ -375,6 +376,7 @@ class FourierBasis(Basis):
             modes = (modes,)
         n_modes = len(modes)
         assert n_modes > 0, "modes should have at least one element"
+        refuse_a_generator_placed_elsewhere(generator, device)
         stated_placement = {} if device is None else {"device": device}
         random_func = partial(random_func, generator=generator, **stated_placement)
         resolved = DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype
