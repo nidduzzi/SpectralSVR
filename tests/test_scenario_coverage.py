@@ -29,6 +29,10 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
+    # device-selection (refuse-moving-a-fitted-model, in flight)
+    "A fitted model refuses to be moved": IN_FLIGHT,
+    "An unfitted model is directed freely": IN_FLIGHT,
+    "Every kind of model refuses alike": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
