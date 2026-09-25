@@ -58,12 +58,19 @@ class MultiRegression(abc.ABC):
         pass
 
     @property
-    def device(self):
+    def device(self) -> torch.device:
         return self._device
 
     @device.setter
-    def device(self, device: torch.device):
-        self._device = device
+    def device(self, device: DeviceInput):
+        requested = resolve_device(device)
+        if self.trained:
+            raise RuntimeError(
+                f"this {type(self).__name__} was fitted on {self._device} and "
+                f"cannot move to {requested}; state the device when building it: "
+                f"{type(self).__name__}(device='{requested}')"
+            )
+        self._device = requested
 
     @abc.abstractmethod
     def _optimize_parameters_and_set(
