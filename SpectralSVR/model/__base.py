@@ -6,7 +6,12 @@ from typing import Callable, overload, Any
 import numpy as np
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE, DeviceInput, resolve_device
+from ..utils import (
+    DEFAULT_REAL_DTYPE,
+    DeviceInput,
+    name_the_same_memory,
+    resolve_device,
+)
 from typing_extensions import Self
 
 NumpyArrayorTensor = np.ndarray | torch.Tensor
@@ -64,11 +69,12 @@ class MultiRegression(abc.ABC):
     @device.setter
     def device(self, device: DeviceInput):
         requested = resolve_device(device)
-        if self.trained:
+        if self.trained and not name_the_same_memory(requested, self._device):
+            kind = type(self).__name__
             raise RuntimeError(
-                f"this {type(self).__name__} was fitted on {self._device} and "
-                f"cannot move to {requested}; state the device when building it: "
-                f"{type(self).__name__}(device='{requested}')"
+                f"this {kind} was fitted on {self._device} and cannot move to "
+                f"{requested}; state the device when building or loading it: "
+                f"{kind}(device='{requested}') or {kind}.load(..., device='{requested}')"
             )
         self._device = requested
 
