@@ -3,13 +3,14 @@
 See proposal.md — Why. The design-relevant state:
 
 ```
-burgers_mms_case                scripts/run_benchmark.py:168
-  Split.partition(f, u, n_train, n_sensors=modes)   <- the shape to copy
-BenchmarkCase                   scripts/run_benchmark.py:61
-  holds (split, query); DatasetSpec holds (label, build)
-grf_coeff                       scripts/run_benchmark.py:97
+burgers_mms_case                scripts/run_benchmark.py
+  (seed, quick, device) -> BenchmarkCase            <- the shape to copy
+  Split.partition(f, u, n_train, n_sensors=modes)
+BenchmarkCase, DatasetSpec      scripts/run_benchmark.py
+  (split, query); (label, build)
+grf_coeff                       scripts/run_benchmark.py
   periodic squared-exponential GRF sampler, already used in 1D
-Burgers._forcing_at             SpectralSVR/problems/burgers.py:241
+Burgers._forcing_at             SpectralSVR/problems/burgers.py
   accepts a Basis field spectral in time; rejects a per-slice field
 ```
 
@@ -44,6 +45,9 @@ Burgers._forcing_at             SpectralSVR/problems/burgers.py:241
 — the same sampler the antiderivative-GRF case uses, in two dimensions. Length
 scales are dataset parameters recorded in the `DatasetSpec` label. The output is
 the time-dependent `u` from `_solve_spectral`, kept as `time_dependent=True`.
+Like every builder since `follow-the-stated-device`, it takes the device it is
+placed on: its generator is built there and `device` is passed to each
+`generate`, so no stage follows the process default.
 
 Starting from rest is what makes the operator `f -> u` alone. With a random
 initial condition as well, the map takes two functions, and DeepONet's branch net
@@ -78,10 +82,10 @@ in a footnote they may not reach.
 - **Time-dependent output fields must evaluate correctly at 2D query points in
   `OperatorDataset.targets`.** The existing `u0 -> u(T)` case sidestepped this by
   slicing to spatial fields, so this row is the first to exercise it. → A task
-  verifies `targets(query)` against direct evaluation of the stored coefficients
-  at grid points; if time interpolation error is visible, the dataset's query
-  grid is restricted to output-grid times and the reason recorded in the
-  `DatasetSpec` docstring.
+  measures `targets(query)` against direct evaluation of the stored coefficients
+  at grid points, records the gap, and sets the bound from the measurement. If
+  time interpolation error is visible, the dataset's query grid is restricted to
+  output-grid times and the reason recorded in the `DatasetSpec` docstring.
 
 - **The GRF length scale in time controls how much the forcing varies within a
   step.** Too smooth and the stage-time behaviour is under-exercised; too rough
@@ -91,18 +95,25 @@ in a footnote they may not reach.
 
 - **A new row cannot claim what the others claimed.** Four changes in this stack
   proved "no number moves" from the diff. → This one proves the weaker, true
-  thing instead: the four existing rows are byte-compared against a base run, and
-  the fifth is reported as new.
+  thing instead: the four existing rows are byte-compared against a base run on
+  the same `--device`, and the fifth is reported as new. In-process, a test also
+  builds every existing case before and after the new one and requires them
+  bit-identical, which catches a builder leaking state into its neighbours. That
+  is how `deepxde` once reset the default device mid-run.
 
-- **The row is generated before `benchmark-reproducibility` defines provenance
-  and before `align-device-resolution` settles where fitting runs.** → Both sit
-  directly above and will regenerate the table anyway; this row is built to be
-  regenerated, not to be final. Its seed and parameters are recorded so the
-  regeneration is reproducible rather than approximate.
+- **The row is generated before `benchmark-reproducibility` defines provenance.**
+  → That change sits directly above and will regenerate the table anyway; this
+  row is built to be regenerated, not to be final. Its seed, parameters and
+  `--device` are recorded so the regeneration is reproducible rather than
+  approximate. The device matters: a generator draws different numbers on a
+  different device from the same seed, so `--device cuda` builds a different
+  dataset. *Corrected:* this risk used to name `align-device-resolution` as
+  settling where fitting runs. That change was withdrawn, and
+  `follow-the-stated-device` settled it by adding `--device`.
 
 ## Migration Plan
 
-One builder, one registry entry, two tests. Nothing persists and no library
+One builder, one registry entry, and the tests naming the four scenarios. Nothing persists and no library
 source changes, so rollback is a revert. The `results/` CSV is generated data and
 gitignored; the row appears on the next regeneration.
 

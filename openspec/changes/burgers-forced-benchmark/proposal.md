@@ -9,9 +9,10 @@ anyone chose, and not one a reader of the table recognises. A reader seeing
 `f -> u` reasonably assumes the forcing was drawn and the solution computed; here
 it is the other way round.
 
-`time-dependent-forcing-in-numerical-burgers`, directly beneath this change, is
-what makes the honest version buildable: until it landed, `Burgers.generate`
-raised `NotImplementedError` for any forcing that was not a constant.
+`time-dependent-forcing-in-numerical-burgers`, since archived as the main spec
+`burgers-time-dependent-forcing`, is what makes the honest version buildable:
+until it landed, `Burgers.generate` raised `NotImplementedError` for any forcing
+that was not a constant.
 
 ## What Changes
 
@@ -53,13 +54,15 @@ split them out, with two changes' worth of material rather than one.
 
 - `scripts/run_benchmark.py`: one `burgers_forced_case` builder and one
   `DatasetSpec` entry. It must target the current harness API —
-  `Split.partition(input_field, output_field, n_train, n_sensors)` and
-  `BenchmarkCase(split, query)` — not `OperatorDataset.from_fields`, which two
-  changes below replaced.
-- `tests/`: the two scenarios below need tests naming them, per the
+  `Split.partition(input_field, output_field, n_train, n_sensors)`,
+  `BenchmarkCase(split, query)` and the `CaseBuilder` signature
+  `(seed, quick, device)` that `follow-the-stated-device` gave every builder —
+  not `OperatorDataset.from_fields`, which an earlier change replaced.
+- `tests/`: the four scenarios below need tests naming them, per the
   `test-oracle-convention` requirement that every stated scenario is verifiable.
 - `results/bench_results.csv`: gains a row. The four existing rows must be shown
   unchanged against a base run, since library behaviour beneath this change has
-  moved and a diff argument no longer settles it.
+  moved and a diff argument no longer settles it. Both runs state the same
+  `--device`: a table is reproducible only against the device it was built on.
 - No library source changes. `SpectralSVR/` is untouched; the capability this
   depends on already landed.

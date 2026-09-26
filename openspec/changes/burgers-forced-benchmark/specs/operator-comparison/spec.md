@@ -20,4 +20,4 @@ Where the comparison offers more than one dataset mapping a forcing to a solutio
 
 #### Scenario: Adding a row leaves the others alone
 - **WHEN** a dataset is added to the comparison
-- **THEN** the rows already reported are unchanged, and that is verified against a previous run rather than assumed from the size of the change
+- **THEN** every case already offered builds exactly as it did before, whether or not the new one is built alongside it, and the rows already reported are verified unchanged against a previous run rather than assumed from the size of the change
