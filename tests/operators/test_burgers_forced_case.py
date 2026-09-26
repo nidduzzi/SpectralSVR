@@ -165,6 +165,26 @@ def test_the_query_lies_on_the_output_time_grid_inside_the_domain(quick, sizes, 
     grid_index = times * periodic_slices
     assert torch.equal(grid_index, grid_index.round())
     assert times.unique().numel() > 1
+    assert space.unique().numel() > 1
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_quick_builds_a_smaller_case_than_full():
+    quick = bench.burgers_forced_case(0, True, HOST)
+    full = bench.burgers_forced_case(0, False, HOST)
+
+    assert quick.split.train.n_functions < full.split.train.n_functions
+    assert quick.split.test.n_functions < full.split.test.n_functions
+    assert quick.split.train.sensors.shape[0] < full.split.train.sensors.shape[0]
+    assert quick.split.train.u.coeff.shape[1] < full.split.train.u.coeff.shape[1]
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_the_forced_case_sizes_are_stated_by_name():
+    with pytest.raises(TypeError, match="positional"):
+        bench.burgers_forced_case(0, True, HOST, *SMALLEST_SIZES)
 
 
 @pytest.mark.oracle_consistency
