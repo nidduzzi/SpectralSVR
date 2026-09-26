@@ -3,7 +3,7 @@ from typing_extensions import Self, override
 
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE, DeviceInput
+from ..utils import DEFAULT_REAL_DTYPE, DeviceInput, resolve_device
 from torch import nn
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
@@ -148,7 +148,9 @@ class FNN(MultiRegression):
         torch.save(payload, self._resolve_path(filepath))
 
     @classmethod
-    def load(cls, filepath: str, only_hyperparams: bool = False) -> Self:
+    def load(
+        cls, filepath: str, only_hyperparams: bool = False, device: DeviceInput = None
+    ) -> Self:
         """Load a model saved by :meth:`dump`.
         - filepath: string
             The model's ``.pt`` file path.
@@ -157,11 +159,14 @@ class FNN(MultiRegression):
             only has effects when the dump of the model was done with the
             model's parameters.
         """
-        payload = torch.load(cls._resolve_path(filepath), weights_only=False)
+        placement = resolve_device(device)
+        payload = torch.load(
+            cls._resolve_path(filepath), map_location=placement, weights_only=False
+        )
         if payload["type"] != "FNN":
             raise Exception(f"Model type '{payload['type']}' doesn't match 'FNN'")
 
-        model = cls(**payload["hyperparameters"])
+        model = cls(**payload["hyperparameters"], device=placement)
 
         params = payload.get("parameters")
         if (params is not None) and (not only_hyperparams):

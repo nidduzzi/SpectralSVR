@@ -324,7 +324,7 @@ class LSSVR(MultiRegression):
         )
 
     @classmethod
-    def load(cls, filepath, only_hyperparams=False):
+    def load(cls, filepath, only_hyperparams=False, device: DeviceInput = None):
         """This class method loads a model from a .json file.
         - filepath: string
             The model's .json file path.
@@ -341,20 +341,21 @@ class LSSVR(MultiRegression):
         lssvr = cls(
             C=model_json["hyperparameters"]["C"],
             kernel=model_json["hyperparameters"]["kernel"],
+            device=device,
             **model_json["hyperparameters"]["kernel_params"],
         )
 
         if (model_json.get("parameters") is not None) and (not only_hyperparams):
             params = model_json["parameters"]
-            device = lssvr.device
+            placement = lssvr.device
             dtype = lssvr.dtype
 
-            lssvr.alpha = torch.tensor(params["alpha"], dtype=dtype, device=device)
-            lssvr.b = torch.tensor(params["b"], dtype=dtype, device=device)
-            lssvr.sv_x = torch.tensor(params["sv_x"], dtype=dtype, device=device)
-            lssvr.sv_y = torch.tensor(params["sv_y"], dtype=dtype, device=device)
+            lssvr.alpha = torch.tensor(params["alpha"], dtype=dtype, device=placement)
+            lssvr.b = torch.tensor(params["b"], dtype=dtype, device=placement)
+            lssvr.sv_x = torch.tensor(params["sv_x"], dtype=dtype, device=placement)
+            lssvr.sv_y = torch.tensor(params["sv_y"], dtype=dtype, device=placement)
             lssvr.y_indicies = torch.tensor(
-                params["y_indicies"], dtype=torch.long, device=device
+                params["y_indicies"], dtype=torch.long, device=placement
             )
 
         return lssvr
