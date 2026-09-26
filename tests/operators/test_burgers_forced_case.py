@@ -150,6 +150,23 @@ def test_the_forced_case_has_the_shape_the_harness_expects(seed, quick, sizes, d
         assert torch.isfinite(half.targets(case.query)).all()
 
 
+@pytest.mark.oracle_smoke
+@FUZZ
+@given(quick=st.booleans(), sizes=SIZES, device=st.sampled_from(DEVICES_PRESENT))
+@example(quick=True, sizes=SMALLEST_SIZES, device=HOST)
+@example(quick=False, sizes=FULL_SIZES, device=HOST)
+def test_the_query_lies_on_the_output_time_grid_inside_the_domain(quick, sizes, device):
+    case = build_forced(0, quick, device, sizes)
+    times, space = case.query[:, 0].cpu(), case.query[:, 1].cpu()
+    periodic_slices = case.split.train.u.coeff.shape[1]
+
+    assert ((0 <= times) & (times < 1)).all()
+    assert ((0 <= space) & (space <= 1)).all()
+    grid_index = times * periodic_slices
+    assert torch.equal(grid_index, grid_index.round())
+    assert times.unique().numel() > 1
+
+
 @pytest.mark.oracle_consistency
 @FUZZ
 @given(
