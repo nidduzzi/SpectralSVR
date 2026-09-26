@@ -2,7 +2,7 @@
 module-path = "scripts/run_benchmark.py"
 timeout = 600.0
 excluded-modules = []
-test-command = "uv run --extra test --extra baselines pytest -x -q --hypothesis-seed=0 tests/operators/test_burgers_forced_case.py tests/operators/test_operators.py"
+test-command = "systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 --quiet uv run --extra test --extra baselines pytest -x -q --hypothesis-seed=0 tests/operators/test_burgers_forced_case.py tests/operators/test_operators.py"
 
 [cosmic-ray.distributor]
 name = "local"
