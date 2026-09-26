@@ -18,7 +18,7 @@ Burgers._forcing_at             SpectralSVR/problems/burgers.py
 | --- | --- |
 | `_forcing_at` accepts a field with `time_dependent=False` and rejects `True` | the sampled forcing must be built spectral in time, which is what `FourierBasis.generate` over a 2D domain produces |
 | `Split.partition` slices both fields and builds two `OperatorDataset`s | a 2D-domain input field must survive `from_fields`' sensor sampling |
-| `SpectralSVROperator.fit` passes `u_time_dependent=dataset.u.time_dependent` | a time-dependent output field is already a supported shape |
+| `SpectralSVROperator.fit` passes `u_time_dependent=dataset.u.time_dependent` | a time-dependent output field can be fitted, but not scored; see *Pilot* below |
 | the four existing rows came from a base run at this branch's parent | "the others are unchanged" is measurable, not arguable |
 
 ## Goals / Non-Goals
@@ -54,9 +54,37 @@ initial condition as well, the map takes two functions, and DeepONet's branch ne
 takes one — the comparison would stop being like-for-like on the very row added
 to make it honest.
 
-*Alternative rejected:* converting `u` to a fully spectral field with
-`to_time_independent` for cheaper evaluation. A forced solution from rest is not
-periodic in time; a Fourier transform along `t` would ring at the boundaries.
+### Pilot: time is scored as a periodic axis
+
+Implementation found that a time-dependent output field cannot be scored.
+`OperatorDataset.targets` calls `self.u(x)` without `t`, and fails with
+`t must not be none for time dependent evaluations`. `SpectralSVR.forward`
+refuses a `(t, x)` query, because a time-dependent field's `modes` are spatial
+only, and it never passes `t`. Fixing either changes library code, which this
+change set out not to touch. The row therefore lands as a pilot that treats `t`
+as the first spatial axis. A new change beneath it will make time-dependent
+outputs scorable, and the row will then be regenerated as first designed.
+
+The pilot is built so that its targets are exact. The solution is integrated on
+an inclusive time grid of step `1/(time_steps - 1)`. The slices at `k/(time_steps
+- 1)` for `k < time_steps - 1` are exactly the periodic grid on `[0, T)`, and
+their values are transformed into a field over `(time, space)`. Queries use
+only times on that grid: 11 of them, from `0` to `10/11`. Measured against the
+per-slice solution at those points, the worst gap was 6.71e-8 on a solution
+scale of 0.127.
+
+`to_time_independent` was measured first and rejected. It resamples the
+inclusive per-slice grid onto the exclusive periodic grid by interpolation,
+which put targets 0.9% to 2.3% of scale off at interior times. It also makes the
+field periodic, so the target at `t = T` read `u(0) = 0` where the truth was
+`u(T)`, 100% of scale off. The pilot does not score `u(T)`. It says so in its
+label, `pilot: t periodic`, and in the builder's docstring, so a reader of the
+table knows what the row does not cover.
+
+*Superseded:* this section used to reject treating `t` as periodic because a
+solution from rest is not periodic in time. That is still true. Scoring only at
+periodic-grid times makes the targets exact, and leaves the jump at `T` to what
+the operators learn rather than to what they are scored against.
 
 ### The dataset is built through `Split.partition`, not two loose datasets
 
@@ -90,15 +118,25 @@ verification.
 
 ### The label carries the forcing's provenance
 
-`"project Burgers forced (f->u, GRF forcing, from rest)"`, beside
+`"project Burgers forced (f->u, GRF forcing, from rest, pilot: t periodic)"`, beside
 `"project Burgers MMS (f->u)"`. Both appear in the table, and the difference a
 reader needs — drawn prior versus derived residual — is in the label rather than
 in a footnote they may not reach.
 
 ## Risks / Trade-offs
 
+- **Sensor values follow the process default, not the stated device.** Found
+  while building this row, and true of every case: `sensor_grid` builds the
+  grid on the process default, so under `--device cuda` each case's sensor
+  values sit on the host, and `burgers-numerical` keeps its output there too.
+  That breaks `device-selection`'s "Work derived for placed data follows that
+  data". → Out of scope and recorded for its own change. This change's device
+  checks cover the stages its builder places: the forcing, the solve and the
+  query.
+
 - **Time-dependent output fields must evaluate correctly at 2D query points in
-  `OperatorDataset.targets`.** The existing `u0 -> u(T)` case sidestepped this by
+  `OperatorDataset.targets`.** *Found to fail outright, not to lose accuracy.*
+  See *Pilot*. The existing `u0 -> u(T)` case sidestepped this by
   slicing to spatial fields, so this row is the first to exercise it. → A task
   measures `targets(query)` against direct evaluation of the stored coefficients
   at grid points, records the gap, and sets the bound from the measurement. If

@@ -20,10 +20,15 @@ that was not a constant.
   Gaussian random field over `(time, space)`, solution integrated numerically by
   `_solve_spectral` and kept `time_dependent=True`. The operator learns `f -> u`
   where `f` was sampled first.
-- Registered as `"project Burgers forced (f->u, GRF forcing, from rest)"` under
+- Registered as `"project Burgers forced (f->u, GRF forcing, from rest, pilot: t
+  periodic)"` under
   key `burgers-forced`, beside the existing `"project Burgers MMS (f->u)"`, so
   the two forcing distributions appear in one table and the comparison is
   explicit rather than implied.
+- **Landed as a pilot.** A time-dependent output cannot be scored yet, so the
+  row scores `u` as a field periodic in time over `[0, T)`, only at times where
+  that is exact, and leaves `u(T)` unscored. A change beneath will make
+  time-dependent outputs scorable, and the row will be regenerated then.
 - **A reported number is added.** Every change in this stack so far has been able
   to claim that no benchmark row moves. This one cannot: it adds a fifth row. The
   claim it can make instead is that the existing four are unchanged, and it must
