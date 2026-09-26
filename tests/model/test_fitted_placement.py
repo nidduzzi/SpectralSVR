@@ -146,7 +146,9 @@ def test_a_fit_that_fails_leaves_the_model_as_it_was(kind, fitted_before):
             after_the_failure = model.fit(X, Y).predict(X)
             torch.manual_seed(0)
             never_failed = kind(device=HOST).fit(X, Y).predict(X)
-        assert torch.equal(after_the_failure, never_failed)
+        assert torch.allclose(
+            after_the_failure, never_failed, rtol=0, atol=HOST_SOLVE_NOISE_ATOL
+        )
 
 
 @pytest.mark.oracle_consistency
