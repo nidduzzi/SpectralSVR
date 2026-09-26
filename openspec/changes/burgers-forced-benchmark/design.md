@@ -70,6 +70,24 @@ Recording it because the inherited note was wrong, not because the choice is
 interesting — a task written against the old API would have compiled a dataset
 the benchmark cannot take.
 
+### The forced builder states its sizes
+
+`burgers_forced_case` takes keyword `n_train`, `n_test` and `modes`, each
+defaulting to what `quick` selects. It still satisfies `CaseBuilder`, so the
+registry and the CLI are unaffected, and tests can fuzz sizes down to the
+smallest the harness accepts instead of sampling two fixed configurations. Only
+the new builder gains this. Widening `CaseBuilder` for every case is a separate
+decision that nothing here needs.
+
+### "Adding a row" is modelled as a sequence
+
+The claim that adding a dataset leaves the others alone constrains what stays
+true across builds. It is tested with a state machine that builds registered
+cases in any order and repoints the process default between builds. A single
+before-and-after test would reach only one of those orders. The base run in the
+tasks is the scenario's other half, over reported rows, and stays a
+verification.
+
 ### The label carries the forcing's provenance
 
 `"project Burgers forced (f->u, GRF forcing, from rest)"`, beside
@@ -113,7 +131,7 @@ in a footnote they may not reach.
 
 ## Migration Plan
 
-One builder, one registry entry, and the tests naming the four scenarios. Nothing persists and no library
+One builder, one registry entry, and the tests in tasks section 3. Nothing persists and no library
 source changes, so rollback is a revert. The `results/` CSV is generated data and
 gitignored; the row appears on the next regeneration.
 

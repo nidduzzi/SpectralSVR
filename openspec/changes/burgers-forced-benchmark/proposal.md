@@ -52,7 +52,8 @@ split them out, with two changes' worth of material rather than one.
 
 ## Impact
 
-- `scripts/run_benchmark.py`: one `burgers_forced_case` builder and one
+- `scripts/run_benchmark.py`: one `burgers_forced_case` builder, whose sizes
+  are keyword arguments defaulting to what `quick` selects, and one
   `DatasetSpec` entry. It must target the current harness API —
   `Split.partition(input_field, output_field, n_train, n_sensors)`,
   `BenchmarkCase(split, query)` and the `CaseBuilder` signature
