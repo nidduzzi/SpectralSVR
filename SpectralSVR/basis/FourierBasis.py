@@ -173,6 +173,7 @@ class FourierBasis(Basis):
     ) -> torch.Tensor:
         if not coeff.is_complex():
             coeff = to_complex_coeff(coeff)
+        points = points.to(coeff.device)
         modes = cls.get_modes(coeff, time_dependent=True)
         if points.ndim != 2 or points.shape[1] != 1 + len(modes):
             raise ValueError(

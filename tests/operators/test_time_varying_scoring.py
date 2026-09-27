@@ -79,23 +79,23 @@ def test_targets_of_a_time_varying_output_are_read_at_a_time_and_a_place(
     "Predictions of a time-varying output are read at the same points"
 )
 @FUZZ
-@given(**FIELDS)
-@example(seed=0, functions=1, slices=1, modes=1)
-@example(seed=0, functions=4, slices=9, modes=9)
+@given(**FIELDS, query_device=st.sampled_from(DEVICES_PRESENT))
+@example(seed=0, functions=1, slices=1, modes=1, query_device=HOST)
+@example(seed=0, functions=4, slices=9, modes=9, query_device=HOST)
 def test_predictions_of_a_time_varying_output_are_read_at_the_same_points(
-    seed, functions, slices, modes
+    seed, functions, slices, modes, query_device
 ):
     slice_values, coeff = time_varying_field(seed, functions, slices, modes, HOST)
     u = FourierBasis(coeff=coeff, domain=DOMAIN, time_dependent=True)
     dataset = dataset_over(u, seed)
-    query = rows(slice_times(slices, HOST), grid_points(modes, HOST))
+    query = rows(slice_times(slices, query_device), grid_points(modes, query_device))
 
     fitted = SpectralSVROperator(FourierBasis(), interpolating_regressor()).fit(dataset)
-    predicted = fitted.predict(dataset.f, query)
+    predicted = fitted.predict(dataset.f, query).cpu()
 
     assert predicted.shape == (functions, len(query))
     tolerance = PREDICTION_RTOL * slice_values.abs().max()
-    assert (predicted - dataset.targets(query)).abs().max() <= tolerance
+    assert (predicted - dataset.targets(query).cpu()).abs().max() <= tolerance
 
 
 @pytest.mark.oracle_smoke
