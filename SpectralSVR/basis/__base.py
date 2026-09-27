@@ -286,8 +286,10 @@ class Basis(abc.ABC):
             ).unflatten(0, coeff.shape[0:2])
             res_t = res[0]
             # time is an evolution axis (not a Fourier axis): closed/linspace
-            t = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop).to(
-                device=device, dtype=self.coeff.real.dtype
+            t = (
+                ClosedUniform()
+                .nodes(res_t.step, res_t.start, res_t.stop)
+                .to(device=device, dtype=self.coeff.real.dtype)
             )
             t_start, t_stop = self.domain[0]
             index_float = (
@@ -545,6 +547,16 @@ class Basis(abc.ABC):
             torch.Tensor -- {n, m} evaluations where n is the number different functions (coeff first dimension)
         """
         pass
+
+    @classmethod
+    @abc.abstractmethod
+    def evaluate_time_dependent_at(
+        cls,
+        coeff: torch.Tensor,
+        points: torch.Tensor,
+        domain: DomainInputType = None,
+    ) -> torch.Tensor:
+        """``u(t_q, x_q)`` at each row ``(t_q, x_q)`` of ``points``, time first: ``(n, Q)``."""
 
     @staticmethod
     @abc.abstractmethod
