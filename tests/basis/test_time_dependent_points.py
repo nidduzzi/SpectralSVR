@@ -5,6 +5,8 @@ from hypothesis import strategies as st
 
 from SpectralSVR import FourierBasis, accelerator
 
+from tests._time_varying import grid_points, rows, slice_times, time_varying_field
+
 DOMAIN = ((0.0, 1.0), (0.0, 1.0))
 HOST = torch.device("cpu")
 DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
@@ -17,30 +19,6 @@ FIELDS = dict(
     modes=st.integers(1, 12),
     device=st.sampled_from(DEVICES_PRESENT),
 )
-
-
-def time_varying_field(seed, functions, slices, modes, device):
-    generator = torch.Generator().manual_seed(seed)
-    slice_values = torch.randn(functions, slices, modes, generator=generator).to(device)
-    coeff = FourierBasis.transform(slice_values.flatten(0, 1)).reshape(
-        functions, slices, modes
-    )
-    return slice_values, coeff
-
-
-def slice_times(slices, device):
-    if slices == 1:
-        return torch.zeros(1, dtype=torch.float64, device=device)
-    return torch.linspace(0, 1, slices, dtype=torch.float64, device=device)
-
-
-def grid_points(modes, device):
-    return torch.arange(modes, dtype=torch.float64, device=device) / modes
-
-
-def rows(times, space):
-    mesh = torch.meshgrid(times, space, indexing="ij")
-    return torch.stack([axis.flatten() for axis in mesh], dim=-1)
 
 
 @pytest.mark.oracle_invariant

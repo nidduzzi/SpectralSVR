@@ -99,8 +99,14 @@ class OperatorDataset:
         return cls(sensors=sensors, f=f, u=output_field)
 
     def targets(self, x: torch.Tensor) -> torch.Tensor:
-        """Ground-truth output values ``u(x)`` at query points ``x`` -> ``(N, Q)``."""
-        return self.u(x).real.to(torch.float64)
+        """Ground-truth ``u`` at each query row, time first where ``u`` varies in time: ``(N, Q)``."""
+        if self.u.time_dependent:
+            values = type(self.u).evaluate_time_dependent_at(
+                self.u.coeff.to(x.device), x, domain=self.u.domain
+            )
+        else:
+            values = self.u(x)
+        return values.real.to(torch.float64)
 
 
 @dataclass(frozen=True)

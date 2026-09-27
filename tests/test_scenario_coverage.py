@@ -29,11 +29,7 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "Targets of a time-varying output are read at a time and a place": IN_FLIGHT,
-    "Predictions of a time-varying output are read at the same points": IN_FLIGHT,
     "The end of the interval is scored": IN_FLIGHT,
-    "A time-invariant output scores as before": IN_FLIGHT,
-    "A query point without a time is refused for a time-varying output": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

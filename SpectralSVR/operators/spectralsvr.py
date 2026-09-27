@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import torch
 
-from ..basis import Basis
+from ..basis import Basis, DomainInputType
 from ..model import SpectralSVR
 from ..model.__base import MultiRegression
 from .dataset import OperatorDataset
@@ -18,9 +18,12 @@ class FittedSpectralSVR:
 
     name: str
     model: SpectralSVR
+    output_domain: DomainInputType
 
     def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        return self.model.forward(f, x).real.to(torch.float64)
+        return self.model.forward(f, x, domain=self.output_domain).real.to(
+            torch.float64
+        )
 
 
 class SpectralSVROperator:
@@ -41,4 +44,6 @@ class SpectralSVROperator:
         model.train(
             dataset.f, dataset.u.coeff, u_time_dependent=dataset.u.time_dependent
         )
-        return FittedSpectralSVR(name=self.name, model=model)
+        return FittedSpectralSVR(
+            name=self.name, model=model, output_domain=dataset.u.domain
+        )
