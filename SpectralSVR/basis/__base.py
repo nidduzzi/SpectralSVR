@@ -992,6 +992,14 @@ class Basis(abc.ABC):
         return copy
 
     @staticmethod
+    def fractional_slice_index(
+        times: torch.Tensor, time_interval: tuple[float, float], slices: int
+    ) -> torch.Tensor:
+        """Position of each time among ``slices`` spanning ``time_interval`` inclusively."""
+        t_start, t_stop = time_interval
+        return (times - t_start) / (t_stop - t_start) * (slices - 1)
+
+    @staticmethod
     def interpolate_time_tensor(x: torch.Tensor, index_float: torch.Tensor):
         x_interp = interpolate_tensor(x, index_float, dim=1)
 

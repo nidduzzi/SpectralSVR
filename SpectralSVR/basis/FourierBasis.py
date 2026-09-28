@@ -31,14 +31,6 @@ from typing_extensions import Self, Literal, Callable
 from functools import partial
 
 
-def fractional_slice_index(
-    times: torch.Tensor, time_interval: tuple[float, float], slices: int
-) -> torch.Tensor:
-    """Position of each time among ``slices`` spanning ``time_interval`` inclusively."""
-    t_start, t_stop = time_interval
-    return (times - t_start) / (t_stop - t_start) * (slices - 1)
-
-
 class FourierBasis(Basis):
     coeff_dtype = ResolvedCoeffDtype()
 
@@ -142,7 +134,7 @@ class FourierBasis(Basis):
             )
             basis = cls.fn(x, modes, domain=domain_t[1:])
             sum_coeff_x_basis = cls.sum_mul(coeff.flatten(2), basis)
-            index_float = fractional_slice_index(
+            index_float = cls.fractional_slice_index(
                 t.flatten().real, domain_t[0], coeff.shape[1]
             )
             sum_coeff_x_basis = cls.interpolate_time_tensor(
@@ -192,7 +184,7 @@ class FourierBasis(Basis):
         per_slice = cls.sum_mul(
             coeff.flatten(2), cls.fn(points[:, 1:], modes, domain=domain_t[1:])
         )
-        index_float = fractional_slice_index(times, domain_t[0], coeff.shape[1])
+        index_float = cls.fractional_slice_index(times, domain_t[0], coeff.shape[1])
         index_floor = index_float.floor().to(torch.int)
         index_ceil = index_float.ceil().to(torch.int)
         weight = ((index_float - index_floor) / (index_ceil - index_floor)).nan_to_num()
