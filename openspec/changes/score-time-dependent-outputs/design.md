@@ -82,9 +82,24 @@ reported as moved deliberately, with the pilot's numbers kept for comparison.
   target is a stored value. A test checks that placement, and the
   interpolation's own accuracy is out of this change's scope.
 - **A second evaluation path could drift from the grid form.** → An invariant
-  test requires paired evaluation at every `(t_i, x_j)` to equal the grid form's
-  `out[:, i, j]` exactly. Enumerated mutation over the new path checks that the
-  test can fail.
+  test requires paired evaluation at every `(t_i, x_j)` to match the grid form's
+  `out[:, i, j]` within 1e-6 relative. *Corrected:* this used to say "exactly".
+  Paired evaluation sums at every row while the grid sums at unique points, so
+  the matmul shapes and their rounding differ. The measured worst gap is 1.8e-7
+  relative, 1.91e-7 with shifted intervals. Enumerated mutation over the new
+  path checks that the test can fail.
+- **Invalid times reach the index map.** → A time exactly at `t1` in float32 can
+  map to `T - 1 + ε`, and its ceiling then reads past the last slice. Measured:
+  341 of 2000 random intervals, and the grid form fails the same way. A NaN time
+  passes a range check, because every comparison with NaN is false. The index
+  map clamps to `[0, T - 1]` inside `fractional_slice_index`, so both forms are
+  fixed in one place. Non-finite times, a domain without a time interval, and a
+  query of zero points are refused with a `ValueError` naming the layout.
+- **Found, not fixed here.** Targets are evaluated on the query's device and
+  predictions on the coefficients' device. The time-invariant path has always
+  worked this way, and the benchmark compares across it. `inverse` and
+  `inverse_coeff` were never made time-aware: `unflatten(1, self.modes)` fails
+  on a time-varying model. Both predate this change and are left for their own.
 - **Recording the slice count adds state to a fitted model.** → It is set only
   at `train`, in the same place as `modes`, and `forward` refuses when it is
   absent. Nothing reads it before a fit.

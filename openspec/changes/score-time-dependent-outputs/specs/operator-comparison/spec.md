@@ -9,7 +9,7 @@ Where the output does not vary in time, the targets and predictions SHALL be exa
 
 #### Scenario: Targets of a time-varying output are read at a time and a place
 - **WHEN** targets are requested for a time-varying output at query points whose first coordinate is time
-- **THEN** each query point gives the stored field's value at that time and place, and at a time the field was stored at, that value is the stored one exactly
+- **THEN** each query point gives the stored field's value at that time and place, and at a time the field was stored at, that value is the stored one, to rounding
 
 #### Scenario: Predictions of a time-varying output are read at the same points
 - **WHEN** an operator fitted to a time-varying output predicts at those query points
