@@ -120,6 +120,27 @@ def test_a_time_varying_output_refuses_a_point_without_a_time(
         fitted.predict(dataset.f, space_only)
 
 
+@pytest.mark.oracle_smoke
+@FUZZ
+@given(
+    seed=st.integers(0, 10_000),
+    modes=st.integers(1, 6),
+    stated_columns=st.sampled_from([1, 3]),
+)
+@example(seed=0, modes=1, stated_columns=1)
+def test_a_time_invariant_output_refuses_rows_of_the_wrong_width(
+    seed, modes, stated_columns
+):
+    u = time_invariant_field(seed, 2, modes)
+    dataset = dataset_over(u, seed)
+    model = SpectralSVR(FourierBasis(), interpolating_regressor())
+    model.train(dataset.f, u.coeff)
+    wrong_width = torch.full((4, stated_columns), 0.5, dtype=torch.float64)
+
+    with pytest.raises(ValueError, match="shape"):
+        model.forward(dataset.f, wrong_width, domain=DOMAIN)
+
+
 @pytest.mark.oracle_consistency
 @pytest.mark.scenario("A time-invariant output scores as before")
 @FUZZ

@@ -162,6 +162,7 @@ def test_the_query_lies_on_the_output_time_grid_inside_the_domain(quick, sizes, 
 
     assert ((0 <= times) & (times <= 1)).all()
     assert times.max() == 1
+    assert ((0 < times) & (times < 1)).any()
     assert ((0 <= space) & (space <= 1)).all()
     slice_index = times * (slices - 1)
     assert torch.equal(slice_index, slice_index.round())
