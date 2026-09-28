@@ -208,32 +208,27 @@ def test_an_unstated_domain_is_the_unit_interval_on_every_axis(
 
 
 @pytest.mark.oracle_smoke
-@FUZZ
-@given(
-    spatial_dimensions=st.integers(1, 3),
-    points=st.integers(1, 5),
-    stated=st.sampled_from(
-        [
-            "space only",
-            "an extra column",
-            "time too early",
-            "time too late",
-            "not a number",
-            "infinite",
-            "no points",
-            "no time interval in the domain",
-            "flat",
-            "stacked",
-        ]
-    ),
+@pytest.mark.parametrize(
+    "stated",
+    [
+        "space only",
+        "an extra column",
+        "time too early",
+        "time too late",
+        "not a number",
+        "infinite",
+        "no points",
+        "no time interval in the domain",
+        "a spatial interval too many",
+        "flat",
+        "stacked",
+    ],
 )
-@example(spatial_dimensions=1, points=1, stated="space only")
-@example(spatial_dimensions=2, points=2, stated="an extra column")
-@example(spatial_dimensions=1, points=2, stated="stacked")
-@example(spatial_dimensions=1, points=1, stated="not a number")
-@example(spatial_dimensions=1, points=1, stated="no time interval in the domain")
+@FUZZ
+@given(spatial_dimensions=st.integers(1, 3), points=st.integers(1, 5))
+@example(spatial_dimensions=1, points=2)
 def test_a_point_without_a_time_in_the_interval_is_refused(
-    spatial_dimensions, points, stated
+    stated, spatial_dimensions, points
 ):
     modes = (3,) * spatial_dimensions
     coeff = torch.zeros(1, 4, *modes, dtype=torch.complex64)
@@ -252,6 +247,7 @@ def test_a_point_without_a_time_in_the_interval_is_refused(
         "infinite": (at_time(float("inf")), domain),
         "no points": (at_time(0.5)[:0], domain),
         "no time interval in the domain": (at_time(0.5), domain[1:]),
+        "a spatial interval too many": (at_time(0.5), (*domain, UNIT)),
         "flat": (at_time(0.5).flatten(), domain),
         "stacked": (at_time(0.5).unsqueeze(0), domain),
     }[stated]

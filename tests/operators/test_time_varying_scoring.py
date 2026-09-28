@@ -167,6 +167,23 @@ def test_a_time_invariant_output_scores_as_before(seed, functions, modes):
     )
 
 
+@pytest.mark.oracle_smoke
+@FUZZ
+@given(**FIELDS)
+@example(seed=0, functions=1, slices=1, modes=1)
+def test_a_trained_model_reports_its_spatial_modes(seed, functions, slices, modes):
+    _, coeff = time_varying_field(seed, functions, slices, modes, HOST)
+    model = SpectralSVR(FourierBasis(), interpolating_regressor())
+    model.train(
+        dataset_over(FourierBasis(coeff=coeff, domain=DOMAIN), seed).f,
+        coeff,
+        u_time_dependent=True,
+    )
+
+    assert model.modes == (modes,)
+    assert model.output_shape == (slices, modes)
+
+
 class FittingAndPredicting(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
