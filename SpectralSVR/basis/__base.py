@@ -997,7 +997,9 @@ class Basis(abc.ABC):
     ) -> torch.Tensor:
         """Position of each time among ``slices`` spanning ``time_interval`` inclusively."""
         t_start, t_stop = time_interval
-        return (times - t_start) / (t_stop - t_start) * (slices - 1)
+        return ((times - t_start) / (t_stop - t_start) * (slices - 1)).clamp(
+            0, slices - 1
+        )
 
     @staticmethod
     def interpolate_time_tensor(x: torch.Tensor, index_float: torch.Tensor):

@@ -18,6 +18,7 @@ HOST = torch.device("cpu")
 DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
 FUZZ = settings(deadline=None, max_examples=30)
 ROUNDOFF_RTOL = 1e-6
+SINGLE_PRECISION_QUERY_RTOL = 1e-4
 INTERVALS = st.tuples(st.floats(-2, 2), st.floats(0.25, 3)).map(
     lambda start_and_length: (start_and_length[0], sum(start_and_length))
 )
@@ -211,22 +212,28 @@ def test_an_unstated_domain_is_the_unit_interval_on_every_axis(
 @given(
     spatial_dimensions=st.integers(1, 3),
     points=st.integers(1, 5),
-    stated_columns=st.sampled_from(
+    stated=st.sampled_from(
         [
             "space only",
             "an extra column",
             "time too early",
             "time too late",
+            "not a number",
+            "infinite",
+            "no points",
+            "no time interval in the domain",
             "flat",
             "stacked",
         ]
     ),
 )
-@example(spatial_dimensions=1, points=1, stated_columns="space only")
-@example(spatial_dimensions=2, points=2, stated_columns="an extra column")
-@example(spatial_dimensions=1, points=2, stated_columns="stacked")
+@example(spatial_dimensions=1, points=1, stated="space only")
+@example(spatial_dimensions=2, points=2, stated="an extra column")
+@example(spatial_dimensions=1, points=2, stated="stacked")
+@example(spatial_dimensions=1, points=1, stated="not a number")
+@example(spatial_dimensions=1, points=1, stated="no time interval in the domain")
 def test_a_point_without_a_time_in_the_interval_is_refused(
-    spatial_dimensions, points, stated_columns
+    spatial_dimensions, points, stated
 ):
     modes = (3,) * spatial_dimensions
     coeff = torch.zeros(1, 4, *modes, dtype=torch.complex64)
@@ -236,14 +243,46 @@ def test_a_point_without_a_time_in_the_interval_is_refused(
     def at_time(time):
         return torch.cat([torch.full((points, 1), time, dtype=torch.float64), place], 1)
 
-    query = {
-        "space only": place,
-        "an extra column": torch.cat([at_time(0.5), place[:, :1]], 1),
-        "time too early": at_time(-0.25),
-        "time too late": at_time(1.25),
-        "flat": at_time(0.5).flatten(),
-        "stacked": at_time(0.5).unsqueeze(0),
-    }[stated_columns]
+    query, stated_domain = {
+        "space only": (place, domain),
+        "an extra column": (torch.cat([at_time(0.5), place[:, :1]], 1), domain),
+        "time too early": (at_time(-0.25), domain),
+        "time too late": (at_time(1.25), domain),
+        "not a number": (at_time(float("nan")), domain),
+        "infinite": (at_time(float("inf")), domain),
+        "no points": (at_time(0.5)[:0], domain),
+        "no time interval in the domain": (at_time(0.5), domain[1:]),
+        "flat": (at_time(0.5).flatten(), domain),
+        "stacked": (at_time(0.5).unsqueeze(0), domain),
+    }[stated]
 
     with pytest.raises(ValueError, match="time"):
-        FourierBasis.evaluate_time_dependent_at(coeff, query, domain=domain)
+        FourierBasis.evaluate_time_dependent_at(coeff, query, domain=stated_domain)
+
+
+@pytest.mark.oracle_analytic
+@FUZZ
+@given(
+    seed=st.integers(0, 10_000),
+    slices=st.integers(2, 100),
+    time_interval=INTERVALS,
+)
+@example(seed=0, slices=28, time_interval=(-0.26331265818486527, 1.666626518785589))
+@example(seed=0, slices=84, time_interval=(-0.457, 1.359))
+def test_a_single_precision_time_at_the_end_reads_the_last_slice(
+    seed, slices, time_interval
+):
+    slice_values, coeff = time_varying_field(seed, 1, slices, 4, HOST)
+    domain = (time_interval, UNIT)
+    space = grid_points(4, HOST)
+    at_the_end = torch.full((len(space),), time_interval[1], dtype=torch.float32)
+    query = torch.stack([at_the_end, space.to(torch.float32)], dim=-1)
+    tolerance = SINGLE_PRECISION_QUERY_RTOL * slice_values.abs().max()
+
+    paired = FourierBasis.evaluate_time_dependent_at(coeff, query, domain=domain)
+    grid = FourierBasis.evaluate(
+        coeff, x=space, t=at_the_end[:1], time_dependent=True, domain=domain
+    )
+
+    assert (paired.real - slice_values[:, -1]).abs().max() <= tolerance
+    assert (grid.real.reshape(1, -1) - slice_values[:, -1]).abs().max() <= tolerance

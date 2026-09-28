@@ -167,15 +167,24 @@ class FourierBasis(Basis):
             coeff = to_complex_coeff(coeff)
         points = points.to(coeff.device)
         modes = cls.get_modes(coeff, time_dependent=True)
-        if points.ndim != 2 or points.shape[1] != 1 + len(modes):
+        if points.ndim != 2 or len(points) == 0 or points.shape[1] != 1 + len(modes):
             raise ValueError(
-                f"points for a time-dependent field are rows (t, x_1, ..., "
-                f"x_{len(modes)}) with time first; got shape {tuple(points.shape)}"
+                f"points for a time-dependent field are one or more rows (t, x_1, "
+                f"..., x_{len(modes)}) with time first; got shape "
+                f"{tuple(points.shape)}"
             )
         domain_t = domainInputType_to_tuple(domain, tuple(coeff.shape[1:]))
+        if len(domain_t) != 1 + len(modes):
+            raise ValueError(
+                f"the domain of a time-dependent field is (time, x_1, ..., "
+                f"x_{len(modes)}) with the time interval first; got {domain_t}"
+            )
         t_start, t_stop = domain_t[0]
         times = points[:, 0].real
-        if ((times < t_start) | (times > t_stop)).any():
+        if (
+            not torch.isfinite(times).all()
+            or ((times < t_start) | (times > t_stop)).any()
+        ):
             raise ValueError(
                 f"every time must lie in the field's time interval "
                 f"[{t_start}, {t_stop}]; got {times.min().item()} to "
