@@ -74,7 +74,7 @@ def test_targets_of_a_time_varying_output_are_read_at_a_time_and_a_place(
     assert torch.equal(targets, paired.real.to(torch.float64))
 
 
-@pytest.mark.oracle_consistency
+@pytest.mark.oracle_analytic
 @pytest.mark.scenario(
     "Predictions of a time-varying output are read at the same points"
 )
@@ -95,7 +95,7 @@ def test_predictions_of_a_time_varying_output_are_read_at_the_same_points(
 
     assert predicted.shape == (functions, len(query))
     tolerance = PREDICTION_RTOL * slice_values.abs().max()
-    assert (predicted - dataset.targets(query).cpu()).abs().max() <= tolerance
+    assert (predicted - slice_values.flatten(1)).abs().max() <= tolerance
 
 
 @pytest.mark.oracle_smoke
