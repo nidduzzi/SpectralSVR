@@ -26,19 +26,12 @@ B = TypeVar("B", bound=Basis)
 
 
 class SpectralSVR(Generic[B, R]):
-    # The basis is decomposed at construction into its two useful halves: the
-    # basis *class* (holding the stateless transform/evaluate statics and coeff
-    # dtype) and the config (domain/sampling/strategy spec). Named ``basis_type``,
-    # not "kernel", to avoid confusion with the SVR/basis-function kernels.
-    # Time-dependence is model-owned state, learned at train time -- the model no
-    # longer reaches into a shared basis instance to flip it.
     basis_type: type[B]
     config: SpectralConfig
     regressor: R
     time_dependent: bool
     output_shape: tuple[int, ...] | None = None
     complex_funcs: bool
-    # number of (real) input features seen at train/test time; None until then
     features: int | None = None
 
     def __init__(
@@ -67,6 +60,14 @@ class SpectralSVR(Generic[B, R]):
         self.regressor = regressor
         self.features = None
         self.logger = logger or logging.getLogger(f"{__name__}.{type(self).__name__}")
+
+    @property
+    def modes(self) -> tuple[int, ...]:
+        if self.output_shape is None:
+            raise ValueError(
+                "modes are known once the model is trained; call train first"
+            )
+        return self.output_shape[1:] if self.time_dependent else self.output_shape
 
     @property
     def output_is_complex(self) -> bool:
@@ -144,14 +145,11 @@ class SpectralSVR(Generic[B, R]):
             )
         self.time_dependent = u_time_dependent
         self.output_shape = tuple(u_coeff.shape[1:])
-        self.modes = Basis.get_modes(u_coeff, u_time_dependent)
         f = f.flatten(1)
         u_coeff = u_coeff.flatten(1)
 
         self.logger.debug(f"modes: {self.modes}")
 
-        # the regressor works in real space; complex coefficients are stored as
-        # interleaved real/imag pairs
         if self.output_is_complex:
             u_coeff = to_real_coeff(u_coeff)
             self._check_precision(u_coeff, "output coefficients")
