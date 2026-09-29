@@ -53,14 +53,39 @@ same only when every tensor matches bit for bit and sits on the same device.
 It was dropped in `burgers-forced-benchmark` because it failed on exactly this
 defect, and this change is what lets it pass.
 
+### A dataset is placed on one device, or refused
+
+`from_fields` refuses an input field and an output field on different devices,
+naming both. `OperatorDataset` refuses sensors and sampled values on different
+devices. Measured by review, a mixed dataset built without complaint: targets
+came back on the host and predictions on the accelerator, and the benchmark
+compared them without surfacing the split. A refusal at construction stops the
+split at the point where it is made.
+
+### `sensor_grid` takes its device by keyword, and refuses an empty grid
+
+`device` is keyword-only, so a positional argument cannot set it by accident.
+The change is still additive, because the parameter is new. A count below one,
+or a domain with no axes, is refused with a `ValueError`. It used to return an
+empty grid, or fail deep inside torch.
+
+### The state machine repoints and rebuilds in one rule
+
+A rule that repoints the process default and rebuilds a case already built
+reaches the property on every use. Measured by review: with separate rules,
+about 1 example in 11 reached build, repoint, rebuild, and the old defect was
+caught in 8 of 10 seeds.
+
 ## Risks / Trade-offs
 
 - **Reported cpu rows move.** A `--device cpu` row built after the first
   DeepONet fit had its sensor values evaluated on cuda. → That is the defect,
   and the move is deliberate. The table is compared against a base worktree
   with its own environment on the same `--device`. Every row whose sensor values
-  were already on the host must be bit-identical, and every moved row is
-  recorded with its size. The first DeepONet fit of a run is compared against
+  were already on the host must match within its measured run-to-run spread,
+  and every moved row is recorded with its size. *Corrected:* this used to say
+  "bit-identical", but `antiderivative` SpectralSVR differs by 1.36e-5 relative
+  between runs of identical code. The first DeepONet fit of a run is compared against
   its measured spread.
 - **Sensor evaluation now runs on the accelerator under `--device cuda`.** Its
   values change by rounding. → No cuda table is reported yet, and the change is

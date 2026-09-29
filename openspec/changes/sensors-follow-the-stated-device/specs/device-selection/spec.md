@@ -20,3 +20,7 @@ This is distinct from a factory that materialises a caller's data. Such a factor
 #### Scenario: A slice keeps its field's device
 - **WHEN** one time slice of a placed field is taken as a field over space
 - **THEN** the slice is on the device of the field it came from
+
+#### Scenario: A dataset whose parts sit on different devices is refused
+- **WHEN** a dataset is built from an input field and an output field on different devices, or its sensors and sampled values are given on different devices
+- **THEN** it is refused, and the refusal names both devices, rather than a comparison later running across them

@@ -49,3 +49,15 @@ the measurement here.
   - `just mutate-changed` against `9d7cc97`: the operators config covered 19 mutants in scope, and all 19 were killed. The script config had 0 in scope: its only change deletes `.cpu()`, which leaves nothing to mutate.
 - [x] 5.4 Verify no source file gained an explanatory prose comment, and that prose was removed where touched. Make a second structural pass: no throwaway helpers or private methods
   - No comment was added, and the `half-open` prose comment in `test_sensor_grid_shape` was removed. The only addition to a docstring is the `device` entry in `sensor_grid`'s parameter list, a contract in the format of its siblings. Second pass: the library change is one parameter and one call that states it, the script change is a deletion, the test's comparison is one `all` over paired tensors, and there are no helpers or private methods.
+
+## 6. Review fixes
+
+A read-only fork reviewed the change adversarially. Each finding below was
+reproduced before it was accepted, and the decisions are recorded in design.md.
+
+- [ ] 6.1 Refuse a dataset split across devices. `from_fields` refuses an input and an output field on different devices, and `OperatorDataset` refuses sensors and sampled values on different devices, each naming both. Enumerate the device pairs with `parametrize`, and verify the tests fail first. Covers `A dataset whose parts sit on different devices is refused`, whose `IN_FLIGHT` entry is added first and removed with the test
+- [ ] 6.2 Replace the separate repoint rule with `rebuild_under_another_default(identity, device)`, which repoints the process default and rebuilds a case already built. Measure the kill rate against the dataset and script from `116b157` over 10 seeds, and record it
+- [ ] 6.3 Make `sensor_grid`'s `device` keyword-only, and refuse `n_per_axis < 1` and a domain with no axes with a `ValueError`. Verify the tests fail first
+- [ ] 6.4 Compare devices in tests against the resolved device, not `.device.type`, so `cuda:0` and `cuda:1` stay distinct
+- [ ] 6.5 Move `HOST`, `DEVICES_PRESENT`, `ACCELERATOR` and `needs_an_accelerator` to a shared `tests/_devices.py`, and have the five test modules that duplicate them import from it
+- [ ] 6.6 Run `just check`. Run `just mutate-changed` over the lines section 6 touched, re-run every survivor, and close real gaps. Audit prose, and make a second structural pass
