@@ -18,19 +18,26 @@ the measurement here.
 
 ## 2. Sensors
 
-- [ ] 2.1 Cover `Sensors are sampled where their field is`. For a field placed on each device under a process default pointing at each device, `OperatorDataset.from_fields` puts the grid and the sampled values on the field's device. Enumerate the field's device and the process default over every device present, and fuzz the dimension, the sensor count and the field. Skip the accelerator pairs, with a reason, where none exists. Verify it fails first
-- [ ] 2.2 Extend `test_sensor_grid_shape`: a stated device places the grid there, an unstated one follows the process default, and the grid's values are the same on every device. Fuzz as it does today, with the stated device enumerated. Verify the stated-device part fails first
-- [ ] 2.3 `sensor_grid(domain, n_per_axis, device: DeviceInput = None)` builds on `resolve_device(device)`, and `from_fields` passes `input_field.coeff.device`. Verify 2.1 and 2.2 pass and every existing operator test passes unchanged
+- [x] 2.1 Cover `Sensors are sampled where their field is`. For a field placed on each device under a process default pointing at each device, `OperatorDataset.from_fields` puts the grid and the sampled values on the field's device. Enumerate the field's device and the process default over every device present, and fuzz the dimension, the sensor count and the field. Skip the accelerator pairs, with a reason, where none exists. Verify it fails first
+  - `test_sensors_are_sampled_where_their_field_is` in `tests/operators/test_operators.py`, `0e0f483`. It enumerates the field's device against the process default over all four pairs, the accelerator pairs skipping with a reason where none exists, and fuzzes dimension, sensor count and field. It failed first on the two mismatched pairs (`assert 'cpu' == 'cuda'` and `'cuda' == 'cpu'`).
+- [x] 2.2 Extend `test_sensor_grid_shape`: a stated device places the grid there, an unstated one follows the process default, and the grid's values are the same on every device. Fuzz as it does today, with the stated device enumerated. Verify the stated-device part fails first
+  - `test_sensor_grid_shape` enumerates the stated device (unstated, host, accelerator) and requires the grid on it, following the process default when unstated, with the same values on every device. `linspace` was measured identical on cpu and cuda in 252 of 252 grids, so that is asserted with `torch.equal`. It failed first with `unexpected keyword argument 'device'`, and its prose comment was removed.
+- [x] 2.3 `sensor_grid(domain, n_per_axis, device: DeviceInput = None)` builds on `resolve_device(device)`, and `from_fields` passes `input_field.coeff.device`. Verify 2.1 and 2.2 pass and every existing operator test passes unchanged
+  - `sensor_grid(domain, n_per_axis, device: DeviceInput = None)` builds on `resolve_device(device)`, and `from_fields` states `input_field.coeff.device`. All 42 operator tests pass, the existing ones unchanged. The GPU driver went missing between writing and committing this section. `just check` was rerun once it was restored, with every accelerator test running: 388 passed.
 
 ## 3. The slice
 
-- [ ] 3.1 Cover `A slice keeps its field's device`: `spatial_field_at` on a time-dependent field placed on each device gives a slice on that device, with the values of that time slice. Fuzz over slice index, mode count and device, pinning the first and last slice. Verify it fails first on the accelerator
-- [ ] 3.2 Drop `.cpu()` from `spatial_field_at`. Verify 3.1 passes
+- [x] 3.1 Cover `A slice keeps its field's device`: `spatial_field_at` on a time-dependent field placed on each device gives a slice on that device, with the values of that time slice. Fuzz over slice index, mode count and device, pinning the first and last slice. Verify it fails first on the accelerator
+  - `test_a_slice_keeps_its_field_s_device`, `bb70379`. The field's device and which slice (first, middle, last) are both closed sets, so both are parametrized. Slice and mode counts are fuzzed, pinning the smallest and largest. With `.cpu()` restored, the three accelerator cases fail and the three host cases pass.
+- [x] 3.2 Drop `.cpu()` from `spatial_field_at`. Verify 3.1 passes
+  - `.cpu()` dropped from `spatial_field_at`. All six cases pass.
 
 ## 4. Cases do not depend on the default
 
-- [ ] 4.1 Cover `A case does not depend on the process default`. Restore `point_the_process_default_elsewhere(device)` in `BenchmarkCasesStayPut`, and make `the_same_case` require every tensor to match bit for bit and sit on the same device. Verify it fails against the code before sections 2 and 3, and passes after them
-- [ ] 4.2 Measure what sections 2 and 3 change in each registered case under a cuda default: for every case, the largest gap in sensor values between the old placement and the new, at seed 0 in quick and full mode. Record the figures
+- [x] 4.1 Cover `A case does not depend on the process default`. Restore `point_the_process_default_elsewhere(device)` in `BenchmarkCasesStayPut`, and make `the_same_case` require every tensor to match bit for bit and sit on the same device. Verify it fails against the code before sections 2 and 3, and passes after them
+  - `d5a3ede`. `point_the_process_default_elsewhere` is restored, and `the_same_case` requires each tensor pair to share a device and match bit for bit. The machine also carries the scenario mark. Against the dataset and script from `116b157` it fails with the sequence build (`antiderivative`, cpu, seed 0), repoint the default, rebuild; against the current code it passes.
+- [x] 4.2 Measure what sections 2 and 3 change in each registered case under a cuda default: for every case, the largest gap in sensor values between the old placement and the new, at seed 0 in quick and full mode. Record the figures
+  - Measured against a worktree of `9d7cc97` with its own environment. Every case was built with `cpu` stated under a cuda process default, at seed 0. The base put every case's sensor values on `cuda:0`; the new code puts them on `cpu`. Worst gap, quick and full: `antiderivative` 7.63e-6 and 7.63e-6; `burgers-mms` 1.19e-7 and 2.38e-7; `burgers-numerical` 2.38e-7 and 3.58e-7; `antiderivative-grf` 4.77e-7 and 4.77e-7; `burgers-forced` 4.47e-8 and 2.98e-8.
 
 ## 5. Verification
 
