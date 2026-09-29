@@ -59,6 +59,33 @@ def the_same_case(first, second) -> bool:
     )
 
 
+@pytest.mark.oracle_consistency
+@pytest.mark.scenario("A slice keeps its field's device")
+@pytest.mark.parametrize(
+    "placed_on",
+    [
+        pytest.param(HOST, id="host"),
+        pytest.param(accelerator(), marks=needs_an_accelerator, id="accelerator"),
+    ],
+)
+@pytest.mark.parametrize("which", ["first", "middle", "last"])
+@FUZZ
+@given(slices=st.integers(1, 6), modes=st.integers(1, 8))
+@example(slices=1, modes=1)
+@example(slices=6, modes=8)
+def test_a_slice_keeps_its_field_s_device(placed_on, which, slices, modes):
+    coeff = torch.randn(2, slices, modes, dtype=DEFAULT_COEFF_DTYPE).to(placed_on)
+    field = bench.FourierBasis(
+        coeff=coeff, domain=((0.0, 1.0), (0.0, 1.0)), time_dependent=True
+    )
+    time_index = {"first": 0, "middle": slices // 2, "last": slices - 1}[which]
+
+    slice_ = bench.spatial_field_at(field, time_index)
+
+    assert slice_.coeff.device.type == placed_on.type
+    assert torch.equal(slice_.coeff, coeff[:, time_index])
+
+
 class BenchmarkCasesStayPut(RuleBasedStateMachine):
     built = Bundle("built")
 

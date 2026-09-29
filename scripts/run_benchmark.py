@@ -147,7 +147,7 @@ def spatial_field_at(field: Basis, time_index: int) -> FourierBasis:
     """One time slice of a time-dependent field, as a field over space alone."""
     assert field.coeff is not None
     space_domain = (field.domain[1],)
-    return FourierBasis(field.coeff[:, time_index].cpu(), domain=space_domain)
+    return FourierBasis(field.coeff[:, time_index], domain=space_domain)
 
 
 def antiderivative_case(
