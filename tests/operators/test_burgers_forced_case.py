@@ -51,12 +51,12 @@ def the_same_case(first, second) -> bool:
         (second.split.train, second.split.test),
         strict=True,
     )
-    return torch.equal(first.query.cpu(), second.query.cpu()) and all(
-        torch.equal(a.f.cpu(), b.f.cpu())
-        and torch.equal(a.sensors.cpu(), b.sensors.cpu())
-        and torch.equal(a.u.coeff.cpu(), b.u.coeff.cpu())
+    tensor_pairs = [(first.query, second.query)] + [
+        pair
         for a, b in halves
-    )
+        for pair in ((a.f, b.f), (a.sensors, b.sensors), (a.u.coeff, b.u.coeff))
+    ]
+    return all(x.device == y.device and torch.equal(x, y) for x, y in tensor_pairs)
 
 
 @pytest.mark.oracle_consistency
@@ -111,6 +111,10 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
         case = bench.DATASETS[key].build(seed, True, device)
         assert the_same_case(case, self.first_builds[identity])
 
+    @rule(device=st.sampled_from(DEVICES_PRESENT))
+    def point_the_process_default_elsewhere(self, device):
+        torch.set_default_device(device)
+
     @rule(seed=SEEDS, sizes=SIZES, device=st.sampled_from(DEVICES_PRESENT))
     def build_the_forced_case_at_other_sizes(self, seed, sizes, device):
         build_forced(seed, True, device, sizes)
@@ -120,8 +124,12 @@ BenchmarkCasesStayPut.TestCase.settings = settings(
     deadline=None, max_examples=10, stateful_step_count=10
 )
 TestBenchmarkCasesStayPut = pytest.mark.scenario(
-    "Adding a row leaves the others alone"
-)(pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase))
+    "A case does not depend on the process default"
+)(
+    pytest.mark.scenario("Adding a row leaves the others alone")(
+        pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase)
+    )
+)
 
 
 @pytest.mark.oracle_analytic
