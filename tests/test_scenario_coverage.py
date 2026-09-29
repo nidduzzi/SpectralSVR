@@ -29,7 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "Sensors are sampled where their field is": IN_FLIGHT,
     "A case does not depend on the process default": IN_FLIGHT,
     "A slice keeps its field's device": IN_FLIGHT,
     # coefficient-encodings

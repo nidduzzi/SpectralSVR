@@ -9,11 +9,11 @@ import time
 
 import pytest
 import torch
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
 
-from SpectralSVR import Antiderivative, FourierBasis
+from SpectralSVR import Antiderivative, FourierBasis, accelerator
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
     DeepONetOperator,
@@ -28,6 +28,33 @@ from SpectralSVR.operators import (
 from tests._anchors import half_open_grid
 
 _HAS_DEEPXDE = importlib.util.find_spec("deepxde") is not None
+
+HOST = torch.device("cpu")
+needs_an_accelerator = pytest.mark.skipif(
+    not torch.accelerator.is_available(),
+    reason="a field placed apart from the process default needs a second device",
+)
+ACCELERATOR = accelerator() if torch.accelerator.is_available() else HOST
+DEVICES_STATABLE = [
+    pytest.param(None, id="unstated"),
+    pytest.param(HOST, id="host"),
+    pytest.param(ACCELERATOR, marks=needs_an_accelerator, id="accelerator"),
+]
+DEVICE_PAIRS = [
+    pytest.param(HOST, HOST, id="host-under-host"),
+    pytest.param(
+        HOST, ACCELERATOR, marks=needs_an_accelerator, id="host-under-accelerator"
+    ),
+    pytest.param(
+        ACCELERATOR, HOST, marks=needs_an_accelerator, id="accelerator-under-host"
+    ),
+    pytest.param(
+        ACCELERATOR,
+        ACCELERATOR,
+        marks=needs_an_accelerator,
+        id="accelerator-under-accelerator",
+    ),
+]
 
 SENSORS = 16
 
@@ -57,13 +84,47 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=SENSORS):
 
 
 @pytest.mark.oracle_smoke
+@pytest.mark.parametrize("stated", DEVICES_STATABLE)
 @given(n=st.integers(2, 8), d=st.integers(1, 2))
-def test_sensor_grid_shape(n, d):
+def test_sensor_grid_shape(stated, n, d):
     domain = tuple((0.0, 1.0) for _ in range(d))
-    grid = sensor_grid(domain, n)
+
+    grid = sensor_grid(domain, n, device=stated)
+
     assert grid.shape == (n**d, d)
-    # half-open: endpoint excluded on every axis
     assert grid.max() < 1.0
+    expected_device = torch.get_default_device() if stated is None else stated
+    assert grid.device.type == expected_device.type
+    assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Sensors are sampled where their field is")
+@pytest.mark.parametrize(("field_device", "process_default"), DEVICE_PAIRS)
+@settings(deadline=None, max_examples=10)
+@given(
+    dimensions=st.integers(1, 2),
+    sensors=st.integers(1, 8),
+    seed=st.integers(0, 10_000),
+)
+@example(dimensions=1, sensors=1, seed=0)
+@example(dimensions=2, sensors=8, seed=0)
+def test_sensors_are_sampled_where_their_field_is(
+    field_device, process_default, dimensions, sensors, seed
+):
+    torch.set_default_device(process_default)
+    generator = torch.Generator().manual_seed(seed)
+    field = FourierBasis(
+        coeff=FourierBasis.generate_coeff(
+            2, (4,) * dimensions, generator=generator, device=HOST
+        ).to(field_device),
+        domain=((0.0, 1.0),) * dimensions,
+    )
+
+    dataset = OperatorDataset.from_fields(field, field, n_sensors=sensors)
+
+    assert dataset.sensors.device.type == field_device.type
+    assert dataset.f.device.type == field_device.type
 
 
 @pytest.mark.no_fuzz
@@ -225,7 +286,9 @@ def test_benchmark_scores_two_operators_against_the_same_targets():
     # operator. Self-referential by construction -- the check is which library
     # output was used, so the library supplies both sides
     target = split.test.targets(QUERY)
-    expected_mse = float(((target - float(split.train.targets(QUERY).mean())) ** 2).mean())
+    expected_mse = float(
+        ((target - float(split.train.targets(QUERY).mean())) ** 2).mean()
+    )
     assert df.loc["Constant", "mse"] == pytest.approx(expected_mse, rel=1e-9)
 
 
@@ -239,7 +302,9 @@ def _flat(text):
 @pytest.mark.scenario("Scope of the claim is stated")
 @pytest.mark.scenario("Fit times are qualified")
 def test_the_benchmark_script_states_what_its_table_establishes():
-    script = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
+    script = (
+        pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
+    )
     doc = _flat(ast.get_docstring(ast.parse(script.read_text())))
     assert "not tuned per dataset" in doc
     assert "single seed" in doc

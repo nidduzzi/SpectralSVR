@@ -15,9 +15,12 @@ from dataclasses import dataclass
 import torch
 
 from ..basis import Basis, DomainAxis
+from ..utils import DeviceInput, resolve_device
 
 
-def sensor_grid(domain: tuple[DomainAxis, ...], n_per_axis: int) -> torch.Tensor:
+def sensor_grid(
+    domain: tuple[DomainAxis, ...], n_per_axis: int, device: DeviceInput = None
+) -> torch.Tensor:
     """Half-open (periodic) tensor-product grid over ``domain``.
 
     Parameters
@@ -27,14 +30,19 @@ def sensor_grid(domain: tuple[DomainAxis, ...], n_per_axis: int) -> torch.Tensor
     n_per_axis : int
         Points per axis; the returned grid has ``n_per_axis ** len(domain)``
         rows.
+    device : DeviceInput
+        Where the grid is placed; unstated, the process default.
 
     Returns
     -------
     torch.Tensor
         Shape ``(m, d)`` sensor coordinates, ``m = n_per_axis ** d``.
     """
+    placement = resolve_device(device)
     axes = [
-        torch.linspace(start, stop, n_per_axis + 1, dtype=torch.float64)[:-1]
+        torch.linspace(
+            start, stop, n_per_axis + 1, dtype=torch.float64, device=placement
+        )[:-1]
         for start, stop in domain
     ]
     mesh = torch.meshgrid(axes, indexing="ij")
@@ -94,7 +102,9 @@ class OperatorDataset:
         n_sensors : int
             Points per axis for the sensor grid.
         """
-        sensors = sensor_grid(input_field.domain, n_sensors)
+        sensors = sensor_grid(
+            input_field.domain, n_sensors, device=input_field.coeff.device
+        )
         f = input_field(sensors).real.to(torch.float64)
         return cls(sensors=sensors, f=f, u=output_field)
 
