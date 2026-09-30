@@ -13,7 +13,7 @@ from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
 
-from SpectralSVR import Antiderivative, FourierBasis, accelerator
+from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
     DeepONetOperator,
@@ -25,16 +25,11 @@ from SpectralSVR.operators import (
     benchmark,
     sensor_grid,
 )
+from tests._devices import ACCELERATOR, HOST, needs_an_accelerator
 from tests._anchors import half_open_grid
 
 _HAS_DEEPXDE = importlib.util.find_spec("deepxde") is not None
 
-HOST = torch.device("cpu")
-needs_an_accelerator = pytest.mark.skipif(
-    not torch.accelerator.is_available(),
-    reason="a field placed apart from the process default needs a second device",
-)
-ACCELERATOR = accelerator() if torch.accelerator.is_available() else HOST
 DEVICES_STATABLE = [
     pytest.param(None, id="unstated"),
     pytest.param(HOST, id="host"),
@@ -94,7 +89,7 @@ def test_sensor_grid_shape(stated, n, d):
     assert grid.shape == (n**d, d)
     assert grid.max() < 1.0
     expected_device = torch.get_default_device() if stated is None else stated
-    assert grid.device.type == expected_device.type
+    assert grid.device == expected_device
     assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
 
 
@@ -123,8 +118,8 @@ def test_sensors_are_sampled_where_their_field_is(
 
     dataset = OperatorDataset.from_fields(field, field, n_sensors=sensors)
 
-    assert dataset.sensors.device.type == field_device.type
-    assert dataset.f.device.type == field_device.type
+    assert dataset.sensors.device == field_device
+    assert dataset.f.device == field_device
 
 
 @pytest.mark.no_fuzz

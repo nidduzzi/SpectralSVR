@@ -8,8 +8,10 @@ from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
 
-from SpectralSVR import accelerator
 from SpectralSVR.utils import DEFAULT_COEFF_DTYPE
+
+from tests._devices import ACCELERATOR, DEVICES_PRESENT, HOST, needs_an_accelerator
+
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
 _spec = importlib.util.spec_from_file_location("_run_benchmark_forced", SCRIPT)
@@ -17,8 +19,6 @@ assert _spec is not None and _spec.loader is not None
 bench = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bench)
 
-HOST = torch.device("cpu")
-DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
 SEEDS = st.integers(0, 2**32 - 1)
 SIZES = st.tuples(st.integers(1, 6), st.integers(1, 4), st.integers(2, 10))
 SMALLEST_SIZES = (1, 1, 2)
@@ -27,11 +27,6 @@ FULL_SIZES = (60, 15, 12)
 AT_REST_ATOL = 1e-6
 END_OF_INTERVAL_RTOL = 5e-6
 FUZZ = settings(deadline=None, max_examples=6)
-
-needs_an_accelerator = pytest.mark.skipif(
-    not torch.accelerator.is_available(),
-    reason="placement against a process default pointing elsewhere needs a second device",
-)
 
 
 def build_forced(seed, quick, device, sizes, **options):
@@ -65,7 +60,7 @@ def the_same_case(first, second) -> bool:
     "placed_on",
     [
         pytest.param(HOST, id="host"),
-        pytest.param(accelerator(), marks=needs_an_accelerator, id="accelerator"),
+        pytest.param(ACCELERATOR, marks=needs_an_accelerator, id="accelerator"),
     ],
 )
 @pytest.mark.parametrize("which", ["first", "middle", "last"])
@@ -82,7 +77,7 @@ def test_a_slice_keeps_its_field_s_device(placed_on, which, slices, modes):
 
     slice_ = bench.spatial_field_at(field, time_index)
 
-    assert slice_.coeff.device.type == placed_on.type
+    assert slice_.coeff.device == placed_on
     assert torch.equal(slice_.coeff, coeff[:, time_index])
 
 
@@ -258,15 +253,15 @@ def test_the_stages_the_builder_places_follow_the_stated_device(
     seed, sizes, stated_on_the_accelerator
 ):
     stated, elsewhere = (
-        (accelerator(), HOST) if stated_on_the_accelerator else (HOST, accelerator())
+        (ACCELERATOR, HOST) if stated_on_the_accelerator else (HOST, ACCELERATOR)
     )
     torch.set_default_device(elsewhere)
 
     case = build_forced(seed, True, stated, sizes)
 
-    assert case.query.device.type == stated.type
+    assert case.query.device == stated
     for half in (case.split.train, case.split.test):
-        assert half.u.coeff.device.type == stated.type
+        assert half.u.coeff.device == stated
 
 
 @pytest.mark.oracle_consistency
