@@ -35,20 +35,20 @@ DEVICES_STATABLE = [
     pytest.param(HOST, id="host"),
     pytest.param(ACCELERATOR, marks=needs_an_accelerator, id="accelerator"),
 ]
-DEVICE_PAIRS = [
-    pytest.param(HOST, HOST, id="host-under-host"),
+PLACEMENTS = {"host": HOST, "accelerator": ACCELERATOR}
+DEVICE_TRIPLES = [
     pytest.param(
-        HOST, ACCELERATOR, marks=needs_an_accelerator, id="host-under-accelerator"
-    ),
-    pytest.param(
-        ACCELERATOR, HOST, marks=needs_an_accelerator, id="accelerator-under-host"
-    ),
-    pytest.param(
-        ACCELERATOR,
-        ACCELERATOR,
-        marks=needs_an_accelerator,
-        id="accelerator-under-accelerator",
-    ),
+        PLACEMENTS[given_input],
+        PLACEMENTS[given_output],
+        PLACEMENTS[default],
+        marks=needs_an_accelerator
+        if "accelerator" in (given_input, given_output, default)
+        else (),
+        id=f"{given_input}-{given_output}-under-{default}",
+    )
+    for given_input in PLACEMENTS
+    for given_output in PLACEMENTS
+    for default in PLACEMENTS
 ]
 
 SENSORS = 16
@@ -80,102 +80,78 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=SENSORS):
 
 @pytest.mark.oracle_smoke
 @pytest.mark.parametrize("stated", DEVICES_STATABLE)
-@given(n=st.integers(2, 8), d=st.integers(1, 2))
-def test_sensor_grid_shape(stated, n, d):
-    domain = tuple((0.0, 1.0) for _ in range(d))
+@pytest.mark.parametrize("passed", ["by keyword", "by position"])
+@given(n=st.integers(-8, 8), d=st.integers(0, 3))
+@example(n=1, d=1)
+@example(n=8, d=3)
+@example(n=0, d=1)
+@example(n=-1, d=2)
+@example(n=2, d=0)
+def test_a_sensor_grid_is_built_or_refused(stated, passed, n, d):
+    domain = ((0.0, 1.0),) * d
 
-    grid = sensor_grid(domain, n, device=stated)
-
-    assert grid.shape == (n**d, d)
-    assert grid.max() < 1.0
-    expected_device = torch.get_default_device() if stated is None else stated
-    assert grid.device == expected_device
-    assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
+    if passed == "by position":
+        with pytest.raises(TypeError, match="positional"):
+            sensor_grid(domain, n, stated)  # type: ignore[misc]
+    elif n < 1 or d == 0:
+        with pytest.raises(ValueError, match="at least one"):
+            sensor_grid(domain, n, device=stated)
+    else:
+        grid = sensor_grid(domain, n, device=stated)
+        assert grid.shape == (n**d, d)
+        assert ((0 <= grid) & (grid < 1)).all()
+        expected_device = torch.get_default_device() if stated is None else stated
+        assert grid.device == expected_device
+        assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
 
 
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Sensors are sampled where their field is")
-@pytest.mark.parametrize(("field_device", "process_default"), DEVICE_PAIRS)
+@pytest.mark.scenario("A dataset whose parts sit on different devices is refused")
+@pytest.mark.parametrize(("input_device", "output_device", "default"), DEVICE_TRIPLES)
 @settings(deadline=None, max_examples=10)
 @given(
     dimensions=st.integers(1, 2),
     sensors=st.integers(1, 8),
+    functions=st.integers(1, 4),
     seed=st.integers(0, 10_000),
 )
-@example(dimensions=1, sensors=1, seed=0)
-@example(dimensions=2, sensors=8, seed=0)
-def test_sensors_are_sampled_where_their_field_is(
-    field_device, process_default, dimensions, sensors, seed
+@example(dimensions=1, sensors=1, functions=1, seed=0)
+@example(dimensions=2, sensors=8, functions=4, seed=0)
+def test_a_dataset_is_built_where_its_fields_are_or_refused(
+    input_device, output_device, default, dimensions, sensors, functions, seed
 ):
-    torch.set_default_device(process_default)
-    generator = torch.Generator().manual_seed(seed)
-    field = FourierBasis(
-        coeff=FourierBasis.generate_coeff(
-            2, (4,) * dimensions, generator=generator, device=HOST
-        ).to(field_device),
-        domain=((0.0, 1.0),) * dimensions,
-    )
-
-    dataset = OperatorDataset.from_fields(field, field, n_sensors=sensors)
-
-    assert dataset.sensors.device == field_device
-    assert dataset.f.device == field_device
-
-
-@pytest.mark.oracle_smoke
-@given(n=st.integers(-8, 0), d=st.integers(1, 3))
-@example(n=0, d=1)
-@example(n=-1, d=2)
-def test_a_sensor_grid_of_no_points_is_refused(n, d):
-    with pytest.raises(ValueError, match="at least one"):
-        sensor_grid(((0.0, 1.0),) * d, n)
-    with pytest.raises(ValueError, match="at least one"):
-        sensor_grid((), max(1, -n))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_the_sensor_grid_device_is_stated_by_name():
-    with pytest.raises(TypeError, match="positional"):
-        sensor_grid(((0.0, 1.0),), 2, HOST)  # type: ignore[misc]
-
-
-SPLIT_PAIRS = [
-    pytest.param(
-        HOST, ACCELERATOR, marks=needs_an_accelerator, id="host-and-accelerator"
-    ),
-    pytest.param(
-        ACCELERATOR, HOST, marks=needs_an_accelerator, id="accelerator-and-host"
-    ),
-]
-
-
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A dataset whose parts sit on different devices is refused")
-@pytest.mark.parametrize(("first", "second"), SPLIT_PAIRS)
-@settings(deadline=None, max_examples=10)
-@given(
-    functions=st.integers(1, 4), modes=st.integers(1, 8), seed=st.integers(0, 10_000)
-)
-@example(functions=1, modes=1, seed=0)
-def test_a_dataset_whose_parts_sit_on_different_devices_is_refused(
-    first, second, functions, modes, seed
-):
+    torch.set_default_device(default)
+    domain = ((0.0, 1.0),) * dimensions
     generator = torch.Generator().manual_seed(seed)
     coeff = FourierBasis.generate_coeff(
-        functions, modes, generator=generator, device=HOST
+        functions, (4,) * dimensions, generator=generator, device=HOST
     )
-    input_field = FourierBasis(coeff=coeff.to(first), domain=((0.0, 1.0),))
-    output_field = FourierBasis(coeff=coeff.to(second), domain=((0.0, 1.0),))
-    sensors = sensor_grid(((0.0, 1.0),), modes, device=first)
+    input_field = FourierBasis(coeff=coeff.to(input_device), domain=domain)
+    output_field = FourierBasis(coeff=coeff.to(output_device), domain=domain)
 
-    with pytest.raises(ValueError, match=f"{first}.*{second}"):
-        OperatorDataset.from_fields(input_field, output_field, n_sensors=modes)
-    with pytest.raises(ValueError, match=f"{first}.*{second}"):
-        OperatorDataset(
-            sensors=sensors,
-            f=torch.zeros(functions, modes, dtype=torch.float64, device=second),
-            u=output_field,
+    if input_device != output_device:
+        with pytest.raises(ValueError, match=f"{input_device}.*{output_device}"):
+            OperatorDataset.from_fields(input_field, output_field, n_sensors=sensors)
+        with pytest.raises(ValueError, match=f"{input_device}.*{output_device}"):
+            OperatorDataset(
+                sensors=sensor_grid(domain, sensors, device=input_device),
+                f=torch.zeros(
+                    functions,
+                    sensors**dimensions,
+                    dtype=torch.float64,
+                    device=output_device,
+                ),
+                u=output_field,
+            )
+    else:
+        dataset = OperatorDataset.from_fields(
+            input_field, output_field, n_sensors=sensors
+        )
+        assert dataset.sensors.device == input_device
+        assert dataset.f.device == input_device
+        assert torch.equal(
+            dataset.f, input_field(dataset.sensors).real.to(torch.float64)
         )
 
 
