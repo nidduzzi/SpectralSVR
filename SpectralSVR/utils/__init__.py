@@ -375,6 +375,16 @@ def _relative_squared_error(
     return rse.sqrt() if not squared else rse
 
 
+def _mean_per_sample_relative_l2(
+    preds: torch.Tensor, targets: torch.Tensor
+) -> torch.Tensor:
+    """Mean over samples of ``||p_i - t_i||_2 / ||t_i||_2``, a sample being one leading-axis row."""
+    samples = preds.shape[0]
+    error = torch.linalg.vector_norm((preds - targets).reshape(samples, -1), dim=1)
+    scale = torch.linalg.vector_norm(targets.reshape(samples, -1), dim=1)
+    return (error / scale).mean()
+
+
 # Default metric set; inject a different mapping into get_metrics to override.
 # NOTE: rse/rrse are normalized by the (global) target variance, so they blow
 # up when the targets have near-zero variance overall; prefer mse/rmse there.
@@ -386,6 +396,7 @@ DEFAULT_METRICS: dict[str, MetricFn] = {
     "smape": symmetric_mean_absolute_percentage_error,
     "rse": _relative_squared_error,
     "rrse": partial(_relative_squared_error, squared=False),
+    "mean_per_sample_relative_l2": _mean_per_sample_relative_l2,
 }
 
 
@@ -399,6 +410,7 @@ class Metrics(TypedDict):
     smape: float
     rse: float
     rrse: float
+    mean_per_sample_relative_l2: float
     pred_nan_sum: int
 
 

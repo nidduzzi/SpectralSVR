@@ -40,6 +40,10 @@ def test_get_metrics_hand_computed_values():
     # col1: SSE=1+0=1, mean=3, SST=1+1=2 -> r2 = 1 - 1/2 =  0.5
     # uniform average = -0.5
     assert math.isclose(m["r2"], -0.5, rel_tol=1e-6)
+    # per-sample relative L2: row 0 |[1,-1]|/|[1,2]| = sqrt(2/5); row 1 |[2,0]|/|[3,4]| = 2/5
+    assert math.isclose(
+        m["mean_per_sample_relative_l2"], (math.sqrt(2 / 5) + 2 / 5) / 2, rel_tol=1e-12
+    )
     assert m["pred_nan_sum"] == 0
 
 
