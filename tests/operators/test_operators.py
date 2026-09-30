@@ -122,6 +122,24 @@ def test_sensors_are_sampled_where_their_field_is(
     assert dataset.f.device == field_device
 
 
+@pytest.mark.oracle_smoke
+@given(n=st.integers(-8, 0), d=st.integers(1, 3))
+@example(n=0, d=1)
+@example(n=-1, d=2)
+def test_a_sensor_grid_of_no_points_is_refused(n, d):
+    with pytest.raises(ValueError, match="at least one"):
+        sensor_grid(((0.0, 1.0),) * d, n)
+    with pytest.raises(ValueError, match="at least one"):
+        sensor_grid((), max(1, -n))
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_the_sensor_grid_device_is_stated_by_name():
+    with pytest.raises(TypeError, match="positional"):
+        sensor_grid(((0.0, 1.0),), 2, HOST)  # type: ignore[misc]
+
+
 SPLIT_PAIRS = [
     pytest.param(
         HOST, ACCELERATOR, marks=needs_an_accelerator, id="host-and-accelerator"

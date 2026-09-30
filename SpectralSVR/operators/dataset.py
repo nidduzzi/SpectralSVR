@@ -19,7 +19,7 @@ from ..utils import DeviceInput, resolve_device
 
 
 def sensor_grid(
-    domain: tuple[DomainAxis, ...], n_per_axis: int, device: DeviceInput = None
+    domain: tuple[DomainAxis, ...], n_per_axis: int, *, device: DeviceInput = None
 ) -> torch.Tensor:
     """Half-open (periodic) tensor-product grid over ``domain``.
 
@@ -38,6 +38,11 @@ def sensor_grid(
     torch.Tensor
         Shape ``(m, d)`` sensor coordinates, ``m = n_per_axis ** d``.
     """
+    if n_per_axis < 1 or len(domain) == 0:
+        raise ValueError(
+            f"a sensor grid needs at least one axis and at least one point per "
+            f"axis; got {len(domain)} axes and {n_per_axis} points per axis"
+        )
     placement = resolve_device(device)
     axes = [
         torch.linspace(
