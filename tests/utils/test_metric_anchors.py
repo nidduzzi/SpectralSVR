@@ -16,6 +16,7 @@ from SpectralSVR.utils import get_metrics
 pytestmark = [pytest.mark.no_fuzz, pytest.mark.oracle_analytic]
 
 
+@pytest.mark.scenario("Neither replaces the other")
 def test_get_metrics_hand_computed_values():
     # preds/targets chosen so every sum is exact in float64:
     # errors e = p - t = [1, -1, 2, 0]

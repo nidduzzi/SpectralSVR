@@ -33,8 +33,6 @@ EXEMPT: dict[str, str] = {
     "A single-seed table is not presented as a result": IN_FLIGHT,
     "Provenance travels with the numbers": IN_FLIGHT,
     "A changed condition is visible": IN_FLIGHT,
-    "Both relative-error conventions appear": IN_FLIGHT,
-    "Neither replaces the other": IN_FLIGHT,
     "One command regenerates": IN_FLIGHT,
     "The notebook reads the record": IN_FLIGHT,
     "Run-to-run spread is stated per operator": IN_FLIGHT,

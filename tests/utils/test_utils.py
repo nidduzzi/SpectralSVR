@@ -234,6 +234,7 @@ def test_get_metrics_injected_metric_set():
 
 
 @pytest.mark.oracle_independent
+@pytest.mark.scenario("Both relative-error conventions appear")
 @SETTINGS
 @given(
     shape=st.lists(st.integers(1, 5), min_size=1, max_size=3),
@@ -267,6 +268,7 @@ def test_per_sample_relative_l2_matches_a_loop_over_samples(shape, seed):
 
 
 @pytest.mark.oracle_invariant
+@pytest.mark.scenario("Both relative-error conventions appear")
 @SETTINGS
 @given(
     rows=st.integers(2, 12),
