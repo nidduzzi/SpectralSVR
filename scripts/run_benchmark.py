@@ -56,6 +56,7 @@ from SpectralSVR import Antiderivative, Burgers, FourierBasis, LSSVR
 from SpectralSVR.basis import Basis
 from SpectralSVR.operators import (
     DeepONetOperator,
+    Lu2021DeepxdeExample,
     Operator,
     Split,
     SpectralSVROperator,
@@ -330,7 +331,12 @@ def build_operators(
             print("  ! deepxde missing; omitting DeepONet (--allow-missing-operators)")
         else:
             operators.append(
-                DeepONetOperator(trunk=query, iterations=iterations, seed=seed)
+                DeepONetOperator(
+                    trunk=query,
+                    recipe=Lu2021DeepxdeExample(),
+                    iterations=iterations,
+                    seed=seed,
+                )
             )
     return operators
 

@@ -14,6 +14,9 @@ from .dataset import (
 from .deeponet import (
     DeepONetOperator as DeepONetOperator,
     FittedDeepONet as FittedDeepONet,
+    DeepONetRecipe as DeepONetRecipe,
+    Lu2021DeepxdeExample as Lu2021DeepxdeExample,
+    Lu2022Burgers as Lu2022Burgers,
 )
 from .spectralsvr import (
     FittedSpectralSVR as FittedSpectralSVR,
