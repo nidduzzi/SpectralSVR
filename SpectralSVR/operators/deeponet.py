@@ -41,7 +41,7 @@ class FittedDeepONet:
         branch = f.detach().cpu().numpy().astype(np.float32)
         trunk = x.to(torch.float64).detach().cpu().numpy().astype(np.float32)
         pred = self._model.predict((branch, trunk))
-        return torch.as_tensor(pred, dtype=torch.float64)
+        return torch.as_tensor(pred, dtype=torch.float64, device=x.device)
 
 
 class DeepONetOperator:
@@ -76,25 +76,23 @@ class DeepONetOperator:
         dde, DeepONetCartesianProd = _import_deepxde()
         import numpy as np
 
-        m = dataset.sensors.shape[0]  # branch input dimension (# sensors)
-        d = int(self.trunk.shape[1])  # trunk input dimension (space/time dims)
+        n_sensors = dataset.sensors.shape[0]
+        trunk_dimension = int(self.trunk.shape[1])
 
-        branch = dataset.f.detach().cpu().numpy().astype(np.float32)  # (N, m)
-        trunk = self.trunk.detach().cpu().numpy().astype(np.float32)  # (Q, d)
+        branch = dataset.f.detach().cpu().numpy().astype(np.float32)
+        trunk = self.trunk.detach().cpu().numpy().astype(np.float32)
         y = dataset.targets(self.trunk).detach().cpu().numpy().astype(np.float32)
 
-        # deepxde requires a test split; reuse the training data (this baseline is
-        # evaluated by the benchmark on its own held-out set, not by deepxde).
         data = dde.data.TripleCartesianProd(
             X_train=(branch, trunk), y_train=y, X_test=(branch, trunk), y_test=y
         )
+        dde.config.set_random_seed(self.seed)
         net = DeepONetCartesianProd(
-            [m, *self.branch_layers],
-            [d, *self.trunk_layers],
+            [n_sensors, *self.branch_layers],
+            [trunk_dimension, *self.trunk_layers],
             self.activation,
             "Glorot normal",
         )
-        dde.config.set_random_seed(self.seed)
         model = dde.Model(data, net)
         model.compile("adam", lr=self.lr)
         model.train(iterations=self.iterations, display_every=self.iterations)

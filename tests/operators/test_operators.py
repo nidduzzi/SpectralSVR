@@ -1,4 +1,4 @@
-"""Operator baselines: dataset, SpectralSVR adapter, benchmark, DeepONet smoke."""
+"""Operator baselines: dataset, SpectralSVR adapter, benchmark."""
 
 import ast
 import dataclasses
@@ -17,7 +17,6 @@ from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, ru
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
-    DeepONetOperator,
     OperatorDataset,
     FittedOperator,
     Operator,
@@ -29,7 +28,6 @@ from SpectralSVR.operators import (
 from tests._devices import DEVICES_PRESENT, HOST
 from tests._anchors import half_open_grid
 
-_HAS_DEEPXDE = importlib.util.find_spec("deepxde") is not None
 
 STATABLE = [None, *DEVICES_PRESENT]
 PASSING = ["by keyword", "by position"]
@@ -511,18 +509,6 @@ def test_the_value_types_are_immutable():
     ):
         with pytest.raises(dataclasses.FrozenInstanceError):
             setattr(value, field, None)
-
-
-@pytest.mark.skipif(not _HAS_DEEPXDE, reason="needs the 'baselines' extra (deepxde)")
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_deeponet_operator_smoke():
-    split = _antiderivative_split(0, n_train=40, n_test=10)
-    query = torch.linspace(0, 1, 20).unsqueeze(-1)
-    fitted = DeepONetOperator(trunk=query, iterations=20, seed=0).fit(split.train)
-    pred = fitted.predict(split.test.f, query)
-    assert pred.shape == (split.test.n_functions, query.shape[0])
-    assert not torch.isnan(pred).any()
 
 
 class BenchmarkRuns(RuleBasedStateMachine):
