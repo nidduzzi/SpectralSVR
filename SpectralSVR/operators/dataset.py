@@ -70,6 +70,11 @@ class OperatorDataset:
     u: Basis
 
     def __post_init__(self) -> None:
+        if self.sensors.device != self.f.device:
+            raise ValueError(
+                f"sensors are on {self.sensors.device} but their sampled values "
+                f"are on {self.f.device}; a dataset holds both on one device"
+            )
         if self.f.shape[1] != self.sensors.shape[0]:
             raise ValueError(
                 f"inputs are sampled at {self.f.shape[1]} points but the dataset "
@@ -102,6 +107,12 @@ class OperatorDataset:
         n_sensors : int
             Points per axis for the sensor grid.
         """
+        if input_field.coeff.device != output_field.coeff.device:
+            raise ValueError(
+                f"the input field is on {input_field.coeff.device} but the output "
+                f"field is on {output_field.coeff.device}; a dataset is built "
+                "from fields on one device"
+            )
         sensors = sensor_grid(
             input_field.domain, n_sensors, device=input_field.coeff.device
         )

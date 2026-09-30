@@ -122,6 +122,45 @@ def test_sensors_are_sampled_where_their_field_is(
     assert dataset.f.device == field_device
 
 
+SPLIT_PAIRS = [
+    pytest.param(
+        HOST, ACCELERATOR, marks=needs_an_accelerator, id="host-and-accelerator"
+    ),
+    pytest.param(
+        ACCELERATOR, HOST, marks=needs_an_accelerator, id="accelerator-and-host"
+    ),
+]
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A dataset whose parts sit on different devices is refused")
+@pytest.mark.parametrize(("first", "second"), SPLIT_PAIRS)
+@settings(deadline=None, max_examples=10)
+@given(
+    functions=st.integers(1, 4), modes=st.integers(1, 8), seed=st.integers(0, 10_000)
+)
+@example(functions=1, modes=1, seed=0)
+def test_a_dataset_whose_parts_sit_on_different_devices_is_refused(
+    first, second, functions, modes, seed
+):
+    generator = torch.Generator().manual_seed(seed)
+    coeff = FourierBasis.generate_coeff(
+        functions, modes, generator=generator, device=HOST
+    )
+    input_field = FourierBasis(coeff=coeff.to(first), domain=((0.0, 1.0),))
+    output_field = FourierBasis(coeff=coeff.to(second), domain=((0.0, 1.0),))
+    sensors = sensor_grid(((0.0, 1.0),), modes, device=first)
+
+    with pytest.raises(ValueError, match=f"{first}.*{second}"):
+        OperatorDataset.from_fields(input_field, output_field, n_sensors=modes)
+    with pytest.raises(ValueError, match=f"{first}.*{second}"):
+        OperatorDataset(
+            sensors=sensors,
+            f=torch.zeros(functions, modes, dtype=torch.float64, device=second),
+            u=output_field,
+        )
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Targets are evaluated, not pre-sampled")
