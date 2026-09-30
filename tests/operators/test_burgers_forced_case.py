@@ -1,4 +1,5 @@
 import importlib.util
+import itertools
 import math
 import pathlib
 
@@ -6,7 +7,7 @@ import pytest
 import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
-from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
+from hypothesis.stateful import Bundle, RuleBasedStateMachine, initialize, rule
 
 from SpectralSVR.utils import DEFAULT_COEFF_DTYPE
 
@@ -54,31 +55,8 @@ def the_same_case(first, second) -> bool:
     return all(x.device == y.device and torch.equal(x, y) for x, y in tensor_pairs)
 
 
-@pytest.mark.oracle_consistency
-@pytest.mark.scenario("A slice keeps its field's device")
-@pytest.mark.parametrize(
-    "placed_on",
-    [
-        pytest.param(HOST, id="host"),
-        pytest.param(ACCELERATOR, marks=needs_an_accelerator, id="accelerator"),
-    ],
-)
-@pytest.mark.parametrize("which", ["first", "middle", "last"])
-@FUZZ
-@given(slices=st.integers(1, 6), modes=st.integers(1, 8))
-@example(slices=1, modes=1)
-@example(slices=6, modes=8)
-def test_a_slice_keeps_its_field_s_device(placed_on, which, slices, modes):
-    coeff = torch.randn(2, slices, modes, dtype=DEFAULT_COEFF_DTYPE).to(placed_on)
-    field = bench.FourierBasis(
-        coeff=coeff, domain=((0.0, 1.0), (0.0, 1.0)), time_dependent=True
-    )
-    time_index = {"first": 0, "middle": slices // 2, "last": slices - 1}[which]
-
-    slice_ = bench.spatial_field_at(field, time_index)
-
-    assert slice_.coeff.device == placed_on
-    assert torch.equal(slice_.coeff, coeff[:, time_index])
+SLICE_EDGES = [(1, 1), (6, 8)]
+WHICH_SLICE = ["first", "middle", "last"]
 
 
 class BenchmarkCasesStayPut(RuleBasedStateMachine):
@@ -87,6 +65,13 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
         self.first_builds = {}
+
+    @initialize()
+    def check_every_pinned_slice(self):
+        for device, which, (slices, modes) in itertools.product(
+            DEVICES_PRESENT, WHICH_SLICE, SLICE_EDGES
+        ):
+            self.slice_a_placed_field(device, slices, modes, which)
 
     @rule(
         target=built,
@@ -100,29 +85,45 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
         assert the_same_case(case, first)
         return (key, seed, device)
 
-    @rule(identity=built)
-    def rebuild(self, identity):
+    @rule(identity=built, default=st.sampled_from([None, *DEVICES_PRESENT]))
+    def rebuild(self, identity, default):
+        if default is not None:
+            torch.set_default_device(default)
         key, seed, device = identity
         case = bench.DATASETS[key].build(seed, True, device)
         assert the_same_case(case, self.first_builds[identity])
-
-    @rule(device=st.sampled_from(DEVICES_PRESENT))
-    def point_the_process_default_elsewhere(self, device):
-        torch.set_default_device(device)
 
     @rule(seed=SEEDS, sizes=SIZES, device=st.sampled_from(DEVICES_PRESENT))
     def build_the_forced_case_at_other_sizes(self, seed, sizes, device):
         build_forced(seed, True, device, sizes)
 
+    @rule(
+        device=st.sampled_from(DEVICES_PRESENT),
+        slices=st.integers(1, 6),
+        modes=st.integers(1, 8),
+        which=st.sampled_from(WHICH_SLICE),
+    )
+    def slice_a_placed_field(self, device, slices, modes, which):
+        coeff = torch.randn(2, slices, modes, dtype=DEFAULT_COEFF_DTYPE).to(device)
+        field = bench.FourierBasis(
+            coeff=coeff, domain=((0.0, 1.0), (0.0, 1.0)), time_dependent=True
+        )
+        time_index = {"first": 0, "middle": slices // 2, "last": slices - 1}[which]
+
+        slice_ = bench.spatial_field_at(field, time_index)
+
+        assert slice_.coeff.device == device
+        assert torch.equal(slice_.coeff, coeff[:, time_index])
+
 
 BenchmarkCasesStayPut.TestCase.settings = settings(
     deadline=None, max_examples=10, stateful_step_count=10
 )
-TestBenchmarkCasesStayPut = pytest.mark.scenario(
-    "A case does not depend on the process default"
-)(
-    pytest.mark.scenario("Adding a row leaves the others alone")(
-        pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase)
+TestBenchmarkCasesStayPut = pytest.mark.scenario("A slice keeps its field's device")(
+    pytest.mark.scenario("A case does not depend on the process default")(
+        pytest.mark.scenario("Adding a row leaves the others alone")(
+            pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase)
+        )
     )
 )
 

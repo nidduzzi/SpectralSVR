@@ -3,15 +3,16 @@
 import ast
 import dataclasses
 import importlib.util
+import itertools
 import math
 import pathlib
 import time
 
 import pytest
 import torch
-from hypothesis import example, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
-from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
+from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
@@ -25,30 +26,20 @@ from SpectralSVR.operators import (
     benchmark,
     sensor_grid,
 )
-from tests._devices import ACCELERATOR, HOST, needs_an_accelerator
+from tests._devices import DEVICES_PRESENT, HOST
 from tests._anchors import half_open_grid
 
 _HAS_DEEPXDE = importlib.util.find_spec("deepxde") is not None
 
-DEVICES_STATABLE = [
-    pytest.param(None, id="unstated"),
-    pytest.param(HOST, id="host"),
-    pytest.param(ACCELERATOR, marks=needs_an_accelerator, id="accelerator"),
-]
-PLACEMENTS = {"host": HOST, "accelerator": ACCELERATOR}
-DEVICE_TRIPLES = [
-    pytest.param(
-        PLACEMENTS[given_input],
-        PLACEMENTS[given_output],
-        PLACEMENTS[default],
-        marks=needs_an_accelerator
-        if "accelerator" in (given_input, given_output, default)
-        else (),
-        id=f"{given_input}-{given_output}-under-{default}",
-    )
-    for given_input in PLACEMENTS
-    for given_output in PLACEMENTS
-    for default in PLACEMENTS
+STATABLE = [None, *DEVICES_PRESENT]
+PASSING = ["by keyword", "by position"]
+SENSOR_GRID_EDGES = [
+    (1, 1, "by keyword"),
+    (8, 3, "by keyword"),
+    (0, 1, "by keyword"),
+    (-1, 2, "by keyword"),
+    (2, 0, "by keyword"),
+    (2, 1, "by position"),
 ]
 
 SENSORS = 16
@@ -78,81 +69,116 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=SENSORS):
     return Split.partition(ut, u, n_train, n_sensors=modes)
 
 
-@pytest.mark.oracle_smoke
-@pytest.mark.parametrize("stated", DEVICES_STATABLE)
-@pytest.mark.parametrize("passed", ["by keyword", "by position"])
-@given(n=st.integers(-8, 8), d=st.integers(0, 3))
-@example(n=1, d=1)
-@example(n=8, d=3)
-@example(n=0, d=1)
-@example(n=-1, d=2)
-@example(n=2, d=0)
-def test_a_sensor_grid_is_built_or_refused(stated, passed, n, d):
-    domain = ((0.0, 1.0),) * d
-
-    if passed == "by position":
-        with pytest.raises(TypeError, match="positional"):
-            sensor_grid(domain, n, stated)  # type: ignore[misc]
-    elif n < 1 or d == 0:
-        with pytest.raises(ValueError, match="at least one"):
-            sensor_grid(domain, n, device=stated)
-    else:
-        grid = sensor_grid(domain, n, device=stated)
-        assert grid.shape == (n**d, d)
-        assert ((0 <= grid) & (grid < 1)).all()
-        expected_device = torch.get_default_device() if stated is None else stated
-        assert grid.device == expected_device
-        assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
-
-
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("Sensors are sampled where their field is")
-@pytest.mark.scenario("A dataset whose parts sit on different devices is refused")
-@pytest.mark.parametrize(("input_device", "output_device", "default"), DEVICE_TRIPLES)
-@settings(deadline=None, max_examples=10)
-@given(
-    dimensions=st.integers(1, 2),
-    sensors=st.integers(1, 8),
-    functions=st.integers(1, 4),
-    seed=st.integers(0, 10_000),
-)
-@example(dimensions=1, sensors=1, functions=1, seed=0)
-@example(dimensions=2, sensors=8, functions=4, seed=0)
-def test_a_dataset_is_built_where_its_fields_are_or_refused(
-    input_device, output_device, default, dimensions, sensors, functions, seed
-):
-    torch.set_default_device(default)
-    domain = ((0.0, 1.0),) * dimensions
-    generator = torch.Generator().manual_seed(seed)
-    coeff = FourierBasis.generate_coeff(
-        functions, (4,) * dimensions, generator=generator, device=HOST
+class SensorsAndDatasets(RuleBasedStateMachine):
+    @initialize(
+        seed=st.integers(0, 10_000),
+        functions=st.integers(1, 4),
+        dimensions=st.integers(1, 2),
     )
-    input_field = FourierBasis(coeff=coeff.to(input_device), domain=domain)
-    output_field = FourierBasis(coeff=coeff.to(output_device), domain=domain)
+    def draw_the_fields_and_check_every_pinned_edge(self, seed, functions, dimensions):
+        generator = torch.Generator().manual_seed(seed)
+        self.domain = ((0.0, 1.0),) * dimensions
+        self.coeff = FourierBasis.generate_coeff(
+            functions, (4,) * dimensions, generator=generator, device=HOST
+        )
+        for (n, d, passed), stated in itertools.product(SENSOR_GRID_EDGES, STATABLE):
+            self.build_a_sensor_grid(n, d, stated, passed)
+        for self.input_device, self.output_device, default in itertools.product(
+            DEVICES_PRESENT, repeat=3
+        ):
+            self.point_the_process_default_elsewhere(default)
+            self.build_a_dataset(sensors=1)
+            self.hand_build_a_dataset(sensors=1)
+        self.input_device = self.output_device = HOST
 
-    if input_device != output_device:
-        with pytest.raises(ValueError, match=f"{input_device}.*{output_device}"):
-            OperatorDataset.from_fields(input_field, output_field, n_sensors=sensors)
-        with pytest.raises(ValueError, match=f"{input_device}.*{output_device}"):
-            OperatorDataset(
-                sensors=sensor_grid(domain, sensors, device=input_device),
-                f=torch.zeros(
-                    functions,
-                    sensors**dimensions,
-                    dtype=torch.float64,
-                    device=output_device,
-                ),
-                u=output_field,
+    @rule(
+        n=st.integers(-8, 8),
+        d=st.integers(0, 3),
+        stated=st.sampled_from(STATABLE),
+        passed=st.sampled_from(PASSING),
+    )
+    def build_a_sensor_grid(self, n, d, stated, passed):
+        domain = ((0.0, 1.0),) * d
+        if passed == "by position":
+            with pytest.raises(TypeError, match="positional"):
+                sensor_grid(domain, n, stated)  # type: ignore[misc]
+        elif n < 1 or d == 0:
+            with pytest.raises(ValueError, match="at least one"):
+                sensor_grid(domain, n, device=stated)
+        else:
+            grid = sensor_grid(domain, n, device=stated)
+            assert grid.shape == (n**d, d)
+            assert ((0 <= grid) & (grid < 1)).all()
+            expected = torch.get_default_device() if stated is None else stated
+            assert grid.device == expected
+            assert torch.equal(grid.cpu(), sensor_grid(domain, n, device=HOST))
+
+    @rule(device=st.sampled_from(DEVICES_PRESENT))
+    def place_the_input_field(self, device):
+        self.input_device = device
+
+    @rule(device=st.sampled_from(DEVICES_PRESENT))
+    def place_the_output_field(self, device):
+        self.output_device = device
+
+    @rule(device=st.sampled_from(DEVICES_PRESENT))
+    def point_the_process_default_elsewhere(self, device):
+        torch.set_default_device(device)
+
+    @rule(sensors=st.integers(1, 8))
+    def build_a_dataset(self, sensors):
+        input_field = FourierBasis(
+            coeff=self.coeff.to(self.input_device), domain=self.domain
+        )
+        output_field = FourierBasis(
+            coeff=self.coeff.to(self.output_device), domain=self.domain
+        )
+        if self.input_device != self.output_device:
+            with pytest.raises(
+                ValueError, match=f"{self.input_device}.*{self.output_device}"
+            ):
+                OperatorDataset.from_fields(
+                    input_field, output_field, n_sensors=sensors
+                )
+        else:
+            dataset = OperatorDataset.from_fields(
+                input_field, output_field, n_sensors=sensors
             )
-    else:
-        dataset = OperatorDataset.from_fields(
-            input_field, output_field, n_sensors=sensors
+            assert dataset.sensors.device == self.input_device
+            assert dataset.f.device == self.input_device
+            assert torch.equal(
+                dataset.f, input_field(dataset.sensors).real.to(torch.float64)
+            )
+
+    @rule(sensors=st.integers(1, 8))
+    def hand_build_a_dataset(self, sensors):
+        output_field = FourierBasis(
+            coeff=self.coeff.to(self.output_device), domain=self.domain
         )
-        assert dataset.sensors.device == input_device
-        assert dataset.f.device == input_device
-        assert torch.equal(
-            dataset.f, input_field(dataset.sensors).real.to(torch.float64)
+        grid = sensor_grid(self.domain, sensors, device=self.input_device)
+        values = torch.zeros(
+            len(self.coeff), len(grid), dtype=torch.float64, device=self.output_device
         )
+        if self.input_device != self.output_device:
+            with pytest.raises(
+                ValueError, match=f"{self.input_device}.*{self.output_device}"
+            ):
+                OperatorDataset(sensors=grid, f=values, u=output_field)
+        else:
+            dataset = OperatorDataset(sensors=grid, f=values, u=output_field)
+            assert dataset.sensors.device == dataset.f.device == self.input_device
+
+
+SensorsAndDatasets.TestCase.settings = settings(
+    deadline=None, max_examples=50, stateful_step_count=15
+)
+TestSensorsAndDatasets = pytest.mark.scenario(
+    "Sensors are sampled where their field is"
+)(
+    pytest.mark.scenario("A dataset whose parts sit on different devices is refused")(
+        pytest.mark.oracle_smoke(SensorsAndDatasets.TestCase)
+    )
+)
 
 
 @pytest.mark.no_fuzz
