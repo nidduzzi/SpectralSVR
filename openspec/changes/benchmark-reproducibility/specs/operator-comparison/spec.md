@@ -33,6 +33,21 @@ Reproducing the table SHALL be one recorded command, and the analysis that prese
 - **WHEN** the comparison notebook is run
 - **THEN** it loads the committed results rather than recomputing them, so what is shown is what was recorded
 
+### Requirement: A baseline is fitted reproducibly and by its reference protocol
+Each baseline SHALL be fitted so that the same seed and the same data give the same predictions wherever the fit falls in a run. It SHALL follow the training protocol of the reference it is compared as, and the table SHALL record that protocol with the results, so a departure from the reference is stated rather than silent.
+
+#### Scenario: A fit does not depend on its place in the run
+- **WHEN** a baseline is fitted with the same seed on the same data, once as the first fit in a process and once after other fits have run
+- **THEN** its predictions are identical, because the seed governs every random draw the fit makes, its initial weights included
+
+#### Scenario: The reference protocol is followed and recorded
+- **WHEN** DeepONet is fitted for the table
+- **THEN** it uses the initialisation matched to its activation, normalised inputs, and outputs normalised point by point from the training targets, as the reference comparison does, and the table records the protocol and the reference it follows
+
+#### Scenario: A baseline predicts where its query is
+- **WHEN** a fitted baseline is queried at points on a stated device
+- **THEN** its predictions are on that device, whatever the process default names
+
 ## MODIFIED Requirements
 
 ### Requirement: The table states what it does and does not establish
@@ -53,6 +68,10 @@ Documentation accompanying the comparison SHALL state what the harness holds fix
 #### Scenario: A single-seed table is not presented as a result
 - **WHEN** the benchmark is run at one seed, for a quick check
 - **THEN** its output is marked as such and is not the artifact the documentation points a reader at
+
+#### Scenario: Run-to-run spread is stated per operator
+- **WHEN** the table reports an operator's spread across the seed set
+- **THEN** the documentation also states that operator's spread between repeated runs at one fixed seed, so a seed spread is not read as the method's variation where repeated runs of one seed vary as much
 
 ### Requirement: A row says how its forcing was obtained
 Where the comparison offers more than one dataset mapping a forcing to a solution, each SHALL make clear whether its forcing was drawn from a stated distribution or derived from a solution that was drawn first. The two are not interchangeable: a forcing derived as a solution's residual carries whatever structure that solution had, so an operator scoring well on it has not been shown to handle a forcing anyone would choose.

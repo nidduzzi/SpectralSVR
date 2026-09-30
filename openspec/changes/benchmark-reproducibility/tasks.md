@@ -9,33 +9,46 @@
 - [ ] 1.2 Verify no existing metric value changes: run the metric suite on a fixed array before and after and assert every pre-existing column is identical
 - [ ] 1.3 Verify the two relative-error columns differ on a case where they must — a test set with one sample of much larger magnitude than the rest — so the distinction is demonstrated rather than asserted
 
-## 2. Provenance
+## 2. DeepONet: reproducible, placed, and by its reference
 
-- [ ] 2.1 Record the device **each stage ran on**, coefficient precision, torch version, deepxde version and git revision as columns on every run row; verify each is populated in a real run rather than left empty. A single device column is wrong today: `Burgers.generate:62` integrates on `cuda:0` through `resolve_device()` while `MultiRegression.__init__` at `model/__base.py:49` hardcodes `cpu`, so one run uses both. Verify a run whose stages differ reports both rather than one standing for the other
-- [ ] 2.2 Record whether the working tree was clean at generation time; verify a deliberately dirty tree is reported as such, so a number from uncommitted code is visible
-- [ ] 2.3 Verify the columns survive concatenating two runs made under different conditions, which is the reason they are columns rather than a file header
+- [ ] 2.1 Seed DeepONet before its network is built. Test first: the same seed and data fitted once as the first fit in a process and once after another fit must give identical predictions; it must fail on the current order, where cold runs measured r2 -0.840 and -1.716 and a warm run -0.119 on the quick MMS split. Scenario "A fit does not depend on its place in the run"
+- [ ] 2.2 Return `FittedDeepONet.predict`'s result on the device of the query. Test first under a process default that differs from the query's device; it must fail on the current code, which builds the result on the process default. Scenario "A baseline predicts where its query is"
+- [ ] 2.3 Before changing the configuration, measure the seeded baseline per dataset: r2, and the r2 move under a 1e-7 and a 1e-6 sensor shift at a fixed seed. Record the table. It is the reference every element below is measured against
+- [ ] 2.4 Adopt He initialisation for the ReLU branch and trunk networks (Lu et al. 2022, §3.1.5); measure as in 2.3 and record the change per dataset
+- [ ] 2.5 Adopt input normalisation by per-sensor training statistics, held by the fitted model and applied at predict; measure as in 2.3 and record
+- [ ] 2.6 Adopt output normalisation point by point, u(ξ) = std[u](ξ)·N(v)(ξ) + ū(ξ), from the training targets only (Lu et al. 2022, §3.4); measure as in 2.3 and record. Test that the statistics come from the training split: a fit on data whose test half is altered must give identical fitted statistics
+- [ ] 2.7 Measure the reference's second-moment output rescaling (§3.1.5) as in 2.3 without adopting it, and record the result as a stated departure
+- [ ] 2.8 Record the protocol DeepONet follows (initialisation, normalisation, learning rate, iterations, layer sizes, and the stated departure) with the results, citing arXiv:2111.05512. Scenario "The reference protocol is followed and recorded"
+- [ ] 2.9 Measure each operator's spread between repeated runs at one fixed seed, per dataset, first in a process and after other fits; record it beside the seed spread and state both in the benchmark documentation. Test that the documentation names both. Scenario "Run-to-run spread is stated per operator"
+- [ ] 2.10 Mutation-test the adapter's changed lines with `just mutate-changed` over `cosmic-ray.toml`, whose module path covers `SpectralSVR/operators/deeponet.py`; read every survivor and re-run it
 
-## 3. Seeds and output format
+## 3. Provenance
 
-- [ ] 3.0 Update `tests/operators/test_operators.py:245`, which asserts `"single seed" in doc`. That assertion encodes the caveat this change removes, so it fails the moment the seed set lands — it must be rewritten to assert which seed set the figures come from, not deleted. Verify it still fails when the new statement is removed from the script's docstring
-- [ ] 3.1 Change the benchmark output to long format, one row per dataset, operator and seed; verify a single-seed run reproduces today's values on every column that already existed **to within the harness's measured run-to-run noise**, not exactly. *Corrected from this task as first written:* six consecutive runs of identical code vary by up to `2.51e-05` relative, so exact reproduction is not achievable and asserting it would fail for reasons unrelated to the format change. Record the observed difference against that floor
-- [ ] 3.2 Add a fixed seed set as the default with the seeds recorded in the output; verify a partial run can be appended rather than requiring a restart, since DeepONet trains for ten thousand iterations per dataset per seed
-- [ ] 3.3 Add aggregation at read time producing a centre and spread per metric; verify the aggregate is derived from the committed long file rather than recomputed from the models
+- [ ] 3.1 Record the device **each stage ran on**, coefficient precision, torch version, deepxde version and git revision as columns on every run row; verify each is populated in a real run rather than left empty. A single device column is wrong today: `Burgers.generate:62` integrates on `cuda:0` through `resolve_device()` while `MultiRegression.__init__` at `model/__base.py:49` hardcodes `cpu`, so one run uses both. Verify a run whose stages differ reports both rather than one standing for the other
+- [ ] 3.2 Record whether the working tree was clean at generation time; verify a deliberately dirty tree is reported as such, so a number from uncommitted code is visible
+- [ ] 3.3 Verify the columns survive concatenating two runs made under different conditions, which is the reason they are columns rather than a file header
 
-## 4. Timing
+## 4. Seeds and output format
 
-- [ ] 4.1 Record what each operator's fit covers — a direct solve or a fixed iteration count — alongside `fit_seconds`; verify both operators report it
-- [ ] 4.2 State in the benchmark documentation that the timing column measures different work for different operators and does not support a like-for-like cost comparison; verify the wording matches what the harness capability already says about the comparison's limits
+- [ ] 4.0 Update the assertion in `tests/operators/test_operators.py` (line 364 after the stack beneath was rebased; first written as 245), which asserts `"single seed" in doc`. That assertion encodes the caveat this change removes, so it fails the moment the seed set lands — it must be rewritten to assert which seed set the figures come from, not deleted. Verify it still fails when the new statement is removed from the script's docstring
+- [ ] 4.1 Change the benchmark output to long format, one row per dataset, operator and seed; verify a single-seed run reproduces today's values on every column that already existed **to within the harness's measured run-to-run noise**, not exactly. *Corrected from this task as first written:* six consecutive runs of identical code vary by up to `2.51e-05` relative, so exact reproduction is not achievable and asserting it would fail for reasons unrelated to the format change. Record the observed difference against that floor. *Corrected again after `sensors-follow-the-stated-device`:* that floor was measured on SpectralSVR. DeepONet rows move by design in section 2, so they are recorded, not compared against it; the SpectralSVR rows alone are held to the floor
+- [ ] 4.2 Add a fixed seed set as the default with the seeds recorded in the output; verify a partial run can be appended rather than requiring a restart, since DeepONet trains for ten thousand iterations per dataset per seed
+- [ ] 4.3 Add aggregation at read time producing a centre and spread per metric; verify the aggregate is derived from the committed long file rather than recomputed from the models
 
-## 5. One command, one record
+## 5. Timing
 
-- [ ] 5.1 Add a `bench` recipe to the `Justfile` regenerating the table with the default seed set and datasets; verify `just bench --help` or the recipe listing shows it and that it needs no remembered arguments
-- [ ] 5.2 Point `notebooks/comparisons/deeponet_vs_spectralsvr.ipynb` at the committed results instead of recomputing; verify it runs without fitting any operator
-- [ ] 5.3 Verify `results/` is still gitignored for scratch output while the committed table lives at a path that is tracked, so the record and the scratch cannot be confused
+- [ ] 5.1 Record what each operator's fit covers — a direct solve or a fixed iteration count — alongside `fit_seconds`; verify both operators report it
+- [ ] 5.2 State in the benchmark documentation that the timing column measures different work for different operators and does not support a like-for-like cost comparison; verify the wording matches what the harness capability already says about the comparison's limits
 
-## 6. Regeneration and verification
+## 6. One command, one record
 
-- [ ] 6.1 Regenerate over the full seed set with all datasets including the forced-Burgers one; verify every row carries complete provenance and no metric is NaN
-- [ ] 6.2 Record in the change which figures moved relative to the previous single-seed table and why — the MMS row from the residual fix, everything else from seed averaging — so the discontinuity is documented rather than discovered later
-- [ ] 6.3 Run `just check`; verify clean
-- [ ] 6.4 Verify no source file gained an explanatory prose comment; the provenance columns and the metric name must carry their own meaning
+- [ ] 6.1 Add a `bench` recipe to the `Justfile` regenerating the table with the default seed set and datasets; verify `just bench --help` or the recipe listing shows it and that it needs no remembered arguments
+- [ ] 6.2 Point `notebooks/comparisons/deeponet_vs_spectralsvr.ipynb` at the committed results instead of recomputing; verify it runs without fitting any operator
+- [ ] 6.3 Verify `results/` is still gitignored for scratch output while the committed table lives at a path that is tracked, so the record and the scratch cannot be confused
+
+## 7. Regeneration and verification
+
+- [ ] 7.1 Regenerate over the full seed set with all datasets including the forced-Burgers one; verify every row carries complete provenance and no metric is NaN
+- [ ] 7.2 Record in the change which figures moved relative to the previous single-seed table and why — the MMS row from the residual fix, every DeepONet row from section 2, everything else from seed averaging — so the discontinuity is documented rather than discovered later
+- [ ] 7.3 Run `just check`; verify clean
+- [ ] 7.4 Verify no source file gained an explanatory prose comment; the provenance columns and the metric name must carry their own meaning

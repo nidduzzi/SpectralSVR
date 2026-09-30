@@ -37,6 +37,10 @@ EXEMPT: dict[str, str] = {
     "Neither replaces the other": IN_FLIGHT,
     "One command regenerates": IN_FLIGHT,
     "The notebook reads the record": IN_FLIGHT,
+    "Run-to-run spread is stated per operator": IN_FLIGHT,
+    "A fit does not depend on its place in the run": IN_FLIGHT,
+    "The reference protocol is followed and recorded": IN_FLIGHT,
+    "A baseline predicts where its query is": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

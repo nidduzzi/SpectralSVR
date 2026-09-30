@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md - Why for the four gaps. The current output, verified:
+See proposal.md - Why for the five gaps. The current output, verified:
 
 ```
 dataset,operator,fit_seconds,mse,rmse,mae,r2,smape,rse,rrse,pred_nan_sum
@@ -23,6 +23,7 @@ Constraints inherited from elsewhere: `align-spectral-residual-with-solver` move
 - Tuning. Untuned-on-both-sides is a stated limitation of the harness; removing it needs a protocol, a budget and its own change. Adding seeds without tuning is still an improvement, and conflating the two would make this change unlandable.
 - New baselines or datasets. FNO belongs with its own adapter change.
 - Changing `rse` or `rrse`. Their definitions were settled deliberately; this change adds beside them.
+- Finding why DeepONet fails on the MMS row. The reference protocol is adopted and measured; whatever r2 results is reported, not chased.
 
 ## Decisions
 
@@ -76,7 +77,33 @@ whether any move at all, shifts between batches. Treating `2.51e-05` as a consta
 clean comparison look anomalous and a noisy one look acceptable; it is a bound to read a difference *against*, not a
 value to expect.
 
+### DeepONet is seeded before its network is built
+
+`dde.config.set_random_seed` moves above the `DeepONetCartesianProd` constructor, so the seed governs the initial weights as well as training. Measured in fresh processes on the quick MMS split at 2000 iterations: the current order gave r2 -0.840 and -1.716 on two cold runs and -0.119 after an earlier fit; the new order gave r2 -0.118985 with identical prediction bytes in all three positions, on cuda, without `torch.use_deterministic_algorithms`. Enabling deterministic algorithms as well gave the same bytes, so it is not adopted at this size. The position-independence scenario is what guards it, since a longer run or a larger split may reach a nondeterministic kernel that this one did not.
+
+*Alternative rejected:* seed once per process. It leaves every fit's weights depending on what ran before it, which is the defect.
+
+### The reference protocol is adopted element by element, each measured
+
+The reference comparison uses He initialisation for ReLU, input normalisation, and point-by-point output normalisation, u(ξ) = std[u](ξ)·N(v)(ξ) + ū(ξ). Each is adopted separately and measured per dataset, for r2 and for the move under a 1e-7 sensor shift at a fixed seed, so the record shows what each element did. Normalisation statistics come from the training split only and are held by the fitted model, so prediction applies the same transform without seeing test data. A quick probe with global rather than per-point normalisation and Glorot initialisation did not help MMS (r2 -0.080, -0.025 and -0.269 at shifts of 0, 1e-7 and 1e-6), which is why the per-point form the reference states is the one planned, and why each element needs its own measurement rather than an expectation.
+
+This is not tuning. Nothing is searched; every choice is the reference's, cited in the table. The reference also rescales the DeepONet output by a standard deviation derived from a second-moment analysis at initialisation (§3.1.5). This change does not adopt it; it is measured alongside the three adopted elements, so its effect is known, and the table's protocol record lists it as a stated departure.
+
+*Alternative rejected:* keep the current configuration and state its departures. A baseline trained off its reference invites the objection that it was handicapped, which the paper cannot answer with a caveat.
+
+### A baseline predicts on the query's device
+
+`FittedDeepONet.predict` returns its result on the device of the points it was queried at, matching `sensors-follow-the-stated-device`'s rule that derived work follows placed data. Today it lands on the process default, which deepxde switches to cuda at import.
+
+### Run-to-run spread is measured per operator
+
+The SpectralSVR noise floor was measured under `dtype-seam`; DeepONet's never was. Each operator is run repeatedly at one fixed seed, first in a process and after other fits, and the spread is recorded per dataset beside the seed spread. The table's documentation states both, so a DeepONet seed spread is not read as method variation where repeated runs vary as much.
+
 ## Risks / Trade-offs
+
+- **Every DeepONet row moves.** Seeding, initialisation and normalisation all change the fit. → Each move is measured and recorded against the element that caused it, and the table cites the protocol, so the discontinuity is documented rather than discovered.
+
+- **DeepONet may still fail on MMS.** The reference protocol is not a promise of accuracy on a manufactured operator. → The row is reported as it comes out, with its fixed-seed spread beside its seed spread.
 
 - **Regeneration cost multiplies by the seed count.** DeepONet trains for ten thousand iterations per dataset per seed. → The long format means a partial run can be appended rather than restarting, and the quick mode stays available for smoke checks.
 
@@ -89,10 +116,11 @@ value to expect.
 ## Migration Plan
 
 1. Add the per-sample relative L2 to the metric suite beside the existing entries; confirm no existing metric value changes.
-2. Add provenance capture and the long output format to the benchmark script; confirm a single-seed run reproduces today's numbers on the columns that already existed to within the harness's measured run-to-run noise of `2.51e-05` -- exact reproduction is not achievable and asserting it would fail for reasons unrelated to this change.
-3. Add seed aggregation and the `just` recipe.
-4. Point the notebook at the committed table.
-5. Regenerate over the full seed set, after the three dependencies have landed, and commit the result with its provenance.
+2. Seed DeepONet before its network is built, return its predictions on the query's device, and adopt the reference protocol element by element, measuring each.
+3. Add provenance capture and the long output format to the benchmark script; confirm a single-seed run reproduces today's SpectralSVR numbers on the columns that already existed to within the harness's measured run-to-run noise of `2.51e-05` -- exact reproduction is not achievable and asserting it would fail for reasons unrelated to this change. DeepONet rows are expected to move, from step 2, and are recorded rather than compared against that floor.
+4. Add seed aggregation and the `just` recipe.
+5. Point the notebook at the committed table.
+6. Regenerate over the full seed set, after the three dependencies have landed, and commit the result with its provenance.
 
 Rollback is a revert plus restoring the previous table from history.
 
