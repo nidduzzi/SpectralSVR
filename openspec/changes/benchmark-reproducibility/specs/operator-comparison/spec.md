@@ -42,7 +42,7 @@ Each baseline SHALL be fitted so that the same seed and the same data give the s
 
 #### Scenario: The reference protocol is followed and recorded
 - **WHEN** DeepONet is fitted for the table
-- **THEN** it uses the initialisation matched to its activation, normalised inputs, and outputs normalised point by point from the training targets, as the reference comparison does, and the table records the protocol and the reference it follows
+- **THEN** it is trained by a named recipe taken from a reference implementation for that kind of problem, and the table records the recipe, the source it was taken from, and each stated departure from it, such as a shorter training length or keeping a simpler recipe where the reference's measured worse
 
 #### Scenario: A baseline predicts where its query is
 - **WHEN** a fitted baseline is queried at points on a stated device

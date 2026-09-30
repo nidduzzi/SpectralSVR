@@ -83,13 +83,32 @@ value to expect.
 
 *Alternative rejected:* seed once per process. It leaves every fit's weights depending on what ran before it, which is the defect.
 
-### The reference protocol is adopted element by element, each measured
+### DeepONet is trained by a named recipe taken from reference code
 
-The reference comparison uses He initialisation for ReLU, input normalisation, and point-by-point output normalisation, u(ξ) = std[u](ξ)·N(v)(ξ) + ū(ξ). Each is adopted separately and measured per dataset, for r2 and for the move under a 1e-7 sensor shift at a fixed seed, so the record shows what each element did. Normalisation statistics come from the training split only and are held by the fitted model, so prediction applies the same transform without seeing test data. A quick probe with global rather than per-point normalisation and Glorot initialisation did not help MMS (r2 -0.080, -0.025 and -0.269 at shifts of 0, 1e-7 and 1e-6), which is why the per-point form the reference states is the one planned, and why each element needs its own measurement rather than an expectation.
+The recipes come from the code the reference results were produced with, not from a paper's prose. Two apply:
 
-This is not tuning. Nothing is searched; every choice is the reference's, cited in the table. The reference also rescales the DeepONet output by a standard deviation derived from a second-moment analysis at initialisation (§3.1.5). This change does not adopt it; it is measured alongside the three adopted elements, so its effect is known, and the table's protocol record lists it as a stated departure.
+- **Lu 2021 / deepxde example**, for the antiderivative rows. Branch `[m, 40, 40]`, trunk `[d, 40, 40]`, ReLU, Glorot normal, Adam at 1e-3, no normalisation. Sources: deepxde `examples/operator/antiderivative_aligned.py` (10,000 iterations) and `lululxvi/deeponet` `src/deeponet_pde.py`, problem `ode` (50,000 epochs). This is the current configuration.
+- **Lu 2022 Burgers**, for the three Burgers rows. Branch `[m] + [128]*4`, trunk `[d] + [128]*3`, tanh, Glorot normal, trunk features `cos` and `sin` of 2πx and 4πx for each periodic spatial coordinate (a time coordinate is passed unchanged), outputs normalised point by point as `outputs * std + mean` from the training targets, no input normalisation, Adam at 1e-3 with inverse-time decay `(iterations // 5, 0.5)`. Source: `lu-group/deeponet-fno` `src/burgers/deeponet.py`, which trains for 500,000 epochs.
 
-*Alternative rejected:* keep the current configuration and state its departures. A baseline trained off its reference invites the objection that it was handicapped, which the paper cannot answer with a caveat.
+Where the training targets are constant at a point, their standard deviation is zero and `outputs * std + mean` would pin that point to the mean while dividing by zero when the targets are normalised. The recipe uses a scale of 1 there, so the point is learned unnormalised. The forced row has twelve such points, its `t = 0` slice starting from rest. Normalisation statistics come from the training split only and are held by the fitted model.
+
+Adoption is decided per Burgers row on five seeds, as the reference reports five trials. The current configuration and the Burgers recipe are each measured at 10,000 and 50,000 iterations. The Burgers recipe is adopted on a row where its better mean r2 is not below the current configuration's better mean by more than the larger of their two standard deviations; the longer run is kept only where it beats the shorter by the same margin, since it multiplies regeneration cost. Otherwise the current configuration stays, and the table records the Burgers recipe's measured result as the departure. 500,000 epochs would take about ten minutes per fit and some twenty-five hours per regeneration, so the length is a stated departure in every case.
+
+This is not tuning. Nothing is searched; every choice is a reference's, cited in the table, and the comparison between two fixed recipes is recorded whichever way it falls.
+
+*Why the first plan was dropped.* It took He initialisation (§3.1.5), input normalisation and point-by-point output normalisation (§3.4) from the paper's text. Measured cumulatively at seed 0, full size and 10,000 iterations, with the r2 move under 1e-7 and 1e-6 sensor shifts in brackets:
+
+| dataset | seeded baseline | + He init | + input norm | + per-point output norm | + second-moment rescale |
+| --- | --- | --- | --- | --- | --- |
+| antiderivative | 0.616 (0.04) | 0.012 | 0.397 | 0.477 (0.02) | 0.585 |
+| burgers-mms | -6.12 (4.87) | -253 | -1186 | -11.79 (2.64) | -7.50 |
+| burgers-numerical | -1.67 (0.08) | -7.69 | -22.8 | -0.19 (0.01) | -0.94 |
+| antiderivative-grf | 0.9991 (0.00) | 0.978 | 0.995 | 0.998 (0.00) | 0.9989 |
+| burgers-forced | 0.801 (0.03) | -22.4 | -10006 | -1.52 (0.67) | -0.29 |
+
+He initialisation alone wrecked every row, and input normalisation made it worse. Neither appears in any of the reference code: its ReLU networks use Glorot initialisation and it never normalises inputs. The second-moment rescaling by O(1/√p) of §3.1.5 is not in the reference Burgers code either, and the paper itself reports that vanilla DeepONet "works well even without scaling", so it is not pursued. The grid also shows that one seed cannot rank recipes: the seeded baseline's MMS r2 moves 4.87 under a 1e-6 shift. Hence five seeds.
+
+*Alternative rejected:* keep the current configuration everywhere and state its departures. It is the reference recipe for the antiderivative rows, but for Burgers a reviewer can point to the fair comparison's code, and that objection is answered by measurement, not by a caveat.
 
 ### A baseline predicts on the query's device
 
@@ -101,9 +120,11 @@ The SpectralSVR noise floor was measured under `dtype-seam`; DeepONet's never wa
 
 ## Risks / Trade-offs
 
-- **Every DeepONet row moves.** Seeding, initialisation and normalisation all change the fit. → Each move is measured and recorded against the element that caused it, and the table cites the protocol, so the discontinuity is documented rather than discovered.
+- **Every DeepONet row moves.** Seeding changes every fit, and the Burgers recipe changes the rows it is adopted on. → Each move is measured and recorded against the element that caused it, and the table cites the protocol, so the discontinuity is documented rather than discovered.
 
-- **DeepONet may still fail on MMS.** The reference protocol is not a promise of accuracy on a manufactured operator. → The row is reported as it comes out, with its fixed-seed spread beside its seed spread.
+- **DeepONet may still fail on MMS.** A reference recipe is not a promise of accuracy on a manufactured operator.
+
+- **The Burgers recipe costs more to measure.** Wider networks at 50,000 iterations over five seeds and five datasets run for about three hours. → The measurement runs once, in the background, and its raw rows are kept with the change. → The row is reported as it comes out, with its fixed-seed spread beside its seed spread.
 
 - **Regeneration cost multiplies by the seed count.** DeepONet trains for ten thousand iterations per dataset per seed. → The long format means a partial run can be appended rather than restarting, and the quick mode stays available for smoke checks.
 
@@ -116,7 +137,7 @@ The SpectralSVR noise floor was measured under `dtype-seam`; DeepONet's never wa
 ## Migration Plan
 
 1. Add the per-sample relative L2 to the metric suite beside the existing entries; confirm no existing metric value changes.
-2. Seed DeepONet before its network is built, return its predictions on the query's device, and adopt the reference protocol element by element, measuring each.
+2. Seed DeepONet before its network is built, return its predictions on the query's device, add the Lu 2022 Burgers recipe beside the current one, and adopt it per row by the five-seed criterion.
 3. Add provenance capture and the long output format to the benchmark script; confirm a single-seed run reproduces today's SpectralSVR numbers on the columns that already existed to within the harness's measured run-to-run noise of `2.51e-05` -- exact reproduction is not achievable and asserting it would fail for reasons unrelated to this change. DeepONet rows are expected to move, from step 2, and are recorded rather than compared against that floor.
 4. Add seed aggregation and the `just` recipe.
 5. Point the notebook at the committed table.
