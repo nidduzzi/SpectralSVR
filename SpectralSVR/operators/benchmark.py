@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pandas as pd
 import torch
 
-from ..utils import DEFAULT_METRICS, get_metrics
+from ..utils import DEFAULT_METRICS, get_metrics, placed
 from .__base import Operator
 from .dataset import Split
 
@@ -60,7 +60,7 @@ def benchmark(
                 "fit_seconds": fit_seconds,
                 "fit_covers": op.fit_covers,
                 "protocol": op.protocol,
-                "fit_device": str(fitted.device),
+                "fit_device": str(placed(fitted.device)),
                 **get_metrics(prediction_on_host, target_on_host),
             }
         )

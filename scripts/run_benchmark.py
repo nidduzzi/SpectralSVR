@@ -88,7 +88,12 @@ from SpectralSVR.operators import (
     SpectralSVROperator,
     benchmark,
 )
-from SpectralSVR.utils import DEFAULT_COEFF_DTYPE, etdrk4_solver, resolve_device
+from SpectralSVR.utils import (
+    DEFAULT_COEFF_DTYPE,
+    etdrk4_solver,
+    placed,
+    resolve_device,
+)
 
 DEFAULT_OUT = Path("results") / "bench_results.csv"
 RECORD_OUT = Path("benchmarks") / "operator_comparison.csv"
@@ -532,7 +537,7 @@ def main(argv: list[str] | None = None) -> None:
             table = benchmark(operators, case.split, case.query).reset_index()
             table.insert(0, "dataset", spec.label)
             table.insert(2, "seed", seed)
-            table["data_device"] = str(device)
+            table["data_device"] = str(placed(device))
             table["quick"] = args.quick
             table["seed_set"] = seed_set
             for field, value in provenance._asdict().items():

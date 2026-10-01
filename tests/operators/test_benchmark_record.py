@@ -113,11 +113,12 @@ class BenchmarkRecord(RuleBasedStateMachine):
                 self.directory / "with_deeponet.csv",
                 [0],
                 ["antiderivative"],
-                ACCELERATORS[0],
+                ACCELERATORS[0].type,
                 append=False,
                 operators=("spectralsvr", "deeponet"),
             )
             assert (table["fit_device"] == str(ACCELERATORS[0])).all()
+            assert (table["data_device"] == str(ACCELERATORS[0])).all()
             deeponet = table[table["operator"] == "DeepONet"].iloc[0]
             assert deeponet["fit_covers"] == (
                 "200 Adam iterations of the Lu 2021 / deepxde example recipe"
