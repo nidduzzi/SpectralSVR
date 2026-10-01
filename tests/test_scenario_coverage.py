@@ -29,10 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "An in-flight exemption ends with its change": IN_FLIGHT,
-    "One command regenerates": IN_FLIGHT,
-    "The notebook reads the record": IN_FLIGHT,
-    "The reference protocol is followed and recorded": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
@@ -140,23 +136,28 @@ EXEMPT: dict[str, str] = {
 }
 
 
-def _spec_files() -> list[Path]:
-    main = sorted((REPO / "openspec" / "specs").rglob("spec.md"))
-    active = sorted(
+def _main_specs() -> list[Path]:
+    return sorted((REPO / "openspec" / "specs").rglob("spec.md"))
+
+
+def _deltas_in_flight() -> list[Path]:
+    return sorted(
         path
         for path in (REPO / "openspec" / "changes").rglob("spec.md")
         if "archive" not in path.parts
     )
-    return main + active
 
 
-def _stated() -> dict[str, list[str]]:
-    """Scenario name -> the capabilities stating it."""
+def _capabilities_stating_each_scenario(specs: list[Path]) -> dict[str, list[str]]:
     stated: dict[str, list[str]] = {}
-    for spec in _spec_files():
+    for spec in specs:
         for match in SCENARIO.finditer(spec.read_text()):
             stated.setdefault(match.group(1), []).append(spec.parent.name)
     return stated
+
+
+def _stated() -> dict[str, list[str]]:
+    return _capabilities_stating_each_scenario(_main_specs() + _deltas_in_flight())
 
 
 def _covered() -> set[str]:
@@ -222,4 +223,21 @@ def test_no_exemption_is_stale():
         f"EXEMPT names scenarios that now have a test: {now_tested}. Remove the "
         "entry -- the list is debt to be worked down, and a stale entry hides "
         "coverage that already exists."
+    )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("An in-flight exemption ends with its change")
+def test_every_in_flight_exemption_names_a_scenario_still_in_flight():
+    in_flight = set(_capabilities_stating_each_scenario(_deltas_in_flight()))
+    stranded = sorted(
+        name
+        for name, reason in EXEMPT.items()
+        if reason == IN_FLIGHT and name not in in_flight
+    )
+    assert not stranded, (
+        f"EXEMPT gives IN_FLIGHT for scenarios no change in flight states: "
+        f"{stranded}. Their change was archived without a test naming them; "
+        "cover each, or record the reason no test can exist."
     )

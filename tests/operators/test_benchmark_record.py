@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import math
 import pathlib
 import shutil
@@ -17,9 +18,8 @@ from SpectralSVR.operators import Lu2021DeepxdeExample, Lu2022Burgers, summarise
 from SpectralSVR.operators.benchmark import RUN_KEY, SUMMARISED_COLUMNS
 from tests._devices import DEVICES_PRESENT, HOST
 
-SCRIPT_PATH = (
-    pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
-)
+REPOSITORY = pathlib.Path(__file__).resolve().parents[2]
+SCRIPT_PATH = REPOSITORY / "scripts" / "run_benchmark.py"
 CHEAP_DATASETS = ["antiderivative", "antiderivative-grf"]
 PROVENANCE_COLUMNS = [
     "data_device",
@@ -244,7 +244,9 @@ TestBenchmarkRecord = pytest.mark.scenario("Every stage runs where the run says"
     pytest.mark.scenario("Provenance travels with the numbers")(
         pytest.mark.scenario("A changed condition is visible")(
             pytest.mark.scenario("Spread accompanies every metric")(
-                pytest.mark.oracle_independent(BenchmarkRecord.TestCase)
+                pytest.mark.scenario("The reference protocol is followed and recorded")(
+                    pytest.mark.oracle_independent(BenchmarkRecord.TestCase)
+                )
             )
         )
     )
@@ -285,3 +287,66 @@ def test_provenance_reports_a_dirty_tree_and_a_clean_one(tmp_path):
     assert clean.tree_clean and not dirty.tree_clean
     assert clean.revision == dirty.revision == head
     assert dirty._replace(tree_clean=True) == clean
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("One command regenerates")
+@pytest.mark.skipif(
+    shutil.which("just") is None, reason="needs just, which the gate runs under"
+)
+def test_one_recipe_regenerates_the_record_with_every_default_stated():
+    recipe = subprocess.run(
+        ["just", "--dry-run", "bench"],
+        cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stderr
+
+    assert "scripts/run_benchmark.py" in recipe
+    assert "--out benchmarks/operator_comparison.csv" in recipe
+    assert "--device cuda" in recipe
+    assert "--seeds" not in recipe and "--datasets" not in recipe
+    assert SCRIPT.SEED_SET == (0, 1, 2, 3, 4)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("The notebook reads the record")
+def test_the_notebook_presents_the_record_and_fits_nothing(tmp_path, monkeypatch):
+    record = tmp_path / "benchmarks" / "operator_comparison.csv"
+    record.parent.mkdir()
+    SCRIPT.main(
+        [
+            "--out",
+            str(record),
+            "--device",
+            "cpu",
+            "--operators",
+            "spectralsvr",
+            "--seeds",
+            "0",
+            "1",
+            "--datasets",
+            "antiderivative",
+        ]
+    )
+    notebook = json.loads(
+        (
+            REPOSITORY / "notebooks" / "comparisons" / "deeponet_vs_spectralsvr.ipynb"
+        ).read_text()
+    )
+    monkeypatch.chdir(tmp_path)
+    namespace: dict = {}
+
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            exec(compile("".join(cell["source"]), "notebook", "exec"), namespace)
+
+    assert list(namespace["summary"].index) == [
+        (SCRIPT.DATASETS["antiderivative"].label, "SpectralSVR")
+    ]
+    assert namespace["summary"]["n_seeds"].tolist() == [2]
+    fitting_names = {"DeepONetOperator", "SpectralSVROperator", "benchmark", "LSSVR"}
+    assert fitting_names.isdisjoint(namespace)
