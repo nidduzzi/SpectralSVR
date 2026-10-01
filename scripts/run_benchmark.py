@@ -37,6 +37,13 @@ its run and whether it was a ``--quick`` check, so a row from a check is never
 read as the record. The table demonstrates that the harness works; with the
 tuning uncontrolled it is not a controlled comparison of the methods.
 
+Run-to-run spread at one fixed seed, measured per operator: on cuda it is zero
+for both SpectralSVR and DeepONet, since three runs of seed 0, one with the
+datasets in reverse order, agreed bit for bit on every metric. On the host,
+SpectralSVR's multi-threaded solve moved by up to 1.9e-05 relative between
+runs; DeepONet does not run there. So a spread over the seed set measured on
+cuda is the methods' variation across draws, not repetition noise.
+
 A table is reproducible only against the same ``--device``. The device is
 passed to every generator, every ``generate`` call and every query grid rather
 than set as a process default, so no later import can move it -- an optional

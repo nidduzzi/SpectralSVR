@@ -362,6 +362,7 @@ def _flat(text):
 @pytest.mark.scenario("Scope of the claim is stated")
 @pytest.mark.scenario("Fit times are qualified")
 @pytest.mark.scenario("A single-seed table is not presented as a result")
+@pytest.mark.scenario("Run-to-run spread is stated per operator")
 def test_the_benchmark_script_states_what_its_table_establishes():
     script = (
         pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
@@ -370,6 +371,9 @@ def test_the_benchmark_script_states_what_its_table_establishes():
     assert "not tuned per dataset" in doc
     assert "seed set 0, 1, 2, 3, 4" in doc
     assert "never read as the record" in doc
+    assert "Run-to-run spread at one fixed seed, measured per operator" in doc
+    assert "zero for both SpectralSVR and DeepONet" in doc
+    assert "moved by up to 1.9e-05 relative" in doc
     assert "``fit_covers`` states the work its fit did" in doc
     assert "``_import_deepxde()``" in doc
     assert "does neither" in doc
