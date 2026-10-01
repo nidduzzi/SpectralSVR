@@ -21,6 +21,10 @@ cov *args:
     COVERAGE_CORE=sysmon {{host_memory_cap}} uv run --extra test --extra baselines coverage run -m pytest {{args}}
     uv run --extra test --extra baselines coverage report -m
 
+# regenerate the committed comparison record over the default seed set (slow; resume with --append)
+bench *args:
+    {{host_memory_cap}} uv run --extra baselines python scripts/run_benchmark.py --out benchmarks/operator_comparison.csv {{args}}
+
 # lint + type-check (ruff, mypy, ty)
 lint:
     uv run --extra lint ruff check SpectralSVR tests scripts
