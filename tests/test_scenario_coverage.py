@@ -29,10 +29,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "Spread accompanies every metric": IN_FLIGHT,
-    "A single-seed table is not presented as a result": IN_FLIGHT,
-    "Provenance travels with the numbers": IN_FLIGHT,
-    "A changed condition is visible": IN_FLIGHT,
     "One command regenerates": IN_FLIGHT,
     "The notebook reads the record": IN_FLIGHT,
     "Run-to-run spread is stated per operator": IN_FLIGHT,

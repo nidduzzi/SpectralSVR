@@ -126,6 +126,10 @@ class FittedDeepONet:
     recipe: DeepONetRecipe
     training_points: torch.Tensor
 
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.net.parameters()).device
+
     def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         points = x.to(torch.float64)
         match self.recipe:
@@ -174,6 +178,10 @@ class DeepONetOperator:
         self.recipe = recipe
         self.iterations = iterations
         self.seed = seed
+
+    @property
+    def fit_covers(self) -> str:
+        return f"{self.iterations} Adam iterations of the {self.recipe.name} recipe"
 
     def fit(self, dataset: OperatorDataset) -> FittedDeepONet:
         dde, DeepONetCartesianProd = _import_deepxde()

@@ -32,6 +32,11 @@ class FittedOperator(Protocol):
         """Label for this operator's row in a comparison table."""
         ...
 
+    @property
+    def device(self) -> torch.device:
+        """Where the fitted state lives."""
+        ...
+
     def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         """Evaluate the learned operator.
 
@@ -64,6 +69,11 @@ class Operator(Protocol):
     @property
     def name(self) -> str:
         """Label for this operator's row in a comparison table."""
+        ...
+
+    @property
+    def fit_covers(self) -> str:
+        """The work one fit does, so a fit time is read against what it measures."""
         ...
 
     def fit(self, dataset: OperatorDataset) -> FittedOperator:

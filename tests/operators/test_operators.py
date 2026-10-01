@@ -272,6 +272,7 @@ def test_benchmark_returns_metric_table():
 
 class _Exploding:
     name = "Exploding"
+    fit_covers = "nothing; it raises"
 
     def fit(self, dataset):
         raise RuntimeError("fit blew up")
@@ -281,6 +282,7 @@ class _FittedConstant:
     """Predicts one number everywhere, chosen from the data it was fitted on."""
 
     name = "Constant"
+    device = HOST
 
     def __init__(self, value):
         self.value = value
@@ -293,6 +295,7 @@ class _FittedZero:
     """Predicts zero everywhere, so its mse is the target's own mean square."""
 
     name = "Zero"
+    device = HOST
 
     def predict(self, f, x):
         return torch.zeros(f.shape[0], x.shape[0], dtype=torch.float64)
@@ -300,6 +303,7 @@ class _FittedZero:
 
 class _Zero:
     name = "Zero"
+    fit_covers = "no training"
 
     def fit(self, dataset):
         return _FittedZero()
@@ -307,6 +311,7 @@ class _Zero:
 
 class _Constant:
     name = "Constant"
+    fit_covers = "one mean over the training targets"
 
     def fit(self, dataset):
         return _FittedConstant(float(dataset.targets(QUERY).mean()))
@@ -353,13 +358,16 @@ def _flat(text):
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Scope of the claim is stated")
 @pytest.mark.scenario("Fit times are qualified")
+@pytest.mark.scenario("A single-seed table is not presented as a result")
 def test_the_benchmark_script_states_what_its_table_establishes():
     script = (
         pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
     )
     doc = _flat(ast.get_docstring(ast.parse(script.read_text())))
     assert "not tuned per dataset" in doc
-    assert "single seed" in doc
+    assert "seed set 0, 1, 2, 3, 4" in doc
+    assert "never read as the record" in doc
+    assert "``fit_covers`` states the work its fit did" in doc
     assert "``_import_deepxde()``" in doc
     assert "does neither" in doc
 
@@ -454,6 +462,7 @@ def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
 
 class _FittedSlow:
     name = "Slow"
+    device = HOST
 
     def __init__(self, predict_pause):
         self._pause = predict_pause
@@ -467,6 +476,7 @@ class _Slow:
     """Spends a known time in fit, and a different known time in predict."""
 
     name = "Slow"
+    fit_covers = "a known pause"
 
     def __init__(self, fit_pause, predict_pause):
         self._fit_pause = fit_pause

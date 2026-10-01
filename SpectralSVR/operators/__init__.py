@@ -5,7 +5,7 @@ from .__base import (
     FittedOperator as FittedOperator,
     Operator as Operator,
 )
-from .benchmark import benchmark as benchmark
+from .benchmark import benchmark as benchmark, summarise as summarise
 from .dataset import (
     OperatorDataset as OperatorDataset,
     Split as Split,

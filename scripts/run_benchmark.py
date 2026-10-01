@@ -1,10 +1,14 @@
 """Regenerate the operator-baseline comparison table.
 
-Fits every operator baseline on the same problems and writes one CSV with a
-``dataset`` column plus the shared metric suite (``utils.get_metrics``).
+Fits every operator baseline on the same problems over a seed set and writes
+one long CSV: one row per dataset, operator and seed, with the shared metric
+suite (``utils.get_metrics``) and the provenance of the run on every row.
 
-The output is generated data, not source: it lands in ``results/`` (gitignored)
-so a rerun never dirties the working tree.
+``just bench`` writes the record, ``benchmarks/operator_comparison.csv``, over
+the default seed set. Any other run defaults to ``results/`` (gitignored), so a
+check never overwrites the record. ``--append`` resumes an interrupted run: rows
+already in the file are kept and not recomputed. ``operators.summarise`` reduces
+the long table to a centre and a spread per dataset and operator.
 
 Usage
 -----
@@ -13,6 +17,8 @@ Usage
     ... --operators spectralsvr                 # skip the neural baseline
     ... --quick                                 # small sizes, few iterations
     ... --device cuda                           # place every stage on an accelerator
+    ... --seeds 0 1                             # a subset of the seed set
+    ... --append                                # resume into an existing file
 
 DeepONet needs the optional ``baselines`` extra (deepxde). Requesting it without
 that extra fails rather than producing a table short of a row; pass
@@ -24,27 +30,37 @@ The harness holds the data and the metrics fixed: every operator is fitted on
 the same sensor-sampled inputs and scored against the same targets at the same
 query points through one metric suite. It does not hold the tuning fixed: the
 hyperparameters on both sides are fixed defaults, chosen once and not tuned per
-dataset, and each figure comes from a single seed (``--seed``, default 0). The table therefore demonstrates that the harness
-works; it is not a controlled comparison of the methods.
+dataset. The reported figures come from the seed set 0, 1, 2, 3, 4: each row is
+one seed, and a centre and spread over the set is what a reader should compare,
+since one seed's figure varies with the draw. Every row records the seed set of
+its run and whether it was a ``--quick`` check, so a row from a check is never
+read as the record. The table demonstrates that the harness works; with the
+tuning uncontrolled it is not a controlled comparison of the methods.
 
 A table is reproducible only against the same ``--device``. The device is
 passed to every generator, every ``generate`` call and every query grid rather
 than set as a process default, so no later import can move it -- an optional
 baseline sets one on import. But a generator on another device draws different
 numbers from the same seed, so ``--device cuda`` builds a different dataset
-rather than reproducing the host table. Report the device alongside any figure.
+rather than reproducing the host table. Each row records the device its data was
+built on and the device its fit ran on, which differ for DeepONet: it trains on
+the process default, which deepxde sets on import.
 
 ``fit_seconds`` is not like-for-like either. ``DeepONetOperator.fit`` calls
 ``_import_deepxde()`` -- a lazy import paid on its first call -- and converts the
 dataset to numpy; ``SpectralSVROperator.fit`` does neither. Read the column as
-the cost of each adapter as written, not of each method.
+the cost of each adapter as written, not of each method. Each row's
+``fit_covers`` states the work its fit did -- one direct solve, or a fixed count
+of training iterations -- so the times are read as two facts, not one ratio.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import importlib.util
 import math
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from typing import NamedTuple
@@ -65,6 +81,41 @@ from SpectralSVR.operators import (
 from SpectralSVR.utils import DEFAULT_COEFF_DTYPE, etdrk4_solver, resolve_device
 
 DEFAULT_OUT = Path("results") / "bench_results.csv"
+RECORD_OUT = Path("benchmarks") / "operator_comparison.csv"
+SEED_SET = (0, 1, 2, 3, 4)
+ACCELERATOR_MEMORY_FRACTION = 0.25
+
+
+class RunProvenance(NamedTuple):
+    """What produced a run: code revision, whether the tree was clean, versions, precision."""
+
+    revision: str
+    tree_clean: bool
+    torch_version: str
+    deepxde_version: str
+    coeff_dtype: str
+
+    @classmethod
+    def of_repository(cls, root: Path) -> RunProvenance:
+        def git(*args: str) -> str:
+            return subprocess.run(
+                ["git", "-C", str(root), *args],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+        try:
+            deepxde_version = importlib.metadata.version("deepxde")
+        except importlib.metadata.PackageNotFoundError:
+            deepxde_version = "absent"
+        return cls(
+            revision=git("rev-parse", "HEAD"),
+            tree_clean=git("status", "--porcelain") == "",
+            torch_version=torch.__version__,
+            deepxde_version=deepxde_version,
+            coeff_dtype=str(DEFAULT_COEFF_DTYPE),
+        )
 
 
 class BenchmarkCase(NamedTuple):
@@ -303,6 +354,12 @@ class MissingOperatorDependency(RuntimeError):
     """A requested operator could not be built because an extra is not installed."""
 
 
+OPERATOR_ROW_NAMES = {
+    "spectralsvr": SpectralSVROperator.name,
+    "deeponet": DeepONetOperator.name,
+}
+
+
 def build_operators(
     names: list[str],
     query: torch.Tensor,
@@ -341,7 +398,7 @@ def build_operators(
     return operators
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "--datasets", nargs="+", choices=list(DATASETS), default=list(DATASETS)
@@ -354,6 +411,11 @@ def main() -> None:
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
+        "--append",
+        action="store_true",
+        help="keep the rows already in --out and add only the missing ones",
+    )
+    parser.add_argument(
         "--device",
         default="cpu",
         help=(
@@ -361,7 +423,7 @@ def main() -> None:
             "importing an optional baseline sets the process default itself"
         ),
     )
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seeds", type=int, nargs="+", default=list(SEED_SET))
     parser.add_argument(
         "--allow-missing-operators",
         action="store_true",
@@ -375,43 +437,67 @@ def main() -> None:
         action="store_true",
         help="small splits + 200 DeepONet iterations (smoke run)",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(ACCELERATOR_MEMORY_FRACTION)
     device = resolve_device(args.device)
     print(f"running on {device}")
 
+    provenance = RunProvenance.of_repository(Path(__file__).resolve().parent)
+    seed_set = str(sorted(args.seeds))
     iterations = 200 if args.quick else args.iterations
-    frames = []
-    for key in args.datasets:
-        spec = DATASETS[key]
-        print(f"[{key}] building...")
-        case = spec.build(args.seed, args.quick, device)
-        operators = build_operators(
-            args.operators,
-            case.query,
-            iterations,
-            args.seed,
-            allow_missing=args.allow_missing_operators,
-        )
-        if not operators:
-            print(f"[{key}] no operators available; skipped")
-            continue
-        print(
-            f"[{key}] fitting {len(operators)} operator(s)"
-            f" on {case.split.train.n_functions} functions"
-        )
-        table = benchmark(operators, case.split, case.query).reset_index()
-        table.insert(0, "dataset", spec.label)
-        frames.append(table)
-
-    if not frames:
-        raise SystemExit("nothing benchmarked")
-
-    result = pd.concat(frames, ignore_index=True)
+    recorded = (
+        pd.read_csv(args.out)
+        if args.append and args.out.exists()
+        else pd.DataFrame(columns=["dataset", "operator", "seed"])
+    )
+    done = set(
+        zip(recorded["dataset"], recorded["operator"], recorded["seed"], strict=True)
+    )
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(args.out, index=False)
+    recorded.to_csv(args.out, index=False)
+
+    rows_added = 0
+    for seed in args.seeds:
+        for key in args.datasets:
+            spec = DATASETS[key]
+            missing = [
+                choice
+                for choice in args.operators
+                if (spec.label, OPERATOR_ROW_NAMES[choice], seed) not in done
+            ]
+            if not missing:
+                print(f"[{key} seed {seed}] already recorded")
+                continue
+            print(f"[{key} seed {seed}] building...")
+            case = spec.build(seed, args.quick, device)
+            operators = build_operators(
+                missing,
+                case.query,
+                iterations,
+                seed,
+                allow_missing=args.allow_missing_operators,
+            )
+            if not operators:
+                print(f"[{key} seed {seed}] no operators available; skipped")
+                continue
+            table = benchmark(operators, case.split, case.query).reset_index()
+            table.insert(0, "dataset", spec.label)
+            table.insert(2, "seed", seed)
+            table["data_device"] = str(device)
+            table["quick"] = args.quick
+            table["seed_set"] = seed_set
+            for field, value in provenance._asdict().items():
+                table[field] = value
+            recorded = pd.concat([recorded, table], ignore_index=True)
+            recorded.to_csv(args.out, index=False)
+            rows_added += len(table)
+
+    if rows_added == 0 and recorded.empty:
+        raise SystemExit("nothing benchmarked")
     print(f"\nwrote {args.out}")
-    print(result.to_string(index=False))
+    print(recorded.to_string(index=False))
 
 
 if __name__ == "__main__":
