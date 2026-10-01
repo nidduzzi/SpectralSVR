@@ -20,3 +20,8 @@
   - `just check`: ruff, mypy and ty clean; 391 passed, 2 failed, the pre-existing failures in `test_time_varying_scoring.py`.
 - [x] 3.2 Verify no source file gained an explanatory prose comment, and that no library, script, notebook or record file changed
   - `git diff 81c8441 --stat -- SpectralSVR scripts notebooks benchmarks Justfile` is empty. The test changes add no explanatory comment; the touched helpers' docstrings were removed in favour of their names.
+
+## 4. Consolidation
+
+- [x] 4.1 Consolidate this change's tests into a state machine where a sequence matters, and fuzz otherwise, with edges and the happy path pinned. *Added during apply, at the user's direction*
+  - `d17ce8e`. The guard's verdicts became pure functions over the stated, in-flight, named and exempt sets; `ScenarioLedger` drives stating, archiving, testing and exempting, and pins the stranding sequence in its initialisation; five hand mutants of the verdicts each fail it. The notebook test is fuzzed over seed sets and dataset subsets with the single and full cases pinned; the operator-import mutant still fails it. The recipe test stays single: it reads one fact of the Justfile.
