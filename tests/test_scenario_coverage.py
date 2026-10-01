@@ -32,15 +32,8 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "A file over its budget fails": IN_FLIGHT,
-    "A new file starts at zero": IN_FLIGHT,
-    "Machine-directed comments are not prose": IN_FLIGHT,
-    "Slack is reclaimed, not banked": IN_FLIGHT,
-    "The budget is per file, not a pooled total": IN_FLIGHT,
     "A derivation in a docstring is refused": IN_FLIGHT,
     "Stating a condition is not deriving it": IN_FLIGHT,
-    "Public and internal are told apart structurally": IN_FLIGHT,
-    "The exemption is bounded": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

@@ -1,0 +1,159 @@
+["SpectralSVR/basis/FourierBasis.py"]
+comments = 46
+internal_docstrings = 24
+
+["SpectralSVR/basis/__base.py"]
+comments = 20
+internal_docstrings = 6
+
+["SpectralSVR/basis/_nufft.py"]
+comments = 3
+internal_docstrings = 24
+
+["SpectralSVR/basis/_plot.py"]
+comments = 4
+internal_docstrings = 7
+
+["SpectralSVR/basis/config.py"]
+comments = 0
+internal_docstrings = 7
+
+["SpectralSVR/basis/domain.py"]
+comments = 5
+internal_docstrings = 14
+
+["SpectralSVR/basis/sampling.py"]
+comments = 12
+internal_docstrings = 34
+
+["SpectralSVR/basis/strategy.py"]
+comments = 1
+internal_docstrings = 26
+
+["SpectralSVR/model/FNN.py"]
+comments = 1
+internal_docstrings = 0
+
+["SpectralSVR/model/LSSVR.py"]
+comments = 6
+internal_docstrings = 8
+
+["SpectralSVR/model/SpectralSVR.py"]
+comments = 5
+internal_docstrings = 7
+
+["SpectralSVR/operators/__base.py"]
+comments = 3
+internal_docstrings = 0
+
+["SpectralSVR/operators/__init__.py"]
+comments = 0
+internal_docstrings = 2
+
+["SpectralSVR/operators/deeponet.py"]
+comments = 0
+internal_docstrings = 2
+
+["SpectralSVR/problems/antiderivative.py"]
+comments = 5
+internal_docstrings = 0
+
+["SpectralSVR/problems/burgers.py"]
+comments = 21
+internal_docstrings = 56
+
+["SpectralSVR/problems/exact.py"]
+comments = 26
+internal_docstrings = 164
+
+["SpectralSVR/utils/__init__.py"]
+comments = 34
+internal_docstrings = 17
+
+["scripts/run_benchmark.py"]
+comments = 12
+internal_docstrings = 0
+
+["tests/_anchors.py"]
+comments = 3
+internal_docstrings = 0
+
+["tests/basis/test_basis.py"]
+comments = 22
+internal_docstrings = 0
+
+["tests/basis/test_coeff_anchors.py"]
+comments = 58
+internal_docstrings = 0
+
+["tests/basis/test_config.py"]
+comments = 4
+internal_docstrings = 0
+
+["tests/basis/test_fourier_basis.py"]
+comments = 77
+internal_docstrings = 0
+
+["tests/basis/test_nufft.py"]
+comments = 19
+internal_docstrings = 0
+
+["tests/basis/test_sampling.py"]
+comments = 10
+internal_docstrings = 0
+
+["tests/conftest.py"]
+comments = 2
+internal_docstrings = 6
+
+["tests/model/test_SpectralSVR.py"]
+comments = 12
+internal_docstrings = 0
+
+["tests/model/test_fnn.py"]
+comments = 2
+internal_docstrings = 0
+
+["tests/model/test_lssvr.py"]
+comments = 19
+internal_docstrings = 0
+
+["tests/model/test_spectralsvr_anchors.py"]
+comments = 12
+internal_docstrings = 5
+
+["tests/model/test_spectralsvr_methods.py"]
+comments = 20
+internal_docstrings = 0
+
+["tests/operators/test_operators.py"]
+comments = 27
+internal_docstrings = 4
+
+["tests/problems/test_problems.py"]
+comments = 82
+internal_docstrings = 35
+
+["tests/test_oracle_coverage.py"]
+comments = 13
+internal_docstrings = 2
+
+["tests/test_scenario_coverage.py"]
+comments = 10
+internal_docstrings = 0
+
+["tests/utils/test_band.py"]
+comments = 11
+internal_docstrings = 0
+
+["tests/utils/test_metric_anchors.py"]
+comments = 18
+internal_docstrings = 0
+
+["tests/utils/test_solvers.py"]
+comments = 11
+internal_docstrings = 0
+
+["tests/utils/test_utils.py"]
+comments = 35
+internal_docstrings = 0
