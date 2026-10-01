@@ -76,6 +76,11 @@ class Operator(Protocol):
         """The work one fit does, so a fit time is read against what it measures."""
         ...
 
+    @property
+    def protocol(self) -> str:
+        """The configuration this operator trains by, its source, and any departure from it."""
+        ...
+
     def fit(self, dataset: OperatorDataset) -> FittedOperator:
         """Train on ``dataset``; returns the fitted operator."""
         ...

@@ -43,7 +43,7 @@ def benchmark(
     -------
     pandas.DataFrame
         One row per operator: ``operator``, ``fit_seconds``, ``fit_covers``,
-        ``fit_device``, then every metric from :func:`utils.get_metrics`.
+        ``protocol``, ``fit_device``, then every metric from :func:`utils.get_metrics`.
     """
     target_on_host = split.test.targets(query).detach().cpu().contiguous()
     rows = []
@@ -59,6 +59,7 @@ def benchmark(
                 "operator": fitted.name,
                 "fit_seconds": fit_seconds,
                 "fit_covers": op.fit_covers,
+                "protocol": op.protocol,
                 "fit_device": str(fitted.device),
                 **get_metrics(prediction_on_host, target_on_host),
             }

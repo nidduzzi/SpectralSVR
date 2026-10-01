@@ -52,6 +52,12 @@ dataset to numpy; ``SpectralSVROperator.fit`` does neither. Read the column as
 the cost of each adapter as written, not of each method. Each row's
 ``fit_covers`` states the work its fit did -- one direct solve, or a fixed count
 of training iterations -- so the times are read as two facts, not one ratio.
+
+DeepONet is trained on each dataset by a named recipe taken from reference code,
+with a training length chosen per dataset by a five-seed measurement: "Lu 2021 /
+deepxde example" on the antiderivative rows and "Lu 2022 Burgers" on the Burgers
+rows. Each row's ``protocol`` names the recipe, its source, and the training
+length against the source's, which is shorter in every case.
 """
 
 from __future__ import annotations
@@ -72,7 +78,9 @@ from SpectralSVR import Antiderivative, Burgers, FourierBasis, LSSVR
 from SpectralSVR.basis import Basis
 from SpectralSVR.operators import (
     DeepONetOperator,
+    DeepONetRecipe,
     Lu2021DeepxdeExample,
+    Lu2022Burgers,
     Operator,
     Split,
     SpectralSVROperator,
@@ -128,11 +136,19 @@ class BenchmarkCase(NamedTuple):
 CaseBuilder = Callable[[int, bool, torch.device], BenchmarkCase]
 
 
+class DeepONetPlan(NamedTuple):
+    """The recipe and training length DeepONet is fitted with on one dataset."""
+
+    recipe: DeepONetRecipe
+    iterations: int
+
+
 class DatasetSpec(NamedTuple):
-    """A CLI dataset choice: its label in the CSV, and how to build it."""
+    """A CLI dataset choice: its label in the CSV, how to build it, and DeepONet's plan for it."""
 
     label: str
     build: CaseBuilder
+    deeponet: DeepONetPlan
 
 
 # --------------------------------------------------------------------------- #
@@ -331,18 +347,29 @@ def burgers_forced_case(
 
 DATASETS: dict[str, DatasetSpec] = {
     "antiderivative": DatasetSpec(
-        "project antiderivative (ut->u)", antiderivative_case
+        "project antiderivative (ut->u)",
+        antiderivative_case,
+        DeepONetPlan(Lu2021DeepxdeExample(), 10_000),
     ),
-    "burgers-mms": DatasetSpec("project Burgers MMS (f->u)", burgers_mms_case),
+    "burgers-mms": DatasetSpec(
+        "project Burgers MMS (f->u)",
+        burgers_mms_case,
+        DeepONetPlan(Lu2022Burgers(periods=(None, 1.0)), 50_000),
+    ),
     "burgers-numerical": DatasetSpec(
-        "project Burgers numerical (u0 -> u(T))", burgers_numerical_case
+        "project Burgers numerical (u0 -> u(T))",
+        burgers_numerical_case,
+        DeepONetPlan(Lu2022Burgers(periods=(1.0,)), 10_000),
     ),
     "antiderivative-grf": DatasetSpec(
-        "DeepONet paper antiderivative (GRF)", antiderivative_grf_case
+        "DeepONet paper antiderivative (GRF)",
+        antiderivative_grf_case,
+        DeepONetPlan(Lu2021DeepxdeExample(), 50_000),
     ),
     "burgers-forced": DatasetSpec(
         "project Burgers forced (f->u, GRF forcing, from rest)",
         burgers_forced_case,
+        DeepONetPlan(Lu2022Burgers(periods=(None, 1.0)), 10_000),
     ),
 }
 
@@ -363,7 +390,7 @@ OPERATOR_ROW_NAMES = {
 def build_operators(
     names: list[str],
     query: torch.Tensor,
-    iterations: int,
+    deeponet: DeepONetPlan,
     seed: int,
     allow_missing: bool = False,
 ) -> list[Operator]:
@@ -390,8 +417,8 @@ def build_operators(
             operators.append(
                 DeepONetOperator(
                     trunk=query,
-                    recipe=Lu2021DeepxdeExample(),
-                    iterations=iterations,
+                    recipe=deeponet.recipe,
+                    iterations=deeponet.iterations,
                     seed=seed,
                 )
             )
@@ -430,7 +457,10 @@ def main(argv: list[str] | None = None) -> None:
         help="benchmark without a requested operator whose extra is not installed",
     )
     parser.add_argument(
-        "--iterations", type=int, default=10_000, help="DeepONet training iterations"
+        "--iterations",
+        type=int,
+        default=None,
+        help="DeepONet training iterations on every dataset, overriding each plan",
     )
     parser.add_argument(
         "--quick",
@@ -446,7 +476,7 @@ def main(argv: list[str] | None = None) -> None:
 
     provenance = RunProvenance.of_repository(Path(__file__).resolve().parent)
     seed_set = str(sorted(args.seeds))
-    iterations = 200 if args.quick else args.iterations
+    iterations_override = 200 if args.quick else args.iterations
     recorded = (
         pd.read_csv(args.out)
         if args.append and args.out.exists()
@@ -472,10 +502,15 @@ def main(argv: list[str] | None = None) -> None:
                 continue
             print(f"[{key} seed {seed}] building...")
             case = spec.build(seed, args.quick, device)
+            plan = (
+                spec.deeponet
+                if iterations_override is None
+                else spec.deeponet._replace(iterations=iterations_override)
+            )
             operators = build_operators(
                 missing,
                 case.query,
-                iterations,
+                plan,
                 seed,
                 allow_missing=args.allow_missing_operators,
             )

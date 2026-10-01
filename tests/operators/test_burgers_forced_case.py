@@ -294,7 +294,7 @@ def test_the_end_of_the_interval_is_scored(seed, sizes, device):
 def test_the_forced_case_is_scored_with_finite_metrics(seed):
     case = bench.burgers_forced_case(seed, True, HOST)
     operators = bench.build_operators(
-        ["spectralsvr"], case.query, iterations=0, seed=seed
+        ["spectralsvr"], case.query, bench.DATASETS["burgers-forced"].deeponet, seed
     )
 
     table = bench.benchmark(operators, case.split, case.query)

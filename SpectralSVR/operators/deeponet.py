@@ -40,6 +40,11 @@ class Lu2021DeepxdeExample:
     """
 
     name: ClassVar[str] = "Lu 2021 / deepxde example"
+    source: ClassVar[str] = (
+        "deepxde examples/operator/antiderivative_aligned.py; "
+        "lululxvi/deeponet src/deeponet_pde.py"
+    )
+    source_iterations: ClassVar[int] = 50_000
     branch_widths: ClassVar[tuple[int, ...]] = (40, 40)
     trunk_widths: ClassVar[tuple[int, ...]] = (40, 40)
     activation: ClassVar[str] = "relu"
@@ -58,6 +63,8 @@ class Lu2022Burgers:
 
     periods: tuple[float | None, ...]
     name: ClassVar[str] = "Lu 2022 Burgers"
+    source: ClassVar[str] = "lu-group/deeponet-fno src/burgers/deeponet.py"
+    source_iterations: ClassVar[int] = 500_000
     branch_widths: ClassVar[tuple[int, ...]] = (128,) * 4
     trunk_widths: ClassVar[tuple[int, ...]] = (128,) * 3
     activation: ClassVar[str] = "tanh"
@@ -182,6 +189,14 @@ class DeepONetOperator:
     @property
     def fit_covers(self) -> str:
         return f"{self.iterations} Adam iterations of the {self.recipe.name} recipe"
+
+    @property
+    def protocol(self) -> str:
+        return (
+            f"{self.recipe.name} recipe from {self.recipe.source}; "
+            f"{self.iterations} iterations against the source's "
+            f"{self.recipe.source_iterations}"
+        )
 
     def fit(self, dataset: OperatorDataset) -> FittedDeepONet:
         dde, DeepONetCartesianProd = _import_deepxde()

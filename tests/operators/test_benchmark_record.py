@@ -12,7 +12,7 @@ from hypothesis import settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
-from SpectralSVR.operators import summarise
+from SpectralSVR.operators import Lu2021DeepxdeExample, Lu2022Burgers, summarise
 from SpectralSVR.operators.benchmark import RUN_KEY, SUMMARISED_COLUMNS
 from tests._devices import DEVICES_PRESENT, HOST
 
@@ -24,6 +24,7 @@ PROVENANCE_COLUMNS = [
     "data_device",
     "fit_device",
     "fit_covers",
+    "protocol",
     "quick",
     "seed_set",
     "revision",
@@ -32,6 +33,15 @@ PROVENANCE_COLUMNS = [
     "deepxde_version",
     "coeff_dtype",
 ]
+
+
+MEASURED_DEEPONET_PLANS = {
+    "antiderivative": (Lu2021DeepxdeExample(), 10_000),
+    "burgers-mms": (Lu2022Burgers(periods=(None, 1.0)), 50_000),
+    "burgers-numerical": (Lu2022Burgers(periods=(1.0,)), 10_000),
+    "antiderivative-grf": (Lu2021DeepxdeExample(), 50_000),
+    "burgers-forced": (Lu2022Burgers(periods=(None, 1.0)), 10_000),
+}
 
 
 def load_script():
@@ -98,6 +108,15 @@ class BenchmarkRecord(RuleBasedStateMachine):
                 "200 Adam iterations of the Lu 2021 / deepxde example recipe"
             )
             assert deeponet["fit_device"] in {str(device) for device in DEVICES_PRESENT}
+            assert deeponet["protocol"] == (
+                "Lu 2021 / deepxde example recipe from deepxde "
+                "examples/operator/antiderivative_aligned.py; lululxvi/deeponet "
+                "src/deeponet_pde.py; 200 iterations against the source's 50000"
+            )
+        assert {
+            key: (spec.deeponet.recipe, spec.deeponet.iterations)
+            for key, spec in SCRIPT.DATASETS.items()
+        } == MEASURED_DEEPONET_PLANS
         self.run(seeds=[0], datasets=["antiderivative"], device=HOST, append=False)
         self.run(seeds=[0, 1], datasets=CHEAP_DATASETS, device=HOST, append=True)
 

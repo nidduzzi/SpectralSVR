@@ -273,6 +273,7 @@ def test_benchmark_returns_metric_table():
 class _Exploding:
     name = "Exploding"
     fit_covers = "nothing; it raises"
+    protocol = "a fake that raises"
 
     def fit(self, dataset):
         raise RuntimeError("fit blew up")
@@ -304,6 +305,7 @@ class _FittedZero:
 class _Zero:
     name = "Zero"
     fit_covers = "no training"
+    protocol = "a fake predicting zero"
 
     def fit(self, dataset):
         return _FittedZero()
@@ -312,6 +314,7 @@ class _Zero:
 class _Constant:
     name = "Constant"
     fit_covers = "one mean over the training targets"
+    protocol = "a fake predicting the training mean"
 
     def fit(self, dataset):
         return _FittedConstant(float(dataset.targets(QUERY).mean()))
@@ -451,11 +454,12 @@ def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
         lambda name, *a, **k: None if name == "deepxde" else real(name, *a, **k),
     )
     query = torch.linspace(0, 1, 5, dtype=torch.float64).unsqueeze(-1)
+    plan = script.DATASETS["antiderivative"].deeponet
     with pytest.raises(script.MissingOperatorDependency, match="deepxde"):
-        script.build_operators(["spectralsvr", "deeponet"], query, 10, 0)
+        script.build_operators(["spectralsvr", "deeponet"], query, plan, 0)
 
     opted_in = script.build_operators(
-        ["spectralsvr", "deeponet"], query, 10, 0, allow_missing=True
+        ["spectralsvr", "deeponet"], query, plan, 0, allow_missing=True
     )
     assert [op.name for op in opted_in] == ["SpectralSVR"]
 
@@ -477,6 +481,7 @@ class _Slow:
 
     name = "Slow"
     fit_covers = "a known pause"
+    protocol = "a fake that sleeps"
 
     def __init__(self, fit_pause, predict_pause):
         self._fit_pause = fit_pause

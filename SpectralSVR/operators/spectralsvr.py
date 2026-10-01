@@ -47,6 +47,13 @@ class SpectralSVROperator:
     def fit_covers(self) -> str:
         return f"one {type(self._regressor).__name__} fit to the output coefficients"
 
+    @property
+    def protocol(self) -> str:
+        return (
+            f"{type(self._regressor).__name__} on {type(self._basis).__name__} "
+            "coefficients with fixed defaults, untuned"
+        )
+
     def fit(self, dataset: OperatorDataset) -> FittedSpectralSVR:
         model = SpectralSVR(self._basis, self._regressor)
         model.train(
