@@ -15,7 +15,9 @@ from SpectralSVR.operators import (
     Lu2022Burgers,
     Split,
 )
-from tests._devices import DEVICES_PRESENT
+from tests._devices import DEVICES_PRESENT, HOST
+
+ACCELERATORS = [device for device in DEVICES_PRESENT if device != HOST]
 
 pytestmark = pytest.mark.skipif(
     importlib.util.find_spec("deepxde") is None,
@@ -78,11 +80,18 @@ CONSTANT_OUTPUT_SPLIT = Split.partition(
 )
 
 
-def fitted(recipe_name: str, split: Split, seed: int = 0):
+def fitted(recipe_name: str, split: Split, seed: int = 0, device=None):
     operator = DeepONetOperator(
-        trunk=QUERY, recipe=RECIPES[recipe_name], iterations=ITERATIONS, seed=seed
+        trunk=QUERY,
+        recipe=RECIPES[recipe_name],
+        device=ACCELERATORS[0] if device is None else device,
+        iterations=ITERATIONS,
+        seed=seed,
     )
-    return operator.fit(split.train)
+    default_before = torch.get_default_device()
+    model = operator.fit(split.train)
+    assert torch.get_default_device() == default_before
+    return model
 
 
 class DeepONetFits(RuleBasedStateMachine):
@@ -92,17 +101,21 @@ class DeepONetFits(RuleBasedStateMachine):
 
     @initialize()
     def check_every_pinned_edge(self):
-        for periods, iterations, trunk_columns in RECIPE_BUILD_EDGES:
-            self.build_a_recipe(periods, iterations, trunk_columns)
+        for (periods, iterations, trunk_columns), device in itertools.product(
+            RECIPE_BUILD_EDGES, DEVICES_PRESENT
+        ):
+            self.build_a_recipe(periods, iterations, trunk_columns, device)
         for recipe in RECIPES:
             self.query_elsewhere(recipe)
             self.fit_where_the_targets_are_constant(recipe)
             self.fit_beside_another_test_half(recipe)
-            for default, query_device in itertools.product(DEVICES_PRESENT, repeat=2):
+            for default, training, query in itertools.product(
+                DEVICES_PRESENT, ACCELERATORS, DEVICES_PRESENT
+            ):
                 self.point_the_process_default_elsewhere(default)
-                self.fit_and_predict(recipe, seed=0, data=0, query_device=query_device)
+                self.fit_and_predict(recipe, 0, 0, training, query)
                 self.draw_from_the_global_generators(draws=1)
-                self.fit_and_predict(recipe, seed=0, data=0, query_device=query_device)
+                self.fit_and_predict(recipe, 0, 0, training, query)
 
     @rule(draws=st.integers(1, 64))
     def draw_from_the_global_generators(self, draws):
@@ -116,19 +129,19 @@ class DeepONetFits(RuleBasedStateMachine):
         recipe=st.sampled_from(sorted(RECIPES)),
         seed=st.integers(0, 1),
         data=st.sampled_from(sorted(SPLITS)),
+        training_device=st.sampled_from(ACCELERATORS),
         query_device=st.sampled_from(DEVICES_PRESENT),
     )
-    def fit_and_predict(self, recipe, seed, data, query_device):
+    def fit_and_predict(self, recipe, seed, data, training_device, query_device):
         split = SPLITS[data]
 
-        predictions = fitted(recipe, split, seed).predict(
-            split.test.f, QUERY.to(query_device)
-        )
+        model = fitted(recipe, split, seed, training_device)
+        predictions = model.predict(split.test.f, QUERY.to(query_device))
 
+        assert model.device == training_device
         assert predictions.device == query_device
         assert predictions.shape == (split.test.n_functions, len(QUERY))
         assert not predictions.isnan().any()
-        training_device = torch.get_default_device()
         first = self.first_predictions.setdefault(
             (recipe, seed, data, training_device), predictions.cpu()
         )
@@ -174,8 +187,9 @@ class DeepONetFits(RuleBasedStateMachine):
         periods=st.lists(st.sampled_from(PERIOD_CHOICES), max_size=3).map(tuple),
         iterations=st.integers(-1, 8),
         trunk_columns=st.integers(1, 3),
+        device=st.sampled_from(DEVICES_PRESENT),
     )
-    def build_a_recipe(self, periods, iterations, trunk_columns):
+    def build_a_recipe(self, periods, iterations, trunk_columns, device):
         periodic = [period for period in periods if period is not None]
         recipe_is_valid = bool(periodic) and all(period > 0 for period in periodic)
         trunk = torch.zeros(4, trunk_columns, dtype=torch.float64)
@@ -184,27 +198,35 @@ class DeepONetFits(RuleBasedStateMachine):
                 Lu2022Burgers(periods=periods)
             return
         recipe = Lu2022Burgers(periods=periods)
-        if iterations < recipe.minimum_iterations:
+        arguments = dict(
+            trunk=trunk, recipe=recipe, device=device, iterations=iterations
+        )
+        if device == HOST:
+            with pytest.raises(ValueError, match="only on an accelerator"):
+                DeepONetOperator(**arguments)
+        elif iterations < recipe.minimum_iterations:
             with pytest.raises(ValueError, match="at least 5 iterations"):
-                DeepONetOperator(trunk=trunk, recipe=recipe, iterations=iterations)
+                DeepONetOperator(**arguments)
         elif len(periods) != trunk_columns:
             with pytest.raises(ValueError, match="trunk coordinates"):
-                DeepONetOperator(trunk=trunk, recipe=recipe, iterations=iterations)
+                DeepONetOperator(**arguments)
         else:
-            operator = DeepONetOperator(
-                trunk=trunk, recipe=recipe, iterations=iterations
-            )
-            assert operator.recipe == recipe
+            operator = DeepONetOperator(**arguments)
+            assert (operator.recipe, operator.device) == (recipe, device)
 
 
 DeepONetFits.TestCase.settings = settings(
     deadline=None, max_examples=10, stateful_step_count=8
 )
-TestDeepONetFits = pytest.mark.scenario(
-    "A fit does not depend on its place in the run"
+TestDeepONetFits = pytest.mark.skipif(
+    not ACCELERATORS, reason="DeepONet trains only on an accelerator"
 )(
-    pytest.mark.scenario("A baseline predicts where its query is")(
-        pytest.mark.oracle_invariant(DeepONetFits.TestCase)
+    pytest.mark.scenario("A fit does not depend on its place in the run")(
+        pytest.mark.scenario("A baseline predicts where its query is")(
+            pytest.mark.scenario("Every stage runs where the run says")(
+                pytest.mark.oracle_invariant(DeepONetFits.TestCase)
+            )
+        )
     )
 )
 

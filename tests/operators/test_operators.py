@@ -456,10 +456,10 @@ def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
     query = torch.linspace(0, 1, 5, dtype=torch.float64).unsqueeze(-1)
     plan = script.DATASETS["antiderivative"].deeponet
     with pytest.raises(script.MissingOperatorDependency, match="deepxde"):
-        script.build_operators(["spectralsvr", "deeponet"], query, plan, 0)
+        script.build_operators(["spectralsvr", "deeponet"], query, plan, 0, HOST)
 
     opted_in = script.build_operators(
-        ["spectralsvr", "deeponet"], query, plan, 0, allow_missing=True
+        ["spectralsvr", "deeponet"], query, plan, 0, HOST, allow_missing=True
     )
     assert [op.name for op in opted_in] == ["SpectralSVR"]
 

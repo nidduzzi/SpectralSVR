@@ -7,6 +7,10 @@ Each set of results SHALL carry the provenance needed to reproduce or challenge 
 - **WHEN** a results table is read
 - **THEN** the device each stage ran on, the precision, library versions and code revision that produced it are available from the same artifact, not from memory
 
+#### Scenario: Every stage runs where the run says
+- **WHEN** a run states a device
+- **THEN** every operator fits on that device, whatever the process default names after an optional baseline's import, and each row's recorded fit device equals its data device
+
 #### Scenario: A changed condition is visible
 - **WHEN** the same benchmark is run at a different precision or on a different device
 - **THEN** the two result sets are distinguishable by their recorded provenance rather than only by their numbers

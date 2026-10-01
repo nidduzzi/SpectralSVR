@@ -23,7 +23,7 @@ cov *args:
 
 # regenerate the committed comparison record over the default seed set (slow; resume with --append)
 bench *args:
-    {{host_memory_cap}} uv run --extra baselines python scripts/run_benchmark.py --out benchmarks/operator_comparison.csv {{args}}
+    {{host_memory_cap}} uv run --extra baselines python scripts/run_benchmark.py --device cuda --out benchmarks/operator_comparison.csv {{args}}
 
 # lint + type-check (ruff, mypy, ty)
 lint:

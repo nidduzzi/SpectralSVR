@@ -42,9 +42,11 @@ passed to every generator, every ``generate`` call and every query grid rather
 than set as a process default, so no later import can move it -- an optional
 baseline sets one on import. But a generator on another device draws different
 numbers from the same seed, so ``--device cuda`` builds a different dataset
-rather than reproducing the host table. Each row records the device its data was
-built on and the device its fit ran on, which differ for DeepONet: it trains on
-the process default, which deepxde sets on import.
+rather than reproducing the host table. Every operator fits on the stated
+device too, and each row records both its data device and its fit device, which
+agree. DeepONet trains only on an accelerator, so a table with DeepONet states
+one (``just bench`` uses ``--device cuda``); the host is refused before anything
+runs.
 
 ``fit_seconds`` is not like-for-like either. ``DeepONetOperator.fit`` calls
 ``_import_deepxde()`` -- a lazy import paid on its first call -- and converts the
@@ -392,6 +394,7 @@ def build_operators(
     query: torch.Tensor,
     deeponet: DeepONetPlan,
     seed: int,
+    device: torch.device,
     allow_missing: bool = False,
 ) -> list[Operator]:
     """Build every requested operator, or say which could not be built.
@@ -402,7 +405,9 @@ def build_operators(
     operators: list[Operator] = []
     if "spectralsvr" in names:
         operators.append(
-            SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0))
+            SpectralSVROperator(
+                FourierBasis(), LSSVR(kernel="rbf", C=50.0, device=device)
+            )
         )
     if "deeponet" in names:
         if importlib.util.find_spec("deepxde") is None:
@@ -418,6 +423,7 @@ def build_operators(
                 DeepONetOperator(
                     trunk=query,
                     recipe=deeponet.recipe,
+                    device=device,
                     iterations=deeponet.iterations,
                     seed=seed,
                 )
@@ -472,6 +478,11 @@ def main(argv: list[str] | None = None) -> None:
     if torch.cuda.is_available():
         torch.cuda.set_per_process_memory_fraction(ACCELERATOR_MEMORY_FRACTION)
     device = resolve_device(args.device)
+    if "deeponet" in args.operators and not DeepONetOperator.trains_on(device):
+        parser.error(
+            f"DeepONet trains only on an accelerator; got --device {device}. "
+            "State one (e.g. --device cuda) or drop it with --operators spectralsvr"
+        )
     print(f"running on {device}")
 
     provenance = RunProvenance.of_repository(Path(__file__).resolve().parent)
@@ -512,6 +523,7 @@ def main(argv: list[str] | None = None) -> None:
                 case.query,
                 plan,
                 seed,
+                device,
                 allow_missing=args.allow_missing_operators,
             )
             if not operators:

@@ -14,13 +14,16 @@ from typing import Any, ClassVar
 import numpy as np
 import torch
 
+from ..utils import DeviceInput, resolve_device
 from .dataset import OperatorDataset
 
 INITIALIZER = "Glorot normal"
 
 
 def _import_deepxde():
+    """Import deepxde on the torch backend, leaving the process default device as it was."""
     os.environ.setdefault("DDE_BACKEND", "pytorch")
+    default_before_import = torch.get_default_device()
     try:
         import deepxde as dde
         from deepxde.nn.pytorch import DeepONetCartesianProd
@@ -28,6 +31,8 @@ def _import_deepxde():
         raise ImportError(
             "DeepONetOperator needs the 'baselines' extra: uv sync --extra baselines"
         ) from exc
+    finally:
+        torch.set_default_device(default_before_import)
     return dde, DeepONetCartesianProd
 
 
@@ -151,14 +156,16 @@ class FittedDeepONet:
                 )
         branch = f.detach().cpu().numpy().astype(np.float32)
         trunk = points.detach().cpu().numpy().astype(np.float32)
-        pred = self.model.predict((branch, trunk))
+        with self.device:
+            pred = self.model.predict((branch, trunk))
         return torch.as_tensor(pred, dtype=torch.float64, device=x.device)
 
 
 class DeepONetOperator:
-    """DeepONet (unstacked, Cartesian-product) operator baseline.
+    """DeepONet (unstacked, Cartesian-product) operator baseline, trained on an accelerator.
 
     The training targets are the output functions sampled on ``trunk`` points.
+    ``device`` must name an accelerator; the host is refused.
     """
 
     name = "DeepONet"
@@ -167,9 +174,16 @@ class DeepONetOperator:
         self,
         trunk: torch.Tensor,
         recipe: DeepONetRecipe,
+        device: DeviceInput,
         iterations: int = 10_000,
         seed: int = 0,
     ) -> None:
+        placement = resolve_device(device)
+        if not self.trains_on(placement):
+            raise ValueError(
+                f"DeepONet trains only on an accelerator (cuda, mps, xpu, ...); got "
+                f"{placement}. State an accelerator, e.g. --device cuda"
+            )
         if iterations < recipe.minimum_iterations:
             raise ValueError(
                 f"the {recipe.name} recipe needs at least {recipe.minimum_iterations} "
@@ -183,8 +197,13 @@ class DeepONetOperator:
                 )
         self.trunk = trunk.to(torch.float64)
         self.recipe = recipe
+        self.device = placement
         self.iterations = iterations
         self.seed = seed
+
+    @staticmethod
+    def trains_on(device: torch.device) -> bool:
+        return device.type != "cpu"
 
     @property
     def fit_covers(self) -> str:
@@ -206,32 +225,33 @@ class DeepONetOperator:
         y = dataset.targets(self.trunk).detach().cpu().numpy().astype(np.float32)
         n_sensors = branch.shape[1]
 
-        data = dde.data.TripleCartesianProd(
-            X_train=(branch, trunk), y_train=y, X_test=(branch, trunk), y_test=y
-        )
-        dde.config.set_random_seed(self.seed)
-        match self.recipe:
-            case Lu2021DeepxdeExample() as recipe:
-                net = DeepONetCartesianProd(
-                    [n_sensors, *recipe.branch_widths],
-                    [trunk.shape[1], *recipe.trunk_widths],
-                    recipe.activation,
-                    INITIALIZER,
-                )
-                decay = None
-            case Lu2022Burgers() as recipe:
-                net = DeepONetCartesianProd(
-                    [n_sensors, *recipe.branch_widths],
-                    [recipe.trunk_feature_width, *recipe.trunk_widths],
-                    recipe.activation,
-                    INITIALIZER,
-                )
-                net.apply_feature_transform(recipe.trunk_features)
-                net.apply_output_transform(PointwiseOutputScale.of(y))
-                decay = recipe.decay(self.iterations)
-        model = dde.Model(data, net)
-        model.compile("adam", lr=self.recipe.learning_rate, decay=decay)
-        model.train(iterations=self.iterations, display_every=self.iterations)
+        with self.device:
+            data = dde.data.TripleCartesianProd(
+                X_train=(branch, trunk), y_train=y, X_test=(branch, trunk), y_test=y
+            )
+            dde.config.set_random_seed(self.seed)
+            match self.recipe:
+                case Lu2021DeepxdeExample() as recipe:
+                    net = DeepONetCartesianProd(
+                        [n_sensors, *recipe.branch_widths],
+                        [trunk.shape[1], *recipe.trunk_widths],
+                        recipe.activation,
+                        INITIALIZER,
+                    )
+                    decay = None
+                case Lu2022Burgers() as recipe:
+                    net = DeepONetCartesianProd(
+                        [n_sensors, *recipe.branch_widths],
+                        [recipe.trunk_feature_width, *recipe.trunk_widths],
+                        recipe.activation,
+                        INITIALIZER,
+                    )
+                    net.apply_feature_transform(recipe.trunk_features)
+                    net.apply_output_transform(PointwiseOutputScale.of(y))
+                    decay = recipe.decay(self.iterations)
+            model = dde.Model(data, net)
+            model.compile("adam", lr=self.recipe.learning_rate, decay=decay)
+            model.train(iterations=self.iterations, display_every=self.iterations)
         return FittedDeepONet(
             name=self.name,
             model=model,
