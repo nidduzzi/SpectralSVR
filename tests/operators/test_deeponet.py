@@ -1,6 +1,8 @@
+import dataclasses
 import importlib.util
 import itertools
 import math
+import statistics
 
 import pytest
 import torch
@@ -11,10 +13,12 @@ from hypothesis.stateful import RuleBasedStateMachine, initialize, rule
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.operators import (
     DeepONetOperator,
+    FittedDeepONet,
     Lu2021DeepxdeExample,
     Lu2022Burgers,
     Split,
 )
+from SpectralSVR.operators.deeponet import PointwiseOutputScale
 from tests._devices import DEVICES_PRESENT, HOST
 
 ACCELERATORS = [device for device in DEVICES_PRESENT if device != HOST]
@@ -42,7 +46,9 @@ RECIPE_BUILD_EDGES = [
     ((), 5, 0),
     ((0.0,), 5, 1),
     ((-1.0, 1.0), 5, 2),
+    ((None, 1.0), 5, 1),
 ]
+NAMED_ACCELERATOR = torch.device("cuda")
 
 
 def antiderivative_fields(seed: int):
@@ -208,7 +214,11 @@ class DeepONetFits(RuleBasedStateMachine):
             with pytest.raises(ValueError, match="at least 5 iterations"):
                 DeepONetOperator(**arguments)
         elif len(periods) != trunk_columns:
-            with pytest.raises(ValueError, match="trunk coordinates"):
+            with pytest.raises(
+                ValueError,
+                match=f"states {len(periods)} trunk coordinates but the trunk "
+                f"points have {trunk_columns}",
+            ):
                 DeepONetOperator(**arguments)
         else:
             operator = DeepONetOperator(**arguments)
@@ -251,9 +261,95 @@ def test_trunk_features_repeat_with_the_period_and_pass_time_through(
 
     features = recipe.trunk_features(point)
 
+    reference = [
+        t,
+        math.cos(2 * math.pi * x / period),
+        math.sin(2 * math.pi * x / period),
+        math.cos(4 * math.pi * x / period),
+        math.sin(4 * math.pi * x / period),
+    ]
+
     assert features.shape == (1, recipe.trunk_feature_width)
-    assert features[0, 0] == t
     assert torch.allclose(features, recipe.trunk_features(shifted), atol=1e-9)
-    assert math.isclose(
-        features[0, 1].item(), math.cos(2 * math.pi * x / period), abs_tol=1e-12
-    )
+    for value, expected in zip(features[0].tolist(), reference, strict=True):
+        assert math.isclose(value, expected, abs_tol=1e-12)
+
+
+@pytest.mark.oracle_independent
+@settings(deadline=None, max_examples=50)
+@given(iterations=st.integers(-2, 600_000))
+@example(iterations=0)
+@example(iterations=1)
+@example(iterations=4)
+@example(iterations=5)
+@example(iterations=7)
+@example(iterations=10_000)
+@example(iterations=50_000)
+def test_recipes_transcribe_their_reference_code(iterations):
+    lu2021, lu2022 = Lu2021DeepxdeExample(), Lu2022Burgers(periods=(1.0,))
+
+    assert (lu2021.branch_widths, lu2021.trunk_widths) == ((40, 40), (40, 40))
+    assert (lu2021.activation, lu2021.learning_rate) == ("relu", 1e-3)
+    assert lu2021.source_iterations == 50_000
+    assert lu2022.branch_widths == (128, 128, 128, 128)
+    assert lu2022.trunk_widths == (128, 128, 128)
+    assert (lu2022.activation, lu2022.learning_rate) == ("tanh", 1e-3)
+    assert lu2022.harmonics == (1, 2)
+    assert lu2022.source_iterations == 500_000
+    if iterations >= 5:
+        assert lu2022.decay(iterations) == ("inverse time", iterations // 5, 0.5)
+    for recipe, minimum in ((lu2021, 1), (lu2022, 5)):
+        build = dict(trunk=QUERY, recipe=recipe, device=NAMED_ACCELERATOR)
+        if iterations < minimum:
+            with pytest.raises(ValueError, match=f"at least {minimum} iterations"):
+                DeepONetOperator(**build, iterations=iterations)
+        else:
+            assert (
+                DeepONetOperator(**build, iterations=iterations).iterations
+                == iterations
+            )
+
+
+@pytest.mark.oracle_independent
+@settings(deadline=None, max_examples=40)
+@given(
+    functions=st.integers(1, 6),
+    points=st.integers(1, 5),
+    seed=st.integers(0, 10_000),
+)
+@example(functions=1, points=1, seed=0)
+@example(functions=6, points=5, seed=0)
+def test_the_output_scale_is_the_per_point_mean_and_deviation(functions, points, seed):
+    generator = torch.Generator().manual_seed(seed)
+    targets = torch.randn(functions, points, generator=generator).numpy()
+    outputs = torch.randn(3, points, generator=generator)
+    columns = [targets[:, column].tolist() for column in range(points)]
+
+    scale = PointwiseOutputScale.of(targets)
+    scaled = scale(None, outputs)
+
+    for column, values in enumerate(columns):
+        mean, deviation = statistics.fmean(values), statistics.pstdev(values)
+        assert math.isclose(scale.mean[column].item(), mean, rel_tol=1e-5, abs_tol=1e-6)
+        assert math.isclose(
+            scale.std[column].item(), deviation, rel_tol=1e-5, abs_tol=1e-6
+        )
+        for row in range(3):
+            expected = outputs[row, column].item() * deviation + mean
+            assert math.isclose(
+                scaled[row, column].item(), expected, rel_tol=1e-5, abs_tol=1e-5
+            )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_the_deeponet_value_types_are_immutable():
+    recipe = Lu2022Burgers(periods=(1.0,))
+    for value, field in (
+        (recipe, "periods"),
+        (Lu2021DeepxdeExample(), "branch_widths"),
+        (PointwiseOutputScale(mean=torch.zeros(1), std=torch.ones(1)), "mean"),
+        (FittedDeepONet("DeepONet", None, recipe, QUERY), "recipe"),
+    ):
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            setattr(value, field, None)

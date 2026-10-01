@@ -128,6 +128,11 @@ class BenchmarkRecord(RuleBasedStateMachine):
                 "examples/operator/antiderivative_aligned.py; lululxvi/deeponet "
                 "src/deeponet_pde.py; 200 iterations against the source's 50000"
             )
+        spectralsvr = self.record_one_run().iloc[0]
+        assert spectralsvr["fit_covers"] == "one LSSVR fit to the output coefficients"
+        assert spectralsvr["protocol"] == (
+            "LSSVR on FourierBasis coefficients with fixed defaults, untuned"
+        )
         assert {
             key: (spec.deeponet.recipe, spec.deeponet.iterations)
             for key, spec in SCRIPT.DATASETS.items()
