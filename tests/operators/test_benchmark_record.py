@@ -1,3 +1,4 @@
+import contextlib
 import importlib.util
 import json
 import math
@@ -10,7 +11,7 @@ import tempfile
 import pandas as pd
 import pytest
 import torch
-from hypothesis import settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
@@ -311,42 +312,48 @@ def test_one_recipe_regenerates_the_record_with_every_default_stated():
     assert SCRIPT.SEED_SET == (0, 1, 2, 3, 4)
 
 
-@pytest.mark.no_fuzz
+NOTEBOOK = REPOSITORY / "notebooks" / "comparisons" / "deeponet_vs_spectralsvr.ipynb"
+FITTING_NAMES = {"DeepONetOperator", "SpectralSVROperator", "benchmark", "LSSVR"}
+
+
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("The notebook reads the record")
-def test_the_notebook_presents_the_record_and_fits_nothing(tmp_path, monkeypatch):
-    record = tmp_path / "benchmarks" / "operator_comparison.csv"
-    record.parent.mkdir()
-    SCRIPT.main(
-        [
-            "--out",
-            str(record),
-            "--device",
-            "cpu",
-            "--operators",
-            "spectralsvr",
-            "--seeds",
-            "0",
-            "1",
-            "--datasets",
-            "antiderivative",
-        ]
-    )
-    notebook = json.loads(
-        (
-            REPOSITORY / "notebooks" / "comparisons" / "deeponet_vs_spectralsvr.ipynb"
-        ).read_text()
-    )
-    monkeypatch.chdir(tmp_path)
-    namespace: dict = {}
-
-    for cell in notebook["cells"]:
-        if cell["cell_type"] == "code":
-            exec(compile("".join(cell["source"]), "notebook", "exec"), namespace)
-
-    assert list(namespace["summary"].index) == [
-        (SCRIPT.DATASETS["antiderivative"].label, "SpectralSVR")
+@settings(deadline=None, max_examples=4)
+@given(
+    seeds=st.lists(st.integers(0, 2), min_size=1, max_size=3, unique=True),
+    datasets=st.lists(st.sampled_from(CHEAP_DATASETS), min_size=1, unique=True),
+)
+@example(seeds=[0], datasets=["antiderivative"])
+@example(seeds=[0, 1, 2], datasets=CHEAP_DATASETS)
+def test_the_notebook_presents_the_record_and_fits_nothing(seeds, datasets):
+    cells = [
+        "".join(cell["source"])
+        for cell in json.loads(NOTEBOOK.read_text())["cells"]
+        if cell["cell_type"] == "code"
     ]
-    assert namespace["summary"]["n_seeds"].tolist() == [2]
-    fitting_names = {"DeepONetOperator", "SpectralSVROperator", "benchmark", "LSSVR"}
-    assert fitting_names.isdisjoint(namespace)
+    with tempfile.TemporaryDirectory() as directory:
+        record = pathlib.Path(directory) / "benchmarks" / "operator_comparison.csv"
+        record.parent.mkdir()
+        SCRIPT.main(
+            [
+                "--out",
+                str(record),
+                "--device",
+                "cpu",
+                "--operators",
+                "spectralsvr",
+                "--seeds",
+                *map(str, seeds),
+                "--datasets",
+                *datasets,
+            ]
+        )
+        namespace: dict = {}
+        with contextlib.chdir(directory):
+            for cell in cells:
+                exec(compile(cell, "notebook", "exec"), namespace)
+
+    expected_rows = [(SCRIPT.DATASETS[key].label, "SpectralSVR") for key in datasets]
+    assert sorted(namespace["summary"].index) == sorted(expected_rows)
+    assert (namespace["summary"]["n_seeds"] == len(seeds)).all()
+    assert FITTING_NAMES.isdisjoint(namespace)
