@@ -131,14 +131,19 @@ and tuned until the false-positive set is empty and the known-bad set is caught.
 
 Rollback is deleting the guard and its budget; nothing else depends on it.
 
-## Open Questions
+## Decided during apply
 
-**Do `tests/` and `SpectralSVR/` share one budget rule?** Tests carry 467
-comment lines against the library's 229, and some record measured values beside
-the bound they justify — which `AGENTS.md` explicitly asks for. Either the
-budget treats a recorded measurement as prose and forces it into the change's
-artifacts (as `time-dependent-forcing-in-numerical-burgers` ended up doing), or
-it recognises a measurement record as a distinct, permitted kind. The first is
-consistent and costs the numbers their proximity to the assertion; the second is
-kinder and needs a definition of "measurement" that does not become a loophole.
-Settle before seeding the test-side budget.
+**A recorded measurement beside an assertion counts as prose.** Decided by the
+user at task 0.1. One rule holds everywhere: a measured figure lives in the
+change's `tasks.md` or `measurements/`, and where it backs a bound it is a
+named constant the assertion uses, such as `MEASURED_WORST = 2.06e-4`, so the
+number stays beside the assertion as code rather than as a comment and cannot
+drift from it silently. This is what `time-dependent-forcing-in-numerical-burgers`
+ended up doing. It barely bites on the hardest file:
+`tests/problems/test_problems.py` carries 82 comment lines, of which 2 carry a
+figure or a measurement word; the rest are section banners and narration.
+
+**Section banners are counted.** Decided by the user at the same point. A
+`# ==== #` block and its title are comments, and the budget counts them like any
+other; structure belongs to test classes, state machines or separate modules.
+The seeded budget absorbs today's banners, and they shrink as files are touched.
