@@ -46,6 +46,7 @@ test = [
     "pytest>=9.1.1,<10",
     "hypothesis>=6.156.6,<7",
     "coverage>=7.15.0,<8",
+    "ruff>=0.15.21,<0.16",
 ]
 mutation = [
     "cosmic-ray>=8.7.0",
