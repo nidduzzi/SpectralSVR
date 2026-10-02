@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 import torch
 from hypothesis import example, given, settings
@@ -310,3 +313,14 @@ def test_the_fixture_refuses_inputs_it_cannot_make_orthonormal(
             orthonormal_rows(columns)
         return
     assert orthonormal_rows(columns).shape == (functions, sensors)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_consistency
+def test_the_prediction_bound_sits_within_ten_times_the_recorded_worst():
+    record = json.loads(
+        (Path(__file__).parent / "prediction_error_record.json").read_text()
+    )
+    worst = max(record["worst_over_reruns"].values())
+
+    assert worst < PREDICTION_RTOL <= 10 * worst
