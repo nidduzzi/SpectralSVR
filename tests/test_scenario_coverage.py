@@ -22,8 +22,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "An oracle's accuracy does not depend on the luck of the draw": IN_FLIGHT,
-    "A draw found to exceed the tolerance is pinned": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
