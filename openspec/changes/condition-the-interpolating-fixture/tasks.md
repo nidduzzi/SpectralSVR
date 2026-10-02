@@ -16,7 +16,7 @@
 
 - [x] 3.1 Measure the worst relative prediction error with the constructed inputs over several thousand seeds spanning every functions, slices and modes the strategies allow, with the one-slice, low-mode corner sampled densely and seed 2211 included; record the worst value, its location and the distribution's upper percentiles in `measurements/`, beside the script that produced them
   - `measurements/prediction_error_over_constructed_inputs.py` and its 5,242 rows: every functions (1 to 4), slices (1 to 9) and modes (1 to 9) at 10 seeds, plus 2,001 one-slice fields at modes 1 to 3 and seed 2211. Worst 1.72e-06 at seed 253, four functions, one slice, two modes; p50 7.5e-07, p90 1.03e-06, p99 1.28e-06, p99.9 1.56e-06; seed 2211 1.02e-06; the corner's worst is the overall worst.
-- [x] 3.2 Set `PREDICTION_RTOL` beneath the measured worst, recording the headroom in this task's note rather than in a comment; verify the two tests pass at several Hypothesis seeds, and that setting the bound just under the measured worst makes the pinned or sampled worst case fail, so the bound is shown to be live
+- [x] 3.2 Set `PREDICTION_RTOL` above the measured worst, derived from it (*corrected wording*, first written "beneath"), recording the headroom in this task's note rather than in a comment; verify the two tests pass at several Hypothesis seeds, and that setting the bound just under the measured worst makes the pinned or sampled worst case fail, so the bound is shown to be live
   - `315a9c1`. `PREDICTION_RTOL` is 1e-05, 5.8 times the measured worst. *Corrected wording:* the task said the bound sits beneath the measured worst, which would fail the worst case; it sits above it, derived from the measurement, and the liveness check is the one stated. The tests pass at Hypothesis seeds 0 to 3, and with the bound at 1.7e-06 the pinned seed-253 case fails.
 - [x] 3.3 Name the new scenarios on the tests that check them (the predictions test and the state machine for the first, the pinned examples for the second), and remove their in-flight entries; verify the scenario guard and the stale-exemption guard pass
   - `315a9c1`. Both scenarios are named on the predictions test and `FittingAndPredicting`, and the first also on the fixture test; their in-flight entries are gone, and the scenario, staleness and in-flight checks pass.
@@ -27,3 +27,18 @@
   - `just check`: ruff, mypy and ty clean; 422 passed and none failed.
 - [x] 4.2 Verify no source or test file gained an explanatory prose comment; the fixture's name and the recorded measurement carry the reasoning
   - No comment was added; `tests/operators/test_time_varying_scoring.py` carries no comment lines and no misshapen docstrings, as measured by the prose guard.
+
+## 5. Review fixes
+
+*Added after the review, every finding in scope at the user's direction.*
+
+- [ ] 5.1 Record the run-to-run spread of the worst fields and re-show liveness at a bound beneath the worst case's run-to-run floor. *Corrects 3.2 and `315a9c1`*, whose liveness check at 1.7e-06 held only when seed 253 landed on its 1.72e-06 branch; verify the check fails on every run
+- [ ] 5.2 Measure the state machine's metric, scaled by ``max(|targets|, 1)``, over its ranges (modes 1 to 7) on both its time-varying and time-invariant branches, record it, and verify `PREDICTION_RTOL` holds over it with the same headroom
+- [ ] 5.3 Refuse functions exceeding sensors in `orthonormal_inputs` with a named error; verify it raises naming both counts
+- [ ] 5.4 Guard the zero-diagonal sign case so no row is zeroed; verify a rank-deficient draw raises instead of returning a zero row
+- [ ] 5.5 Make the measurement reproducible: the record states the commit it measured and the script freezes the fixture it uses rather than importing the live test module; verify the script runs from any directory
+- [ ] 5.6 Anchor the construction against an independent classical Gram-Schmidt of the same seeded draw, which pins the sign convention, and assert different seeds give different rows; verify the identity-rows and dropped-sign mutants fail
+- [ ] 5.7 Anchor tightness: a test reads the recorded worst from `measurements/` and requires `PREDICTION_RTOL` within ten times it; verify a loosened bound fails
+- [ ] 5.8 Correct the artifacts the review found stale; the overstated liveness claim in `315a9c1`'s message cannot be amended and is recorded here and in 5.1
+- [ ] 5.9 Run `just check`; verify the identity-rows, dropped-sign, loosened-bound, `q` instead of `q.T`, smaller `C` and raw-draw mutants all fail, and no prose was added
+

@@ -17,6 +17,7 @@ What these tests check is that predictions are read at the right (t, x) points, 
 - The fixture's inputs become well-conditioned by construction: orthonormal rows, so the Gram matrix is the identity and the ridge bias is bounded near 1/C whatever the draw. The bound is not loosened, and no library code changes.
 - The worst error is measured over a large sample that includes the one-slice, low-mode corner where the failure was found. It is recorded with the change, and `PREDICTION_RTOL` is set beneath the measurement. The bound may tighten.
 - Seed 2211 is pinned as an example on both failing tests.
+- Both tests holding `PREDICTION_RTOL` are measured on their own metric and range: the predictions test, and the state machine with its time-invariant branch.
 - The rule the fixture broke is stated as a testing convention: a fuzzed anchor's tolerance holds over every input its fuzzing can draw. Where the oracle's accuracy depends on a property of the drawn inputs, the fixture guarantees that property by construction rather than leaving it to the draw.
 
 **Not in scope:** the library's LSSVR, its regularisation, and its precision checks; and the other tolerances in the module, which do not depend on input conditioning (the targets test compares exact evaluations to rounding).

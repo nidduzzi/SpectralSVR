@@ -42,3 +42,24 @@ The predictions test gains an `@example` for seed 2211, four functions, one slic
 - **The new inputs change every example these tests draw.** Refusal, shape and bit-identity checks do not depend on the inputs' values, only on their shape and distinctness. → The whole module runs before and after, and every test that passed still passes.
 - **Orthonormal rows have norm 1 where `randn` rows had norm near 2.** The targets do not depend on the inputs, so only the fitted weights' scale changes. → None needed; the bias bound is relative to the targets.
 - **A tighter bound could become fragile on another machine.** → The headroom is stated and measured; the bound sits beneath the worst observed value, not at it.
+
+## Decided after the review
+
+**The QR sign correction stays, and an independent Gram-Schmidt pins it.** Decided
+by the user. QR's sign convention follows the platform's LAPACK, so the correction
+cannot be observed on one machine; classical Gram-Schmidt, written out in the
+test, always yields a positive R diagonal, and comparing the fixture with it makes
+the convention observable everywhere. The same test asserts that different seeds
+give different rows, which the review showed nothing checked.
+
+**Tightness is anchored to the measurement.** Decided by the user. A test reads the
+recorded worst from `measurements/` and requires `PREDICTION_RTOL` to sit within
+ten times it, so loosening the bound fails and moving it means regenerating the
+record.
+
+**Liveness is shown at the run-to-run floor, and both tests' metrics are measured.**
+The worst fields' errors move between identical runs (seed 253 alternates between
+1.37e-06 and 1.72e-06), so a single run's value is not a liveness threshold. The
+state machine's check, scaled by ``max(|targets|, 1)`` over modes 1 to 7 and a
+time-invariant branch, is measured alongside the predictions test's.
+
