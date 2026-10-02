@@ -57,9 +57,9 @@ recorded worst from `measurements/` and requires `PREDICTION_RTOL` to sit within
 ten times it, so loosening the bound fails and moving it means regenerating the
 record.
 
-**Liveness is shown at the run-to-run floor, and both tests' metrics are measured.**
+**Liveness is shown where it holds on every run, and both tests' metrics are measured.**
 The worst fields' errors move between identical runs (seed 253 alternates between
-1.37e-06 and 1.72e-06), so a single run's value is not a liveness threshold. The
+1.37e-06 and 1.72e-06), so a single run's value is not a liveness threshold: even a bound under seed 253's recorded floor passed once in ten runs. Liveness is shown at 1e-06, beneath most fields' error, where both tests fail on every run. The
 state machine's check, scaled by ``max(|targets|, 1)`` over modes 1 to 7 and a
 time-invariant branch, is measured alongside the predictions test's.
 

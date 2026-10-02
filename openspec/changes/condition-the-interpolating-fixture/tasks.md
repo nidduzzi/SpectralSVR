@@ -32,13 +32,22 @@
 
 *Added after the review, every finding in scope at the user's direction.*
 
-- [ ] 5.1 Record the run-to-run spread of the worst fields and re-show liveness at a bound beneath the worst case's run-to-run floor. *Corrects 3.2 and `315a9c1`*, whose liveness check at 1.7e-06 held only when seed 253 landed on its 1.72e-06 branch; verify the check fails on every run
-- [ ] 5.2 Measure the state machine's metric, scaled by ``max(|targets|, 1)``, over its ranges (modes 1 to 7) on both its time-varying and time-invariant branches, record it, and verify `PREDICTION_RTOL` holds over it with the same headroom
-- [ ] 5.3 Refuse functions exceeding sensors in `orthonormal_inputs` with a named error; verify it raises naming both counts
-- [ ] 5.4 Guard the zero-diagonal sign case so no row is zeroed; verify a rank-deficient draw raises instead of returning a zero row
-- [ ] 5.5 Make the measurement reproducible: the record states the commit it measured and the script freezes the fixture it uses rather than importing the live test module; verify the script runs from any directory
-- [ ] 5.6 Anchor the construction against an independent classical Gram-Schmidt of the same seeded draw, which pins the sign convention, and assert different seeds give different rows; verify the identity-rows and dropped-sign mutants fail
-- [ ] 5.7 Anchor tightness: a test reads the recorded worst from `measurements/` and requires `PREDICTION_RTOL` within ten times it; verify a loosened bound fails
-- [ ] 5.8 Correct the artifacts the review found stale; the overstated liveness claim in `315a9c1`'s message cannot be amended and is recorded here and in 5.1
-- [ ] 5.9 Run `just check`; verify the identity-rows, dropped-sign, loosened-bound, `q` instead of `q.T`, smaller `C` and raw-draw mutants all fail, and no prose was added
+- [x] 5.1 Record the run-to-run spread of the worst fields and re-show liveness at a bound beneath the worst case's run-to-run floor. *Corrects 3.2 and `315a9c1`*, whose liveness check at 1.7e-06 held only when seed 253 landed on its 1.72e-06 branch; verify the check fails on every run
+  - `c46cc9a`. Thirty worst fields per metric rerun eight times: errors move by up to 42% between identical runs; seed 253's least observed value is 1.37e-06. *Amended:* a bound of 1.3e-06, under that floor, still passed once in ten runs, so the floor is lower than eight reruns found; liveness is shown instead at 1e-06, beneath most fields' error (p90 1.03e-06), where both tests failed on all ten runs.
+- [x] 5.2 Measure the state machine's metric, scaled by ``max(|targets|, 1)``, over its ranges (modes 1 to 7) on both its time-varying and time-invariant branches, record it, and verify `PREDICTION_RTOL` holds over it with the same headroom
+  - `c46cc9a`. The state machine's metric over 2,520 fields, modes 1 to 7, both branches: worst 1.46e-06, 1.50e-06 over reruns; `PREDICTION_RTOL` at 1e-05 holds with 6.7 times headroom.
+- [x] 5.3 Refuse functions exceeding sensors in `orthonormal_inputs` with a named error; verify it raises naming both counts
+  - `6d304f2`. `orthonormal_inputs` raises `ValueError` naming both counts for more functions than sensors; fuzzed with `5 over 4` pinned.
+- [x] 5.4 Guard the zero-diagonal sign case so no row is zeroed; verify a rank-deficient draw raises instead of returning a zero row
+  - `6d304f2`. `orthonormal_rows` refuses a draw whose numerical rank is below its column count. *Amended:* first written as a zero test on R's diagonal, which never fires in floating point, where a duplicated column leaves a diagonal near 1e-16; the test caught it.
+- [x] 5.5 Make the measurement reproducible: the record states the commit it measured and the script freezes the fixture it uses rather than importing the live test module; verify the script runs from any directory
+  - `c46cc9a`. The script freezes the fixture and query helpers, records the commit it measured (`6d304f2`), and was run from `/tmp`; its summary is `tests/operators/prediction_error_record.json`.
+- [x] 5.6 Anchor the construction against an independent classical Gram-Schmidt of the same seeded draw, which pins the sign convention, and assert different seeds give different rows; verify the identity-rows and dropped-sign mutants fail
+  - `6d304f2`. `test_the_fixture_inputs_are_the_gram_schmidt_basis_of_their_seeded_draw` compares with a classical Gram-Schmidt written in the test and requires different seeds to differ; the identity-rows and dropped-sign mutants fail.
+- [x] 5.7 Anchor tightness: a test reads the recorded worst from `measurements/` and requires `PREDICTION_RTOL` within ten times it; verify a loosened bound fails
+  - `c46cc9a`. `test_the_prediction_bound_sits_within_ten_times_the_recorded_worst` reads the record; loosening the bound to 5e-04 fails it.
+- [x] 5.8 Correct the artifacts the review found stale; the overstated liveness claim in `315a9c1`'s message cannot be amended and is recorded here and in 5.1
+  - Task 3.2's line now says the bound sits above the measured worst; the design's liveness decision states where liveness is shown and why; the proposal names both tests' metrics. The overstated liveness claim in `315a9c1`'s message cannot be amended and is corrected in 5.1 and in `c46cc9a`'s message.
+- [x] 5.9 Run `just check`; verify the identity-rows, dropped-sign, loosened-bound, `q` instead of `q.T`, smaller `C` and raw-draw mutants all fail, and no prose was added
+  - `just check`: lint clean, 424 passed. Mutants failed: identity rows, dropped sign, `q` for `q.T`, raw draw (`6d304f2`), loosened bound (`c46cc9a`), and `C = 1e4` from the review's run. No comment was added; the test module carries no counted prose.
 
