@@ -62,18 +62,32 @@
 
 *Added after the review, every finding in scope at the user's direction.* Each fix starts from the review's failing probe, which becomes a pinned case before the code changes.
 
-- [ ] 6.1 Count a ruff violation anywhere within a docstring's span, not only on its first line; verify a fixture with D406, D407, D409 and D412 counts as misshapen, and that every ruff violation in the repository falls inside some counted docstring
-- [ ] 6.2 Let an Examples section hold only doctest lines and their output; verify prose in Examples refuses the shape and a doctest-only section is accepted
-- [ ] 6.3 Walk definitions under module-level `if`, `try` and `with`; verify a two-sentence docstring under each is counted
-- [ ] 6.4 Count an unterminated trailing sentence; verify `Do x. And y` counts two and `Do x` counts one
-- [ ] 6.5 Carry visibility down through class nesting; verify a method of a public nested class is public and one under an internal class is internal
-- [ ] 6.6 Match machine directives case-insensitively, add `pylint:`, and exclude the coding cookie; verify each tool's documented directive form is not counted
-- [ ] 6.7 Stop refusing an ellipsis and the common abbreviations: an ellipsis is not a terminator and the closed abbreviation list grows to the titles and Latin forms in use; verify `Wait... then go.` and `Ask Dr. Smith.` count one sentence
-- [ ] 6.8 Admit Other Parameters, Receives and Methods as entry lists; verify each is accepted with one-sentence entries and refused with a two-sentence entry, and that Warnings and References are refused
-- [ ] 6.9 Validate the budget file: unknown keys and negative values raise a named error stating the file and the key; verify both
-- [ ] 6.10 Make the export map follow absolute imports of the package, `__all__`, star imports and imports under a module-level `if`; verify each against a temporary package
-- [ ] 6.11 Ignore ruff entries that are not docstring violations, such as syntax errors; verify a file with a syntax error does not mark a docstring misshapen
-- [ ] 6.12 Anchor the rules the review found held only by consistency, and kill its ten surviving mutants: the closed set as the spec's literal list in the test, a hand-counted sentence corpus, the ruff join against ruff's own JSON over a fixture, a directive table, the export map against Python's own `dir()` of a temporary package, and `BudgetLedger` checking which files and columns are reported with an honest oracle marker; verify each of the ten mutants and the earlier seven fail a test with the repository checks deselected
-- [ ] 6.13 Reshape `tests/test_scenario_coverage.py`'s module docstring, a touched file, to the shape, lowering its budget
-- [ ] 6.14 Run `just check`, and verify no explanatory prose comment was added and every touched docstring is in shape
+- [x] 6.1 Count a ruff violation anywhere within a docstring's span, not only on its first line; verify a fixture with D406, D407, D409 and D412 counts as misshapen, and that every ruff violation in the repository falls inside some counted docstring
+  - `7bcfe11`. `Docstring` carries its first and last line and a finding anywhere in that span counts. The short-underline fixture (D409) counts as misshapen, and `test_every_ruff_docstring_finding_lands_in_a_counted_docstring` finds no repository finding outside a docstring. The first-line-only mutant fails.
+- [x] 6.2 Let an Examples section hold only doctest lines and their output; verify prose in Examples refuses the shape and a doctest-only section is accepted
+  - `7bcfe11`. `is_doctest_only` admits `>>>`, `...` and output lines only; the review's derivation in Examples is pinned and refused, a doctest-only section accepted, and the entries-instead mutant fails.
+- [x] 6.3 Walk definitions under module-level `if`, `try` and `with`; verify a two-sentence docstring under each is counted
+  - `7bcfe11`. `unconditional_and_guarded` walks module-level `if`, `try` and `with`; the visibility fuzzer wraps the classes in each, the hidden two-sentence docstring is pinned, and the skip-guarded mutant fails.
+- [x] 6.4 Count an unterminated trailing sentence; verify `Do x. And y` counts two and `Do x` counts one
+  - `7bcfe11`. A trailing fragment counts as a sentence; `Do x` is one and `Do x. And y` two, pinned, and the mutant fails.
+- [x] 6.5 Carry visibility down through class nesting; verify a method of a public nested class is public and one under an internal class is internal
+  - `7bcfe11`. Visibility passes down through class bodies; the fuzzer covers every prefix combination of outer class, inner class and method with and without export, and the always-public mutant fails.
+- [x] 6.6 Match machine directives case-insensitively, add `pylint:`, and exclude the coding cookie; verify each tool's documented directive form is not counted
+  - `7bcfe11`. The directive pattern is case-insensitive and includes `pylint:` and the coding cookie; each documented form, `# NOQA` and both file headers are pinned, and the case-sensitive and pylint mutants fail.
+- [x] 6.7 Stop refusing an ellipsis and the common abbreviations: an ellipsis is not a terminator and the closed abbreviation list grows to the titles and Latin forms in use; verify `Wait... then go.` and `Ask Dr. Smith.` count one sentence
+  - `7bcfe11`. An ellipsis is not a terminator and the closed abbreviation list has fifteen forms, stated literally in the test; `Wait... then go.` and `Ask Dr. Smith.` are one sentence each, and both mutants fail.
+- [x] 6.8 Admit Other Parameters, Receives and Methods as entry lists; verify each is accepted with one-sentence entries and refused with a two-sentence entry, and that Warnings and References are refused
+  - `7bcfe11`. Other Parameters, Receives and Methods are admitted; `test_each_section_the_spec_names_is_admitted_and_no_other` enumerates all eleven spec sections and refuses Notes, Warnings and References.
+- [x] 6.9 Validate the budget file: unknown keys and negative values raise a named error stating the file and the key; verify both
+  - `7bcfe11`. `read_budget` raises `BudgetFileError` naming the file and entry for unknown columns and for values that are negative or not integers (booleans included); fuzzed with each case pinned, and the unvalidated mutant fails.
+- [x] 6.10 Make the export map follow absolute imports of the package, `__all__`, star imports and imports under a module-level `if`; verify each against a temporary package
+  - `7bcfe11`. `PackageInit` follows relative and absolute imports, `__all__`, star imports and imports under module-level compound statements; `test_the_export_map_agrees_with_what_python_binds` compares with Python's own bindings in a subprocess, and the absolute, star and re-export mutants fail.
+- [x] 6.11 Ignore ruff entries that are not docstring violations, such as syntax errors; verify a file with a syntax error does not mark a docstring misshapen
+  - `7bcfe11`. `docstring_violation_rows` keeps only `D` codes; fuzzed over a synthetic report with `None`, `invalid-syntax` and `E501` entries, and the unfiltered mutant fails.
+- [x] 6.12 Anchor the rules the review found held only by consistency, and kill its ten surviving mutants: the closed set as the spec's literal list in the test, a hand-counted sentence corpus, the ruff join against ruff's own JSON over a fixture, a directive table, the export map against Python's own `dir()` of a temporary package, and `BudgetLedger` checking which files and columns are reported with an honest oracle marker; verify each of the ten mutants and the earlier seven fail a test with the repository checks deselected
+  - `7bcfe11`. Twenty-seven hand mutants -- the review's ten, the earlier seven, ten for section 6 -- each fail a test with the repository checks deselected, on two consecutive runs. Three survived the first run (roles, See Also inline, package re-export) and were closed by pinned cases; Warns surviving a later run by chance was closed by enumerating the closed set. `BudgetLedger` now checks reported files and columns and is marked as an invariant.
+- [x] 6.13 Reshape `tests/test_scenario_coverage.py`'s module docstring, a touched file, to the shape, lowering its budget
+  - `5f04961`. The module docstring is one sentence and the file's misshapen budget is 0, which the slack check required.
+- [x] 6.14 Run `just check`, and verify no explanatory prose comment was added and every touched docstring is in shape
+  - `just check`: ruff, mypy and ty clean; 419 passed and 2 failed, the pre-existing failures in `test_time_varying_scoring.py`. No explanatory comment was added, and `tests/_prose.py` and `tests/test_prose_budget.py` carry no counted prose, every docstring in them in shape.
 
