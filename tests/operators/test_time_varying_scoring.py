@@ -29,11 +29,27 @@ def interpolating_regressor():
     return LSSVR(kernel="linear", C=INTERPOLATING_C, dtype=torch.float32)
 
 
-def orthonormal_inputs(functions, sensors, seed):
+def seeded_draw(functions, sensors, seed):
     generator = torch.Generator().manual_seed(seed + 1)
-    draw = torch.randn(sensors, functions, generator=generator, dtype=torch.float64)
-    q, r = torch.linalg.qr(draw)
+    return torch.randn(sensors, functions, generator=generator, dtype=torch.float64)
+
+
+def orthonormal_rows(columns):
+    if torch.linalg.matrix_rank(columns) < columns.shape[1]:
+        raise ValueError(
+            f"a {tuple(columns.shape)} draw of rank below {columns.shape[1]} has no "
+            "orthonormal rows spanning it"
+        )
+    q, r = torch.linalg.qr(columns)
     return (q * torch.sign(torch.diagonal(r))).T
+
+
+def orthonormal_inputs(functions, sensors, seed):
+    if functions > sensors:
+        raise ValueError(
+            f"{functions} orthonormal input functions cannot fit in {sensors} sensors"
+        )
+    return orthonormal_rows(seeded_draw(functions, sensors, seed))
 
 
 def dataset_over(u, seed):
@@ -242,17 +258,55 @@ TestFittingAndPredicting = pytest.mark.scenario(
 )
 
 
-@pytest.mark.oracle_invariant
+def classical_gram_schmidt(columns):
+    basis = []
+    for column in columns.T:
+        residual = column - sum((column @ b) * b for b in basis)
+        basis.append(residual / torch.linalg.vector_norm(residual))
+    return torch.stack(basis)
+
+
+@pytest.mark.oracle_independent
 @pytest.mark.scenario("An oracle's accuracy does not depend on the luck of the draw")
 @FUZZ
 @given(seed=st.integers(0, 10_000), functions=st.integers(1, 4))
 @example(seed=2211, functions=4)
+@example(seed=253, functions=4)
 @example(seed=0, functions=1)
-def test_the_fixture_inputs_are_orthonormal_and_fixed_by_their_seed(seed, functions):
+def test_the_fixture_inputs_are_the_gram_schmidt_basis_of_their_seeded_draw(
+    seed, functions
+):
     inputs = orthonormal_inputs(functions, 4, seed)
 
-    assert inputs.shape == (functions, 4)
+    assert torch.allclose(
+        inputs, classical_gram_schmidt(seeded_draw(functions, 4, seed)), atol=1e-10
+    )
     assert torch.allclose(
         inputs @ inputs.T, torch.eye(functions, dtype=torch.float64), atol=1e-12
     )
-    assert torch.equal(inputs, orthonormal_inputs(functions, 4, seed))
+    assert not torch.allclose(inputs, orthonormal_inputs(functions, 4, seed + 1))
+
+
+@pytest.mark.oracle_smoke
+@FUZZ
+@given(functions=st.integers(1, 6), sensors=st.integers(1, 6), deficient=st.booleans())
+@example(functions=5, sensors=4, deficient=False)
+@example(functions=4, sensors=4, deficient=False)
+@example(functions=2, sensors=4, deficient=True)
+def test_the_fixture_refuses_inputs_it_cannot_make_orthonormal(
+    functions, sensors, deficient
+):
+    if functions > sensors:
+        with pytest.raises(
+            ValueError,
+            match=f"{functions} orthonormal input functions cannot fit in {sensors} sensors",
+        ):
+            orthonormal_inputs(functions, sensors, 0)
+        return
+    columns = seeded_draw(functions, sensors, 0)
+    if deficient and functions > 1:
+        columns[:, -1] = columns[:, 0]
+        with pytest.raises(ValueError, match="no orthonormal rows"):
+            orthonormal_rows(columns)
+        return
+    assert orthonormal_rows(columns).shape == (functions, sensors)
