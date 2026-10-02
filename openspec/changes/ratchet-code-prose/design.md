@@ -21,6 +21,10 @@ excluded:
 | `tests` | 24 | 467 | 198 | 54 |
 | `scripts` | 1 | 12 | 60 | 0 |
 
+*Corrected during apply:* the library and script rows could not be reproduced on any tree
+this census could have come from, and its method was never recorded; only the `tests` row
+reproduces exactly. The counts at the branch head are recorded in tasks 1.1 and 1.2.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -47,8 +51,8 @@ excluded:
 `ast-grep` matches syntax trees. Python's parser discards comments before a tree
 exists — they are not nodes — so no tree matcher can see them. `tokenize`
 yields `COMMENT` tokens directly, and `ast.get_docstring` yields docstrings.
-Both are standard library, so the guard adds no dependency and does not touch
-`pyproject.toml`.
+Both are standard library. *Corrected during apply:* the docstring shape added
+ruff, declared in the test extra, and its numpy convention in `pyproject.toml`.
 
 *Alternative rejected:* a regex over source lines. It cannot tell a `#` inside a
 string literal from a comment, and this repository has string literals
@@ -151,10 +155,14 @@ guarantee, and the user rejected it as a heuristic.
 
 ## Migration Plan
 
-1. Write the counter and verify it against the census numbers in proposal.md;
-   any disagreement is a counter bug, not a census correction.
+1. Write the counter and verify it against constructed modules of known
+   counts and against the `tests` census, the one row that reproduces.
+   *Corrected during apply:* first written to treat any disagreement with the
+   whole census as a counter bug, which the unreproducible rows made untenable.
 2. Seed the budget from the measurement so the guard is green on arrival.
-3. Tune the derivation check against every docstring in the repository.
+3. Hold every docstring to the numpy shape with this change's constraint.
+   *Corrected during apply:* first written as tuning a derivation heuristic,
+   which the user rejected.
 4. Wire into `just check`.
 
 Rollback is deleting the guard and its budget; nothing else depends on it.
@@ -192,3 +200,16 @@ violation to the docstring whose literal starts on its line; a docstring is
 misshapen when ruff flags it or when it breaks this change's constraint. The
 missing-docstring rules stay off, since this change wants less prose. Ruff is
 declared in the test extra, where the guard runs.
+
+**The closed set admits numpydoc's entry-list sections; Examples holds only doctests.**
+Decided by the user after the review. The closed set is Parameters, Other
+Parameters, Receives, Returns, Yields, Raises, Warns, Attributes, Methods, See
+Also and Examples: every numpydoc section made of one-sentence entries. Warnings,
+References and Notes stay out, because each is free prose. An Examples section
+may hold only doctest lines, `>>>` and `...`, and the output that follows them;
+prose there would carry a derivation past the one-sentence rule.
+
+**The review's findings are all in scope.** Decided by the user. They are listed
+as tasks 6.1 to 6.14; each closes a misclassification the review proved with a
+probe, or anchors a rule that only a consistency check held.
+

@@ -45,9 +45,11 @@ visible so that slack is reclaimed rather than banked.
 
 ### Requirement: A docstring has a shape that leaves no room for a derivation
 Every docstring SHALL be one summary sentence, optionally followed by numpydoc
-sections drawn from a closed set -- Parameters, Returns, Yields, Raises, Warns,
-Attributes, See Also and Examples -- with each entry's description at most one
-sentence. Free paragraphs and a Notes section SHALL NOT appear. A derivation is a
+sections drawn from a closed set -- Parameters, Other Parameters, Receives,
+Returns, Yields, Raises, Warns, Attributes, Methods, See Also and Examples --
+with each entry's description at most one sentence. An Examples section SHALL
+hold only doctest lines and their output. Free paragraphs and the Notes,
+Warnings and References sections SHALL NOT appear. A derivation is a
 chain of sentences reconstructing why a guarantee holds; the shape gives it
 nowhere to go, so the reasoning lives in the change that owns it while the
 docstring keeps the condition, stated in a Parameters or Raises entry. The shape
@@ -58,8 +60,9 @@ shrinks.
 
 #### Scenario: A docstring outside the shape is refused
 - **WHEN** a docstring carries a second sentence in its summary, a free
-  paragraph, a section outside the closed set, or an entry longer than one
-  sentence, in a file whose budget does not already count it
+  paragraph, a section outside the closed set, an entry longer than one
+  sentence, or prose inside an Examples section, in a file whose budget does not
+  already count it
 - **THEN** the guard fails, naming the file, so the docstring is reshaped and any
   reasoning it carried moves to the change that owns it
 

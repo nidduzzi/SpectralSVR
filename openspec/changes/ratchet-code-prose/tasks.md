@@ -57,3 +57,23 @@
   - `tests/_prose.py` and `tests/test_prose_budget.py` carry no comment lines, no internal docstring lines and no misshapen docstrings, and have no budget entry, so they are held to zero like any new file.
 - [x] 5.4 Verify no reported number moves and nothing executable changes, by diff argument: this change adds a test and a data file and touches no library source
   - `git diff ccfbe18..HEAD --stat -- SpectralSVR scripts notebooks benchmarks` is empty: the change adds tests, a budget file and configuration, and moves no reported number.
+
+## 6. Review fixes
+
+*Added after the review, every finding in scope at the user's direction.* Each fix starts from the review's failing probe, which becomes a pinned case before the code changes.
+
+- [ ] 6.1 Count a ruff violation anywhere within a docstring's span, not only on its first line; verify a fixture with D406, D407, D409 and D412 counts as misshapen, and that every ruff violation in the repository falls inside some counted docstring
+- [ ] 6.2 Let an Examples section hold only doctest lines and their output; verify prose in Examples refuses the shape and a doctest-only section is accepted
+- [ ] 6.3 Walk definitions under module-level `if`, `try` and `with`; verify a two-sentence docstring under each is counted
+- [ ] 6.4 Count an unterminated trailing sentence; verify `Do x. And y` counts two and `Do x` counts one
+- [ ] 6.5 Carry visibility down through class nesting; verify a method of a public nested class is public and one under an internal class is internal
+- [ ] 6.6 Match machine directives case-insensitively, add `pylint:`, and exclude the coding cookie; verify each tool's documented directive form is not counted
+- [ ] 6.7 Stop refusing an ellipsis and the common abbreviations: an ellipsis is not a terminator and the closed abbreviation list grows to the titles and Latin forms in use; verify `Wait... then go.` and `Ask Dr. Smith.` count one sentence
+- [ ] 6.8 Admit Other Parameters, Receives and Methods as entry lists; verify each is accepted with one-sentence entries and refused with a two-sentence entry, and that Warnings and References are refused
+- [ ] 6.9 Validate the budget file: unknown keys and negative values raise a named error stating the file and the key; verify both
+- [ ] 6.10 Make the export map follow absolute imports of the package, `__all__`, star imports and imports under a module-level `if`; verify each against a temporary package
+- [ ] 6.11 Ignore ruff entries that are not docstring violations, such as syntax errors; verify a file with a syntax error does not mark a docstring misshapen
+- [ ] 6.12 Anchor the rules the review found held only by consistency, and kill its ten surviving mutants: the closed set as the spec's literal list in the test, a hand-counted sentence corpus, the ruff join against ruff's own JSON over a fixture, a directive table, the export map against Python's own `dir()` of a temporary package, and `BudgetLedger` checking which files and columns are reported with an honest oracle marker; verify each of the ten mutants and the earlier seven fail a test with the repository checks deselected
+- [ ] 6.13 Reshape `tests/test_scenario_coverage.py`'s module docstring, a touched file, to the shape, lowering its budget
+- [ ] 6.14 Run `just check`, and verify no explanatory prose comment was added and every touched docstring is in shape
+

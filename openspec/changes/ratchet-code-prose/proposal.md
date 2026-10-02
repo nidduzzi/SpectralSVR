@@ -31,6 +31,10 @@ The current surface, measured with `tokenize` and `ast`, pragmas excluded:
 | `tests` | 24 | 467 | 198 | 54 |
 | `scripts` | 1 | 12 | 60 | 0 |
 
+*Corrected during apply:* the library and script rows could not be reproduced on any tree
+this census could have come from, and its method was never recorded; only the `tests` row
+reproduces exactly. The counts at the branch head are recorded in tasks 1.1 and 1.2.
+
 The worst files are `tests/problems/test_problems.py` (82 comment lines),
 `tests/basis/test_fourier_basis.py` (77), `tests/basis/test_coeff_anchors.py`
 (58) and `SpectralSVR/basis/FourierBasis.py` (49).
@@ -67,8 +71,10 @@ two observed derivations sat.
 - New guard in `tests/`, alongside `test_oracle_coverage.py` and
   `test_scenario_coverage.py`, which it deliberately resembles.
 - A budget file recording per-file counts. Every entry is debt.
-- No library source changes. No dependency: `tokenize` gives comments and `ast`
-  gives docstrings, both standard library. `ast-grep` was considered and is the
-  wrong tool here — `ast` discards comments entirely, so a syntax-tree matcher
-  cannot see them.
+- No library source changes. `tokenize` gives comments and `ast` gives
+  docstrings, both standard library; `ast-grep` was considered and is the wrong
+  tool here, since `ast` discards comments entirely. *Corrected during apply:*
+  the docstring shape uses ruff's numpy-convention rules, so `pyproject.toml`
+  states that convention and the test extra declares ruff, with `uv.lock`
+  following.
 - No reported number moves; nothing executable changes.
