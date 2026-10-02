@@ -112,5 +112,8 @@ target-version = "py313"
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "B", "W", "C9", "PERF"]
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.ruff.format]
 quote-style = "double"

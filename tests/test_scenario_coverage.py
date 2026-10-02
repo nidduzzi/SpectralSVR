@@ -32,9 +32,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "A docstring outside the shape is refused": IN_FLIGHT,
-    "A contract in the shape is accepted": IN_FLIGHT,
-    "The exemption covers length, not shape": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
