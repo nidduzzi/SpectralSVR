@@ -175,3 +175,20 @@ figure or a measurement word; the rest are section banners and narration.
 `# ==== #` block and its title are comments, and the budget counts them like any
 other; structure belongs to test classes, state machines or separate modules.
 The seeded budget absorbs today's banners, and they shrink as files are touched.
+
+**The shape follows numpy style, the convention already in use.** Decided by the
+user when the shape was implemented. Of the 43 docstrings with sections, 12
+written by recent changes use numpy style, 31 in the older model and basis code
+use a nonstandard `Arguments:` with `name {type} --` form, and 2 use Google style;
+numpy is also the scientific-Python norm. The 31 count as misshapen debt and
+convert when their files are touched.
+
+**Standard checks come from ruff, and the guard owns the ratchet.** Decided by
+the user. `pyproject.toml` states `convention = "numpy"` for ruff's pydocstyle
+rules, but `D` stays out of the default selection: ruff cannot report a
+per-file ignore that no longer matches, so grandfathering there would never
+shrink. The guard runs `ruff check --select D --ignore D1` and joins each
+violation to the docstring whose literal starts on its line; a docstring is
+misshapen when ruff flags it or when it breaks this change's constraint. The
+missing-docstring rules stay off, since this change wants less prose. Ruff is
+declared in the test extra, where the guard runs.
