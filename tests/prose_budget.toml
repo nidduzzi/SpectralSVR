@@ -211,7 +211,7 @@ misshapen_docstrings = 1
 ["tests/test_scenario_coverage.py"]
 comments = 10
 internal_docstrings = 0
-misshapen_docstrings = 1
+misshapen_docstrings = 0
 
 ["tests/utils/test_band.py"]
 comments = 11
