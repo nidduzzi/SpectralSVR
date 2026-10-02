@@ -87,25 +87,53 @@ would become the place to put "this one is worth it".
 public. It puts the decision back in the author's hands at the point where they
 are motivated to keep the prose.
 
-### Derivations are refused on content, and the check is narrow on purpose
+### Derivations are made structurally impossible by the docstring's shape
 
-The observed failures all had the same shape: arithmetic reconstructing why a
-bound holds, inside a docstring, duplicating a change's design. That is
-detectable without judging style — a docstring stating `ns >= 6 K` is a
-contract, a docstring walking from the mask's `modes / 3` through the product's
-`2 K` to reach it is a derivation.
+Decided by the user during apply. A docstring is one summary sentence, then
+optionally numpydoc sections from a closed set -- Parameters, Returns, Yields,
+Raises, Warns, Attributes, See Also, Examples -- each entry's description at most
+one sentence. Notes and free paragraphs are not in the set. A derivation is a
+chain of sentences; the shape has nowhere to put one. Conditions a caller must
+meet go in a Parameters or Raises entry, as the condition alone.
 
-A narrow check that catches this category and nothing else is worth more than a
-broad one that fires on legitimate contract text and gets suppressed. Where the
-boundary sits is the one thing this design cannot settle in advance, so tasks
-below require it be measured against the docstrings already in the repository
-and tuned until the false-positive set is empty and the known-bad set is caught.
+The check parses: it splits the docstring into a summary paragraph and sections
+by their numpydoc headers and underlines, splits each section into entries, and
+counts sentence terminators outside inline code (``...``) and outside a closed
+list of abbreviations (e.g., i.e., etc.). Examples bodies are code and are not
+counted. A docstring outside the shape counts against a third budget column,
+`misshapen_docstrings`, seeded from the head and shrink-only like the others.
+Public docstrings are held to the shape: one of the two observed derivations sat
+in a public one, and the exemption existed to spare the interface a length
+limit, not to let it carry reasoning.
+
+Packing a chain into one long sentence stays possible. It is visible, bounded to
+one sentence per entry, and review sees it; the shape removes the room that let
+two multi-sentence derivations pass review, which is the failure this change was
+written for.
+
+*Alternative rejected: a content heuristic.* Measured during apply against every
+docstring in the repository and the two known-bad docstrings recoverable from
+`4e2b786`'s parent (`_solve_spectral` and `widest_manufactured_band` in
+`SpectralSVR/problems/burgers.py`). The first candidate, two or more inline
+expressions with an operator plus a reasoning word, caught both and fired on 18
+of 243 current docstrings, most of them contracts. The best tuned rule -- three
+sentences pairing a reasoning word with an operator expression, or two with a
+strong connective such as "therefore" -- caught both and fired on none, but it
+was fitted to two positives, and three current contracts (`as_semilinear_solver`,
+`burgers_periodic_manufactured`, `_solve_spectral`) sat one sentence below its
+threshold. A rule that recognises only the shape it was tuned on is not a
+guarantee, and the user rejected it as a heuristic.
 
 ## Risks / Trade-offs
 
-- **The derivation check could fire on a legitimate contract.** → Tuned against
-  the whole repository before it is asserted, with both sets recorded. A check
-  nobody trusts is a check someone suppresses.
+- **The shape rejects docstrings that are fine as prose.** Many public
+  docstrings run to paragraphs today. → They are recorded as debt in the third
+  column rather than rewritten here; each shrinks when its file is next touched.
+
+- **Sentence counting has edge cases.** Abbreviations and decimals contain
+  periods. → Terminators inside inline code are ignored, the abbreviation list is
+  closed and stated, and the parser is fuzzed over constructed docstrings with
+  those cases pinned.
 
 - **A budget edit in every prose-touching commit is friction.** → Accepted, and
   it is the mechanism rather than a side effect. The alternative is a ceiling

@@ -43,29 +43,39 @@ visible so that slack is reclaimed rather than banked.
 - **THEN** the addition still fails its own file's budget, because a repository
   total would let one file's cleanup pay for another file's narration
 
-### Requirement: A docstring states a contract, not a derivation
-A docstring SHALL state what a name guarantees, not re-derive why the guarantee
-holds. Where reasoning belongs to a change, it belongs in that change's planning
-artifacts, which are versioned with the decision and reviewed as a claim; a
-derivation copied into a docstring is a second, unchecked copy that drifts from
-the first.
+### Requirement: A docstring has a shape that leaves no room for a derivation
+Every docstring SHALL be one summary sentence, optionally followed by numpydoc
+sections drawn from a closed set -- Parameters, Returns, Yields, Raises, Warns,
+Attributes, See Also and Examples -- with each entry's description at most one
+sentence. Free paragraphs and a Notes section SHALL NOT appear. A derivation is a
+chain of sentences reconstructing why a guarantee holds; the shape gives it
+nowhere to go, so the reasoning lives in the change that owns it while the
+docstring keeps the condition, stated in a Parameters or Raises entry. The shape
+SHALL be checked by parsing structure and counting sentences, never by judging
+what the text says. A docstring outside the shape SHALL count against its file's
+budget like any other prose, so existing ones are recorded as debt that only
+shrinks.
 
-#### Scenario: A derivation in a docstring is refused
-- **WHEN** a docstring carries the arithmetic of a derivation rather than the
-  condition it produces
-- **THEN** the guard fails, naming the docstring, so the reasoning moves to the
-  change that owns it and the docstring keeps the condition
+#### Scenario: A docstring outside the shape is refused
+- **WHEN** a docstring carries a second sentence in its summary, a free
+  paragraph, a section outside the closed set, or an entry longer than one
+  sentence, in a file whose budget does not already count it
+- **THEN** the guard fails, naming the file, so the docstring is reshaped and any
+  reasoning it carried moves to the change that owns it
 
-#### Scenario: Stating a condition is not deriving it
-- **WHEN** a docstring names a bound, a condition or a relationship that the
-  caller must satisfy, without reconstructing the argument for it
-- **THEN** the guard accepts it, because that is the contract the caller needs
+#### Scenario: A contract in the shape is accepted
+- **WHEN** a docstring states its summary in one sentence and states each
+  condition, parameter and refusal in its own one-sentence section entry
+- **THEN** the guard accepts it, however much mathematics those sentences state,
+  because the shape bounds the structure and not the content
 
 ### Requirement: The public interface is exempt and the exemption is stated
-Docstrings on the library's public interface SHALL NOT be counted against the
-budget, because they are how a reader of the published work uses the library.
-The boundary between public and internal SHALL be structural rather than a
-judgement recorded per name, so that it cannot be argued case by case.
+Docstring lines on the library's public interface SHALL NOT be counted against
+the budget, because they are how a reader of the published work uses the
+library. The exemption covers their length only: public docstrings SHALL be held
+to the docstring shape like every other. The boundary between public and
+internal SHALL be structural rather than a judgement recorded per name, so that
+it cannot be argued case by case.
 
 #### Scenario: Public and internal are told apart structurally
 - **WHEN** the guard decides whether a docstring counts
@@ -77,3 +87,8 @@ judgement recorded per name, so that it cannot be argued case by case.
 - **THEN** it counts against the budget, however useful it is, because the
   exemption covers the interface a caller outside the library meets and nothing
   further
+
+#### Scenario: The exemption covers length, not shape
+- **WHEN** a public docstring falls outside the docstring shape
+- **THEN** it counts against its file's budget of misshapen docstrings, because
+  the exemption spares the public interface a length limit and nothing else

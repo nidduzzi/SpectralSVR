@@ -41,8 +41,11 @@ The worst files are `tests/problems/test_problems.py` (82 comment lines),
   docstring lines, asserted `<=` and shrinking only. Modelled on
   `tests/test_scenario_coverage.py`'s `EXEMPT`: debt with a number against it,
   never furniture.
-- A check refusing **new derivations in docstrings** — the specific failure this
-  change exists to close, and narrower than a length budget.
+- A **fixed docstring shape** that leaves a derivation no room: one summary
+  sentence, then only numpydoc sections from a closed set, each entry at most one
+  sentence. A derivation is a chain of sentences; the shape has nowhere to put
+  one, and a parser checks it without judging content. Existing docstrings
+  outside the shape are counted per file and the count only shrinks.
 - The budget is seeded from today's measurement, so the guard is green on
   arrival and every later commit either holds or shrinks it.
 
@@ -50,6 +53,8 @@ Explicitly **not** ratcheted: public docstring lines. Those are the library's
 interface for the readers of the paper it backs, and 1229 lines across 28 files
 is not the problem this change found. A length budget on them would push toward
 dense and unreadable rather than toward absent, optimising the wrong thing.
+Public docstrings are held to the shape, though, since that is where one of the
+two observed derivations sat.
 
 ## Capabilities
 

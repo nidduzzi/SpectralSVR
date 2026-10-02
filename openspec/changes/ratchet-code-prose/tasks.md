@@ -25,19 +25,20 @@
 - [x] 2.5 Verify the budget is per file rather than pooled: add a comment to one file, remove one from another, confirm the guard still fails
   - `a7e3a14`. Removing a comment from the script and adding one to `tests/conftest.py` failed both: the script's slack and `conftest.py`'s `comments 3 over its budget of 2`. `BudgetLedger` checks the same per-file holding against an independent model over sequences, and a pooled-total mutant fails it.
 
-## 3. Derivations in docstrings
+## 3. Docstring shape
 
-- [ ] 3.1 Measure before asserting: run a candidate check over every docstring in the repository and record two sets in design.md -- what it catches and what it fires on wrongly. The archived `manufactured-band-derivation` and `time-dependent-forcing-in-numerical-burgers` supply known-bad examples, since three docstrings cut during their reviews are recoverable from git history
-- [ ] 3.2 Tune until the false-positive set is empty and the known-bad set is caught, and record the final rule with both sets; a check that fires on legitimate contract text gets suppressed rather than obeyed, so an untuned check is worse than none
-- [ ] 3.3 Fail a docstring carrying a derivation, naming it; verify against a known-bad example from 3.1
-- [ ] 3.4 Accept a docstring stating a bound or condition without reconstructing the argument for it; verify against the contract-only docstrings the same files now carry
+- [ ] 3.1 Record in design.md the content heuristic measured during apply and rejected by the user, with both measured sets, as the alternative rejected. *Replaces the original 3.1 to 3.4, which tuned that heuristic*
+- [ ] 3.2 Parse the docstring shape: a one-sentence summary, then numpydoc sections from the closed set (Parameters, Returns, Yields, Raises, Warns, Attributes, See Also, Examples), each entry's description at most one sentence, with terminators counted outside inline code and outside a closed abbreviation list, and Examples bodies not counted. Verify by fuzzing constructed docstrings of known conformance, with an abbreviation, a decimal inside inline code, a Notes section, a second summary sentence and a two-sentence entry pinned
+- [ ] 3.3 Measure conformance over every docstring in the repository, public and internal, and record the count per area; seed `misshapen_docstrings` per file from it so the guard is green on arrival. Verify the two known-bad docstrings from `4e2b786`'s parent fall outside the shape
+- [ ] 3.4 Refuse a misshapen docstring a file's budget does not count, naming the file; verify by adding a two-sentence summary to a conforming docstring and confirming the guard names its file, and that slack in the third column is reported like the other two
+- [ ] 3.5 Accept a conforming contract however much mathematics it states; verify with a docstring whose Parameters and Raises entries each state a bound with operators in one sentence
 
 ## 4. Scenario coverage
 
-- [ ] 4.1 Mark each of the capability's scenarios with `@pytest.mark.scenario` as its task completes and remove its `IN_FLIGHT` entry in the same commit. The nine scenarios enter `EXEMPT` when this change is proposed, because it is parked at the stack tip with its artifacts written and no implementation, and a stated scenario with neither a test nor an entry leaves the suite red. Verify the stale-exemption test forces each removal rather than tolerating it
+- [ ] 4.1 Mark each of the capability's scenarios with `@pytest.mark.scenario` as its task completes and remove its `IN_FLIGHT` entry in the same commit. The capability's scenarios, nine at proposal and ten after the shape revision, enter `EXEMPT` when this change is proposed, because it is parked at the stack tip with its artifacts written and no implementation, and a stated scenario with neither a test nor an entry leaves the suite red. Verify the stale-exemption test forces each removal rather than tolerating it
 - [x] 4.2 Fuzz the counting properties over generated sources rather than pinning one file: comment and docstring counts over constructed modules, and the public/internal split over generated names. Verify each property fails under a mutation of the behaviour it describes
   - `a7e3a14`. The constructed-module and public-split tests are fuzzed with edges pinned, and `BudgetLedger` drives budget sequences. Hand mutants each failed a test: directives counted, the export rule ignored, the underscore ignored, the over-budget check disabled, the slack check disabled, a pooled total, docstrings uncounted.
-- [ ] 4.3 Verify no scenario of this capability sits in `EXEMPT` at the end, so the nine entries added at proposal time are all discharged rather than archived as debt
+- [ ] 4.3 Verify no scenario of this capability sits in `EXEMPT` at the end, so every entry added for this capability is discharged rather than archived as debt
 
 ## 5. Verification
 
