@@ -76,6 +76,10 @@ class SpectralConfig:
         """A copy with a different domain (this object is immutable)."""
         return replace(self, domain=domain)
 
+    def with_sampling(self, sampling: SamplingInputType) -> "SpectralConfig":
+        """Return a copy placing nodes by a different scheme or per-axis schemes."""
+        return replace(self, sampling=sampling)
+
     def with_precision(self, coeff_dtype: torch.dtype) -> "SpectralConfig":
         """A copy storing coefficients at a different complex precision.
 

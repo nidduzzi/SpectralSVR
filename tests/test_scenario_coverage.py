@@ -22,8 +22,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "A time-dependent field converts only to its own slice count": IN_FLIGHT,
-    "A conversion that cannot be placed in time is refused": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

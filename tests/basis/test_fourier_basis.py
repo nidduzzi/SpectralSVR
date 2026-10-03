@@ -30,6 +30,7 @@ from SpectralSVR import (
 from SpectralSVR.basis import Basis
 from SpectralSVR.basis.sampling import PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
+from tests._anchors import fourier_series_on_the_unit_cell_at
 
 CPU = torch.device("cpu")
 
@@ -708,53 +709,41 @@ def _time_dependent_basis(modes=8, nt=8):
     return FourierBasis(coeff).to_time_dependent(nt=nt)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_dependent_and_back():
-    td = _time_dependent_basis()
-    assert td.time_dependent and td.time_size == 8
-    ti = td.to_time_independent()
-    assert not ti.time_dependent
+DOUBLE_PRECISION_ROUNDING = 1e-12
 
 
-SINGLE_PRECISION_ROUNDING = 1e-5
-
-
-@pytest.mark.oracle_consistency
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(m=st.integers(2, 8), seed=st.integers(0, 10_000))
 def test_to_time_dependent_preserves_values(m, seed):
     g = torch.Generator().manual_seed(seed)
     u = FourierBasis(
-        FourierBasis.transform(torch.randn(2, m, m, generator=g) + 0j),
+        FourierBasis.transform(
+            torch.randn(2, m, m, generator=g, dtype=torch.float64) + 0j
+        ),
         domain=((0.0, 1.0), (0.0, 1.0)),
     )
     td = u.to_time_dependent()
     tdv, td_grid = td.get_values_and_grid(res=m, device=CPU)
-    source_at_slices = u(td_grid.flatten(0, -2)).view_as(tdv)
-    assert (tdv - source_at_slices).abs().max() <= SINGLE_PRECISION_ROUNDING
+    source_at_slices = fourier_series_on_the_unit_cell_at(
+        u.coeff, td_grid.flatten(0, -2)
+    ).reshape(tdv.shape)
+    assert np.abs(tdv.numpy() - source_at_slices).max() <= DOUBLE_PRECISION_ROUNDING
 
     tiv, ti_grid = td.to_time_independent().get_values_and_grid(res=m, device=CPU)
-    time_wavenumbers = torch.fft.fftfreq(m, 1 / m).abs().view(1, m, 1)
+    time_wavenumbers = np.abs(np.fft.fftfreq(m, 1 / m)).reshape(1, m, 1)
     largest_second_time_derivative = (
-        (u.coeff.abs() / m**2 * (2 * math.pi * time_wavenumbers) ** 2)
-        .sum(dim=(1, 2))
+        (u.coeff.abs().numpy() / m**2 * (2 * math.pi * time_wavenumbers) ** 2)
+        .sum(axis=(1, 2))
         .max()
     )
     interpolation_bound = (1 / (m - 1)) ** 2 / 8 * largest_second_time_derivative
-    source_at_nodes = u(ti_grid.flatten(0, -2)).view_as(tiv)
-    assert (tiv - source_at_nodes).abs().max() <= (
-        interpolation_bound + SINGLE_PRECISION_ROUNDING
+    source_at_nodes = fourier_series_on_the_unit_cell_at(
+        u.coeff, ti_grid.flatten(0, -2)
+    ).reshape(tiv.shape)
+    assert np.abs(tiv.numpy() - source_at_nodes).max() <= (
+        interpolation_bound + DOUBLE_PRECISION_ROUNDING
     )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_dependent_default_nt():
-    torch.manual_seed(0)
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    td = FourierBasis(coeff).to_time_dependent()  # nt defaults to modes[0]
-    assert td.time_dependent and td.time_size == 8
 
 
 @pytest.mark.no_fuzz

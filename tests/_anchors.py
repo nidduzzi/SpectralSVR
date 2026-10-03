@@ -8,12 +8,25 @@ itself live in ``SpectralSVR.problems.exact``; this module is test-only.
 
 import math
 
+import numpy
 import torch
 
 
 def half_open_grid(n: int, start: float = 0.0, stop: float = 1.0) -> torch.Tensor:
     """The periodic (half-open) uniform grid Fourier values sample on."""
     return torch.linspace(start, stop, n + 1, dtype=torch.float64)[:-1]
+
+
+def fourier_series_on_the_unit_cell_at(
+    coeff: torch.Tensor, points: torch.Tensor
+) -> numpy.ndarray:
+    modes = coeff.shape[1:]
+    wavenumber_axes = numpy.meshgrid(
+        *(numpy.fft.fftfreq(m, 1 / m) for m in modes), indexing="ij"
+    )
+    wavenumbers = numpy.stack([axis.ravel() for axis in wavenumber_axes], axis=1)
+    phases = numpy.exp(2j * numpy.pi * points.numpy() @ wavenumbers.T)
+    return coeff.reshape(len(coeff), -1).numpy() @ phases.T / len(wavenumbers)
 
 
 def single_mode_values(
@@ -36,8 +49,15 @@ def single_mode_spectrum(
     """
     assert 0 < m < n_points / 2
     coeff = torch.zeros(n_points, dtype=torch.complex128)
-    coeff[m] = n_points * amp / 2 * torch.exp(torch.tensor(1j * phase, dtype=torch.complex128))
-    coeff[n_points - m] = n_points * amp / 2 * torch.exp(torch.tensor(-1j * phase, dtype=torch.complex128))
+    coeff[m] = (
+        n_points * amp / 2 * torch.exp(torch.tensor(1j * phase, dtype=torch.complex128))
+    )
+    coeff[n_points - m] = (
+        n_points
+        * amp
+        / 2
+        * torch.exp(torch.tensor(-1j * phase, dtype=torch.complex128))
+    )
     return coeff
 
 
@@ -78,9 +98,9 @@ def separable_time_field(
     """
     powers = torch.arange(len(g_coeffs), dtype=torch.float64)
     g = (g_coeffs * t.unsqueeze(-1).pow(powers)).sum(-1)  # (nt,)
-    dg = (
-        (g_coeffs[1:] * powers[1:]) * t.unsqueeze(-1).pow(powers[:-1])
-    ).sum(-1)  # (nt,)
+    dg = ((g_coeffs[1:] * powers[1:]) * t.unsqueeze(-1).pow(powers[:-1])).sum(
+        -1
+    )  # (nt,)
     s = torch.sin(2 * math.pi * m * x / length)  # (nx,)
     return g.unsqueeze(-1) * s, dg.unsqueeze(-1) * s
 
