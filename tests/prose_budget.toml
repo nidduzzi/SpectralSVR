@@ -4,7 +4,7 @@ internal_docstrings = 24
 misshapen_docstrings = 6
 
 ["SpectralSVR/basis/__base.py"]
-comments = 20
+comments = 19
 internal_docstrings = 6
 misshapen_docstrings = 27
 
@@ -129,7 +129,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_coeff_anchors.py"]
-comments = 58
+comments = 44
 internal_docstrings = 0
 misshapen_docstrings = 1
 
@@ -139,7 +139,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_fourier_basis.py"]
-comments = 77
+comments = 72
 internal_docstrings = 0
 misshapen_docstrings = 2
 

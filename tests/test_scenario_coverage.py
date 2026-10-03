@@ -22,10 +22,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "A time-independent field reads as its time-dependent source at its nodes": IN_FLIGHT,
-    "A round trip stays within interpolation error": IN_FLIGHT,
-    "A converted field reads as its source at every time": IN_FLIGHT,
-    "Any slice count is accepted": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,

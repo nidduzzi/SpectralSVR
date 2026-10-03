@@ -956,21 +956,34 @@ class Basis(abc.ABC):
         if self.time_dependent:
             return copy
 
-        res_modes = tuple(
+        slices = self.modes[0] if nt is None else nt
+        if slices < 2:
+            raise ValueError(
+                f"a time-dependent field spans its time interval with at least two "
+                f"slices; got {slices}"
+            )
+        t_start, t_stop = self.domain[0]
+        spatial_res = tuple(
             slice(start, stop, mode)
             for mode, (start, stop) in zip(self.modes[1:], self.domain[1:], strict=True)
         )
-        if nt is None:
-            nt = self.modes[0]
-        t_start, t_stop = self.domain[0]
-        res_modes = (slice(t_start, t_stop, nt), *res_modes)
-
-        val = self.get_values(res=res_modes)
-        time_dependent_coeff = self.transform(val.flatten(0, 1)).reshape(
-            (len(self), *self.modes)
+        spatial_sampling = samplings_to_tuple(
+            self.sampling, self.ndim, self.default_sampling()
+        )[1:]
+        values_at_slice_times = self.inv_transform(
+            self.coeff,
+            res=(slice(t_start, t_stop, slices), *spatial_res),
+            sampling=(ClosedUniform(), *spatial_sampling),
+            strategy=self.strategy,
+            domain=self.domain,
         )
         copy.time_dependent = True
-        copy.coeff = time_dependent_coeff
+        copy.coeff = self.transform(
+            values_at_slice_times.flatten(0, 1),
+            sampling=spatial_sampling,
+            strategy=self.strategy,
+            domain=self.domain[1:],
+        ).unflatten(0, (len(self), slices))
         return copy
 
     def to_time_independent(self):
@@ -978,17 +991,31 @@ class Basis(abc.ABC):
         if not self.time_dependent:
             return copy
 
-        # since domain combines time interval with spatial intervals, get only the spatial ones with index [1:]
-        res_modes = tuple(
-            slice(start, stop, mode)
-            for mode, (start, stop) in zip(self.modes, self.domain[1:], strict=True)
+        time_interval = self.domain[0]
+        spatial_sampling = samplings_to_tuple(
+            self.sampling, self.ndim, self.default_sampling()
         )
-        t_start, t_stop = self.domain[0]
-        res_modes = (slice(t_start, t_stop, self.time_size), *res_modes)
-        val = self.get_values(res=res_modes)
-        time_dependent_coeff = self.transform(val)
+        slice_values = self.inv_transform(
+            self.coeff.flatten(0, 1),
+            sampling=spatial_sampling,
+            strategy=self.strategy,
+            domain=self.domain[1:],
+        ).unflatten(0, self.coeff.shape[:2])
+        time_sampling = self.default_sampling()
+        node_times = time_sampling.nodes(self.time_size, *time_interval).to(
+            device=self.coeff.device, dtype=self.coeff.real.dtype
+        )
+        values_at_node_times = self.interpolate_time_tensor(
+            slice_values,
+            self.fractional_slice_index(node_times, time_interval, self.time_size),
+        )
         copy.time_dependent = False
-        copy.coeff = time_dependent_coeff
+        copy.coeff = self.transform(
+            values_at_node_times,
+            sampling=(time_sampling, *spatial_sampling),
+            strategy=self.strategy,
+            domain=self.domain,
+        )
         return copy
 
     @staticmethod

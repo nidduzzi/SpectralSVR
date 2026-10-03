@@ -7,9 +7,11 @@ against hand-derived expectations independent of the code under test.
 
 import math
 
+import numpy
+
 import pytest
 import torch
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
 from tests._anchors import (
@@ -19,6 +21,7 @@ from tests._anchors import (
     single_mode_spectrum,
 )
 from SpectralSVR import FourierBasis
+from SpectralSVR.basis.sampling import ClosedUniform, PeriodicUniform
 from SpectralSVR.utils import (
     ExactModeCount,
     WavenumberCutoff,
@@ -207,10 +210,6 @@ def test_time_dependent_integral_time_axis_matches_analytic(a, b, m):
     assert torch.allclose(got, expected.to(got.dtype), atol=tol)
 
 
-# --------------------------------------------------------------------------- #
-# to_time_dependent: per-time-slice spectra must equal g(t_j) * S with S the
-# hand-computed single-mode spectrum -- values anchored, not just shapes.
-# --------------------------------------------------------------------------- #
 @pytest.mark.oracle_analytic
 @SETTINGS
 @given(
@@ -221,17 +220,19 @@ def test_time_dependent_integral_time_axis_matches_analytic(a, b, m):
 )
 def test_to_time_dependent_slice_spectra_match_analytic(m_t, m_x, amp, phase):
     nt = ns = 16
-    t = half_open_grid(nt)  # 2D field: BOTH axes are periodic Fourier axes
+    t = half_open_grid(nt)
     x = half_open_grid(ns)
-    g = torch.cos(2 * math.pi * m_t * t)
-    values = g.view(nt, 1) * (amp * torch.cos(2 * math.pi * m_x * x + phase))
-    # batched 2D transform: (1, nt, ns) input -> true (time, space) spectrum
+    values = torch.cos(2 * math.pi * m_t * t).view(nt, 1) * (
+        amp * torch.cos(2 * math.pi * m_x * x + phase)
+    )
     coeff = FourierBasis.transform(values.unsqueeze(0) + 0j)
     u = FourierBasis(coeff, domain=((0.0, 1.0), (0.0, 1.0)))
 
     td = u.to_time_dependent()
     assert td.time_dependent and td.coeff.shape == (1, nt, ns)
-    s = single_mode_spectrum(ns, m_x, amp, phase)  # hand-computed spatial DFT
+    slice_times = torch.linspace(0, 1, nt, dtype=torch.float64)
+    g = torch.cos(2 * math.pi * m_t * slice_times)
+    s = single_mode_spectrum(ns, m_x, amp, phase)
     for j in (0, 3, nt // 2, nt - 1):
         expected = (g[j] * s).to(torch.complex64)
         assert torch.allclose(
@@ -239,24 +240,165 @@ def test_to_time_dependent_slice_spectra_match_analytic(m_t, m_x, amp, phase):
         ), f"slice {j}"
 
 
+DOUBLE_PRECISION_ROUNDING = 1e-12
+
+
+def time_periodic_field(modes, span, m_t, m_x, phase):
+    t = PeriodicUniform().nodes(modes[0], 0.0, span)
+    x = PeriodicUniform().nodes(modes[1], 0.0, 1.0)
+    values = torch.cos(2 * math.pi * m_t * t / span + phase).view(-1, 1) * torch.cos(
+        2 * math.pi * m_x * x
+    )
+    coeff = FourierBasis.transform(values.unsqueeze(0) + 0j)
+    return FourierBasis(coeff, domain=((0.0, span), (0.0, 1.0)))
+
+
+def time_periodic_values(points, span, m_t, m_x, phase):
+    t, x = points[:, 0], points[:, 1]
+    return torch.cos(2 * math.pi * m_t * t / span + phase) * torch.cos(
+        2 * math.pi * m_x * x
+    )
+
+
 @pytest.mark.oracle_analytic
+@pytest.mark.scenario("A converted field reads as its source at every time")
+@pytest.mark.scenario("Any slice count is accepted")
+@pytest.mark.scenario("A round trip stays within interpolation error")
+@SETTINGS
+@given(
+    modes=st.tuples(st.integers(2, 8), st.integers(2, 6)),
+    slices=st.one_of(st.none(), st.integers(2, 12)),
+    span=st.floats(0.5, 4.0),
+    wavenumbers=st.tuples(st.integers(0, 3), st.integers(0, 2)),
+    phase=st.floats(0, 2 * math.pi),
+    probes=st.lists(st.floats(0, 1), min_size=1, max_size=8),
+)
+@example(modes=(3, 2), slices=2, span=1.0, wavenumbers=(1, 0), phase=0.0, probes=[0.5])
+@example(
+    modes=(8, 4), slices=5, span=1.0, wavenumbers=(1, 1), phase=0.3, probes=[0.1, 0.6]
+)
+@example(
+    modes=(6, 4), slices=6, span=2.0, wavenumbers=(2, 1), phase=1.0, probes=[0.25, 0.75]
+)
+@example(
+    modes=(4, 3),
+    slices=11,
+    span=0.5,
+    wavenumbers=(1, 1),
+    phase=2.0,
+    probes=[0.05, 0.95],
+)
+@example(
+    modes=(8, 8),
+    slices=None,
+    span=1.0,
+    wavenumbers=(1, 1),
+    phase=0.0,
+    probes=[0.5, 0.75],
+)
+def test_to_time_dependent_and_back_read_as_the_source(
+    modes, slices, span, wavenumbers, phase, probes
+):
+    m_t = wavenumbers[0] % ((modes[0] + 1) // 2)
+    m_x = wavenumbers[1] % ((modes[1] + 1) // 2)
+    converted = time_periodic_field(modes, span, m_t, m_x, phase).to_time_dependent(
+        nt=slices
+    )
+    nt = modes[0] if slices is None else slices
+    assert converted.time_dependent and converted.time_size == nt
+
+    x = PeriodicUniform().nodes(modes[1], 0.0, 1.0)
+    slice_times = ClosedUniform().nodes(nt, 0.0, span)
+    probe_times = torch.tensor(probes, dtype=torch.float64) * span
+    interpolation_bound = (span / (nt - 1)) ** 2 / 8 * (2 * math.pi * m_t / span) ** 2
+    for times, tolerance in (
+        (slice_times, DOUBLE_PRECISION_ROUNDING),
+        (probe_times, interpolation_bound + DOUBLE_PRECISION_ROUNDING),
+    ):
+        points = torch.cartesian_prod(times, x)
+        got = FourierBasis.evaluate_time_dependent_at(
+            converted.coeff, points, domain=converted.domain
+        )[0].real
+        expected = time_periodic_values(points, span, m_t, m_x, phase)
+        assert (got.double() - expected).abs().max() <= tolerance
+
+    round_trip = converted.to_time_independent()
+    node_points = torch.cartesian_prod(PeriodicUniform().nodes(nt, 0.0, span), x)
+    got = FourierBasis.inv_transform(round_trip.coeff)[0].real.flatten()
+    expected = time_periodic_values(node_points, span, m_t, m_x, phase)
+    assert (
+        got.double() - expected
+    ).abs().max() <= interpolation_bound + DOUBLE_PRECISION_ROUNDING
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario(
+    "A time-independent field reads as its time-dependent source at its nodes"
+)
+@SETTINGS
+@given(
+    slices=st.integers(2, 12),
+    spatial_modes=st.integers(2, 6),
+    span=st.floats(0.5, 4.0),
+    seed=st.integers(0, 10_000),
+)
+@example(slices=2, spatial_modes=2, span=1.0, seed=0)
+@example(slices=8, spatial_modes=4, span=1.0, seed=1)
+@example(slices=12, spatial_modes=6, span=3.0, seed=2)
+def test_to_time_independent_reads_as_its_time_dependent_source_at_its_nodes(
+    slices, spatial_modes, span, seed
+):
+    generator = torch.Generator().manual_seed(seed)
+    slice_values = torch.randn(
+        slices, spatial_modes, generator=generator, dtype=torch.float64
+    )
+    coeff = FourierBasis.transform(slice_values + 0j).unsqueeze(0)
+    source = FourierBasis(coeff, time_dependent=True, domain=((0.0, span), (0.0, 1.0)))
+
+    converted = source.to_time_independent()
+    assert not converted.time_dependent
+    assert converted.coeff.shape == (1, slices, spatial_modes)
+    got = FourierBasis.inv_transform(converted.coeff)[0].real.double().numpy()
+    node_times = PeriodicUniform().nodes(slices, 0.0, span).numpy()
+    slice_times = ClosedUniform().nodes(slices, 0.0, span).numpy()
+    expected = numpy.stack(
+        [
+            numpy.interp(node_times, slice_times, column)
+            for column in slice_values.T.numpy()
+        ],
+        axis=1,
+    )
+    assert numpy.abs(got - expected).max() <= DOUBLE_PRECISION_ROUNDING
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(modes=st.tuples(st.integers(2, 8), st.integers(2, 6)), slices=st.integers(-3, 1))
+@example(modes=(3, 2), slices=1)
+@example(modes=(3, 2), slices=0)
+def test_to_time_dependent_refuses_fewer_than_two_slices(modes, slices):
+    field = time_periodic_field(modes, 1.0, 0, 0, 0.0)
+    with pytest.raises(ValueError, match=f"at least two slices; got {slices}$"):
+        field.to_time_dependent(nt=slices)
+
+
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(m_t=st.integers(1, 3), m_x=st.integers(1, 5), amp=st.floats(0.5, 2.0))
 def test_to_time_independent_values_match_analytic(m_t, m_x, amp):
-    # time-dependent field u(t, x) = cos(2 pi m_t t) * amp sin(2 pi m_x x) whose
-    # slices sit on the closed uniform time nodes; to_time_independent resamples
-    # that axis and transforms both axes. The resulting 2D field's values must
-    # reproduce the closed form AT ITS OWN NODES exactly -- a shifted or
-    # misinterpolated time axis (the to_time_dependent bug class) fails this.
     nt, ns = 16, 16
-    t = torch.linspace(0, 1, nt, dtype=torch.float64)  # closed evolution nodes
+    slice_times = torch.linspace(0, 1, nt, dtype=torch.float64)
     x = half_open_grid(ns)
-    g = torch.cos(2 * math.pi * m_t * t)
-    values = g.view(nt, 1) * (amp * torch.sin(2 * math.pi * m_x * x))
-    coeff = FourierBasis.transform(values + 0j).unsqueeze(0)  # (1, nt, ns)
+    spatial = amp * torch.sin(2 * math.pi * m_x * x)
+    g = torch.cos(2 * math.pi * m_t * slice_times)
+    coeff = FourierBasis.transform(g.view(nt, 1) * spatial + 0j).unsqueeze(0)
     u = FourierBasis(coeff, time_dependent=True, domain=((0.0, 1.0), (0.0, 1.0)))
 
     ti = u.to_time_independent()
     assert not ti.time_dependent
     got = FourierBasis.inv_transform(ti.coeff)[0].real.double().cpu()
-    assert torch.allclose(got, values, atol=1e-3 * amp)
+    g_at_nodes = numpy.interp(
+        half_open_grid(nt).numpy(), slice_times.numpy(), g.numpy()
+    )
+    expected = torch.from_numpy(g_at_nodes).view(nt, 1) * spatial
+    assert torch.allclose(got, expected, atol=1e-3 * amp)
