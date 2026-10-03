@@ -17,6 +17,7 @@ An analytic anchor, `test_to_time_dependent_slice_spectra_match_analytic`, pins 
 - The anchor pinning half-open placement is rewritten to expect slice `j` at `j / (nt - 1)`; its oracle class stays analytic.
 - `to_time_independent` reads a time-dependent field of `N` slices at the periodic times `t_i = start + i (stop - start) / N` through the representation's linear interpolation between slices, then transforms. The time axis keeps `N` modes. A round trip of a field periodic in time therefore holds within linear interpolation's bound, not exactly.
 - `test_to_time_independent_values_match_analytic` and `test_to_time_dependent_preserves_values` are rewritten to compare values at matching coordinates.
+- After review: both conversions construct their result with a sampling of the right arity; a time-dependent field converts only to its own slice count; invalid slice counts, empty bases and fields without a spatial axis are refused with named errors.
 - A fuzzed test draws slice counts below, at and above the time axis's mode count, with those edges and the default pinned, and checks the converted field against the source at the slice times to rounding and between them against linear interpolation's analytic bound.
 
 **Not in this change:** the Burgers manufactured-solution generator in `SpectralSVR/problems/burgers.py` carries its own copy of the half-open sampling and feeds the benchmark's MMS row. Fixing it moves a recorded number, so it is the next change, decided by the user, with the row's move measured and the record regenerated there.

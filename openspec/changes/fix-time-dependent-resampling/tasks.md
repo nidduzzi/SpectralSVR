@@ -48,3 +48,24 @@
   - `A round trip stays within interpolation error` is named on the forward test, and the node scenario on the new inverse test. `tests/test_scenario_coverage.py` is back to its content at `734d7f9`. Guards pass.
 - [x] 4.8 Rerun 3.1, 3.3 with the closed-time read in `to_time_independent` restored as a further mutant, and 3.4
   - 3.1 above. 3.3 against both basis modules: all six mutants killed (half-open placement, old reshape, refusal removed, default from a spatial axis, inverse closed-time read, inverse slice index off by one). 3.4: no comment or docstring added; comment budgets lowered for `__base.py` 20 to 19, `test_coeff_anchors.py` 51 to 44, and `test_fourier_basis.py` 77 to 72.
+
+## 5. Review fixes
+
+*Added after the review; every finding in scope at the user's direction. Folding the conversions into `BasisLifecycle` stays with `consolidate-the-test-suite`.*
+
+- [ ] 5.1 Register the two new scenarios as in flight; verify the scenario guard passes
+- [ ] 5.2 Construct each conversion's result with the class constructor and a sampling of the right arity (time scheme dropped forward, prepended back); verify a per-axis sampling's round trip matches the default-sampling one within the interpolation bound, and that restoring the copied sampling fails a test
+- [ ] 5.3 Return a copy for a time-dependent field converted with no slice count or its own, and raise naming both counts otherwise; verify both branches
+- [ ] 5.4 Refuse a non-integer or boolean slice count with `TypeError`, and an empty basis and a field without a spatial axis with `ValueError`; verify each raises its named error and the refusal test covers every path
+- [ ] 5.5 Sample the inverse's time axis on `PeriodicUniform()` explicitly, and resolve spatial schemes through a `spatial_sampling` property used by both conversions and `get_values`; verify the suite passes
+- [ ] 5.6 State each conversion's contract in a one-line numpy docstring with a `Raises` section; verify the docstring shape guard passes and no free prose is added
+- [ ] 5.7 Draw the time interval's start in both fuzzed tests and pin `start=1.0, span=2.0`; verify the forward and inverse start-ignoring mutants fail
+- [ ] 5.8 Draw a non-FFT `PeriodicUniform` and a non-default strategy where the API admits one, to separate the mutants that drop spatial sampling, domain or strategy; record any that stay equivalent and why
+- [ ] 5.9 Measure both rewritten anchors' errors over their ranges, record them, and tighten their tolerances above what was measured
+- [ ] 5.10 Take oracle times from `torch.linspace` and `half_open_grid` rather than the library's sampling schemes; verify the tests pass
+- [ ] 5.11 Replace `test_to_time_dependent_preserves_values`'s reference with an independent numpy point evaluation of the spectrum, measured over its full seed range before bounding, and mark its oracle honestly
+- [ ] 5.12 Draw precision (complex64, complex128), batch size above one and complex-valued fields in the conversion tests, pinning complex64 and a batch of three; verify they pass at the measured tolerances
+- [ ] 5.13 Delete `test_to_time_dependent_and_back` and `test_to_time_dependent_default_nt`, which the fuzzed tests subsume; verify the default and round trip stay pinned there
+- [ ] 5.14 Cut `tests/basis/test_coeff_anchors.py`'s module docstring to one sentence that holds for the module
+- [ ] 5.15 Name the new scenarios and remove their in-flight entries; run `just check`, rerun the hand mutants with the new ones, and the prose audit
+

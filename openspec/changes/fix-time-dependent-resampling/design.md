@@ -42,7 +42,25 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 *Alternative rejected:* treat slices `0 .. N-2` as the periodic grid and drop the endpoint, which duplicates the start for a periodic field. The round trip would be exact for periodic sources, but the time axis would have `N - 1` modes, which changes the shape contract, and a field that is not periodic in time, such as a Burgers evolution, would lose its last slice.
 
+## Decided after the review
+
+*Every finding in scope, decided by the user.*
+
+**The result is constructed, not copied and mutated.** Each conversion builds its result with the class's constructor, passing coefficients, `time_dependent`, domain, strategy and a sampling with the right number of axes: the time scheme dropped going to time-dependent and prepended coming back. The copy-then-assign form carried the source's per-axis sampling onto a field with one axis fewer, so the inverse applied the time scheme to space; with `(ClosedUniform(), PeriodicUniform())` the round trip differed from the default-sampling one by 5.34. Construction also removes the order dependence between assigning `time_dependent` and `coeff`.
+
+**The spatial schemes are a property.** `spatial_sampling` resolves the basis's schemes for its spatial axes once; both conversions and `get_values` read it instead of each resolving `samplings_to_tuple` themselves.
+
+**The time axis is named.** The inverse samples time on `PeriodicUniform()`, as the requirement states, rather than on `default_sampling()`, which agreed only because `FourierBasis` is the only subclass.
+
+**A time-dependent field converts only to its own slice count.** With no slice count or its own, `to_time_dependent` returns a copy; with another it raises naming both. Resampling between slice counts was rejected as new behaviour with its own bound.
+
+**Refusals are named and stated.** A non-integer or boolean slice count raises `TypeError`; a count below two, an empty basis and a field without a spatial axis raise `ValueError`, each saying which. The contracts live in one-line numpy docstrings with `Raises` sections, not in prose.
+
+**The inverse test's oracle is independent through an anchored pair.** It sets up and reads back through `FourierBasis.transform` and `inv_transform`, whose scale and layout other anchors pin; its expectation, `numpy.interp`, is independent of the code under test.
+
+**Tolerances are measured, including the anchors'.** The two rewritten anchors kept tolerances never measured (headroom about 1e12 and 1e5); they are measured, recorded and tightened. Oracles take their times from `torch.linspace` and `half_open_grid` rather than the library's sampling schemes.
+
 ## Risks / Trade-offs
 
 - **Something relied on the half-open placement.** → `to_time_dependent` is called by the library only through the Burgers generator's own copy, which this change leaves alone; the suite runs in full before and after, and any test whose expectation moves is named in the commit.
-- **Evaluating at explicit points costs more than a transform.** → The conversion is used at dataset build time on small grids; the suite's wall time is recorded before and after.
+- ~~**Evaluating at explicit points costs more than a transform.**~~ *Stale after the amendment above:* the conversion goes through the inverse transform with a closed time axis, so there is no per-point evaluation; the suite's wall time is still recorded before and after.
