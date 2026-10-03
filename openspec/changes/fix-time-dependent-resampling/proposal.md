@@ -20,6 +20,8 @@ An analytic anchor, `test_to_time_dependent_slice_spectra_match_analytic`, pins 
 - After review: both conversions construct their result with a sampling of the right arity; a time-dependent field converts only to its own slice count; invalid slice counts, empty bases and fields without a spatial axis are refused with named errors.
 - A fuzzed test draws slice counts below, at and above the time axis's mode count, with those edges and the default pinned, and checks the converted field against the source at the slice times to rounding and between them against linear interpolation's analytic bound.
 
+**Also not in this change:** a `FourierBasis` under `ClosedUniform` sampling is inconsistent with itself, and `copy()` drops a configured precision; both predate this change, surfaced in its review, and are their own changes.
+
 **Not in this change:** the Burgers manufactured-solution generator in `SpectralSVR/problems/burgers.py` carries its own copy of the half-open sampling and feeds the benchmark's MMS row. Fixing it moves a recorded number, so it is the next change, decided by the user, with the row's move measured and the record regenerated there.
 
 ## Capabilities

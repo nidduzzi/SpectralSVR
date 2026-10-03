@@ -60,6 +60,26 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **Tolerances are measured, including the anchors'.** The two rewritten anchors kept tolerances never measured (headroom about 1e12 and 1e5); they are measured, recorded and tightened. Oracles take their times from `torch.linspace` and `half_open_grid` rather than the library's sampling schemes.
 
+## Decided after the second review
+
+*Every in-change finding in scope, decided by the user.*
+
+**A slice count is any true integer.** `operator.index(nt)` accepts Python, numpy and 0-d torch integers and refuses floats; a boolean is still refused. `isinstance(nt, int)` had refused `numpy.int64(4)`, contradicting "any integer slice count".
+
+**Emptiness is checked first, in both directions.** An empty basis is refused before the time-dependent branch reads `time_size`, which raised `IndexError` on an empty time-dependent basis. `to_time_independent` gains the forward conversion's refusals: fewer than two slices, which silently produced a field constant in time, no spatial axis, and no coefficients.
+
+**A per-axis sampling must name every axis.** Resolving a per-axis sampling whose length differs from the field's axis count raises a named error, so `axis_sampling` delivers what its name promises. A 3-tuple on a two-axis field had passed through and handed a one-axis field two schemes.
+
+**A no-op conversion owns its coefficients.** It clones them, so the scenario's "independent copy" holds; an in-place change to the result had changed the source.
+
+**Accuracy is stated for exact evaluation; the strategy is honoured.** The user chose to keep honouring the caller's strategy, memory budget included, over forcing the exact path. The spec scopes the rounding and interpolation claims to exact evaluation. A new scenario checks that a converted field matches the same sampling and transform under the same strategy. Task 5.8(c) was wrong: under `EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)` at modes (16, 16), dropping the strategy moves the coefficients by 2.08e-3, so that mutant is not equivalent.
+
+**One equivalence is conditional.** Task 5.8(a), dropping the spatial sampling, is equivalent only because a closed spatial axis, the one admissible-by-type scheme that would tell, is itself broken on a Fourier basis (below).
+
+**An intended duplicate.** `test_to_time_independent_values_match_analytic` checks a narrower case of the fuzzed inverse test with the same `numpy.interp` oracle. It is kept as a literal anchor, as the user decided for the analytic anchors.
+
+**Deferred to their own changes.** Two pre-existing defects surfaced and are left out of this change. A `FourierBasis` accepts `ClosedUniform` sampling but is inconsistent with itself under it: `transform(get_values())` differs from its own coefficients by 6.7. And `copy()` drops a configured precision for its other callers. `from_config` passing a dtype mismatch between tensor and config through unchanged goes with the second.
+
 ## Risks / Trade-offs
 
 - **Something relied on the half-open placement.** → `to_time_dependent` is called by the library only through the Burgers generator's own copy, which this change leaves alone; the suite runs in full before and after, and any test whose expectation moves is named in the commit.
