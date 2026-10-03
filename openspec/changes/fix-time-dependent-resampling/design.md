@@ -12,13 +12,15 @@ See proposal.md - Why. `to_time_dependent` today asks `get_values` for the field
 **Non-Goals:**
 
 - The Burgers manufactured-solution generator's own copy of the sampling, which feeds the benchmark: the next change, so a recorded row moves where it is measured.
-- `to_time_independent`, which resamples a time-dependent field onto the periodic grid through the representation's own evaluation; it reads the slices with the convention this change makes `to_time_dependent` write, so it needs no change, and the anchor `test_to_time_independent_values_match_analytic` already pins it.
+- ~~`to_time_independent` needs no change.~~ *Corrected after the gate's first run:* it reads slice `j` at the inclusive time but transforms it as the periodic sample at `j T / N`, the mirror of the defect fixed here, and its anchor encodes that. It joins this change; see the decision below.
 
 ## Decisions
 
 ### Sample at the inclusive slice times explicitly
 
 The conversion evaluates the source at the points `(t_i, x)` with `t_i = start + i (stop - start) / (nt - 1)` and `x` on each spatial axis's periodic grid, rather than asking `get_values` for a time slice, whose periodic scheme can only produce the half-open nodes. The spatial transform of each row and the shape `(len, nt, *modes[1:])` follow from that grid, so the reshape no longer assumes `nt` equals the time axis's mode count.
+
+*Amended in implementation:* the points are not evaluated one by one. The source's inverse transform takes a sampling scheme per axis, so the conversion asks it for `ClosedUniform` nodes along time and the basis's own scheme along each spatial axis. That is the same grid, and the spatial transform is then given the same spatial schemes.
 
 *Alternative rejected:* keep half-open sampling and change how a time-dependent field is read. Every time-dependent consumer, the benchmark's scoring included, reads slices inclusively, so the reader is the convention and the writer is the defect.
 
@@ -32,7 +34,13 @@ Inclusive spacing divides by `nt - 1`, so one slice has no spacing. The conversi
 
 ### The between-slice oracle is analytic
 
-Between slices the representation interpolates linearly, so a converted field matches its source there only to interpolation error. The test bounds that by `Δt² / 8 · max |∂²u/∂t²|`, computed from the field's own time spectrum, rather than by a fitted tolerance; at the slice times it requires agreement to float32 rounding, measured first.
+Between slices the representation interpolates linearly, so a converted field matches its source there only to interpolation error. The test bounds that by `Δt² / 8 · max |∂²u/∂t²|`, computed from the field's own time spectrum, rather than by a fitted tolerance; at the slice times it requires agreement to rounding, measured first. *Amended:* the test builds its fields in double precision, so the coefficients are complex128; the worst slice-time error over 5000 draws was 8.2e-15, and the between-slice error reached 0.992 of the bound.
+
+### The inverse reads the slices at the periodic times by interpolation
+
+*Decided by the user after the gate's first run.* `to_time_independent` evaluates the time-dependent field at the periodic times `start + i (stop - start) / N`, through the same linear interpolation every reader of a time-dependent field uses, and transforms the result. The time axis keeps `N` modes. A round trip of a field periodic in time then holds within `Δt² / 8 · max |∂²u/∂t²|` rather than exactly: the exactness before was the two misplacements cancelling.
+
+*Alternative rejected:* treat slices `0 .. N-2` as the periodic grid and drop the endpoint, which duplicates the start for a periodic field. The round trip would be exact for periodic sources, but the time axis would have `N - 1` modes, which changes the shape contract, and a field that is not periodic in time, such as a Burgers evolution, would lose its last slice.
 
 ## Risks / Trade-offs
 
