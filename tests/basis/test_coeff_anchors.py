@@ -221,6 +221,7 @@ SPATIAL_SAMPLINGS = st.sampled_from((None, PeriodicUniform(supports_fft=False)))
 STRATEGIES = st.sampled_from(
     (None, EvaluationStrategy(memory_budget_mb=1e-4, allow_approximate=False))
 )
+INTEGER_TYPES = st.sampled_from((int, numpy.int64, torch.tensor))
 AMPLITUDES = st.lists(
     st.complex_numbers(min_magnitude=0.5, max_magnitude=2.0, allow_subnormal=False),
     min_size=1,
@@ -291,6 +292,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @given(
     modes=st.tuples(st.integers(2, 8), st.integers(2, 6)),
     slices=st.one_of(st.none(), st.integers(2, 12)),
+    integer_type=INTEGER_TYPES,
     start=st.floats(-2.0, 2.0),
     span=st.floats(0.5, 4.0),
     wavenumbers=st.tuples(st.integers(0, 3), st.integers(0, 2)),
@@ -304,6 +306,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(3, 2),
     slices=2,
+    integer_type=int,
     start=0.0,
     span=1.0,
     wavenumbers=(1, 0),
@@ -317,6 +320,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(8, 4),
     slices=5,
+    integer_type=numpy.int64,
     start=1.0,
     span=2.0,
     wavenumbers=(1, 1),
@@ -330,6 +334,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(6, 4),
     slices=6,
+    integer_type=int,
     start=1.0,
     span=2.0,
     wavenumbers=(2, 1),
@@ -343,6 +348,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(4, 3),
     slices=11,
+    integer_type=torch.tensor,
     start=-1.5,
     span=0.5,
     wavenumbers=(1, 1),
@@ -356,6 +362,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(8, 8),
     slices=None,
+    integer_type=int,
     start=0.0,
     span=1.0,
     wavenumbers=(1, 1),
@@ -369,6 +376,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 def test_to_time_dependent_and_back_read_as_the_source(
     modes,
     slices,
+    integer_type,
     start,
     span,
     wavenumbers,
@@ -383,7 +391,9 @@ def test_to_time_dependent_and_back_read_as_the_source(
     m_x = wavenumbers[1] % ((modes[1] + 1) // 2)
     field = (start, span, m_t, m_x, phase, amplitudes)
     source = time_periodic_field(modes, *field, precision, sampling, strategy)
-    converted = source.to_time_dependent(nt=slices)
+    converted = source.to_time_dependent(
+        nt=None if slices is None else integer_type(slices)
+    )
     nt = modes[0] if slices is None else slices
     assert converted.time_dependent and converted.time_size == nt
     assert converted.coeff.dtype == converted.config.coeff_dtype == precision
@@ -524,6 +534,9 @@ REFUSAL_SOURCE = time_periodic_field(
 )
 
 
+TIME_DEPENDENT_REFUSAL_SOURCE = REFUSAL_SOURCE.to_time_dependent(nt=4)
+
+
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A conversion that cannot be placed in time is refused")
 @SETTINGS
@@ -532,60 +545,174 @@ REFUSAL_SOURCE = time_periodic_field(
         st.integers(-3, 1),
         st.floats(allow_nan=False, allow_infinity=False),
         st.booleans(),
-    )
+        st.just(torch.tensor(2.0)),
+    ),
+    time_dependent=st.booleans(),
 )
-@example(slices=1)
-@example(slices=0)
-@example(slices=2.0)
-@example(slices=True)
-def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(slices):
-    if isinstance(slices, int) and not isinstance(slices, bool):
-        with pytest.raises(ValueError, match=f"at least two slices; got {slices}$"):
-            REFUSAL_SOURCE.to_time_dependent(nt=slices)
+@example(slices=1, time_dependent=False)
+@example(slices=0, time_dependent=False)
+@example(slices=2.0, time_dependent=False)
+@example(slices=True, time_dependent=False)
+@example(slices=4.0, time_dependent=True)
+@example(slices=False, time_dependent=True)
+def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
+    slices, time_dependent
+):
+    source = TIME_DEPENDENT_REFUSAL_SOURCE if time_dependent else REFUSAL_SOURCE
+    is_integer = isinstance(slices, int) and not isinstance(slices, bool)
+    if not is_integer:
+        with pytest.raises(TypeError, match="a slice count is an integer"):
+            source.to_time_dependent(nt=slices)
         return
-    with pytest.raises(TypeError, match="a slice count is an integer"):
-        REFUSAL_SOURCE.to_time_dependent(nt=slices)
+    message = (
+        f"converts only to its own slice count; got {slices}$"
+        if time_dependent
+        else f"at least two slices; got {slices}$"
+    )
+    with pytest.raises(ValueError, match=message):
+        source.to_time_dependent(nt=slices)
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A conversion that cannot be placed in time is refused")
 @pytest.mark.parametrize(
-    ("field", "message"),
+    ("field", "slices", "message"),
     [
-        (FourierBasis(), "holding no coefficients"),
+        (FourierBasis(), None, "holding no coefficients"),
+        (FourierBasis(time_dependent=True), 3, "holding no coefficients"),
         (
             FourierBasis(FourierBasis.transform(torch.randn(1, 8) + 0j)),
-            "needs a spatial axis beside time; the field has 1 axis",
+            None,
+            "a spatial axis beside time; got 0 spatial axes$",
+        ),
+        (
+            FourierBasis(
+                FourierBasis.transform(torch.randn(1, 8, 4) + 0j),
+                sampling=(PeriodicUniform(),),
+            ),
+            None,
+            "got 1 schemes for 2 axes$",
+        ),
+        (
+            FourierBasis(
+                FourierBasis.transform(torch.randn(1, 8, 4) + 0j),
+                sampling=(PeriodicUniform(),) * 3,
+            ),
+            None,
+            "got 3 schemes for 2 axes$",
         ),
     ],
-    ids=["empty", "time only"],
+    ids=[
+        "empty",
+        "empty time-dependent",
+        "time only",
+        "sampling too short",
+        "sampling too long",
+    ],
 )
-def test_to_time_dependent_refuses_a_field_it_cannot_place(field, message):
+def test_to_time_dependent_refuses_a_field_it_cannot_place(field, slices, message):
     with pytest.raises(ValueError, match=message):
-        field.to_time_dependent()
+        field.to_time_dependent(nt=slices)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A time-independent conversion that cannot be placed is refused")
+@pytest.mark.parametrize(
+    ("field", "message"),
+    [
+        (FourierBasis(time_dependent=True), "holding no coefficients"),
+        (
+            FourierBasis(
+                torch.zeros(1, 4, dtype=torch.complex128), time_dependent=True
+            ),
+            "a spatial axis beside time; got 0 spatial axes$",
+        ),
+        (
+            FourierBasis(
+                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
+            ),
+            "at least two slices; got 1$",
+        ),
+    ],
+    ids=["empty", "no spatial axis", "one slice"],
+)
+def test_to_time_independent_refuses_a_field_it_cannot_place(field, message):
+    with pytest.raises(ValueError, match=message):
+        field.to_time_independent()
 
 
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A time-dependent field converts only to its own slice count")
 @SETTINGS
-@given(own=st.integers(2, 8), requested=st.one_of(st.none(), st.integers(0, 12)))
-@example(own=4, requested=None)
-@example(own=4, requested=4)
-@example(own=4, requested=5)
-@example(own=4, requested=1)
-def test_a_time_dependent_field_converts_only_to_its_own_slice_count(own, requested):
+@given(
+    own=st.integers(2, 8),
+    requested=st.one_of(st.none(), st.integers(0, 12)),
+    integer_type=INTEGER_TYPES,
+)
+@example(own=4, requested=None, integer_type=int)
+@example(own=4, requested=4, integer_type=int)
+@example(own=4, requested=4, integer_type=numpy.int64)
+@example(own=4, requested=4, integer_type=torch.tensor)
+@example(own=4, requested=5, integer_type=int)
+@example(own=4, requested=1, integer_type=torch.tensor)
+def test_a_time_dependent_field_converts_only_to_its_own_slice_count(
+    own, requested, integer_type
+):
     field = REFUSAL_SOURCE.to_time_dependent(nt=own)
+    nt = None if requested is None else integer_type(requested)
     if requested in (None, own):
-        again = field.to_time_dependent(nt=requested)
-        assert again is not field and torch.equal(again.coeff, field.coeff)
-        assert again.config == field.config
+        again = field.to_time_dependent(nt=nt)
+        assert again is not field and again.config == field.config
+        assert again.coeff.data_ptr() == field.coeff.data_ptr()
+        unchanged = REFUSAL_SOURCE.to_time_independent()
+        assert unchanged is not REFUSAL_SOURCE
+        assert unchanged.coeff.data_ptr() == REFUSAL_SOURCE.coeff.data_ptr()
         return
     with pytest.raises(
         ValueError,
         match=f"of {own} slices converts only to its own slice count; got {requested}$",
     ):
-        field.to_time_dependent(nt=requested)
+        field.to_time_dependent(nt=nt)
+
+
+APPROXIMATE = EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)
+
+
+@pytest.mark.oracle_consistency
+@pytest.mark.scenario("A conversion honours its evaluation strategy")
+@SETTINGS
+@given(
+    modes=st.tuples(st.integers(3, 12), st.integers(2, 8)),
+    slices=st.integers(2, 12),
+    strategy=st.sampled_from((APPROXIMATE, EvaluationStrategy())),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=(4, 4), slices=3, strategy=APPROXIMATE, seed=0)
+@example(modes=(12, 8), slices=12, strategy=APPROXIMATE, seed=1)
+@example(modes=(4, 4), slices=3, strategy=EvaluationStrategy(), seed=0)
+def test_a_conversion_honours_its_evaluation_strategy(modes, slices, strategy, seed):
+    generator = torch.Generator().manual_seed(seed)
+    coeff = FourierBasis.transform(
+        torch.randn(2, *modes, generator=generator, dtype=torch.float64) + 0j
+    )
+    source = FourierBasis(coeff, strategy=strategy)
+
+    converted = source.to_time_dependent(nt=slices)
+    values_at_slice_times = FourierBasis.inv_transform(
+        coeff,
+        res=(slice(0.0, 1.0, slices), slice(0.0, 1.0, modes[1])),
+        sampling=(ClosedUniform(), PeriodicUniform()),
+        strategy=strategy,
+        domain=source.domain,
+    )
+    by_hand = FourierBasis.transform(
+        values_at_slice_times.flatten(0, 1), strategy=strategy
+    ).unflatten(0, (2, slices))
+    assert torch.allclose(
+        converted.coeff, by_hand, atol=DOUBLE_PRECISION_ROUNDING, rtol=0
+    )
 
 
 @pytest.mark.oracle_independent

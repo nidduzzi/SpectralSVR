@@ -29,9 +29,9 @@ internal_docstrings = 14
 misshapen_docstrings = 3
 
 ["SpectralSVR/basis/sampling.py"]
-comments = 12
-internal_docstrings = 34
-misshapen_docstrings = 5
+comments = 10
+internal_docstrings = 28
+misshapen_docstrings = 4
 
 ["SpectralSVR/basis/strategy.py"]
 comments = 1

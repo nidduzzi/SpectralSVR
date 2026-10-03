@@ -30,7 +30,7 @@ from SpectralSVR import (
 from SpectralSVR.basis import Basis
 from SpectralSVR.basis.sampling import PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
-from tests._anchors import fourier_series_on_the_unit_cell_at
+from tests._anchors import fourier_series_at
 
 CPU = torch.device("cpu")
 
@@ -725,8 +725,8 @@ def test_to_time_dependent_preserves_values(m, seed):
     )
     td = u.to_time_dependent()
     tdv, td_grid = td.get_values_and_grid(res=m, device=CPU)
-    source_at_slices = fourier_series_on_the_unit_cell_at(
-        u.coeff, td_grid.flatten(0, -2)
+    source_at_slices = fourier_series_at(
+        u.coeff, td_grid.flatten(0, -2), u.domain
     ).reshape(tdv.shape)
     assert np.abs(tdv.numpy() - source_at_slices).max() <= DOUBLE_PRECISION_ROUNDING
 
@@ -738,8 +738,8 @@ def test_to_time_dependent_preserves_values(m, seed):
         .max()
     )
     interpolation_bound = (1 / (m - 1)) ** 2 / 8 * largest_second_time_derivative
-    source_at_nodes = fourier_series_on_the_unit_cell_at(
-        u.coeff, ti_grid.flatten(0, -2)
+    source_at_nodes = fourier_series_at(
+        u.coeff, ti_grid.flatten(0, -2), u.domain
     ).reshape(tiv.shape)
     assert np.abs(tiv.numpy() - source_at_nodes).max() <= (
         interpolation_bound + DOUBLE_PRECISION_ROUNDING

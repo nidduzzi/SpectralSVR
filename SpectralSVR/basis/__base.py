@@ -1,5 +1,6 @@
 import torch
 import abc
+import operator
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
 from ..utils import resize_modes, interpolate_tensor, resolve_device, DeviceInput
@@ -974,13 +975,20 @@ class Basis(abc.ABC):
         ValueError
             If ``nt`` is below two or differs from a time-dependent field's own, the basis holds no coefficients, or the field has no spatial axis.
         """
-        if nt is not None and (isinstance(nt, bool) or not isinstance(nt, int)):
-            raise TypeError(f"a slice count is an integer; got {nt!r}")
+        not_an_integer = TypeError(f"a slice count is an integer; got {nt!r}")
+        if isinstance(nt, bool):
+            raise not_an_integer
+        try:
+            requested = None if nt is None else operator.index(nt)
+        except TypeError as error:
+            raise not_an_integer from error
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no field to convert")
         if self.time_dependent:
-            if nt is not None and nt != self.time_size:
+            if requested is not None and requested != self.time_size:
                 raise ValueError(
                     f"a time-dependent field of {self.time_size} slices converts "
-                    f"only to its own slice count; got {nt}"
+                    f"only to its own slice count; got {requested}"
                 )
             return self.from_config(
                 self.coeff,
@@ -988,14 +996,13 @@ class Basis(abc.ABC):
                 time_dependent=True,
                 complex_funcs=self.complex_funcs,
             )
-        if self.coeff.numel() == 0:
-            raise ValueError("a basis holding no coefficients has no field to convert")
-        if self.ndim < 2:
+        spatial_axes = self.ndim - 1
+        if spatial_axes < 1:
             raise ValueError(
-                f"a time-dependent field needs a spatial axis beside time; the field "
-                f"has {self.ndim} axis"
+                f"a field converts through time only with a spatial axis beside "
+                f"time; got {spatial_axes} spatial axes"
             )
-        slices = self.modes[0] if nt is None else nt
+        slices = self.modes[0] if requested is None else requested
         if slices < 2:
             raise ValueError(
                 f"a time-dependent field spans its time interval with at least two "
@@ -1034,10 +1041,27 @@ class Basis(abc.ABC):
         -------
         Self
             A new time-independent field, or a copy of one already time-independent.
+
+        Raises
+        ------
+        ValueError
+            If the basis holds no coefficients, the field has no spatial axis, or fewer than two slices.
         """
         if not self.time_dependent:
             return self.from_config(
                 self.coeff, self.config, complex_funcs=self.complex_funcs
+            )
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no field to convert")
+        if self.ndim < 1:
+            raise ValueError(
+                f"a field converts through time only with a spatial axis beside "
+                f"time; got {self.ndim} spatial axes"
+            )
+        if self.time_size < 2:
+            raise ValueError(
+                f"a time-dependent field spans its time interval with at least two "
+                f"slices; got {self.time_size}"
             )
         time_interval = self.domain[0]
         spatial_sampling = self.axis_sampling

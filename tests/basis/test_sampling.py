@@ -103,3 +103,15 @@ def test_matmul_transform_leg_matches_closed_form(m, amp, phase):
     )[0]
     expected = single_mode_spectrum(n, m, amp, phase).to(got.dtype)
     assert torch.allclose(got, expected, atol=2e-3 * n * amp)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(ndim=st.integers(1, 4), length=st.integers(0, 6))
+def test_a_per_axis_sampling_names_every_axis(ndim, length):
+    schemes = tuple(PeriodicUniform() for _ in range(length))
+    if length == ndim:
+        assert samplings_to_tuple(schemes, ndim, ClosedUniform()) == schemes
+        return
+    with pytest.raises(ValueError, match=f"got {length} schemes for {ndim} axes$"):
+        samplings_to_tuple(schemes, ndim, ClosedUniform())

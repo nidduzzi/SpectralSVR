@@ -17,15 +17,18 @@ def half_open_grid(n: int, start: float = 0.0, stop: float = 1.0) -> torch.Tenso
     return torch.linspace(start, stop, n + 1, dtype=torch.float64)[:-1]
 
 
-def fourier_series_on_the_unit_cell_at(
-    coeff: torch.Tensor, points: torch.Tensor
+def fourier_series_at(
+    coeff: torch.Tensor, points: torch.Tensor, domain: tuple[tuple[float, float], ...]
 ) -> numpy.ndarray:
     modes = coeff.shape[1:]
+    starts = numpy.array([start for start, _ in domain])
+    lengths = numpy.array([stop - start for start, stop in domain])
     wavenumber_axes = numpy.meshgrid(
         *(numpy.fft.fftfreq(m, 1 / m) for m in modes), indexing="ij"
     )
     wavenumbers = numpy.stack([axis.ravel() for axis in wavenumber_axes], axis=1)
-    phases = numpy.exp(2j * numpy.pi * points.numpy() @ wavenumbers.T)
+    cell_points = (points.numpy() - starts) / lengths
+    phases = numpy.exp(2j * numpy.pi * cell_points @ wavenumbers.T)
     return coeff.reshape(len(coeff), -1).numpy() @ phases.T / len(wavenumbers)
 
 
