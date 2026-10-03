@@ -36,8 +36,8 @@ def single_mode_spectrum(
     """
     assert 0 < m < n_points / 2
     coeff = torch.zeros(n_points, dtype=torch.complex128)
-    coeff[m] = n_points * amp / 2 * torch.exp(torch.tensor(1j * phase))
-    coeff[n_points - m] = n_points * amp / 2 * torch.exp(torch.tensor(-1j * phase))
+    coeff[m] = n_points * amp / 2 * torch.exp(torch.tensor(1j * phase, dtype=torch.complex128))
+    coeff[n_points - m] = n_points * amp / 2 * torch.exp(torch.tensor(-1j * phase, dtype=torch.complex128))
     return coeff
 
 
