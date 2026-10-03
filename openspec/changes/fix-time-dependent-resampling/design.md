@@ -48,7 +48,7 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **The result is constructed, not copied and mutated.** Each conversion builds its result with the class's constructor, passing coefficients, `time_dependent`, domain, strategy and a sampling with the right number of axes: the time scheme dropped going to time-dependent and prepended coming back. The copy-then-assign form carried the source's per-axis sampling onto a field with one axis fewer, so the inverse applied the time scheme to space; with `(ClosedUniform(), PeriodicUniform())` the round trip differed from the default-sampling one by 5.34. Construction also removes the order dependence between assigning `time_dependent` and `coeff`.
 
-**The spatial schemes are a property.** `spatial_sampling` resolves the basis's schemes for its spatial axes once; both conversions and `get_values` read it instead of each resolving `samplings_to_tuple` themselves.
+**The per-axis schemes are a property.** ~~`spatial_sampling`~~ `axis_sampling` (*renamed in implementation:* on a time-independent field it covers every axis, the time axis included) resolves one scheme per mode axis, excluding a time-dependent field's time axis; both conversions and `get_values` read it instead of each resolving `samplings_to_tuple` themselves. The forward conversion takes its spatial schemes as `axis_sampling[1:]`.
 
 **The time axis is named.** The inverse samples time on `PeriodicUniform()`, as the requirement states, rather than on `default_sampling()`, which agreed only because `FourierBasis` is the only subclass.
 
