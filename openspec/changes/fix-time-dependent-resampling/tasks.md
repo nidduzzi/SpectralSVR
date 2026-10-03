@@ -93,7 +93,7 @@
 - [ ] 6.3 Refuse an empty basis before the time-dependent branch, in both conversions; verify an empty time-dependent basis raises the named error rather than `IndexError`
 - [ ] 6.4 Refuse in `to_time_independent` a field of fewer than two slices or without a spatial axis, stated in its docstring's `Raises`; verify each raises its named error
 - [ ] 6.5 Refuse resolving a per-axis sampling whose length differs from the field's axis count, with a named error; verify a too-short and a too-long tuple are refused and existing callers pass
-- [ ] 6.6 Clone the coefficients on a no-op conversion in both directions; verify an in-place change to the result leaves the source unchanged
+- [ ] 6.6 ~~Clone the coefficients on a no-op conversion.~~ *Amended: the user reversed this before implementation.* Keep the shared storage in both directions, matching `copy()`, and pin it: the result is a distinct field whose coefficients share the source's storage
 - [ ] 6.7 Check a conversion under an approximate strategy against the same sampling and transform under that strategy; verify the dropped-strategy mutant fails, and correct task 5.8(c)'s claim
 - [ ] 6.8 Confirm the accuracy tests draw only exact strategies, matching the spec's scoping to exact evaluation
 - [ ] 6.9 Make the numpy series oracle take the domain it evaluates on, rather than assuming the unit cell; verify the consistency test passes with it

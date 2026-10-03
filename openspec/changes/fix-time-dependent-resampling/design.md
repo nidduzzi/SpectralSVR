@@ -70,7 +70,7 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **A per-axis sampling must name every axis.** Resolving a per-axis sampling whose length differs from the field's axis count raises a named error, so `axis_sampling` delivers what its name promises. A 3-tuple on a two-axis field had passed through and handed a one-axis field two schemes.
 
-**A no-op conversion owns its coefficients.** It clones them, so the scenario's "independent copy" holds; an in-place change to the result had changed the source.
+**A no-op conversion shares its coefficients.** ~~It clones them.~~ *Reversed by the user before implementation:* a clone doubles the coefficient grid's memory on every no-op call, no caller mutates a converted field in place, and `copy()` shares storage everywhere else. The scenario is reworded from "an independent copy" to "a new field over the same coefficients", matching `copy()`, and the shared storage is pinned as stated behaviour.
 
 **Accuracy is stated for exact evaluation; the strategy is honoured.** The user chose to keep honouring the caller's strategy, memory budget included, over forcing the exact path. The spec scopes the rounding and interpolation claims to exact evaluation. A new scenario checks that a converted field matches the same sampling and transform under the same strategy. Task 5.8(c) was wrong: under `EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)` at modes (16, 16), dropping the strategy moves the coefficients by 2.08e-3, so that mutant is not equivalent.
 

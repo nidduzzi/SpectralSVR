@@ -13,7 +13,7 @@ Converting a field whose first axis is time into a time-dependent representation
 
 #### Scenario: A time-dependent field converts only to its own slice count
 - **WHEN** a field that is already time-dependent is converted with no slice count or with its own
-- **THEN** the result is an independent copy, and with any other slice count the conversion raises naming both counts
+- **THEN** the result is a new field over the same coefficients, as `copy()` gives, and with any other slice count the conversion raises naming both counts
 
 #### Scenario: A conversion that cannot be placed in time is refused
 - **WHEN** the slice count is not an integer or is below two, the basis holds no coefficients, whether time-dependent or not, the field has no spatial axis, or a per-axis sampling has a length other than the field's axis count
