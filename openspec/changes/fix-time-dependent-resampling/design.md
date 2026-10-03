@@ -74,6 +74,8 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **Accuracy is stated for exact evaluation; the strategy is honoured.** The user chose to keep honouring the caller's strategy, memory budget included, over forcing the exact path. The spec scopes the rounding and interpolation claims to exact evaluation. A new scenario checks that a converted field matches the same sampling and transform under the same strategy. Task 5.8(c) was wrong: under `EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)` at modes (16, 16), dropping the strategy moves the coefficients by 2.08e-3, so that mutant is not equivalent.
 
+**The strategy test starts its time axis at three modes.** *Found in implementation, decided by the user:* the approximate (NUFFT) evaluation raises `IndexError: index out of bounds` inside torchkbnufft's table build whenever the non-uniform axis has exactly two modes, for every spatial size and slice count tried (28 of 28 cases at two time modes, none above). A direct `inv_transform` reproduces it without the conversions, so it predates this change. The strategy test draws time modes from three, and the defect is its own change, which will pin two modes.
+
 **One equivalence is conditional.** Task 5.8(a), dropping the spatial sampling, is equivalent only because a closed spatial axis, the one admissible-by-type scheme that would tell, is itself broken on a Fourier basis (below).
 
 **An intended duplicate.** `test_to_time_independent_values_match_analytic` checks a narrower case of the fuzzed inverse test with the same `numpy.interp` oracle. It is kept as a literal anchor, as the user decided for the analytic anchors.
