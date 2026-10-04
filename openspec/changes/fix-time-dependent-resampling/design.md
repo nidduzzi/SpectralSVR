@@ -100,6 +100,18 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **Kept as is.** The three refusal messages duplicated across the two conversions stay literal: the tests pin them by pattern, and a formatter for three strings would add indirection without removing a rule. Anchoring the strategy test as a bound on the approximate path's error, rather than a mirror of the composition, is left out.
 
+## Decided after the fourth review
+
+*Every in-change finding in scope, decided by the user.*
+
+**The no-op path checks the whole field.** A time-dependent field without a spatial axis is refused by `to_time_dependent` as by `to_time_independent`, completing what section 7 began with the one-slice field. The mismatch check stays first, so a one-slice field asked for another count still names both counts.
+
+**Pinned means `@example`.** Values listed inside a drawn strategy are sampled, not pinned: under one Hypothesis seed the torch-boolean mutant survived. Every refusal value the tasks call pinned is an `@example`, and mutant verdicts on those paths are rerun under several seeds.
+
+**Docstrings say what the code refuses.** The `Raises` entries of `to_time_dependent` name the zero-dimensional, non-boolean integer contract and the one-slice and spatial-axis refusals.
+
+**Recorded, not fixed.** `axis_sampling`'s one-line docstring does not mention its refusal; the named error carries it. No ceiling bounds the slice count: `nt=10**9` exhausts memory rather than failing fast, while `10**6` takes 0.2 s.
+
 ## Risks / Trade-offs
 
 - **Something relied on the half-open placement.** → `to_time_dependent` is called by the library only through the Burgers generator's own copy, which this change leaves alone; the suite runs in full before and after, and any test whose expectation moves is named in the commit.

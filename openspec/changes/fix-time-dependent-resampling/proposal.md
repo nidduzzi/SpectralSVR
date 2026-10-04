@@ -47,5 +47,5 @@ None.
 - `tests/basis/test_coeff_anchors.py`: both anchors' expected times.
 - `tests/basis/test_fourier_basis.py`: `test_to_time_dependent_preserves_values`.
 - `tests/basis/`: a fuzzed conversion test.
-- No benchmark row moves here: the benchmark's time-dependent fields come from the Burgers generator, which this change does not touch. `notebooks/cases/burgers/burgers.ipynb` reaches `to_time_dependent` only through that generator.
+- No benchmark row moves here: the benchmark's time-dependent fields come from the Burgers generator, which this change does not touch. ~~`notebooks/cases/burgers/burgers.ipynb` reaches `to_time_dependent` only through that generator.~~ *Corrected after the fourth review:* its cell 2 also calls `u.to_time_dependent().modes[0]` directly, reading only the mode count, which this change does not move.
 - `consolidate-the-test-suite` is paused above this change and rebases onto it.
