@@ -206,6 +206,8 @@ class Basis(abc.ABC):
     @property
     def axis_sampling(self) -> tuple[SamplingScheme, ...]:
         """One scheme per mode axis, the time axis of a time-dependent field excluded."""
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no axes to sample")
         return self._config.resolve_sampling(self.ndim, self.default_sampling())
 
     @property
@@ -975,13 +977,15 @@ class Basis(abc.ABC):
         ValueError
             If ``nt`` is below two or differs from a time-dependent field's own, the basis holds no coefficients, or the field has no spatial axis.
         """
-        not_an_integer = TypeError(f"a slice count is an integer; got {nt!r}")
-        if isinstance(nt, bool):
-            raise not_an_integer
+        is_boolean = isinstance(nt, bool) or getattr(nt, "dtype", None) is torch.bool
+        if is_boolean or getattr(nt, "ndim", 0) != 0:
+            raise TypeError(f"a slice count is a zero-dimensional integer; got {nt!r}")
         try:
             requested = None if nt is None else operator.index(nt)
         except TypeError as error:
-            raise not_an_integer from error
+            raise TypeError(
+                f"a slice count is a zero-dimensional integer; got {nt!r}"
+            ) from error
         if self.coeff.numel() == 0:
             raise ValueError("a basis holding no coefficients has no field to convert")
         if self.time_dependent:
@@ -989,6 +993,11 @@ class Basis(abc.ABC):
                 raise ValueError(
                     f"a time-dependent field of {self.time_size} slices converts "
                     f"only to its own slice count; got {requested}"
+                )
+            if self.time_size < 2:
+                raise ValueError(
+                    f"a time-dependent field spans its time interval with at least "
+                    f"two slices; got {self.time_size}"
                 )
             return self.from_config(
                 self.coeff,

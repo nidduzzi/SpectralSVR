@@ -221,7 +221,7 @@ SPATIAL_SAMPLINGS = st.sampled_from((None, PeriodicUniform(supports_fft=False)))
 STRATEGIES = st.sampled_from(
     (None, EvaluationStrategy(memory_budget_mb=1e-4, allow_approximate=False))
 )
-INTEGER_TYPES = st.sampled_from((int, numpy.int64, torch.tensor))
+INTEGER_TYPES = st.sampled_from((int, numpy.int64, numpy.array, torch.tensor))
 AMPLITUDES = st.lists(
     st.complex_numbers(min_magnitude=0.5, max_magnitude=2.0, allow_subnormal=False),
     min_size=1,
@@ -545,7 +545,15 @@ TIME_DEPENDENT_REFUSAL_SOURCE = REFUSAL_SOURCE.to_time_dependent(nt=4)
         st.integers(-3, 1),
         st.floats(allow_nan=False, allow_infinity=False),
         st.booleans(),
-        st.just(torch.tensor(2.0)),
+        st.sampled_from(
+            (
+                torch.tensor(2.0),
+                torch.tensor(True),
+                numpy.True_,
+                torch.tensor([3]),
+                numpy.array([3]),
+            )
+        ),
     ),
     time_dependent=st.booleans(),
 )
@@ -561,7 +569,9 @@ def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
     source = TIME_DEPENDENT_REFUSAL_SOURCE if time_dependent else REFUSAL_SOURCE
     is_integer = isinstance(slices, int) and not isinstance(slices, bool)
     if not is_integer:
-        with pytest.raises(TypeError, match="a slice count is an integer"):
+        with pytest.raises(
+            TypeError, match="a slice count is a zero-dimensional integer"
+        ):
             source.to_time_dependent(nt=slices)
         return
     message = (
@@ -582,33 +592,31 @@ def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
         (FourierBasis(), None, "holding no coefficients"),
         (FourierBasis(time_dependent=True), 3, "holding no coefficients"),
         (
-            FourierBasis(FourierBasis.transform(torch.randn(1, 8) + 0j)),
+            FourierBasis(torch.zeros(1, 8, dtype=torch.complex128)),
             None,
             "a spatial axis beside time; got 0 spatial axes$",
         ),
         (
             FourierBasis(
-                FourierBasis.transform(torch.randn(1, 8, 4) + 0j),
-                sampling=(PeriodicUniform(),),
+                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
             ),
             None,
-            "got 1 schemes for 2 axes$",
+            "at least two slices; got 1$",
         ),
         (
             FourierBasis(
-                FourierBasis.transform(torch.randn(1, 8, 4) + 0j),
-                sampling=(PeriodicUniform(),) * 3,
+                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
             ),
-            None,
-            "got 3 schemes for 2 axes$",
+            1,
+            "at least two slices; got 1$",
         ),
     ],
     ids=[
         "empty",
         "empty time-dependent",
         "time only",
-        "sampling too short",
-        "sampling too long",
+        "one-slice no-op",
+        "one-slice own count",
     ],
 )
 def test_to_time_dependent_refuses_a_field_it_cannot_place(field, slices, message):

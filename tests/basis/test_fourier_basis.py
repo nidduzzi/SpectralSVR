@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
@@ -714,14 +714,23 @@ DOUBLE_PRECISION_ROUNDING = 1e-12
 
 @pytest.mark.oracle_independent
 @SETTINGS
-@given(m=st.integers(2, 8), seed=st.integers(0, 10_000))
-def test_to_time_dependent_preserves_values(m, seed):
+@given(
+    m=st.integers(2, 8),
+    seed=st.integers(0, 10_000),
+    starts=st.tuples(st.floats(-2.0, 2.0), st.floats(-2.0, 2.0)),
+    spans=st.tuples(st.floats(0.5, 4.0), st.floats(0.5, 4.0)),
+)
+@example(m=8, seed=0, starts=(0.0, 0.0), spans=(1.0, 1.0))
+@example(m=5, seed=1, starts=(1.0, -2.0), spans=(2.0, 3.5))
+def test_to_time_dependent_preserves_values(m, seed, starts, spans):
     g = torch.Generator().manual_seed(seed)
     u = FourierBasis(
         FourierBasis.transform(
             torch.randn(2, m, m, generator=g, dtype=torch.float64) + 0j
         ),
-        domain=((0.0, 1.0), (0.0, 1.0)),
+        domain=tuple(
+            (start, start + span) for start, span in zip(starts, spans, strict=True)
+        ),
     )
     td = u.to_time_dependent()
     tdv, td_grid = td.get_values_and_grid(res=m, device=CPU)
@@ -733,11 +742,15 @@ def test_to_time_dependent_preserves_values(m, seed):
     tiv, ti_grid = td.to_time_independent().get_values_and_grid(res=m, device=CPU)
     time_wavenumbers = np.abs(np.fft.fftfreq(m, 1 / m)).reshape(1, m, 1)
     largest_second_time_derivative = (
-        (u.coeff.abs().numpy() / m**2 * (2 * math.pi * time_wavenumbers) ** 2)
+        (
+            u.coeff.abs().numpy()
+            / m**2
+            * (2 * math.pi * time_wavenumbers / spans[0]) ** 2
+        )
         .sum(axis=(1, 2))
         .max()
     )
-    interpolation_bound = (1 / (m - 1)) ** 2 / 8 * largest_second_time_derivative
+    interpolation_bound = (spans[0] / (m - 1)) ** 2 / 8 * largest_second_time_derivative
     source_at_nodes = fourier_series_at(
         u.coeff, ti_grid.flatten(0, -2), u.domain
     ).reshape(tiv.shape)
