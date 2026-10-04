@@ -82,6 +82,24 @@ Between slices the representation interpolates linearly, so a converted field ma
 
 **Deferred to their own changes.** Two pre-existing defects surfaced and are left out of this change. A `FourierBasis` accepts `ClosedUniform` sampling but is inconsistent with itself under it: `transform(get_values())` differs from its own coefficients by 6.7. And `copy()` drops a configured precision for its other callers. `from_config` passing a dtype mismatch between tensor and config through unchanged goes with the second.
 
+## Decided after the third review
+
+*Every in-change finding in scope, decided by the user.*
+
+**A slice count is a zero-dimensional, non-boolean integer.** `operator.index` alone let `torch.tensor(True)` through as 1 and `torch.tensor([3])` through as 3, while `numpy.array([3])` was refused. The conversion now refuses any value with more than zero dimensions and any boolean, numpy and torch boolean dtypes included, then reads the count with `operator.index`. The `TypeError` and its `repr` are built only where they are raised.
+
+**A one-slice time-dependent field is refused in both directions.** The no-op path checks the slice count too, so an invalid field is not passed through by one conversion and refused by the other.
+
+**The sampling length is a contract of every transform.** The second review made `samplings_to_tuple` refuse a wrong length; that reaches both transforms, `get_values`, the conversions and the problem modules, so it is stated as its own requirement rather than inside the conversion's. `axis_sampling` on a basis without coefficients refuses with a named error, rather than reporting a per-axis sampling's length against zero axes.
+
+**The strategy scenario is the forward conversion's.** The inverse's transforms run at the field's own periodic nodes, where no strategy selects an approximation, so dropping the strategy there is equivalent; the scenario names the forward conversion, and task 6.7 records the inverse's equivalence.
+
+**The constructor's annotation admits per-axis sampling.** `FourierBasis.__init__` annotated `sampling` as one scheme, while `from_config` passes the per-axis tuples the conversions build.
+
+**The series oracle is exercised off the unit cell.** The consistency test draws its domain, so `fourier_series_at`'s mapping by start and length is checked.
+
+**Kept as is.** The three refusal messages duplicated across the two conversions stay literal: the tests pin them by pattern, and a formatter for three strings would add indirection without removing a rule. Anchoring the strategy test as a bound on the approximate path's error, rather than a mirror of the composition, is left out.
+
 ## Risks / Trade-offs
 
 - **Something relied on the half-open placement.** → `to_time_dependent` is called by the library only through the Burgers generator's own copy, which this change leaves alone; the suite runs in full before and after, and any test whose expectation moves is named in the commit.

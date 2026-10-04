@@ -109,3 +109,16 @@
 - [x] 6.10 Name the new scenarios and remove their in-flight entries; run `just check`, the hand mutants with the new ones (integer types refused, emptiness checked late, inverse refusals removed, sampling length unchecked, clone removed, strategy dropped), and the prose audit
   - Both scenarios are named, `tests/test_scenario_coverage.py` matches `734d7f9`, and the guards pass. `just check` is green, ruff, mypy and ty clean: 436 passed in 95.6 s (99 s wall), against 428 in 89.5 s before section 6. Of 29 hand mutants, all 23 behavioural ones are killed, the precision one included. M9 is now killed; five survive, the equivalent spatial-sampling and domain mutants recorded in 5.8 and the design. No comment was added. `sampling.py` lost its two inline comments and its internal docstring: comments 12 to 10, internal docstring lines 34 to 28, misshapen 5 to 4.
 
+## 7. Third review fixes
+
+*Added after the third review; every in-change finding in scope at the user's direction. The proposal's Impact, What Changes and deferred list are corrected in the same revision.*
+
+- [ ] 7.1 Register the new scenario as in flight; verify the scenario guard passes
+- [ ] 7.2 Refuse a slice count with more than zero dimensions or a boolean dtype (Python, numpy, torch), building the `TypeError` only where raised; verify `torch.tensor(True)`, `numpy.True_`, `torch.tensor([3])` and `numpy.array([3])` are refused and `numpy.array(3)` and `torch.tensor(3)` accepted
+- [ ] 7.3 Refuse a time-dependent field of fewer than two slices on the no-op path; verify `to_time_dependent()` on a one-slice field raises the named error
+- [ ] 7.4 Refuse `axis_sampling` on a basis without coefficients with a named error, and pin the length refusal at the transform level (`transform`, `inv_transform`) and through `get_values`; verify each raises naming both counts
+- [ ] 7.5 Widen `FourierBasis.__init__`'s `sampling` annotation to per-axis input; verify mypy and ty pass
+- [ ] 7.6 Narrow the strategy scenario to the forward conversion and record in 6.7 why the inverse's dropped strategy is equivalent
+- [ ] 7.7 Draw the domain in `test_to_time_dependent_preserves_values`; verify a mutant that ignores the start or length in `fourier_series_at` fails
+- [ ] 7.8 Name the new scenario and remove its in-flight entry; run `just check`, the hand mutants with the new ones (torch bool admitted, more-than-zero dimensions admitted, one-slice no-op admitted, empty `axis_sampling` unrefused), and the prose audit
+

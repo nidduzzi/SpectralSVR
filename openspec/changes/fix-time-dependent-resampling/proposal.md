@@ -17,10 +17,12 @@ An analytic anchor, `test_to_time_dependent_slice_spectra_match_analytic`, pins 
 - The anchor pinning half-open placement is rewritten to expect slice `j` at `j / (nt - 1)`; its oracle class stays analytic.
 - `to_time_independent` reads a time-dependent field of `N` slices at the periodic times `t_i = start + i (stop - start) / N` through the representation's linear interpolation between slices, then transforms. The time axis keeps `N` modes. A round trip of a field periodic in time therefore holds within linear interpolation's bound, not exactly.
 - `test_to_time_independent_values_match_analytic` and `test_to_time_dependent_preserves_values` are rewritten to compare values at matching coordinates.
-- After review: both conversions construct their result with a sampling of the right arity; a time-dependent field converts only to its own slice count; invalid slice counts, empty bases and fields without a spatial axis are refused with named errors.
+- After the first review: both conversions construct their result with a sampling of the right arity; a time-dependent field converts only to its own slice count; invalid slice counts, empty bases and fields without a spatial axis are refused with named errors.
+- After the second review: a slice count of any integer type is read with `operator.index`; `to_time_independent` refuses empty, one-slice and spatial-axis-less fields; a per-axis sampling of the wrong length is refused wherever it is resolved, every transform included; accuracy is stated for exact evaluation and the conversion honours the caller's strategy.
+- After the third review: a slice count is a zero-dimensional, non-boolean integer; a one-slice time-dependent field is refused on the no-op path too; an empty basis cannot resolve a per-axis sampling; the strategy scenario is the forward conversion's.
 - A fuzzed test draws slice counts below, at and above the time axis's mode count, with those edges and the default pinned, and checks the converted field against the source at the slice times to rounding and between them against linear interpolation's analytic bound.
 
-**Also not in this change:** a `FourierBasis` under `ClosedUniform` sampling is inconsistent with itself, and `copy()` drops a configured precision; both predate this change, surfaced in its review, and are their own changes.
+**Also not in this change:** three defects that predate this change surfaced in its reviews and are their own changes. A `FourierBasis` under `ClosedUniform` sampling is inconsistent with itself. `copy()` drops a configured precision. And the approximate (NUFFT) evaluation raises `IndexError` inside torchkbnufft on any two-mode axis; the default strategy takes that path for large problems, so it is reachable without a special strategy and is the most urgent of the three.
 
 **Not in this change:** the Burgers manufactured-solution generator in `SpectralSVR/problems/burgers.py` carries its own copy of the half-open sampling and feeds the benchmark's MMS row. Fixing it moves a recorded number, so it is the next change, decided by the user, with the row's move measured and the record regenerated there.
 
@@ -36,7 +38,12 @@ None.
 
 ## Impact
 
-- `SpectralSVR/basis/__base.py`: `to_time_dependent` and `to_time_independent`.
+- `SpectralSVR/basis/__base.py`: `to_time_dependent`, `to_time_independent`, the `axis_sampling` property and `get_values_and_grid`.
+- `SpectralSVR/basis/config.py`: `SpectralConfig.with_sampling`.
+- `SpectralSVR/basis/sampling.py`: `samplings_to_tuple` refuses a per-axis sampling of the wrong length for every caller: both transforms, `get_values`, the conversions, and `problems/antiderivative.py` and `problems/burgers.py`. No library, script or notebook caller passes one today.
+- `SpectralSVR/basis/FourierBasis.py`: the constructor's `sampling` annotation widens to per-axis input.
+- `tests/_anchors.py`: `single_mode_spectrum` in double precision; `fourier_series_at`.
+- `tests/basis/test_sampling.py`: the length refusal.
 - `tests/basis/test_coeff_anchors.py`: both anchors' expected times.
 - `tests/basis/test_fourier_basis.py`: `test_to_time_dependent_preserves_values`.
 - `tests/basis/`: a fuzzed conversion test.
