@@ -1,0 +1,235 @@
+{
+ "tests": [
+  "tests/basis/test_fourier_basis.py",
+  "tests/basis/test_config.py",
+  "tests/basis/test_coeff_anchors.py",
+  "tests/basis/test_sampling.py"
+ ],
+ "mutants": {
+  "copy returns self": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        basis_copy = super().copy()\n        return basis_copy",
+   "        return self"
+  ],
+  "time_size reads the wrong axis": [
+   "SpectralSVR/basis/__base.py",
+   "        return self.coeff.shape[1]\n\n    @property\n    def config",
+   "        return self.coeff.shape[-1]\n\n    @property\n    def config"
+  ],
+  "ndim ignores time": [
+   "SpectralSVR/basis/__base.py",
+   "            return coeff_ndim - 2",
+   "            return coeff_ndim - 1"
+  ],
+  "empty modes is ()": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.ndim < 1:\n            return (0,)",
+   "        if self.ndim < 1:\n            return ()"
+  ],
+  "domain setter ignored": [
+   "SpectralSVR/basis/__base.py",
+   "        self._config = self._config.with_domain(domain)",
+   "        pass"
+  ],
+  "len reads the last axis": [
+   "SpectralSVR/basis/__base.py",
+   "        return self.coeff.__len__()",
+   "        return self.coeff.shape[-1]"
+  ],
+  "default nt off by one": [
+   "SpectralSVR/basis/__base.py",
+   "slices = self.modes[0] if requested is None else requested",
+   "slices = self.modes[0] + 1 if requested is None else requested"
+  ],
+  "to_time_dependent returns self when already time-dependent": [
+   "SpectralSVR/basis/__base.py",
+   "            return self.from_config(\n                self.coeff,\n                self.config,\n                time_dependent=True,",
+   "            return self\n            return self.from_config(\n                self.coeff,\n                self.config,\n                time_dependent=True,"
+  ],
+  "to_time_independent returns self when not time-dependent": [
+   "SpectralSVR/basis/__base.py",
+   "            return self.from_config(\n                self.coeff, self.config, complex_funcs=self.complex_funcs",
+   "            return self\n            return self.from_config(\n                self.coeff, self.config, complex_funcs=self.complex_funcs"
+  ],
+  "to_time_dependent leaves the flag off": [
+   "SpectralSVR/basis/__base.py",
+   "            self.config.with_sampling(spatial_sampling),\n            time_dependent=True,",
+   "            self.config.with_sampling(spatial_sampling),\n            time_dependent=False,"
+  ],
+  "to_time_independent leaves the flag on": [
+   "SpectralSVR/basis/__base.py",
+   "            self.config.with_sampling(node_sampling),\n            complex_funcs=self.complex_funcs,",
+   "            self.config.with_sampling(node_sampling),\n            time_dependent=True,\n            complex_funcs=self.complex_funcs,"
+  ],
+  "forward half-open placement": [
+   "SpectralSVR/basis/__base.py",
+   "sampling=(ClosedUniform(), *spatial_sampling),",
+   "sampling=(self.default_sampling(), *spatial_sampling),"
+  ],
+  "forward old reshape": [
+   "SpectralSVR/basis/__base.py",
+   ".unflatten(0, (len(self), slices))",
+   ".reshape((len(self), *self.modes))"
+  ],
+  "two-slice refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if slices < 2:\n",
+   "        if False:\n"
+  ],
+  "forward ignores time start": [
+   "SpectralSVR/basis/__base.py",
+   "res=(slice(t_start, t_stop, slices), *spatial_res),",
+   "res=(slice(0.0, t_stop, slices), *spatial_res),"
+  ],
+  "inverse ignores time start": [
+   "SpectralSVR/basis/__base.py",
+   "node_times = time_sampling.nodes(self.time_size, *time_interval)",
+   "node_times = time_sampling.nodes(self.time_size, 0.0, time_interval[1])"
+  ],
+  "forward copies sampling arity": [
+   "SpectralSVR/basis/__base.py",
+   "            self.config.with_sampling(spatial_sampling),\n",
+   "            self.config,\n"
+  ],
+  "inverse copies sampling arity": [
+   "SpectralSVR/basis/__base.py",
+   "            self.config.with_sampling(node_sampling),\n",
+   "            self.config,\n"
+  ],
+  "inverse closed-time read": [
+   "SpectralSVR/basis/__base.py",
+   "        time_sampling = PeriodicUniform()\n",
+   "        time_sampling = ClosedUniform()\n"
+  ],
+  "inverse slice index off by one": [
+   "SpectralSVR/basis/__base.py",
+   "self.fractional_slice_index(node_times, time_interval, self.time_size)",
+   "self.fractional_slice_index(node_times, time_interval, self.time_size - 1)"
+  ],
+  "M9 forward drops strategy": [
+   "SpectralSVR/basis/__base.py",
+   "            sampling=(ClosedUniform(), *spatial_sampling),\n            strategy=self.strategy,\n",
+   "            sampling=(ClosedUniform(), *spatial_sampling),\n"
+  ],
+  "integer types refused": [
+   "SpectralSVR/basis/__base.py",
+   "            requested = None if nt is None else operator.index(nt)\n",
+   "            requested = None if nt is None else nt.__index__() if type(nt) is int else operator.index(float(nt))\n"
+  ],
+  "time-dependent mismatch admitted": [
+   "SpectralSVR/basis/__base.py",
+   "            if requested is not None and requested != self.time_size:\n",
+   "            if False:\n"
+  ],
+  "emptiness checked late": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.coeff.numel() == 0:\n            raise ValueError(\"a basis holding no coefficients has no field to convert\")\n        if self.time_dependent:\n",
+   "        if self.time_dependent:\n"
+  ],
+  "forward spatial-axis refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if spatial_axes < 1:\n",
+   "        if False:\n"
+  ],
+  "default from a spatial axis": [
+   "SpectralSVR/basis/__base.py",
+   "slices = self.modes[0] if requested is None else requested",
+   "slices = self.modes[-1] if requested is None else requested"
+  ],
+  "inverse empty refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "            )\n        if self.coeff.numel() == 0:\n            raise ValueError(\"a basis holding no coefficients has no field to convert\")\n        if self.ndim < 1:\n",
+   "            )\n        if self.ndim < 1:\n"
+  ],
+  "sampling length unchecked": [
+   "SpectralSVR/basis/sampling.py",
+   "    if len(schemes) != ndim:\n",
+   "    if False:\n"
+  ],
+  "no-op clones forward": [
+   "SpectralSVR/basis/__base.py",
+   "            return self.from_config(\n                self.coeff,\n                self.config,\n                time_dependent=True,",
+   "            return self.from_config(\n                self.coeff.clone(),\n                self.config,\n                time_dependent=True,"
+  ],
+  "no-op clones inverse": [
+   "SpectralSVR/basis/__base.py",
+   "                self.coeff, self.config, complex_funcs=self.complex_funcs",
+   "                self.coeff.clone(), self.config, complex_funcs=self.complex_funcs"
+  ],
+  "copy loses precision": [
+   "SpectralSVR/basis/__base.py",
+   "            return self.from_config(\n                self.coeff,\n                self.config,\n                time_dependent=True,",
+   "            return self.copy()\n            return self.from_config(\n                self.coeff,\n                self.config,\n                time_dependent=True,"
+  ],
+  "forward empty refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.coeff.numel() == 0:\n            raise ValueError(\"a basis holding no coefficients has no field to convert\")\n        if self.time_dependent:\n            if requested",
+   "        if self.time_dependent:\n            if requested"
+  ],
+  "more than zero dimensions admitted": [
+   "SpectralSVR/basis/__base.py",
+   "        if is_boolean or getattr(nt, \"ndim\", 0) != 0:\n",
+   "        if is_boolean:\n"
+  ],
+  "one-slice no-op admitted": [
+   "SpectralSVR/basis/__base.py",
+   "            if self.time_size < 2:\n                raise ValueError(\n                    f\"a time-dependent field spans its time interval with at least \"",
+   "            if False:\n                raise ValueError(\n                    f\"a time-dependent field spans its time interval with at least \""
+  ],
+  "empty axis_sampling unrefused": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.coeff.numel() == 0:\n            raise ValueError(\"a basis holding no coefficients has no axes to sample\")\n",
+   ""
+  ],
+  "series oracle ignores start": [
+   "tests/_anchors.py",
+   "    cell_points = (points.numpy() - starts) / lengths\n",
+   "    cell_points = points.numpy() / lengths\n"
+  ],
+  "series oracle ignores length": [
+   "tests/_anchors.py",
+   "    cell_points = (points.numpy() - starts) / lengths\n",
+   "    cell_points = points.numpy() - starts\n"
+  ],
+  "Python bool admitted": [
+   "SpectralSVR/basis/__base.py",
+   "        is_boolean = isinstance(nt, bool) or getattr(nt, \"dtype\", None) is torch.bool\n",
+   "        is_boolean = getattr(nt, \"dtype\", None) is torch.bool\n"
+  ],
+  "ndim above one only": [
+   "SpectralSVR/basis/__base.py",
+   "getattr(nt, \"ndim\", 0) != 0:",
+   "getattr(nt, \"ndim\", 0) > 1:"
+  ],
+  "dimension check removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if is_boolean or getattr(nt, \"ndim\", 0) != 0:\n",
+   "        if is_boolean:\n"
+  ],
+  "one-slice check before mismatch": [
+   "SpectralSVR/basis/__base.py",
+   "            if requested is not None and requested != self.time_size:\n                raise ValueError(\n                    f\"a time-dependent field of {self.time_size} slices converts \"\n                    f\"only to its own slice count; got {requested}\"\n                )\n            if self.ndim < 1:",
+   "            if self.time_size < 2:\n                raise ValueError(\n                    f\"a time-dependent field spans its time interval with at least \"\n                    f\"two slices; got {self.time_size}\"\n                )\n            if requested is not None and requested != self.time_size:\n                raise ValueError(\n                    f\"a time-dependent field of {self.time_size} slices converts \"\n                    f\"only to its own slice count; got {requested}\"\n                )\n            if self.ndim < 1:"
+  ],
+  "no-op spatial-axis refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "                )\n            if self.ndim < 1:\n",
+   "                )\n            if False:\n"
+  ],
+  "torch bool admitted": [
+   "SpectralSVR/basis/__base.py",
+   "        is_boolean = isinstance(nt, bool) or getattr(nt, \"dtype\", None) is torch.bool\n",
+   "        is_boolean = isinstance(nt, bool)\n"
+  ],
+  "inverse spatial-axis refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.ndim < 1:\n            raise ValueError(\n                f\"a field converts through time only",
+   "        if False:\n            raise ValueError(\n                f\"a field converts through time only"
+  ],
+  "inverse slice refusal removed": [
+   "SpectralSVR/basis/__base.py",
+   "        if self.time_size < 2:\n            raise ValueError(",
+   "        if False:\n            raise ValueError("
+  ]
+ }
+}
