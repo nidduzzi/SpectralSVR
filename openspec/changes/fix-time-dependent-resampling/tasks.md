@@ -135,9 +135,14 @@
 
 *Added after the fourth review; every in-change finding in scope at the user's direction.*
 
-- [ ] 8.1 Refuse a time-dependent field without a spatial axis on `to_time_dependent`'s no-op path, after the mismatch check; verify it raises the named error and a pin covers it
-- [ ] 8.2 Pin a one-slice time-dependent field asked for another slice count; verify it raises the mismatch naming both counts, and that moving the one-slice check first fails
-- [ ] 8.3 Turn `torch.tensor(True)`, `numpy.True_`, `torch.tensor([3])` and `numpy.array([3])` into `@example`s against both sources, and pin `numpy.array` as an accepted integer type; verify the torch-bool-admitted and `ndim > 1` mutants fail under at least three Hypothesis seeds each
-- [ ] 8.4 Sync `to_time_dependent`'s `Raises` entries with the integer contract and the one-slice and spatial-axis refusals; verify the docstring shape guard passes and no prose is added beyond the entries
-- [ ] 8.5 Run `just check`, the section 7 and 8 mutants under several seeds, and the prose audit
+- [x] 8.1 Refuse a time-dependent field without a spatial axis on `to_time_dependent`'s no-op path, after the mismatch check; verify it raises the named error and a pin covers it
+  - The time-dependent branch refuses `ndim < 1` after the mismatch check and before the one-slice check, with the inverse's message (`got 0 spatial axes`). Pinned as `time-dependent without spatial axis`, and the removal mutant is killed under seeds 0 to 3.
+- [x] 8.2 Pin a one-slice time-dependent field asked for another slice count; verify it raises the mismatch naming both counts, and that moving the one-slice check first fails
+  - A one-slice field asked for `nt=3` is pinned as `one-slice other count`, expecting `of 1 slices converts only to its own slice count; got 3`. The mutant that moves the one-slice check before the mismatch check is killed under seeds 0 to 3.
+- [x] 8.3 Turn `torch.tensor(True)`, `numpy.True_`, `torch.tensor([3])` and `numpy.array([3])` into `@example`s against both sources, and pin `numpy.array` as an accepted integer type; verify the torch-bool-admitted and `ndim > 1` mutants fail under at least three Hypothesis seeds each
+  - The four values are `@example`s against both sources: eight examples. `numpy.array` is pinned as an accepted type in a forward-conversion example and in two own-count examples, one matching and one mismatched. Under `--hypothesis-seed` 0, 1, 2 and 3, the torch-bool-admitted, Python-bool-admitted, `ndim > 1`, dimension-check-removed, one-slice-first, no-op-spatial-axis-removed and one-slice-no-op-admitted mutants are all killed: 7 mutants by 4 seeds, 28 of 28.
+- [x] 8.4 Sync `to_time_dependent`'s `Raises` entries with the integer contract and the one-slice and spatial-axis refusals; verify the docstring shape guard passes and no prose is added beyond the entries
+  - `Raises` now reads `TypeError`, if `nt` is a boolean, has more than zero dimensions, or is not an integer; and `ValueError`, if `nt` is below two or differs from a time-dependent field's own, the field has fewer than two slices or no spatial axis, or the basis holds no coefficients. Both entries are one sentence, and the shape guard passes.
+- [x] 8.5 Run `just check`, the section 7 and 8 mutants under several seeds, and the prose audit
+  - `just check` is green, ruff, mypy and ty clean: 441 passed in 89.8 s (93 s wall), against 439 in 96.5 s before section 8. Mutants as in 8.3. No comment was added, and no prose budget moved.
 
