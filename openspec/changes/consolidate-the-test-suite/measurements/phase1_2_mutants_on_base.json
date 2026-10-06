@@ -1,0 +1,21 @@
+{
+ "transform accepts one dimension": "killed",
+ "inv_transform accepts one dimension": "killed",
+ "fn accepts missing modes": "killed",
+ "fn dimension check removed": "survived",
+ "fn integer cast removed": "killed",
+ "coeff setter accepts real": "killed",
+ "call accepts no coefficients": "survived",
+ "time-dependent evaluate accepts no t": "killed",
+ "generate zero is random": "killed",
+ "generate accepts unknown value type": "killed",
+ "sub accepts a number": "killed",
+ "add accepts a number": "killed",
+ "grid int spans two": "survived",
+ "grid stack order reversed": "killed",
+ "plot bounds unchecked": "killed",
+ "plot real-component warning dropped": "survived",
+ "plot_coefficients accepts time-dependent": "killed",
+ "dealias keeps half": "killed",
+ "dealias drops the boundary": "killed"
+}
