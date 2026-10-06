@@ -334,7 +334,7 @@ def time_periodic_values(points, start, span, m_t, m_x, phase, amplitudes):
 @example(
     modes=(6, 4),
     slices=6,
-    integer_type=int,
+    integer_type=numpy.array,
     start=1.0,
     span=2.0,
     wavenumbers=(2, 1),
@@ -563,6 +563,14 @@ TIME_DEPENDENT_REFUSAL_SOURCE = REFUSAL_SOURCE.to_time_dependent(nt=4)
 @example(slices=True, time_dependent=False)
 @example(slices=4.0, time_dependent=True)
 @example(slices=False, time_dependent=True)
+@example(slices=torch.tensor(True), time_dependent=False)
+@example(slices=torch.tensor(True), time_dependent=True)
+@example(slices=numpy.True_, time_dependent=False)
+@example(slices=numpy.True_, time_dependent=True)
+@example(slices=torch.tensor([3]), time_dependent=False)
+@example(slices=torch.tensor([3]), time_dependent=True)
+@example(slices=numpy.array([3]), time_dependent=False)
+@example(slices=numpy.array([3]), time_dependent=True)
 def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
     slices, time_dependent
 ):
@@ -610,6 +618,20 @@ def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
             1,
             "at least two slices; got 1$",
         ),
+        (
+            FourierBasis(
+                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
+            ),
+            3,
+            "of 1 slices converts only to its own slice count; got 3$",
+        ),
+        (
+            FourierBasis(
+                torch.zeros(1, 4, dtype=torch.complex128), time_dependent=True
+            ),
+            None,
+            "a spatial axis beside time; got 0 spatial axes$",
+        ),
     ],
     ids=[
         "empty",
@@ -617,6 +639,8 @@ def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
         "time only",
         "one-slice no-op",
         "one-slice own count",
+        "one-slice other count",
+        "time-dependent without spatial axis",
     ],
 )
 def test_to_time_dependent_refuses_a_field_it_cannot_place(field, slices, message):
@@ -662,6 +686,8 @@ def test_to_time_independent_refuses_a_field_it_cannot_place(field, message):
 @example(own=4, requested=None, integer_type=int)
 @example(own=4, requested=4, integer_type=int)
 @example(own=4, requested=4, integer_type=numpy.int64)
+@example(own=4, requested=4, integer_type=numpy.array)
+@example(own=4, requested=6, integer_type=numpy.array)
 @example(own=4, requested=4, integer_type=torch.tensor)
 @example(own=4, requested=5, integer_type=int)
 @example(own=4, requested=1, integer_type=torch.tensor)

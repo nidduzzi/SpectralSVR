@@ -973,9 +973,9 @@ class Basis(abc.ABC):
         Raises
         ------
         TypeError
-            If ``nt`` is not an integer.
+            If ``nt`` is a boolean, has more than zero dimensions, or is not an integer.
         ValueError
-            If ``nt`` is below two or differs from a time-dependent field's own, the basis holds no coefficients, or the field has no spatial axis.
+            If ``nt`` is below two or differs from a time-dependent field's own, the field has fewer than two slices or no spatial axis, or the basis holds no coefficients.
         """
         is_boolean = isinstance(nt, bool) or getattr(nt, "dtype", None) is torch.bool
         if is_boolean or getattr(nt, "ndim", 0) != 0:
@@ -993,6 +993,11 @@ class Basis(abc.ABC):
                 raise ValueError(
                     f"a time-dependent field of {self.time_size} slices converts "
                     f"only to its own slice count; got {requested}"
+                )
+            if self.ndim < 1:
+                raise ValueError(
+                    f"a field converts through time only with a spatial axis beside "
+                    f"time; got {self.ndim} spatial axes"
                 )
             if self.time_size < 2:
                 raise ValueError(
