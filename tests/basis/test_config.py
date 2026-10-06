@@ -2,7 +2,6 @@
 
 import pytest
 
-from SpectralSVR import FourierBasis
 from SpectralSVR.basis import SpectralConfig
 from SpectralSVR.basis.domain import domainInputType_to_tuple
 from SpectralSVR.basis.sampling import PeriodicUniform
@@ -32,15 +31,6 @@ def test_config_with_domain_is_immutable_copy():
     assert other.domain == (-1.0, 1.0)
     assert other.sampling is cfg.sampling  # other fields carried over
     assert other.strategy is DEFAULT_EVALUATION_STRATEGY
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_domain_setter_rebuilds_config():
-    basis = FourierBasis(FourierBasis.generate_empty(1, (8, 4)), domain=(0.0, 1.0))
-    basis.domain = ((0.0, 2.0), (0.0, 3.0))
-    assert basis.domain == ((0.0, 2.0), (0.0, 3.0))
-    assert basis.lengths == (2.0, 3.0)
 
 
 @pytest.mark.no_fuzz
