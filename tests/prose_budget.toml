@@ -139,7 +139,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_fourier_basis.py"]
-comments = 66
+comments = 54
 internal_docstrings = 0
 misshapen_docstrings = 2
 
