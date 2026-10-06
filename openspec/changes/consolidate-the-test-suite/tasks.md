@@ -1,11 +1,11 @@
 ## 0. Baseline
 
-- [ ] 0.1 Record the baseline: `just check` green, the suite's test count and wall time, and the scenario names carried by every test in `inventory.md`; verify each single test's row in the inventory still matches the code at this branch's base
-- [ ] 0.2 For each phase below, write its hand mutants of the code its tests cover and record which the current tests kill; verify the list exists before the phase's first edit
+- [ ] 0.1 Record the baseline: `just check` green, the suite's test count and wall time, and the scenario names carried by every test in `inventory.md`; verify each single test's row in the inventory still matches the code at this branch's base. *Amended after the rebase onto `fix-time-dependent-resampling`:* record on the new base (`4238a5e`) and regenerate `inventory.md` and `baseline_single_tests.json` there; the first recording (424 passed, 90 s, 187 single tests) predates the fix
+- [ ] 0.2 For each phase below, write its hand mutants of the code its tests cover and record which the current tests kill; verify the list exists before the phase's first edit. *Amended:* rerun phase 1's mutants on the new base, adding the fix's conversion mutants
 
 ## 1. BasisLifecycle
 
-- [ ] 1.1 Build `BasisLifecycle` with rules for generate, empty, copy, resize, time-dependent conversion, grad, integral, evaluation and the domain setter, and invariants for shape, length, domain spans and independence of copies; pin every literal from its 23 member tests in its initialisation; verify each member's scenario names move to it and the scenario guard passes
+- [ ] 1.1 Build `BasisLifecycle` with rules for generate, empty, copy, resize, time-dependent conversion, grad, integral, evaluation and the domain setter, and invariants for shape, length, domain spans and independence of copies; pin every literal from its ~~23~~ 21 member tests in its initialisation; verify each member's scenario names move to it and the scenario guard passes. *Amended:* it also absorbs the fix's slice-count refusal, both field-refusal tests and the own-slice-count test as rules, drawing `nt` freely across accepted and refused values, with their `@example`s as initialisation pins (each accepted integer type, booleans, arrays of more than zero dimensions, empty bases, one-slice fields both ways, a field without a spatial axis, a wrong-length sampling, shared storage on a no-op); verify their scenario names move and the fix's conversion mutants stay killed under several Hypothesis seeds
 - [ ] 1.2 Fuzz the other single tests of `basis/test_fourier_basis.py` the inventory marks FUZZ, keeping each literal as an example and each closed set enumerated; merge its duplicate; verify every phase-1 mutant the old tests killed is killed, oracle markers are unchanged or stronger, and the suite is green
 
 ## 2. Precision and persistence

@@ -49,3 +49,12 @@ Two legacy tests sit in modules the oracle-coverage guard exempts (`basis/test_b
 - **A machine with too many rules explores poorly.** → A machine is split where its rules stop sharing state, and each records its example and step counts.
 - **Folding changes failure messages.** A single test named what failed; a machine names a rule sequence. → Each rule keeps a descriptive name, and the pinned initialisation reproduces the old literal case first.
 - **Suite time grows with examples.** No single test runs over 0.67 s today. → Each phase records the suite's time before and after, and examples are sized to keep the gate near its current 90 s.
+
+## After the rebase onto fix-time-dependent-resampling
+
+*This change was paused while `fix-time-dependent-resampling` landed beneath it, then rebased onto its archive, `4238a5e`.*
+
+**The baseline is re-recorded on the new base.** The first recording (424 passed in 90 s, 187 single tests) predates the fix, which grew the suite to 441, deleted two single tests and added fuzzed and parametrized ones. The inventory is regenerated against the new base rather than edited by hand, and the per-phase mutants are rerun there.
+
+**`BasisLifecycle` absorbs the fix's refusal tests.** The fix left four tests that check conversions refusing what they cannot place: the slice-count refusal, the two field refusals, and the own-slice-count test. A conversion refusing is a transition of the same lifecycle, so they become the machine's rules and carry their scenario names. Their `@example`s become initialisation pins: integer slice counts of every accepted type, booleans and arrays of more than zero dimensions, an empty basis in both directions, a one-slice time-dependent field in both directions, one without a spatial axis, a wrong-length per-axis sampling, and shared storage on a no-op conversion. The fix's analytic and independent value tests stay fuzzed single tests: their oracles hold per draw, not across a sequence.
+

@@ -14,7 +14,7 @@ A read-only inventory of all 187, recorded in `inventory.md`, classifies each:
 ## What Changes
 
 - **Seven new state machines**, each replacing the single tests that share its state:
-  - `BasisLifecycle`, 23 tests: generate, empty, copy, resize, time-dependent conversion, grad, integral, evaluation and the domain setter.
+  - `BasisLifecycle`, ~~23~~ 21 tests: generate, empty, copy, resize, time-dependent conversion, grad, integral, evaluation and the domain setter. *Amended after the rebase onto `fix-time-dependent-resampling`:* that change deleted two of the members, `test_to_time_dependent_and_back` and `test_to_time_dependent_default_nt`, which its fuzzed tests subsume. The machine also absorbs four of its refusal and own-slice-count tests as rules.
   - `SpectralSVRBoundary`, 10: precision narrowing, widening and matching on every path, inverse before training, dtype refusals.
   - `RegressorPersistence`, 6: dump and load for both regressors, full or hyperparameters only, and refusal on a kind mismatch.
   - `DeviceStatements`, 5: stated host or index, unstated index, process default, generator placement.
