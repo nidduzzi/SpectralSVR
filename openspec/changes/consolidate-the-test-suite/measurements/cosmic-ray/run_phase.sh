@@ -9,6 +9,7 @@ for tree in base after; do
     module=$(basename "$config" .toml)
     session="$root/$tree-$module.sqlite"
     echo "=== $tree $module $(date -Is)"
+    [ -z "$(git status --porcelain)" ] || { echo "dirty tree, a killed run left a mutant in place: $tree"; exit 1; }
     uv run --extra mutation cosmic-ray baseline "$config" || { echo "baseline failed: $tree $module"; exit 1; }
     [ -f "$session" ] || uv run --extra mutation cosmic-ray init "$config" "$session"
     uv run --extra mutation cosmic-ray exec "$config" "$session"
