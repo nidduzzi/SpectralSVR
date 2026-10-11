@@ -1071,15 +1071,17 @@ class BasisLifecycle(RuleBasedStateMachine):
         self.convert_to_time_independent()
         self.start_empty(functions=1, modes=(8,))
         self.convert_to_time_dependent(slices=(None, None))
-        for spatial_modes, slices in (
-            ((4,), (None, None)),
-            ((4,), (1, 1)),
-            ((4,), (3, 3)),
-            ((), (None, None)),
+        for spatial_modes, source_slices, slices in (
+            ((4,), 1, (None, None)),
+            ((4,), 1, (1, 1)),
+            ((4,), 1, (3, 3)),
+            ((4,), 2, (None, None)),
+            ((4,), 2, (2, 2)),
+            ((), 4, (None, None)),
         ):
             self.start_time_dependent(
                 functions=1,
-                slices=1 if spatial_modes else 4,
+                slices=source_slices,
                 spatial_modes=spatial_modes,
                 seed=0,
             )
@@ -1309,6 +1311,13 @@ class BasisLifecycle(RuleBasedStateMachine):
         count = min(count, len(self.basis) - start)
         values = self.basis.get_values(i=start, n=count, res=points, device=CPU)
         assert values.shape[0] == count
+        if self.basis.ndim == 1:
+            x = torch.linspace(0, 1, points)
+            selected = FourierBasis.evaluate(self.basis.coeff, x, i=start, n=count)
+            assert torch.equal(
+                selected,
+                FourierBasis.evaluate(self.basis.coeff[start : start + count], x),
+            )
 
     @precondition(lambda self: self.placeable() and not self.basis.time_dependent)
     @rule(points=st.integers(2, 50))
