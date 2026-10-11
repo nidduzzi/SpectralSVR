@@ -169,12 +169,12 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/model/test_fnn.py"]
-comments = 2
+comments = 1
 internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/model/test_lssvr.py"]
-comments = 19
+comments = 18
 internal_docstrings = 0
 misshapen_docstrings = 0
 
