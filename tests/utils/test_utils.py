@@ -1,4 +1,5 @@
 import math
+import tempfile
 
 import numpy as np
 import pytest
@@ -7,6 +8,11 @@ import torch
 from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    rule,
+)
 
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
@@ -335,39 +341,6 @@ def test_standard_scaler_roundtrip_complex(rows, cols, seed):
     assert torch.allclose(scaler.inverse(scaler.transform(c)), c, atol=1e-3)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-def test_standard_scaler_tuple_and_subset():
-    a = torch.randn(10, 3)
-    b = torch.randn(10, 2, dtype=torch.complex64)
-    scaler = StandardScaler().fit((a, b))
-    ta, tb = scaler.transform((a, b))
-    assert ta.shape == a.shape and tb.shape == b.shape
-    sub = scaler.get_subset_scaler(0)
-    assert torch.allclose(sub.inverse(sub.transform(a)), a, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_standard_scaler_consistency_checks():
-    scaler = StandardScaler().fit(torch.randn(8, 3))
-    with pytest.raises(AssertionError):
-        scaler.transform(torch.randn(8, 4))  # wrong 2nd dim
-    with pytest.raises(AssertionError):
-        scaler.transform(torch.randn(8, 3, dtype=torch.complex64))  # complex mismatch
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-def test_standard_scaler_save_load(tmp_path):
-    x = torch.randn(12, 4)
-    scaler = StandardScaler().fit(x)
-    path = str(tmp_path / "scaler.pt")
-    scaler.save(path)
-    loaded = StandardScaler.load(path)
-    assert torch.allclose(loaded.transform(x), scaler.transform(x), atol=1e-6)
-
-
 @pytest.mark.oracle_invariant
 @given(rows=st.integers(2, 30), cols=st.integers(1, 6), seed=st.integers(0, 10_000))
 @SETTINGS
@@ -646,3 +619,124 @@ def test_every_conversion_preserves_device():
         c = torch.randn(3, 4, dtype=torch.complex64).cuda()
         assert forward(c).device.type == "cuda", label
         assert inverse(forward(c)).device.type == "cuda", label
+
+
+SCALER_FIELD_KINDS = st.lists(
+    st.tuples(st.booleans(), st.integers(1, 5)), min_size=1, max_size=3
+)
+
+
+def scaler_field(is_complex, cols, rows, seed):
+    generator = torch.Generator().manual_seed(seed)
+    if is_complex:
+        return torch.randn(rows, cols, dtype=torch.complex64, generator=generator)
+    return torch.randn(rows, cols, generator=generator) * 3 + 1.5
+
+
+class ScalerLifecycle(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.directory = tempfile.TemporaryDirectory()
+        self.saves = 0
+        self.fit([(False, 3)], 8, 0, False)
+
+    def teardown(self):
+        self.directory.cleanup()
+
+    def tolerance(self, field):
+        return 1e-3 if field.is_complex() else 1e-4
+
+    @rule(
+        kinds=SCALER_FIELD_KINDS,
+        rows=st.integers(2, 30),
+        seed=st.integers(0, 10_000),
+        bare=st.booleans(),
+    )
+    def fit(self, kinds, rows, seed, bare):
+        self.fields = tuple(
+            scaler_field(is_complex, cols, rows, seed + i)
+            for i, (is_complex, cols) in enumerate(kinds)
+        )
+        self.bare = bare and len(self.fields) == 1
+        self.scaler = StandardScaler().fit(self.fields[0] if self.bare else self.fields)
+
+    @rule()
+    def transform_and_invert(self):
+        offered = self.fields[0] if self.bare else self.fields
+        transformed = self.scaler.transform(offered)
+        recovered = self.scaler.inverse(transformed)
+        if self.bare:
+            transformed, recovered = (transformed,), (recovered,)
+        for original, scaled, back in zip(self.fields, transformed, recovered, strict=True):
+            assert scaled.shape == original.shape
+            assert scaled.is_complex() == original.is_complex()
+            assert torch.allclose(back, original, atol=self.tolerance(original))
+
+    @rule(first=st.integers(0, 2), count=st.integers(1, 3))
+    def take_a_subset(self, first, count):
+        indices = sorted({(first + step) % len(self.fields) for step in range(count)})
+        subset = self.scaler.get_subset_scaler(
+            indices if len(indices) > 1 else indices[0]
+        )
+        kept = tuple(self.fields[i] for i in indices)
+        recovered = subset.inverse(subset.transform(kept))
+        for original, back in zip(kept, recovered, strict=True):
+            assert torch.allclose(back, original, atol=self.tolerance(original))
+        self.scaler = subset
+        self.fields = kept
+        self.bare = False
+
+    @rule()
+    def save_and_load(self):
+        self.saves += 1
+        path = f"{self.directory.name}/scaler{self.saves}.pt"
+        self.scaler.save(path)
+        loaded = StandardScaler.load(path)
+        offered = self.fields[0] if self.bare else self.fields
+        expected = self.scaler.transform(offered)
+        actual = loaded.transform(offered)
+        if self.bare:
+            expected, actual = (expected,), (actual,)
+        for want, got in zip(expected, actual, strict=True):
+            assert torch.allclose(got, want, atol=1e-6)
+        self.scaler = loaded
+
+    @rule(chosen=st.integers(0, 2))
+    def misuse_a_field(self, chosen):
+        index = chosen % len(self.fields)
+        field = self.fields[index]
+        wrong_width = scaler_field(
+            field.is_complex(), field.shape[1] + 1, field.shape[0], 0
+        )
+        other_kind = scaler_field(
+            not field.is_complex(), field.shape[1], field.shape[0], 0
+        )
+        for misuse in (wrong_width, other_kind):
+            offered = list(self.fields)
+            offered[index] = misuse
+            for call in (self.scaler.transform, self.scaler.inverse):
+                with pytest.raises(AssertionError):
+                    call(tuple(offered))
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.transform_and_invert()
+        self.take_a_subset(0, 1)
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.take_a_subset(0, 2)
+        self.fit([(False, 3)], 8, 0, True)
+        self.misuse_a_field(0)
+        self.fit([(False, 4)], 12, 0, True)
+        self.save_and_load()
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.misuse_a_field(1)
+
+
+ScalerLifecycle.TestCase.settings = settings(
+    deadline=None,
+    max_examples=25,
+    stateful_step_count=8,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+TestScalerLifecycle = pytest.mark.oracle_invariant(ScalerLifecycle.TestCase)

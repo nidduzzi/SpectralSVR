@@ -3,8 +3,15 @@
 import numpy as np
 import pytest
 import torch
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    invariant,
+    precondition,
+    rule,
+)
 
 from SpectralSVR import LSSVR, accelerator
 
@@ -52,13 +59,6 @@ def test_lssvr_predict_numpy_roundtrips(n, d, o, seed):
     assert out.shape == (n, o)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_lssvr_predict_before_fit_raises():
-    with pytest.raises(AssertionError):
-        LSSVR().predict(torch.randn(4, 2))
-
-
 @pytest.mark.oracle_smoke
 @SETTINGS
 @given(
@@ -83,35 +83,7 @@ def test_lssvr_invalid_kernel_raises():
         LSSVR(kernel="bogus").fit(torch.randn(6, 2), torch.randn(6, 1))
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_lssvr_correlation_and_p_matrix():
-    X, y = linear_dataset(20, 3, 2, seed=0)
-    model = LSSVR(kernel="linear", C=10.0)
-    model.fit(X, y)
-    corr = model.get_correlation_image()
-    pmat = model.get_p_matrix()
-    assert corr.shape[0] == X.shape[0]
-    assert pmat.shape == (X.shape[1], y.shape[1])
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_lssvr_correlation_before_fit_raises():
-    with pytest.raises(AssertionError):
-        LSSVR().get_correlation_image()
-
-
 from SpectralSVR.model import torch_json_encoder  # noqa: E402
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_lssvr_kernel_property_before_fit_defaults_sigma():
-    # accessing K before fit (sv_x is None) falls back to sigma=1.0
-    model = LSSVR(kernel="rbf")
-    assert callable(model.K)
-    assert model.kernel_params["sigma"] == 1.0
 
 
 @pytest.mark.oracle_consistency
@@ -218,3 +190,107 @@ def test_lssvr_matches_independent_kkt_solve(n, d, o, c, seed):
     got = model.predict(xq)
     scale = expected.abs().max().clamp(min=1.0)
     assert torch.allclose(got, expected, atol=1e-5 * float(scale), rtol=1e-4)
+
+
+LSSVR_KERNELS = ("linear", "poly", "rbf", "tri", "frob", "max")
+SIGMA_FROM_DATA = ("rbf", "poly")
+
+
+class LSSVRLifecycle(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.build("rbf", 1.0, None)
+
+    @rule(
+        kernel=st.sampled_from(LSSVR_KERNELS),
+        C=st.sampled_from((1.0, 10.0)),
+        sigma=st.sampled_from((None, 1.5)),
+    )
+    def build(self, kernel, C, sigma):
+        stated = {"d": 2.0}
+        self.stated_sigma = 1.5 if kernel == "tri" else sigma
+        if self.stated_sigma is not None:
+            stated["sigma"] = self.stated_sigma
+        self.kernel = kernel
+        self.model = LSSVR(kernel=kernel, C=C, **stated)
+        self.fitted_on = None
+
+    @rule(
+        n=st.integers(10, 30),
+        d=st.integers(1, 4),
+        o=st.integers(1, 3),
+        seed=st.integers(0, 10_000),
+    )
+    def fit(self, n, d, o, seed):
+        X, y = linear_dataset(n, d, o, seed)
+        self.model.fit(X, y)
+        self.fitted_on = (X, y)
+        assert self.model.trained
+
+    @rule()
+    def predict(self):
+        if self.fitted_on is None:
+            with pytest.raises(AssertionError, match="fitted"):
+                self.model.predict(torch.randn(4, 2))
+            return
+        X, y = self.fitted_on
+        out = self.model.predict(X)
+        assert out.shape == y.shape
+        assert not torch.isnan(out).any()
+
+    @rule()
+    def read_the_correlation_image(self):
+        if self.fitted_on is None:
+            with pytest.raises(AssertionError, match="trained first"):
+                self.model.get_correlation_image()
+            return
+        X, _ = self.fitted_on
+        assert self.model.get_correlation_image().shape == X.shape
+
+    @rule()
+    def read_the_p_matrix(self):
+        if self.fitted_on is None:
+            with pytest.raises(AssertionError, match="trained first"):
+                self.model.get_p_matrix()
+            return
+        X, y = self.fitted_on
+        assert self.model.get_p_matrix().shape == (X.shape[1], y.shape[1])
+
+    @precondition(lambda self: self.fitted_on is None)
+    @rule()
+    def read_the_kernel_before_fitting(self):
+        assert callable(self.model.K)
+        expected = self.stated_sigma
+        if expected is None and self.kernel in SIGMA_FROM_DATA:
+            expected = 1.0
+        assert self.model.kernel_params.get("sigma") == expected
+
+    @invariant()
+    def trained_exactly_when_fitted(self):
+        assert self.model.trained == (self.fitted_on is not None)
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        self.build("rbf", 1.0, None)
+        self.predict()
+        self.read_the_correlation_image()
+        self.read_the_p_matrix()
+        self.read_the_kernel_before_fitting()
+        for kernel in LSSVR_KERNELS:
+            for sigma in (None, 1.5):
+                self.build(kernel, 10.0, sigma)
+                self.read_the_kernel_before_fitting()
+                self.fit(20, 3, 2, 0)
+                self.predict()
+                self.read_the_correlation_image()
+                self.read_the_p_matrix()
+        self.build("linear", 10.0, None)
+
+
+LSSVRLifecycle.TestCase.settings = settings(
+    deadline=None,
+    max_examples=25,
+    stateful_step_count=8,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+TestLSSVRLifecycle = pytest.mark.oracle_smoke(LSSVRLifecycle.TestCase)

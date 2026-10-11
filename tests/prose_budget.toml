@@ -174,7 +174,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/model/test_lssvr.py"]
-comments = 18
+comments = 17
 internal_docstrings = 0
 misshapen_docstrings = 0
 
@@ -229,6 +229,6 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/utils/test_utils.py"]
-comments = 35
+comments = 33
 internal_docstrings = 0
 misshapen_docstrings = 0
