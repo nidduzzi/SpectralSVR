@@ -184,7 +184,7 @@ internal_docstrings = 5
 misshapen_docstrings = 2
 
 ["tests/model/test_spectralsvr_methods.py"]
-comments = 20
+comments = 10
 internal_docstrings = 0
 misshapen_docstrings = 1
 
