@@ -1,15 +1,14 @@
+import argparse
 import collections
 import pathlib
-import sys
 
 from cosmic_ray.work_db import WorkDB, use_db
 
 ROOT = pathlib.Path.home() / ".cache" / "spectralsvr-mutation"
-MODULES = ("__base", "FourierBasis", "_plot", "sampling")
 SURVIVED = "TestOutcome.SURVIVED"
 
 
-def survivors(tree: str, module: str, session: pathlib.Path) -> collections.Counter:
+def survivors(tree: str, session: pathlib.Path) -> collections.Counter:
     sources: dict[pathlib.Path, list[str]] = {}
     counted: collections.Counter = collections.Counter()
     with use_db(str(session), WorkDB.Mode.open) as db:
@@ -24,10 +23,12 @@ def survivors(tree: str, module: str, session: pathlib.Path) -> collections.Coun
     return counted
 
 
-def main(after_sessions: dict[str, pathlib.Path]) -> None:
-    for module in MODULES:
-        before = survivors("base", module, ROOT / f"base-phase1-{module}.sqlite")
-        after = survivors("after", module, after_sessions[module])
+def main(phase: str, before_tree: str, after_tree: str, modules: list[str]) -> None:
+    for module in modules:
+        before = survivors(
+            before_tree, ROOT / f"{before_tree}-{phase}-{module}.sqlite"
+        )
+        after = survivors(after_tree, ROOT / f"{after_tree}-{phase}-{module}.sqlite")
         introduced = after - before
         print(
             f"{module}: before {sum(before.values())}, after {sum(after.values())}, "
@@ -39,6 +40,12 @@ def main(after_sessions: dict[str, pathlib.Path]) -> None:
 
 
 if __name__ == "__main__":
-    default = {m: ROOT / f"after-phase1-{m}.sqlite" for m in MODULES}
-    overrides = dict(arg.split("=", 1) for arg in sys.argv[1:])
-    main({m: pathlib.Path(overrides.get(m, default[m])) for m in MODULES})
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--phase", default="phase1")
+    parser.add_argument("--before", default="base")
+    parser.add_argument("--after", default="after")
+    parser.add_argument(
+        "--modules", nargs="+", default=["__base", "FourierBasis", "_plot", "sampling"]
+    )
+    arguments = parser.parse_args()
+    main(arguments.phase, arguments.before, arguments.after, arguments.modules)
