@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import (
     RuleBasedStateMachine,
@@ -16,6 +16,8 @@ from hypothesis.stateful import (
 from SpectralSVR import LSSVR, accelerator
 
 from _model_data import SETTINGS, linear_dataset, smooth_dataset
+
+LSSVR_KERNELS = ("linear", "poly", "rbf", "tri", "frob", "max")
 
 
 @pytest.mark.oracle_consistency
@@ -76,11 +78,13 @@ def test_lssvr_all_kernels_fit_predict(kernel, n, seed):
     assert not torch.isnan(out).any()
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_lssvr_invalid_kernel_raises():
+@SETTINGS
+@given(kernel=st.text().filter(lambda name: name not in LSSVR_KERNELS))
+@example(kernel="bogus")
+def test_lssvr_invalid_kernel_raises(kernel):
     with pytest.raises(KeyError):
-        LSSVR(kernel="bogus").fit(torch.randn(6, 2), torch.randn(6, 1))
+        LSSVR(kernel=kernel).fit(torch.randn(6, 2), torch.randn(6, 1))
 
 
 from SpectralSVR.model import torch_json_encoder  # noqa: E402
@@ -102,11 +106,26 @@ def test_lssvr_batched_kernel_matches_unbatched(n, d, seed):
     assert torch.allclose(batched.predict(X.double()), unbatched.predict(X.double()), atol=1e-8)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_torch_json_encoder_rejects_unknown_type():
+@SETTINGS
+@given(
+    unencodable=st.one_of(
+        st.none(),
+        st.booleans(),
+        st.integers(),
+        st.floats(),
+        st.text(),
+        st.binary(),
+        st.frozensets(st.integers()),
+        st.sets(st.integers()),
+        st.lists(st.integers()),
+    )
+)
+@example(unencodable={1, 2, 3})
+@example(unencodable=object())
+def test_torch_json_encoder_rejects_unknown_type(unencodable):
     with pytest.raises(TypeError):
-        torch_json_encoder({1, 2, 3})  # not a torch object
+        torch_json_encoder(unencodable)
 
 
 @pytest.mark.oracle_smoke
@@ -125,23 +144,19 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
 
 @pytest.mark.oracle_independent
 @pytest.mark.scenario("A process-wide setting is followed")
+@pytest.mark.scenario("The host is not overridden")
 @SETTINGS
 @given(
     name=st.sampled_from(
         ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
-    )
+    ),
+    stated=st.sampled_from((None, "cpu")),
 )
-def test_lssvr_follows_the_process_default(name):
+@example(name=accelerator().type, stated="cpu")
+def test_lssvr_follows_the_process_default(name, stated):
     torch.set_default_device(name)
-    assert LSSVR().device == torch.zeros(1).device
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("The host is not overridden")
-def test_lssvr_keeps_a_stated_host_under_an_accelerator():
-    torch.set_default_device(accelerator())
-    assert LSSVR(device="cpu").device == torch.device("cpu")
+    expected = torch.zeros(1).device if stated is None else torch.device(stated)
+    assert LSSVR(device=stated).device == expected
 
 
 @pytest.mark.no_fuzz
@@ -192,7 +207,6 @@ def test_lssvr_matches_independent_kkt_solve(n, d, o, c, seed):
     assert torch.allclose(got, expected, atol=1e-5 * float(scale), rtol=1e-4)
 
 
-LSSVR_KERNELS = ("linear", "poly", "rbf", "tri", "frob", "max")
 SIGMA_FROM_DATA = ("rbf", "poly")
 
 
