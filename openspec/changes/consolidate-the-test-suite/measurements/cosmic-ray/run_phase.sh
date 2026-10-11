@@ -3,7 +3,7 @@ set -u
 phase=$1
 configs=$(cd "$(dirname "$0")" && pwd)
 root=${MUTATION_ROOT:-$HOME/.cache/spectralsvr-mutation}
-for tree in base after; do
+for tree in ${TREES:-base after}; do
   cd "$root/$tree" || exit 1
   for config in "$configs"/"$phase"-*.toml; do
     module=$(basename "$config" .toml)
