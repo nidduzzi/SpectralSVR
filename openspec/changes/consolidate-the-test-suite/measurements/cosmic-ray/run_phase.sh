@@ -11,7 +11,10 @@ for tree in ${TREES:-base after}; do
     echo "=== $tree $module $(date -Is)"
     [ -z "$(git status --porcelain)" ] || { echo "dirty tree, a killed run left a mutant in place: $tree"; exit 1; }
     uv run --extra mutation cosmic-ray baseline "$config" || { echo "baseline failed: $tree $module"; exit 1; }
-    [ -f "$session" ] || uv run --extra mutation cosmic-ray init "$config" "$session"
+    if [ ! -f "$session" ]; then
+      uv run --extra mutation cosmic-ray init "$config" "$session"
+      [ ! -f "${config%.toml}.class" ] || uv run --extra mutation python "$configs/restrict_session.py" "$session" "$(grep -oP '^module-path = "\K[^"]+' "$config")" "$(cat "${config%.toml}.class")"
+    fi
     uv run --extra mutation cosmic-ray exec "$config" "$session"
     uv run --extra mutation cr-report "$session" > "$root/$tree-$module.report.txt"
     tail -3 "$root/$tree-$module.report.txt"
