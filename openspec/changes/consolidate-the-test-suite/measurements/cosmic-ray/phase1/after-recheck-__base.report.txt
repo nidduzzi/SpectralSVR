@@ -1,0 +1,12 @@
+[job-id] 6d3ee630882d490ab7f0e825fa4a90e5
+SpectralSVR/basis/__base.py core/ReplaceComparisonOperator_Lt_LtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] befaf08f1c0c4f76a1211d99aea94ae1
+SpectralSVR/basis/__base.py core/NumberReplacer 146
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b82159dd03fb464bba2ddf6543d06302
+SpectralSVR/basis/__base.py core/NumberReplacer 147
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+total jobs: 3
+complete: 3 (100.00%)
+surviving mutants: 0 (0.00%)

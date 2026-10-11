@@ -1,0 +1,17 @@
+__base: before 206, after 194, survivors after but not before 2, before but not after 14
+  only after x1: NumberReplacer: if self.time_size < 2:
+  only after x1: ReplaceComparisonOperator_Lt_LtE: if self.time_size < 2:
+FourierBasis: before 193, after 195, survivors after but not before 11, before but not after 9
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Div: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_LShift: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Mod: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Mul: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Pow: coeff = coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_RShift: coeff = coeff[i : i + n]
+  only after x1: ReplaceComparisonOperator_Gt_Eq: assert True if init_len < 1 else len(coeff) > 0, (
+  only after x1: ReplaceComparisonOperator_Gt_Lt: assert True if init_len < 1 else len(coeff) > 0, (
+  only after x1: ReplaceComparisonOperator_Gt_LtE: assert True if init_len < 1 else len(coeff) > 0, (
+_plot: before 279, after 277, survivors after but not before 0, before but not after 2
+sampling: before 39, after 39, survivors after but not before 0, before but not after 0
