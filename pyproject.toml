@@ -73,6 +73,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
+addopts = ["--durations=15", "--durations-min=1.0"]
 # Surface warnings as errors so regressions are caught, but allowlist the
 # known matplotlib/numpy copy-keyword deprecation raised during plotting.
 filterwarnings = [

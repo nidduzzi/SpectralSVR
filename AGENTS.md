@@ -34,7 +34,9 @@ just mutate        # cosmic-ray over SpectralSVR/operators (slow)
 ```
 
 `just check` is the gate. Run it before claiming work is done, and report its
-output rather than a summary of it.
+output rather than a summary of it. Every pytest run ends with its fifteen
+slowest phases above one second, so a slow suite names its own cost; read that
+report before guessing where the time goes.
 
 Every test and measurement run is hard-capped, so a runaway process is killed
 rather than taking the machine down. Host memory: `just test` and `just cov`
