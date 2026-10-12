@@ -13,7 +13,7 @@ for tree in ${TREES:-base after}; do
     uv run --extra mutation cosmic-ray baseline "$config" || { echo "baseline failed: $tree $module"; exit 1; }
     if [ ! -f "$session" ]; then
       uv run --extra mutation cosmic-ray init "$config" "$session"
-      [ ! -f "${config%.toml}.class" ] || uv run --extra mutation python "$configs/restrict_session.py" "$session" "$(grep -oP '^module-path = "\K[^"]+' "$config")" "$(cat "${config%.toml}.class")"
+      [ ! -f "${config%.toml}.class" ] || uv run --extra mutation python "$configs/restrict_session.py" "$session" "$(grep -oP '^module-path = "\K[^"]+' "$config")" $(cat "${config%.toml}.class")
     fi
     uv run --extra mutation cosmic-ray exec "$config" "$session"
     uv run --extra mutation cr-report "$session" > "$root/$tree-$module.report.txt"
