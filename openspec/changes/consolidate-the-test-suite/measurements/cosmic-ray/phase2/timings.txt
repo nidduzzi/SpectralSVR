@@ -4,6 +4,12 @@ p2-after SpectralSVR/model/LSSVR.py: 493 runs, 1.62 h, median 13.2 s, p95 21.1 s
 p2-after SpectralSVR/model/SpectralSVR.py: 201 runs, 0.89 h, median 15.7 s, p95 33.5 s, max 69.9 s, killed 169
 p2-after SpectralSVR/model/__base.py: 144 runs, 0.54 h, median 14.2 s, p95 27.9 s, max 30.7 s, killed 85
 p2-after SpectralSVR/utils/__init__.py: 219 runs, 0.48 h, median 8.7 s, p95 12.5 s, max 20.6 s, killed 178
+p2-after2 ?: 5 runs, 0.02 h, median 17.7 s, p95 17.9 s, max 17.9 s, killed 0
+p2-after2 SpectralSVR/model/FNN.py: 72 runs, 0.13 h, median 4.0 s, p95 17.8 s, max 18.2 s, killed 58
+p2-after2 SpectralSVR/model/LSSVR.py: 493 runs, 1.49 h, median 13.0 s, p95 18.6 s, max 113.2 s, killed 341
+p2-after2 SpectralSVR/model/SpectralSVR.py: 201 runs, 0.88 h, median 15.9 s, p95 33.7 s, max 64.8 s, killed 169
+p2-after2 SpectralSVR/model/__base.py: 144 runs, 0.41 h, median 13.4 s, p95 18.1 s, max 19.9 s, killed 85
+p2-after2 SpectralSVR/utils/__init__.py: 219 runs, 0.47 h, median 8.5 s, p95 12.0 s, max 20.2 s, killed 178
 p2-before ?: 9 runs, 0.05 h, median 17.1 s, p95 25.3 s, max 27.0 s, killed 0
 p2-before SpectralSVR/model/FNN.py: 72 runs, 0.12 h, median 3.8 s, p95 15.2 s, max 21.8 s, killed 58
 p2-before SpectralSVR/model/LSSVR.py: 493 runs, 1.33 h, median 12.5 s, p95 17.2 s, max 112.6 s, killed 337
@@ -14,13 +20,13 @@ p2-before SpectralSVR/utils/__init__.py: 219 runs, 0.48 h, median 8.8 s, p95 14.
 slowest 10 runs
     170.0 s  exit   0  p2-after  +++ b/SpectralSVR/model/LSSVR.py @@ -56 +56 @@ def default_batch_size(dims: int) -> int: +    return 2**21 % dims + 7 
     152.9 s  exit   1  p2-after  +++ b/SpectralSVR/model/LSSVR.py @@ -56 +56 @@ def default_batch_size(dims: int) -> int: +    return 2**21 // dims % 7 
+    113.2 s  exit 137  p2-after2  +++ b/SpectralSVR/model/LSSVR.py @@ -56 +56 @@ def default_batch_size(dims: int) -> int: +    return 2**21 ** dims + 7 
     113.1 s  exit 137  p2-after  +++ b/SpectralSVR/model/LSSVR.py @@ -56 +56 @@ def default_batch_size(dims: int) -> int: +    return 2**21 ** dims + 7 
     112.6 s  exit 137  p2-before  +++ b/SpectralSVR/model/LSSVR.py @@ -56 +56 @@ def default_batch_size(dims: int) -> int: +    return 2**21 ** dims + 7 
      87.8 s  exit   1  p2-before  +++ b/SpectralSVR/model/SpectralSVR.py @@ -216 +216 @@ class SpectralSVR(Generic[B, R]): +                self.basis_type.inv_transform(u_coeff_preds.
      81.4 s  exit   1  p2-before  +++ b/SpectralSVR/model/SpectralSVR.py @@ -222 +222 @@ class SpectralSVR(Generic[B, R]): +                .unflatten( 1, (-1, time_shape)) 
      69.9 s  exit   1  p2-after  +++ b/SpectralSVR/model/SpectralSVR.py @@ -222 +222 @@ class SpectralSVR(Generic[B, R]): +                .unflatten( -1, (-1, time_shape)) 
      67.2 s  exit   1  p2-after  +++ b/SpectralSVR/model/SpectralSVR.py @@ -217 +217 @@ class SpectralSVR(Generic[B, R]): +                .unflatten( 1, (-1, time_shape)) 
-     64.5 s  exit   1  p2-after  +++ b/SpectralSVR/model/SpectralSVR.py @@ -216 +216 @@ class SpectralSVR(Generic[B, R]): +                self.basis_type.inv_transform(u_coeff_preds.
-     63.8 s  exit   1  p2-after  +++ b/SpectralSVR/model/SpectralSVR.py @@ -221 +221 @@ class SpectralSVR(Generic[B, R]): +                self.basis_type.inv_transform(u_coeff_target
+     64.8 s  exit   1  p2-after2  +++ b/SpectralSVR/model/SpectralSVR.py @@ -216 +216 @@ class SpectralSVR(Generic[B, R]): +                self.basis_type.inv_transform(u_coeff_preds.
 
-exit statuses {0: 616, 1: 1654, 137: 2}
+exit statuses {0: 919, 1: 2484, 137: 3}
