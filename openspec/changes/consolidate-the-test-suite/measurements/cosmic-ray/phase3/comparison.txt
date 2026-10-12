@@ -1,0 +1,1 @@
+devices_and_resize: before 43, after 39, survivors after but not before 0, before but not after 4
