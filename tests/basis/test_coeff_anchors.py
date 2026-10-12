@@ -8,11 +8,18 @@ import pytest
 import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    invariant,
+    rule,
+)
 
 from tests._anchors import (
     half_open_grid,
     hermitian_error,
     hermitian_spectrum,
+    resized_by_frequency,
     single_mode_spectrum,
 )
 from SpectralSVR import FourierBasis
@@ -79,57 +86,93 @@ RESIZE_SOURCE_MODES = (4, 5, 8, 9, 12)
 RESIZE_TOLERANCE = 1e-14
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_preserves_conjugate_symmetry():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        assert hermitian_error(source) == 0.0, f"n={n}: source is not Hermitian"
-        for target in (2 * n, 4 * n):
-            measured = hermitian_error(resize_modes(source, target, rescale=False))
-            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
+@pytest.mark.oracle_independent
+@SETTINGS
+@given(
+    rows=st.integers(1, 3),
+    modes=st.integers(1, 24),
+    target=st.integers(1, 48),
+    seed=st.integers(0, 10_000),
+)
+@example(rows=1, modes=4, target=2, seed=0)
+@example(rows=1, modes=4, target=6, seed=0)
+def test_resizing_matches_an_independent_frequency_map(rows, modes, target, seed):
+    generator = numpy.random.default_rng(seed)
+    x = generator.standard_normal((rows, modes)) + 1j * generator.standard_normal(
+        (rows, modes)
+    )
+    got = resize_modes(torch.from_numpy(x), target, rescale=False)
+    assert torch.equal(got, torch.from_numpy(resized_by_frequency(x, target)))
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_then_truncating_returns_the_original():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        for target in (2 * n, 4 * n):
-            padded = resize_modes(source, target, rescale=False)
-            measured = float(
-                (resize_modes(padded, n, rescale=False) - source).abs().max()
-            )
-            assert measured < RESIZE_TOLERANCE, (
-                f"n={n} -> {target} -> {n}: {measured:.3e}"
-            )
+class ResizeRoundTrips(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.start(4, 4)
+
+    @rule(modes=st.integers(2, 16), seed=st.integers(0, 10_000))
+    def start(self, modes, seed):
+        self.source = hermitian_spectrum(modes, seed=seed)
+        self.modes = modes
+        self.current = self.source
+        assert hermitian_error(self.source) == 0.0
+
+    @rule(growth=st.integers(0, 40))
+    def pad(self, growth):
+        target = self.current.shape[1] + growth
+        self.current = resize_modes(self.current, target, rescale=False)
+
+    @rule()
+    def truncate_back_to_the_source_count(self):
+        returned = resize_modes(self.current, self.modes, rescale=False)
+        assert float((returned - self.source).abs().max()) < RESIZE_TOLERANCE
+        self.current = returned
+
+    @invariant()
+    def the_padded_spectrum_describes_a_real_field(self):
+        assert hermitian_error(self.current) < RESIZE_TOLERANCE
+
+    @invariant()
+    def truncating_returns_the_source(self):
+        returned = resize_modes(self.current, self.modes, rescale=False)
+        assert float((returned - self.source).abs().max()) < RESIZE_TOLERANCE
+
+    @invariant()
+    def padding_preserves_the_function_at_the_source_points(self):
+        count = self.current.shape[1]
+        if count % self.modes:
+            return
+        coarse = torch.fft.ifft(self.source) * self.modes
+        fine = torch.fft.ifft(self.current) * count
+        measured = float((fine[:, :: count // self.modes] - coarse).abs().max())
+        assert measured < RESIZE_TOLERANCE
+
+    @invariant()
+    def an_odd_source_count_is_copied_through(self):
+        if self.modes % 2 == 0:
+            return
+        count = self.current.shape[1]
+        for j in range(self.modes):
+            frequency = j if j <= (self.modes - 1) // 2 else j - self.modes
+            assert self.current[0, frequency % count] == self.source[0, j]
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        for modes in RESIZE_SOURCE_MODES:
+            self.start(modes, modes)
+            self.pad(modes)
+            self.truncate_back_to_the_source_count()
+            self.pad(3 * modes)
+            self.truncate_back_to_the_source_count()
+            self.pad(modes)
+            self.pad(2 * modes)
+        self.start(4, 4)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_odd_source_counts_have_nothing_to_redistribute():
-    """Isolation control: odd counts read clean under either convention."""
-    for n in (5, 9):
-        source = hermitian_spectrum(n, seed=n)
-        for target in (2 * n, 4 * n):
-            padded = resize_modes(source, target, rescale=False)
-            for j in range(n):
-                k = j if j <= (n - 1) // 2 else j - n
-                assert padded[0, k % target] == source[0, j], (
-                    f"n={n} -> {target}: coefficient at frequency {k} was altered"
-                )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_preserves_the_function_at_the_original_sample_points():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        coarse = torch.fft.ifft(source) * n
-        for target in (2 * n, 4 * n):
-            fine = torch.fft.ifft(resize_modes(source, target, rescale=False)) * target
-            measured = float((fine[:, :: target // n] - coarse).abs().max())
-            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
+ResizeRoundTrips.TestCase.settings = settings(
+    deadline=None, max_examples=40, stateful_step_count=8
+)
+TestResizeRoundTrips = pytest.mark.oracle_invariant(ResizeRoundTrips.TestCase)
 
 
 @pytest.mark.no_fuzz
