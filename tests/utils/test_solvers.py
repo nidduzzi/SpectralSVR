@@ -5,7 +5,7 @@ import math
 
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, assume, example, given, settings
 from hypothesis import strategies as st
 
 from SpectralSVR.utils import (
@@ -13,7 +13,6 @@ from SpectralSVR.utils import (
     as_semilinear_solver,
     etdrk4_solver,
     euler_solver,
-    implicit_adams_solver,
 )
 
 SETTINGS = settings(
@@ -189,29 +188,50 @@ def _closed_form_weights(z: torch.Tensor, h: float):
     )
 
 
-@pytest.mark.no_fuzz
+CLOSED_FORM_ATOL = 1e-10
+SMALLEST_STEP_TIMES_FREQUENCY = 0.1
+
+
 @pytest.mark.oracle_analytic
-def test_etdrk4_complex_weights_match_closed_form():
-    h = 0.1
-    linear = torch.tensor([-2j, -20j, -200j, 5j], dtype=torch.complex128)
+@SETTINGS
+@given(
+    h=st.floats(0.01, 0.5),
+    frequencies=st.lists(
+        st.floats(1.0, 200.0).flatmap(lambda size: st.sampled_from((size, -size))),
+        min_size=1,
+        max_size=6,
+    ),
+)
+@example(h=0.1, frequencies=[-2.0, -20.0, -200.0, 5.0])
+def test_etdrk4_complex_weights_match_closed_form(h, frequencies):
+    assume(
+        h * min(abs(frequency) for frequency in frequencies)
+        >= SMALLEST_STEP_TIMES_FREQUENCY
+    )
+    linear = 1j * torch.tensor(frequencies, dtype=torch.float64).to(torch.complex128)
     contour = _etdrk4_weights(linear, h, contour_points=32)
     exact = _closed_form_weights(h * linear, h)
     for weight, reference in zip(contour, exact, strict=True):
         assert weight.is_complex()
-        assert (weight - reference).abs().max() < 1e-10
+        assert (weight - reference).abs().max() < CLOSED_FORM_ATOL
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_consistency
-def test_etdrk4_real_weights_unchanged():
-    h = 0.1
-    k = torch.fft.fftfreq(16) * 16
-    linear = (-0.01 * k**2).to(torch.complex64).to(torch.complex128)
+@SETTINGS
+@given(
+    h=st.floats(0.01, 0.5),
+    nu=st.floats(0.001, 0.5),
+    size=st.integers(4, 64),
+    contour_points=st.integers(8, 64),
+)
+@example(h=0.1, nu=0.01, size=16, contour_points=32)
+def test_etdrk4_real_weights_unchanged(h, nu, size, contour_points):
+    k = torch.fft.fftfreq(size) * size
+    linear = (-nu * k**2).to(torch.complex64).to(torch.complex128)
     assert not linear.imag.any()
 
-    m = 32
-    j = torch.arange(1, m + 1, dtype=torch.float64)
-    r = torch.exp(1j * torch.pi * (j - 0.5) / m)
+    j = torch.arange(1, contour_points + 1, dtype=torch.float64)
+    r = torch.exp(1j * torch.pi * (j - 0.5) / contour_points)
     lr = h * linear.reshape(-1).unsqueeze(-1) + r.unsqueeze(0)
 
     def half_circle_real(expr):
@@ -223,33 +243,64 @@ def test_etdrk4_real_weights_unchanged():
         half_circle_real((2 + lr + torch.exp(lr) * (-2 + lr)) / lr**3),
         half_circle_real((-4 - 3 * lr - lr**2 + torch.exp(lr) * (4 - lr)) / lr**3),
     )
-    for weight, reference in zip(_etdrk4_weights(linear, h, m), expected, strict=True):
+    for weight, reference in zip(
+        _etdrk4_weights(linear, h, contour_points), expected, strict=True
+    ):
         assert torch.equal(weight, reference)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_etdrk4_rejects_non_uniform_grid():
-    uneven = torch.cat([torch.linspace(0, 0.5, 6), torch.linspace(0.6, 1.0, 3)])
-    with pytest.raises(AssertionError, match="uniformly spaced"):
-        etdrk4_solver(
+def an_uneven_grid(first, second):
+    return torch.cat(
+        [torch.linspace(0, 0.5, first), torch.linspace(0.6, 1.0, second)]
+    ).double()
+
+
+SOLVER_REFUSALS = (
+    (
+        "uniformly spaced",
+        lambda first, second: (first, second) != (6, 5) and second >= 2,
+        lambda first, second: etdrk4_solver(
             torch.tensor([-1.0], dtype=torch.float64),
             lambda ti, v: torch.zeros_like(v),
             torch.ones(1, 1, dtype=torch.complex128),
-            uneven.double(),
-        )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_etdrk4_requires_matching_shapes():
-    with pytest.raises(AssertionError):
-        etdrk4_solver(
-            torch.zeros(8),
+            an_uneven_grid(first, second),
+        ),
+    ),
+    (
+        "must match y0 mode grid",
+        lambda first, second: first != second,
+        lambda first, second: etdrk4_solver(
+            torch.zeros(first),
             lambda ti, v: v,
-            torch.zeros(2, 4, dtype=torch.complex128),
+            torch.zeros(2, second, dtype=torch.complex128),
             torch.linspace(0, 1, 5),
-        )
+        ),
+    ),
+    (
+        "more than one evaluation points",
+        lambda first, second: True,
+        lambda first, second: euler_solver(
+            lambda ti, y: y, torch.zeros(first), torch.tensor([float(second)])
+        ),
+    ),
+)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(
+    refusal=st.sampled_from(SOLVER_REFUSALS),
+    first=st.integers(2, 12),
+    second=st.integers(0, 12),
+)
+@example(refusal=SOLVER_REFUSALS[0], first=6, second=3)
+@example(refusal=SOLVER_REFUSALS[1], first=8, second=4)
+@example(refusal=SOLVER_REFUSALS[2], first=2, second=0)
+def test_a_solver_refuses_what_it_cannot_integrate(refusal, first, second):
+    message, admits, call = refusal
+    assume(admits(first, second))
+    with pytest.raises(AssertionError, match=message):
+        call(first, second)
 
 
 # --------------------------------------------------------------------------- #
@@ -261,42 +312,35 @@ def test_etdrk4_requires_matching_shapes():
     N=st.integers(4, 32),
     decay=st.floats(0.1, 2.0),
     seed=st.integers(0, 10_000),
+    complex_state=st.booleans(),
 )
-def test_conversion_equals_the_combined_right_hand_side(N, decay, seed):
+@example(N=8, decay=0.01, seed=0, complex_state=True)
+def test_conversion_equals_the_combined_right_hand_side(N, decay, seed, complex_state):
     generator = torch.Generator().manual_seed(seed)
     linear = -decay * torch.arange(N, dtype=torch.float64)
-    y0 = torch.randn(3, N, dtype=torch.float64, generator=generator)
+    state_dtype = torch.complex128 if complex_state else torch.float64
+    y0 = torch.randn(3, N, dtype=state_dtype, generator=generator)
     t = torch.linspace(0, 1.0, 11, dtype=torch.float64)
 
     def nonlinear(ti, v):
-        return 0.1 * v.sin()
+        return 0.1 * v / (1 + v.abs())
 
     converted = as_semilinear_solver(euler_solver)(linear, nonlinear, y0, t)
+    assert converted.dtype == y0.dtype
     direct = euler_solver(lambda ti, v: linear * v + nonlinear(ti, v), y0, t)
     assert torch.equal(converted, direct)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_conversion_integrates_complex_spectral_state():
-    N = 8
-    k = torch.fft.fftfreq(N) * N
-    linear = -0.01 * k**2
-    v0 = torch.randn(
-        2, N, dtype=torch.complex128, generator=torch.Generator().manual_seed(0)
-    )
-    t = torch.linspace(0, 1.0, 401, dtype=torch.float64)
-
-    sol = as_semilinear_solver(implicit_adams_solver)(
-        linear, lambda ti, v: torch.zeros_like(v), v0, t
-    )
-    assert sol.dtype == v0.dtype
-    assert torch.allclose(sol[-1], v0 * torch.exp(linear * 1.0), atol=1e-7)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_conversion_forwards_the_time_grid_unchanged():
+@SETTINGS
+@given(
+    points=st.integers(2, 40),
+    stop=st.floats(0.1, 10.0),
+    width=st.integers(1, 6),
+    rows=st.integers(1, 4),
+)
+@example(points=7, stop=2.0, width=3, rows=2)
+def test_conversion_forwards_the_time_grid_unchanged(points, stop, width, rows):
     seen = {}
 
     def recording_solver(rhs, y0, t):
@@ -304,10 +348,10 @@ def test_conversion_forwards_the_time_grid_unchanged():
         seen["y0"] = y0
         return y0.unsqueeze(0).expand(len(t), *y0.shape)
 
-    t = torch.linspace(0, 2.0, 7, dtype=torch.float64)
-    y0 = torch.ones(2, 3, dtype=torch.float64)
+    t = torch.linspace(0, stop, points, dtype=torch.float64)
+    y0 = torch.ones(rows, width, dtype=torch.float64)
     as_semilinear_solver(recording_solver)(
-        torch.zeros(3, dtype=torch.float64), lambda ti, v: v, y0, t
+        torch.zeros(width, dtype=torch.float64), lambda ti, v: v, y0, t
     )
     assert seen["t"] is t
     assert seen["y0"] is y0

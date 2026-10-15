@@ -17,7 +17,6 @@ from hypothesis.stateful import (
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
     accelerator,
-    ExactModeCount,
     StandardScaler,
     WavenumberCutoff,
     euler_solver,
@@ -37,6 +36,7 @@ from SpectralSVR.utils import (
 SETTINGS = settings(
     deadline=None, max_examples=40, suppress_health_check=[HealthCheck.too_slow]
 )
+RRSE_SQUARED_RTOL = 1e-6
 _elements = st.floats(-8.0, 8.0, allow_nan=False, allow_infinity=False)
 
 
@@ -115,10 +115,9 @@ def test_resolve_device_follows_the_process_default(name):
     assert resolve_device(None) == torch.zeros(1).device
 
 
-DISAGREEING_PAIRS = (
-    [(a, b) for a in STATABLE_DEVICES for b in STATABLE_DEVICES if a != b]
-    or None
-)
+DISAGREEING_PAIRS = [
+    (a, b) for a in STATABLE_DEVICES for b in STATABLE_DEVICES if a != b
+] or None
 
 
 @pytest.mark.oracle_smoke
@@ -154,7 +153,9 @@ def test_an_agreeing_random_source_is_unremarkable(name):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(rows=st.integers(2, 20), cols=st.integers(1, 5), seed=st.integers(0, 10_000))
+@given(rows=st.integers(1, 20), cols=st.integers(1, 5), seed=st.integers(0, 10_000))
+@example(rows=1, cols=3, seed=0)
+@example(rows=3, cols=1, seed=0)
 def test_get_metrics_default_keys(rows, cols, seed):
     g = torch.Generator().manual_seed(seed)
     preds = torch.randn(rows, cols, generator=g)
@@ -162,26 +163,23 @@ def test_get_metrics_default_keys(rows, cols, seed):
     m = get_metrics(preds, targets)
     assert set(m) == set(DEFAULT_METRICS) | {"pred_nan_sum"}
     assert m["mse"] >= 0.0
+    assert math.isnan(m["r2"]) == (rows == 1)
+    if rows > 1:
+        assert math.isclose(m["rrse"] ** 2, m["rse"], rel_tol=RRSE_SQUARED_RTOL)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_get_metrics_single_sample_r2_is_nan():
-    m = get_metrics(torch.randn(1, 3), torch.randn(1, 3))
-    assert m["r2"] != m["r2"]  # NaN
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_metrics_injected_metric_set():
+@SETTINGS
+@given(name=st.text(min_size=1).filter(lambda name: name != "pred_nan_sum"))
+@example(name="custom")
+def test_get_metrics_injected_metric_set(name):
     m = get_metrics(
         torch.zeros(4, 2),
         torch.zeros(4, 2),
-        metrics={"custom": lambda p, t: (p - t).abs().sum()},
+        metrics={name: lambda p, t: (p - t).abs().sum()},
     )
-    assert m["custom"] == 0.0
-    assert "mse" not in m
-    assert "pred_nan_sum" in m
+    assert set(m) == {name, "pred_nan_sum"}
+    assert m[name] == 0.0
 
 
 @pytest.mark.oracle_independent
@@ -311,62 +309,23 @@ def test_to_mag_angle_reconstructs(rows, cols, seed):
     assert torch.allclose(mag * torch.exp(1j * angle), c, atol=1e-4)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_to_mag_angle_idempotent_on_real():
-    r = torch.randn(3, 4)
+@SETTINGS
+@given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
+@example(rows=3, cols=4, seed=0)
+def test_to_mag_angle_idempotent_on_real(rows, cols, seed):
+    r = torch.randn(rows, cols, generator=torch.Generator().manual_seed(seed))
     assert torch.equal(to_mag_angle(r), r)
 
 
-POLAR_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_to_mag_angle_handles_any_number_of_mode_axes():
-    generator = torch.Generator().manual_seed(11)
-    for shape in POLAR_SHAPES:
-        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-        ma = to_mag_angle(c)
-        assert ma.shape == (*shape[:-1], shape[-1] * 2)
-        mag, angle = ma[..., ::2], ma[..., 1::2]
-        assert torch.allclose(mag * torch.exp(1j * angle), c, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_from_mag_angle_inverts_to_mag_angle():
-    generator = torch.Generator().manual_seed(12)
-    for shape in POLAR_SHAPES:
-        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-        assert torch.allclose(from_mag_angle(to_mag_angle(c)), c, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_polar_encoding_precision_corresponds():
-    for complex_dtype, real_dtype in (
-        (torch.complex64, torch.float32),
-        (torch.complex128, torch.float64),
-    ):
-        c = torch.randn(3, 4, dtype=complex_dtype)
-        assert to_mag_angle(c).dtype == real_dtype
-        assert from_mag_angle(to_mag_angle(c)).dtype == complex_dtype
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
-def test_polar_encoding_preserves_device():
-    c = torch.randn(3, 4, dtype=torch.complex64).cuda()
-    assert to_mag_angle(c).device.type == "cuda"
-    assert from_mag_angle(to_mag_angle(c)).device.type == "cuda"
-
-
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_from_mag_angle_idempotent_on_complex():
-    c = torch.randn(3, 4, dtype=torch.complex64)
+@SETTINGS
+@given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
+@example(rows=3, cols=4, seed=0)
+def test_from_mag_angle_idempotent_on_complex(rows, cols, seed):
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     assert torch.equal(from_mag_angle(c), c)
 
 
@@ -386,13 +345,6 @@ def test_euler_solver_linear_decay(a, seed):
     sol = euler_solver(rhs, y0, t)
     exact = y0 * torch.exp(-a * t[-1])
     assert torch.allclose(sol[-1], exact, atol=5e-2 * y0.abs().max())
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_euler_solver_requires_multiple_points():
-    with pytest.raises(AssertionError):
-        euler_solver(lambda ti, y: y, torch.zeros(2), torch.tensor([0.0]))
 
 
 # --------------------------------------------------------------------------- #
@@ -437,27 +389,6 @@ def test_zero_coeff_zeros_high_modes(n, cutoff, seed):
     out = zero_coeff(x, WavenumberCutoff(cutoff))
     assert out.shape == x.shape
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_zero_coeff_per_axis_bands():
-    x = torch.ones(2, 8, 8, dtype=torch.complex64)
-    # |k| <= 1 keeps 3 bins of an axis, an exact count of 4 keeps 4
-    mixed = zero_coeff(x, [WavenumberCutoff(1), ExactModeCount(4)])
-    assert int(torch.count_nonzero(mixed)) == 2 * 3 * 4
-    broadcast = zero_coeff(x, WavenumberCutoff(1))
-    assert int(torch.count_nonzero(broadcast)) == 2 * 3 * 3
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_zero_coeff_rejects_a_bare_count():
-    x = torch.ones(1, 8, dtype=torch.complex64)
-    with pytest.raises(TypeError):
-        zero_coeff(x, 4)
-    with pytest.raises(TypeError):
-        zero_coeff(x, [4])
 
 
 @pytest.mark.oracle_analytic
@@ -510,7 +441,6 @@ CONVERSIONS = (
     ("real/imag", to_real_coeff, to_complex_coeff),
     ("mag/angle", to_mag_angle, from_mag_angle),
 )
-CONVERSION_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
 
 
 @pytest.mark.no_fuzz
@@ -531,39 +461,84 @@ def test_conversion_registry_covers_every_exported_conversion():
     )
 
 
-@pytest.mark.no_fuzz
+CONVERSION_AXES = st.lists(st.integers(1, 9), min_size=2, max_size=4).map(tuple)
+CONVERSION_SPECS = st.sampled_from(CONVERSIONS)
+CONVERSION_PRECISIONS = st.sampled_from(
+    ((torch.complex64, torch.float32), (torch.complex128, torch.float64))
+)
+
+
 @pytest.mark.oracle_invariant
-def test_every_conversion_accepts_any_number_of_mode_axes():
-    generator = torch.Generator().manual_seed(21)
-    for label, forward, inverse in CONVERSIONS:
-        for shape in CONVERSION_SHAPES:
-            c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-            out = forward(c)
-            assert out.shape == (*shape[:-1], shape[-1] * 2), f"{label} {shape}"
-            assert torch.allclose(inverse(out), c, atol=1e-4), f"{label} {shape}"
+@SETTINGS
+@given(conversion=CONVERSION_SPECS, shape=CONVERSION_AXES, seed=st.integers(0, 10_000))
+@example(conversion=CONVERSIONS[0], shape=(5, 9), seed=21)
+@example(conversion=CONVERSIONS[0], shape=(2, 8, 8), seed=21)
+@example(conversion=CONVERSIONS[0], shape=(2, 4, 4, 4), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(5, 9), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(2, 8, 8), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(2, 4, 4, 4), seed=21)
+def test_every_conversion_accepts_any_number_of_mode_axes(conversion, shape, seed):
+    label, forward, inverse = conversion
+    generator = torch.Generator().manual_seed(seed)
+    c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
+    out = forward(c)
+    assert out.shape == (*shape[:-1], shape[-1] * 2), f"{label} {shape}"
+    assert torch.allclose(inverse(out), c, atol=1e-4), f"{label} {shape}"
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
-def test_every_conversion_preserves_precision():
-    for label, forward, inverse in CONVERSIONS:
-        for complex_dtype, real_dtype in (
-            (torch.complex64, torch.float32),
-            (torch.complex128, torch.float64),
-        ):
-            c = torch.randn(3, 4, dtype=complex_dtype)
-            assert forward(c).dtype == real_dtype, label
-            assert inverse(forward(c)).dtype == complex_dtype, label
+@SETTINGS
+@given(
+    conversion=CONVERSION_SPECS, precision=CONVERSION_PRECISIONS, shape=CONVERSION_AXES
+)
+@example(
+    conversion=CONVERSIONS[0], precision=(torch.complex64, torch.float32), shape=(5, 9)
+)
+@example(
+    conversion=CONVERSIONS[0], precision=(torch.complex128, torch.float64), shape=(5, 9)
+)
+@example(
+    conversion=CONVERSIONS[0],
+    precision=(torch.complex64, torch.float32),
+    shape=(2, 8, 8),
+)
+@example(
+    conversion=CONVERSIONS[0],
+    precision=(torch.complex128, torch.float64),
+    shape=(2, 8, 8),
+)
+@example(
+    conversion=CONVERSIONS[1], precision=(torch.complex64, torch.float32), shape=(3, 4)
+)
+@example(
+    conversion=CONVERSIONS[1], precision=(torch.complex128, torch.float64), shape=(3, 4)
+)
+def test_every_conversion_preserves_precision(conversion, precision, shape):
+    label, forward, inverse = conversion
+    complex_dtype, real_dtype = precision
+    c = torch.randn(*shape, dtype=complex_dtype)
+    assert forward(c).dtype == real_dtype, label
+    assert inverse(forward(c)).dtype == complex_dtype, label
+    if forward is to_real_coeff:
+        assert torch.equal(inverse(forward(c)), c), label
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
-def test_every_conversion_preserves_device():
-    for label, forward, inverse in CONVERSIONS:
-        c = torch.randn(3, 4, dtype=torch.complex64).cuda()
-        assert forward(c).device.type == "cuda", label
-        assert inverse(forward(c)).device.type == "cuda", label
+@SETTINGS
+@given(
+    conversion=CONVERSION_SPECS,
+    device=st.sampled_from(STATABLE_DEVICES),
+    shape=CONVERSION_AXES,
+)
+@example(conversion=CONVERSIONS[0], device="cuda", shape=(3, 4))
+@example(conversion=CONVERSIONS[1], device="cuda", shape=(3, 4))
+def test_every_conversion_preserves_device(conversion, device, shape):
+    if device not in STATABLE_DEVICES:
+        pytest.skip("no accelerator available")
+    label, forward, inverse = conversion
+    c = torch.randn(*shape, dtype=torch.complex64, device=device)
+    assert forward(c).device.type == device, label
+    assert inverse(forward(c)).device.type == device, label
 
 
 SCALER_FIELD_KINDS = st.lists(
@@ -612,7 +587,9 @@ class ScalerLifecycle(RuleBasedStateMachine):
         recovered = self.scaler.inverse(transformed)
         if self.bare:
             transformed, recovered = (transformed,), (recovered,)
-        for original, scaled, back in zip(self.fields, transformed, recovered, strict=True):
+        for original, scaled, back in zip(
+            self.fields, transformed, recovered, strict=True
+        ):
             assert scaled.shape == original.shape
             assert scaled.is_complex() == original.is_complex()
             assert torch.allclose(back, original, atol=self.tolerance(original))

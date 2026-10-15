@@ -357,18 +357,6 @@ TestSpectralSVRBoundary = pytest.mark.oracle_invariant(SpectralSVRBoundary.TestC
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_bridge_round_trips_exactly_at_both_precisions():
-    generator = torch.Generator().manual_seed(6)
-    for complex_dtype in (torch.complex64, torch.complex128):
-        for shape in ((5, 9), (2, 8, 8)):
-            c = torch.randn(*shape, dtype=complex_dtype, generator=generator)
-            assert torch.equal(to_complex_coeff(to_real_coeff(c)), c), (
-                f"{complex_dtype} {shape}"
-            )
-
-
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A source the library builds for itself agrees by construction")
 def test_the_inverse_builds_its_own_source_where_the_work_is():

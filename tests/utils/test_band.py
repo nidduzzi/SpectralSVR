@@ -13,7 +13,7 @@ import pytest
 import torch
 from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
-from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
+from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
 import SpectralSVR
 from SpectralSVR.utils import (
@@ -183,7 +183,9 @@ def test_band_limiting_is_idempotent(n, band, seed):
 @given(n=GRID, a=st.integers(0, 12), b=st.integers(0, 12))
 def test_a_wider_cutoff_keeps_a_superset(n, a, b):
     narrow, wide = min(a, b), max(a, b)
-    assert kept_bins(WavenumberCutoff(narrow), n) <= kept_bins(WavenumberCutoff(wide), n)
+    assert kept_bins(WavenumberCutoff(narrow), n) <= kept_bins(
+        WavenumberCutoff(wide), n
+    )
 
 
 @pytest.mark.oracle_invariant
@@ -251,6 +253,33 @@ class BandLimiting(RuleBasedStateMachine):
         self.grid = zero_coeff(self.grid, band)
         self.expected &= named_bins(band, self.MODES)
         self.every_band_guaranteed_real &= isinstance(band, REAL_FORMS)
+
+    @rule(first=ANY_BAND, second=ANY_BAND)
+    def band_each_axis_of_a_two_axis_grid(self, first, second):
+        grid = torch.ones(2, 8, 8, dtype=torch.complex64)
+        kept_first, kept_second = (len(named_bins(band, 8)) for band in (first, second))
+        mixed = zero_coeff(grid, [first, second])
+        assert int(torch.count_nonzero(mixed)) == 2 * kept_first * kept_second
+        broadcast = zero_coeff(grid, first)
+        assert int(torch.count_nonzero(broadcast)) == 2 * kept_first * kept_first
+
+    @rule(count=st.integers(0, 24))
+    def refuse_a_bare_count(self, count):
+        grid = torch.ones(1, 8, dtype=torch.complex64)
+        with pytest.raises(TypeError):
+            zero_coeff(grid, count)
+        with pytest.raises(TypeError):
+            zero_coeff(grid, [count])
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        ramp = torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
+        by_cutoff = torch.tensor([[1, 2, 3, 0, 0, 0, 7, 8]], dtype=torch.complex64)
+        by_count = torch.tensor([[1, 0, 0, 0, 0, 0, 0, 8]], dtype=torch.complex64)
+        assert torch.equal(zero_coeff(ramp, WavenumberCutoff(2)), by_cutoff)
+        assert torch.equal(zero_coeff(ramp, ExactModeCount(2)), by_count)
+        self.band_each_axis_of_a_two_axis_grid(WavenumberCutoff(1), ExactModeCount(4))
+        self.refuse_a_bare_count(4)
 
     @invariant()
     def the_surviving_bins_are_the_intersection_so_far(self):

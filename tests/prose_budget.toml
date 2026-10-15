@@ -129,7 +129,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_coeff_anchors.py"]
-comments = 44
+comments = 39
 internal_docstrings = 0
 misshapen_docstrings = 0
 
@@ -219,7 +219,7 @@ internal_docstrings = 0
 misshapen_docstrings = 4
 
 ["tests/utils/test_metric_anchors.py"]
-comments = 18
+comments = 16
 internal_docstrings = 0
 misshapen_docstrings = 1
 
@@ -229,6 +229,6 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/utils/test_utils.py"]
-comments = 33
+comments = 31
 internal_docstrings = 0
 misshapen_docstrings = 0

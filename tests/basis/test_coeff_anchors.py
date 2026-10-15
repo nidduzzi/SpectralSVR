@@ -26,10 +26,7 @@ from SpectralSVR import FourierBasis
 from SpectralSVR.basis.sampling import ClosedUniform, PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
 from SpectralSVR.utils import (
-    ExactModeCount,
-    WavenumberCutoff,
     resize_modes,
-    zero_coeff,
 )
 
 SETTINGS = settings(deadline=None, max_examples=20)
@@ -173,24 +170,6 @@ ResizeRoundTrips.TestCase.settings = settings(
     deadline=None, max_examples=40, stateful_step_count=8
 )
 TestResizeRoundTrips = pytest.mark.oracle_invariant(ResizeRoundTrips.TestCase)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_zero_coeff_values():
-    x = (
-        torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
-    )  # bins 0..7 = freqs [0, 1, 2, 3, -4, -3, -2, -1]
-    # |k| <= 2 keeps freqs {0, 1, 2, -2, -1} = bins {0, 1, 2, 6, 7}; zero the
-    # high-|frequency| middle block bins {3, 4, 5}
-    expected = torch.tensor([[1, 2, 3, 0, 0, 0, 7, 8]], dtype=torch.complex64)
-    assert torch.equal(zero_coeff(x, WavenumberCutoff(2)), expected)
-    # the same numeral as a raw count is a different band: 2 modes, freqs
-    # {0, -1} = bins {0, 7}
-    assert torch.equal(
-        zero_coeff(x, ExactModeCount(2)),
-        torch.tensor([[1, 0, 0, 0, 0, 0, 0, 8]], dtype=torch.complex64),
-    )
 
 
 # --------------------------------------------------------------------------- #
