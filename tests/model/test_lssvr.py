@@ -51,7 +51,12 @@ def test_lssvr_rbf_interpolates_training_points(n, seed):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(10, 40), d=st.integers(1, 4), o=st.integers(1, 3), seed=st.integers(0, 10_000))
+@given(
+    n=st.integers(10, 40),
+    d=st.integers(1, 4),
+    o=st.integers(1, 3),
+    seed=st.integers(0, 10_000),
+)
 def test_lssvr_predict_numpy_roundtrips(n, d, o, seed):
     X, y = linear_dataset(n, d, o, seed)
     model = LSSVR(kernel="linear")
@@ -103,7 +108,9 @@ def test_lssvr_batched_kernel_matches_unbatched(n, d, seed):
         kernel="rbf", C=10.0, dtype=torch.float64, batch_size_func=lambda dims: 1
     )
     batched.fit(X.double(), y.double())
-    assert torch.allclose(batched.predict(X.double()), unbatched.predict(X.double()), atol=1e-8)
+    assert torch.allclose(
+        batched.predict(X.double()), unbatched.predict(X.double()), atol=1e-8
+    )
 
 
 @pytest.mark.oracle_smoke
@@ -147,9 +154,7 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
 @pytest.mark.scenario("The host is not overridden")
 @SETTINGS
 @given(
-    name=st.sampled_from(
-        ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
-    ),
+    name=st.sampled_from(["cpu"] + (["cuda"] if torch.cuda.is_available() else [])),
     stated=st.sampled_from((None, "cpu")),
 )
 @example(name=accelerator().type, stated="cpu")
@@ -171,37 +176,41 @@ def test_lssvr_each_kernel_covered(kernel):
     assert out.shape == y.shape and not torch.isnan(out).any()
 
 
+def gram_matrix(kernel, x, z, sigma):
+    if kernel == "linear":
+        return x @ z.T
+    return torch.exp(-(torch.cdist(x, z) ** 2) / (2 * sigma) ** 2)
+
+
 @pytest.mark.oracle_independent
 @SETTINGS
 @given(
+    kernel=st.sampled_from(("linear", "rbf")),
     n=st.integers(5, 20),
     d=st.integers(1, 4),
     o=st.integers(1, 3),
     c=st.floats(0.5, 100.0),
+    sigma=st.floats(0.5, 3.0),
     seed=st.integers(0, 10_000),
 )
-def test_lssvr_matches_independent_kkt_solve(n, d, o, c, seed):
-    # Independent oracle: the LS-SVM dual (Suykens & Vandewalle 1999) is the
-    # linear system  [[0, 1^T], [1, K + I/C]] [b; alpha] = [0; y]  with
-    # prediction f(x) = K(x, X) alpha + b. Solve that system inline (different
-    # code path: torch.linalg.solve on a hand-assembled matrix with an explicit
-    # linear kernel) and require LSSVR to reproduce its predictions.
+@example(kernel="rbf", n=300, d=2, o=1, c=10.0, sigma=1.5, seed=0)
+@example(kernel="linear", n=300, d=2, o=1, c=10.0, sigma=1.5, seed=0)
+def test_lssvr_matches_independent_kkt_solve(kernel, n, d, o, c, sigma, seed):
     g = torch.Generator().manual_seed(seed)
     x = torch.randn(n, d, generator=g, dtype=torch.float64)
     y = torch.randn(n, o, generator=g, dtype=torch.float64)
     xq = torch.randn(7, d, generator=g, dtype=torch.float64)
 
-    k = x @ x.T  # explicit linear kernel
     a = torch.zeros(n + 1, n + 1, dtype=torch.float64)
     a[0, 1:] = 1
     a[1:, 0] = 1
-    a[1:, 1:] = k + torch.eye(n, dtype=torch.float64) / c
+    a[1:, 1:] = gram_matrix(kernel, x, x, sigma) + torch.eye(n, dtype=torch.float64) / c
     rhs = torch.cat([torch.zeros(1, o, dtype=torch.float64), y])
     sol = torch.linalg.lstsq(a, rhs).solution
     b, alpha = sol[0], sol[1:]
-    expected = (xq @ x.T) @ alpha + b
+    expected = gram_matrix(kernel, xq, x, sigma) @ alpha + b
 
-    model = LSSVR(kernel="linear", C=c, dtype=torch.float64).fit(x, y)
+    model = LSSVR(kernel=kernel, sigma=sigma, C=c, dtype=torch.float64).fit(x, y)
     got = model.predict(xq)
     scale = expected.abs().max().clamp(min=1.0)
     assert torch.allclose(got, expected, atol=1e-5 * float(scale), rtol=1e-4)
