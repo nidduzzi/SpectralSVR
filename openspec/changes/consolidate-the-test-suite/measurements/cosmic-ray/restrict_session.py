@@ -24,4 +24,6 @@ for job_id in outside:
     connection.execute("delete from work_items where job_id = ?", (job_id,))
 connection.commit()
 remaining = connection.execute("select count(*) from work_items").fetchone()[0]
-print(f"{' '.join(names)}: {remaining} mutants kept, {len(outside)} outside them dropped")
+print(
+    f"{' '.join(names)}: {remaining} mutants kept, {len(outside)} outside them dropped"
+)

@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/problems/burgers.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "/home/migi/Documents/projects/SpectralSVR/openspec/changes/consolidate-the-test-suite/measurements/cosmic-ray/timed_pytest.sh -x -q -p no:cacheprovider --hypothesis-seed=0 tests/problems/test_problems.py::test_axis_diff_matches_analytic tests/problems/test_problems.py::test_axis_diff_rejects_bad_order tests/problems/test_problems.py::test_antiderivative_rejects_bad_sizes tests/problems/test_problems.py::test_burgers_numerical_solution_dissipates_energy tests/problems/test_problems.py::test_manufactured_branch_rejects_a_solver tests/problems/test_problems.py::test_numerical_branch_uses_the_supplied_solver tests/problems/test_problems.py::test_numerical_burgers_agrees_with_an_independent_integrator tests/problems/test_problems.py::test_manufactured_pair_satisfies_the_continuous_equation tests/problems/test_problems.py::test_continuous_residual_detects_a_corrupted_forcing tests/problems/test_problems.py::test_generate_rejects_a_time_domain_without_a_step tests/problems/test_problems.py::test_generation_survives_a_process_default_pointing_elsewhere"
+
+[cosmic-ray.distributor]
+name = "local"

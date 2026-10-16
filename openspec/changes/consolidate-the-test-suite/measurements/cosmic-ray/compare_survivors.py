@@ -23,12 +23,20 @@ def survivors(tree: str, session: pathlib.Path) -> collections.Counter:
     return counted
 
 
-def main(phase: str, before_tree: str, after_tree: str, modules: list[str]) -> None:
+def main(
+    before_phase: str,
+    after_phase: str,
+    before_tree: str,
+    after_tree: str,
+    modules: list[str],
+) -> None:
     for module in modules:
         before = survivors(
-            before_tree, ROOT / f"{before_tree}-{phase}-{module}.sqlite"
+            before_tree, ROOT / f"{before_tree}-{before_phase}-{module}.sqlite"
         )
-        after = survivors(after_tree, ROOT / f"{after_tree}-{phase}-{module}.sqlite")
+        after = survivors(
+            after_tree, ROOT / f"{after_tree}-{after_phase}-{module}.sqlite"
+        )
         introduced = after - before
         print(
             f"{module}: before {sum(before.values())}, after {sum(after.values())}, "
@@ -42,10 +50,18 @@ def main(phase: str, before_tree: str, after_tree: str, modules: list[str]) -> N
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--phase", default="phase1")
+    parser.add_argument("--before-phase")
+    parser.add_argument("--after-phase")
     parser.add_argument("--before", default="base")
     parser.add_argument("--after", default="after")
     parser.add_argument(
         "--modules", nargs="+", default=["__base", "FourierBasis", "_plot", "sampling"]
     )
     arguments = parser.parse_args()
-    main(arguments.phase, arguments.before, arguments.after, arguments.modules)
+    main(
+        arguments.before_phase or arguments.phase,
+        arguments.after_phase or arguments.phase,
+        arguments.before,
+        arguments.after,
+        arguments.modules,
+    )
