@@ -1,0 +1,5 @@
+operators___base: before 7, after 7, survivors after but not before 0, before but not after 0
+operators_benchmark: before 8, after 8, survivors after but not before 0, before but not after 0
+operators_dataset: before 21, after 21, survivors after but not before 0, before but not after 0
+operators_deeponet: before 209, after 198, survivors after but not before 0, before but not after 11
+operators_spectralsvr: before 2, after 2, survivors after but not before 0, before but not after 0

@@ -1,0 +1,12 @@
+[job-id] a8d28c60eb1248c19b81c71d3496a3d3
+SpectralSVR/model/LSSVR.py core/ReplaceBinaryOperator_Mul_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c48eae6f77c44fc484eedee50a6c2b00
+SpectralSVR/model/LSSVR.py core/NumberReplacer 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1c848d723c774e8cbd46beb466b2006e
+SpectralSVR/model/LSSVR.py core/NumberReplacer 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 3
+complete: 3 (100.00%)
+surviving mutants: 2 (66.67%)

@@ -1,0 +1,783 @@
+[job-id] 343745e7ea7340ab85ab8e57b369ae6a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f313ea0040d1474a90a8e2dee9c4e641
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1e6bf17516ac4f3e83e551cf8523fd92
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 310b8af85e30473d9a549fc77fab2441
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e4b9b7b74454431d9c688290f2321295
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cfd8cf5fdcbe47b09985cc5fac03900e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 79d2c4cebf1b4a0394a5420f65f520e2
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5a6523861569411bbdda4e442249cf6c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 35097f183a0c4f46829a663d3a80b398
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6b227b16ce3f4a5aa1c57b972e2193fd
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 298ff9c4c3854c218deb03afb246f007
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Add_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fa2a13ea3d7d43c9b073ff94aac8cd75
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 22f781fd1d384510a2df51cf85df224d
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6e57e36863124b258682de8f904d393c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ed3bb960c4194a389be6c5a618e7c4e5
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8a648424b6bd4cef98aa197324b26b90
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0ef76b5a2c56424aa59c1c5fd8d4eb23
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d89933db9fc144859118f81b93d42b23
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Add 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a7c1c0a9e8594e9294c3938ddfe016a0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1b30d48c88de45309865e016453e40a2
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee6843c337c04bcf8e2685708e8f911c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 971a2c43d5554bcbacb54dc596b824ce
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d09d4bb1ab654e2ebc1e0bb76e93352a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 07fbaeedd71845b6813cf180f1b1e4aa
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fd815f334f9949d89121b33089d697d2
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Sub 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] eadba7b385e5446dbed97912a4dafd14
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bbca4d24b5094094a4e686859def7e06
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c502e4c2fcd94a8f97988113f76247d9
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b111c08b9ba04d9298a77ff798204e0a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 96a6598638fa4ab9bb033b1b9d2b007b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 57e6842f6c9b4996a778c644e658572c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 70cdb6fa685c494f85e2d73351b2d7fb
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Div 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 86bffad8152740db986ec0610dbb1cd6
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c1ae892e53a469d999771dad2699117
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 79d9772d1ca245aab1cb22bedbcbd9b0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b6dcbc88bcdf426387fc094748057076
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a7732af90ba44823b51174838a70f46e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f11f4325c46c4ae3bc6e80259578c07c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fc8a743e93a24626b323fed9e93cd8f7
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_FloorDiv 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 66cf6174b1f345be9090d2f313a01afc
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b38e5c8ef0d14d7d839cd4e0d3b18a3d
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e7ffa3247a284602a5248c6bb66ddad5
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2014cb9f6734904b1cd9771d7680815
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f0817a2e81fd4abf9c2f0a3b64d417ec
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c8dc55f0535845ce9774e4d71247886b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7acdd13895f045cc8ad581d196775054
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Mod 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ba85ebaad4da468ca8fbbc63c8f901af
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4e182b528b534d57856574fe5e8b5c29
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8e844bb4ca094dfca196f59d39911404
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2f4bbd51fa204c0ba0136978b734c534
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a7173d574c8d4bb98e3094d07ca19008
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6bb1fa380b3e4db99b83f66b308ddc76
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 16233aaf9a2f4fd4980b35f83ed78a60
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_Pow 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a4097611a19e4c0e829885f857635773
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 37e5e3f95eb444fca84c5b694fd3af3a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f484dd595a6d4969b023a1c1ba42cca3
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c85380005bfe4f76aa05cc992c8b50c0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 172ffdb334d54135ae765bb0ff768b1a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b4214742768e44cba1040de3cb7103a1
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 378e44bd209c4d1c8ad44df46491402e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_RShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fcdb76225bd7450d807b44f54ce7a023
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 530f562584664a79835d21d1e7c029e1
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a58c39cd39b348c2ae9c264f82b1685a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b018c38a86ad471e8de3e88567cbd909
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 937a083a437c4d749bae06ce3cb6e523
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e8be1037213b4cb3a56e77c446a3e174
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0c9d767f729c4d0b8093e6af30af92ed
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_LShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cd2af996c3db4e0197d06df9af7f5dd5
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b2b041025fc44983a53a0f02d3f18579
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c96bdcca3faf4df9b369c3c5b562b42a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] afc2488fdd404a79a424b6faeee83095
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6a4f9a631fe24db3a2be6aeeedc4f12f
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f08284a991e8443b80609321b7825661
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 276eb210cfc74a89af170bb36d2bf39e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitOr 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2d5ad8b167cf4352a5f32016189179b0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3d96a00e43344e7c9ed48252e739ae5b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d52d04087ff7447b9bd65dc095e08173
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] daefe250cbd644b8b7bf8c1c1d9d3c15
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c15bbe3b5558496e8978cb8e01239159
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6cc8ddac07034504872b367119b2d7d0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9b61464df79148aeac29e960ceffc3d9
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitAnd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 10f7d34bbcb14446a70e28ebb8d8eb4b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9739c7768c2f47898273c843a19b371b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 819a133a1e4645fbb6eeef6a86d460ff
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 53e57e06f69b4b14bc3cebc97f6fdb72
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d64d00d93c98410c85583137e5933934
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 089c53d7964d4109b3860995b48d95b1
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 00886b2fcd0c4a46b46ed31e31b7a48b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Mul_BitXor 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 06a83febd32242b793cf3de76f4c8a6a
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 589d46a97753465b9ab2e77a7301cb5b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c5e1faf1eee34389ab1cc6a819eb5c3e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 72a2c73a83dd497eaead5e2b9dde3ab0
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 90db2db8d2b04b269709ec7aff1cceac
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cf9d8ff784704a11b8fb74d56ffc85eb
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c4e6d7317b3e43aab8c2d478321a5ca7
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 68066fb12396443bb4b98183c706b429
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c86b61d90dee466a881d520f7ca49a1b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] eccfd1d41af0438b9971ad2851a4a6bc
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cdd6c76c4de44095834452cc8151b06c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_Div_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 466eb7b9890045f3a5ccee3f6289e92e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 142bcb25d2504bbe94b23874b3783c35
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5524a4e1537c41f69830d5cef8564c69
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 22add60214bc4c18b06b784c4d1e569e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4708cd2416b146fd9746ff5c4fe2d972
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 04aef7b7ebe84ccc9b9e27f70d4db1f7
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 54f6c0cf39a444e38150d36911c8895d
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5d1d78f47cfd488ca4535c29d9a0cd96
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6baf4d2e0e3e45718e0e658d5cac77ff
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 517ff0f8dbc946bebf43d0d05351da64
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a524b0adf60f4d6489e18c3831069b28
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_FloorDiv_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5b2ac7e73ca64829983ad7f1490a20b2
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 61a52c894a4a4d6ab689805334c022ab
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6b566156dab943ac954fd19fba08ff06
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 55a9164acac841c48d258e296884eb3b
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e5230f8d17204123abc700b452427025
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3fd7ac8b654c44bca4c23f34e6c548b4
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3a0becc006f44f8f890c19968ce8d5de
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f977da5e60c14680977c1cc08a7795fe
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a23f1fe2438f49d9a33d22c7c79b53db
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 28dc3bda454e491baa63e878e0bd1acc
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f1a78c553e741dc981f8730b1076c0c
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cc449913df7042228979e4db86f78e36
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f2c4a9045606464c83177c7d239a4d57
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 28cc3635299448a59745415c0986fb36
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f5ed93d9580743b98f107bf2e1b30a42
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c29e07953cb548fea298d5c8758495a7
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f57dfb649bdb4ee0846e2e680e465dc2
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3a5ce9ed85d84c9ba9bd7e7d13c21219
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 485c04303b9e4caea8e792d560aebb32
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4b72eedad66a4610b12277edc19af8d7
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 91fdf08299224949898d1ee905590d9e
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 084b0630d07b4e89bb58c232195596ba
+SpectralSVR/operators/deeponet.py core/ReplaceBinaryOperator_BitOr_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 439e508518044481a041f2e1406d827a
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1849d25f990147fd9cc2165861434ebd
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Eq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ea2e0349634541dda49b44c628d1fbed
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 647f266572214cddb2270c82564ffa48
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eb65f7e10445438cbc31287b6fa24b36
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e9161ba8f4a64044812b2d7d5c552dff
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 20e6d21cea5c4875a236d0f3b94db441
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 44afe631a0ae4f379be5b03c1099253b
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 59b204f991c7434096480be389414ece
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ce77fd6b9327476aaf9e658cc611a383
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] adb89d01aac1439eb6d7fe3401a43b61
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cc40855a4dd54540ac8f6b4bfec5c4b3
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 91de106aef1c45cfb9d833af4475d151
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] eae34cef83ca46b2b48aa52ac46c8c57
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_NotEq_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 667bd5c1d9614a85b3c3505afa621a89
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1117fa8ace194dd79cc0aaa8fe53bf02
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d48b6c13f9fd47b6b33261ec4e3d70d7
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3ea272f0e85e41489de34fc112c677b3
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4058a40f8343463bb92b4ed1d822a9c8
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 11246134e9004f95ace6a16480f4c2ba
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fa6d20d1f1734190bb801ba00ae6696a
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Lt_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] aeabdcac48eb495e8a4c38ea7714b316
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Gt_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cf0e14c33deb48899df028607ad23466
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Gt_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 13e381e91c0b444f82f3c0de630a7908
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Gt_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 39d70a6958604820bcaa2453402da2c0
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Gt_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 95df2b9d83d54c109544fb1d14570016
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Gt_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d6dd4661009d4254b42b3eb290391fe6
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Is_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4b4ca4264059416ebbaeb70465cc48a3
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_Is_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a576c713d1e24e3cb58a410d9cd4bd52
+SpectralSVR/operators/deeponet.py core/ReplaceComparisonOperator_IsNot_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] df3b85b573574426b07bada2207576fd
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_UAdd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fbc4aabc20a54b97ac86e385283a3fc5
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_UAdd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 13b5607f53b94d87a9333e3374234603
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_Invert 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8309df081da94039bae60f0bfc34cb98
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_Invert 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2ea71df46cbe455cb8b5ce26550f15d6
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 83e4efdc722f489c9375bce1a56bb2c6
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_USub_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 00881fd8a8ba45be9ecb0ec400df6118
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_USub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4c368ce06afa4291bf270a02df79b374
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_USub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 430b32c2bc414877b38ddac192032625
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5eedff2d8b45419d8506180e7697ce23
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ffd64a58412649a2bb8fe0076dc2033c
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_Not 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 82341e6309bc4764abb4964602ca331a
+SpectralSVR/operators/deeponet.py core/ReplaceUnaryOperator_Delete_Not 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d6fd2ab8605496aa96910ba511a919b
+SpectralSVR/operators/deeponet.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] af95cb63dbd14cf4a2e6722612b80dfd
+SpectralSVR/operators/deeponet.py core/AddNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d7937400e7fb4b4db363f8ee81de3f45
+SpectralSVR/operators/deeponet.py core/AddNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 36d4d6d11dbc472596131fd16493cead
+SpectralSVR/operators/deeponet.py core/AddNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d135677ddc1e442b83d687c70e38a6fd
+SpectralSVR/operators/deeponet.py core/AddNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7348dcf296be4d8b81084ff518b7b2fb
+SpectralSVR/operators/deeponet.py core/ReplaceTrueWithFalse 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1da1a0b6510e48138cf78200c5f67f67
+SpectralSVR/operators/deeponet.py core/ReplaceTrueWithFalse 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eccba521d6a1459691b84b3b9f4b6e32
+SpectralSVR/operators/deeponet.py core/ReplaceTrueWithFalse 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8bb2a4a6033c456eb601920293e7dd91
+SpectralSVR/operators/deeponet.py core/ReplaceTrueWithFalse 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 46ccf9eae93a40d4b8afd8116cdb123d
+SpectralSVR/operators/deeponet.py core/ReplaceTrueWithFalse 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2036bf9665834f23b8e7062ffc156fe7
+SpectralSVR/operators/deeponet.py core/ReplaceOrWithAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c14cf23e734b43d7beb9184ec73a14f4
+SpectralSVR/operators/deeponet.py core/ReplaceContinueWithBreak 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7c071ef50d07419089155e19a143ca15
+SpectralSVR/operators/deeponet.py core/ExceptionReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 19dc839ccbfb44429aa23506e7db1310
+SpectralSVR/operators/deeponet.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c9308f77ab6444c3b3d95011a7a94238
+SpectralSVR/operators/deeponet.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f9e84afe26054e7a9b69e275016ff0c3
+SpectralSVR/operators/deeponet.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 627de3f4cad84bfea8cee1038e506e92
+SpectralSVR/operators/deeponet.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bd295fc20e40492ab28f9926a7feeb07
+SpectralSVR/operators/deeponet.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 44f801a38a2049e5a93e55f40084749b
+SpectralSVR/operators/deeponet.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0a711833f9ba4253a3c34ef39b8e06c7
+SpectralSVR/operators/deeponet.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e0472cf38ca741dfa3fed9f90abf0149
+SpectralSVR/operators/deeponet.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c51ad1a5a26149d28d4e5e732132cd9f
+SpectralSVR/operators/deeponet.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 507a380e2feb48ada96340b30adbadac
+SpectralSVR/operators/deeponet.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e42b01669e554f9eb4a4a27956bb6ba1
+SpectralSVR/operators/deeponet.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 98ff615500e14584ad81b18974e81df7
+SpectralSVR/operators/deeponet.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 46d76b2883194582827a0d99d10feaef
+SpectralSVR/operators/deeponet.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 111ad451a36a4a3eb7ddecc88b46fff6
+SpectralSVR/operators/deeponet.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8160769c32cc455b9f2a1f1f927ab2b8
+SpectralSVR/operators/deeponet.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d47e12e2cf5045db8d4520c86578ba15
+SpectralSVR/operators/deeponet.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 28204dd4d46e44d78cbd5b93ea1e0566
+SpectralSVR/operators/deeponet.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fa49a6d8108e4910a7d76a91dcd517f2
+SpectralSVR/operators/deeponet.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d34efac3b7234f15ae10f0ac9602f94c
+SpectralSVR/operators/deeponet.py core/NumberReplacer 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] beda4ce1ae724849a0d05e9ca8f4d7af
+SpectralSVR/operators/deeponet.py core/NumberReplacer 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c7523f9552e04624bfbbbbb1d394e594
+SpectralSVR/operators/deeponet.py core/NumberReplacer 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d966a96423d24049b2396fca605f6b82
+SpectralSVR/operators/deeponet.py core/NumberReplacer 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 790834ba6d6c47f48e84f30620562b3f
+SpectralSVR/operators/deeponet.py core/NumberReplacer 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 376968a483914137bb49dc7a75753734
+SpectralSVR/operators/deeponet.py core/NumberReplacer 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 139639aa31e44cc6bcc3e769525ea53c
+SpectralSVR/operators/deeponet.py core/NumberReplacer 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f8db346a63184397964ea03412c027c7
+SpectralSVR/operators/deeponet.py core/NumberReplacer 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e6aac931f9024e78b2ecad0320d3fb51
+SpectralSVR/operators/deeponet.py core/NumberReplacer 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 52dd5969c6de465190e23f306cb6025d
+SpectralSVR/operators/deeponet.py core/NumberReplacer 27
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 614fc005050e47f4b8b13da3d7bb1654
+SpectralSVR/operators/deeponet.py core/NumberReplacer 28
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 980bbe9a478940718bc95bb2af739a4b
+SpectralSVR/operators/deeponet.py core/NumberReplacer 29
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6dc49250b0934ff98d90218be21013bd
+SpectralSVR/operators/deeponet.py core/NumberReplacer 30
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e45f7f47a88d4561828dd9d0d7bee529
+SpectralSVR/operators/deeponet.py core/NumberReplacer 31
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a2f5f54c4cee4649af9331e202e07a21
+SpectralSVR/operators/deeponet.py core/NumberReplacer 32
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 88b1c37a07d54ba790dec550e27393df
+SpectralSVR/operators/deeponet.py core/NumberReplacer 33
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e4f6ce47b2a64af48ec690d8702eef5e
+SpectralSVR/operators/deeponet.py core/NumberReplacer 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 078481d14ebd48b3836bfe3d449ea026
+SpectralSVR/operators/deeponet.py core/NumberReplacer 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0e7701a7512643f9b8880d9e5294635b
+SpectralSVR/operators/deeponet.py core/NumberReplacer 36
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d14af59fd4b64776974a7815acdbf893
+SpectralSVR/operators/deeponet.py core/NumberReplacer 37
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 91bc046ff8994af2b053437f147e3d65
+SpectralSVR/operators/deeponet.py core/NumberReplacer 38
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 903392e3cf484042bf8527ed7fe22e49
+SpectralSVR/operators/deeponet.py core/NumberReplacer 39
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 49a2450399b74e15908264a1cbc93570
+SpectralSVR/operators/deeponet.py core/NumberReplacer 40
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 644aaef155814deaa764491540e76cc9
+SpectralSVR/operators/deeponet.py core/NumberReplacer 41
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8ef4a6f46eb0475cb936edbfb6597019
+SpectralSVR/operators/deeponet.py core/NumberReplacer 42
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6820498b52674637952f0c71a8469096
+SpectralSVR/operators/deeponet.py core/NumberReplacer 43
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ceb7fd1eb42f4002bdf2aa4a5d8f9c55
+SpectralSVR/operators/deeponet.py core/NumberReplacer 44
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f19e3e82ce194a0186e320d2140773ef
+SpectralSVR/operators/deeponet.py core/NumberReplacer 45
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 033c68be0960456a8917b3ca0ca92908
+SpectralSVR/operators/deeponet.py core/NumberReplacer 46
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5cbdd531c67d4d5db48c5478a1dcdb0e
+SpectralSVR/operators/deeponet.py core/NumberReplacer 47
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d52c3272e5a14f4e9737ce1dec553bab
+SpectralSVR/operators/deeponet.py core/NumberReplacer 48
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] aece4c8d8d3a4aa68ac2a4fdecf22561
+SpectralSVR/operators/deeponet.py core/NumberReplacer 49
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 268753618f2a455096300871ffbc93b7
+SpectralSVR/operators/deeponet.py core/NumberReplacer 50
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 570f44b5df944426b712d1ec15965377
+SpectralSVR/operators/deeponet.py core/NumberReplacer 51
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c9e0c6c6e24040c7902743c44cb9bdc2
+SpectralSVR/operators/deeponet.py core/NumberReplacer 52
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9e0c3a18f7d04696ba278bb4309af3d7
+SpectralSVR/operators/deeponet.py core/NumberReplacer 53
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b9d534b0529b429fa9eee966973c5ad3
+SpectralSVR/operators/deeponet.py core/NumberReplacer 54
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 939e3c5dec04472c80d460be51419495
+SpectralSVR/operators/deeponet.py core/NumberReplacer 55
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2fe99ad367d4c3481ab14ccaf5eeceb
+SpectralSVR/operators/deeponet.py core/NumberReplacer 56
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 85ef5631a278488ab0c9bb26dc0a977d
+SpectralSVR/operators/deeponet.py core/NumberReplacer 57
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9228f5e93fdf45b2b70dd2735978df77
+SpectralSVR/operators/deeponet.py core/NumberReplacer 58
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2b0c20f9d4ef4451a71a7d6f38ee5d15
+SpectralSVR/operators/deeponet.py core/NumberReplacer 59
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0e93a5859d214250bd71fcd18470672e
+SpectralSVR/operators/deeponet.py core/NumberReplacer 60
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3820e454cf99427ca50ae0d722426258
+SpectralSVR/operators/deeponet.py core/NumberReplacer 61
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 09f712654e86405b859245952545c5cb
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5925b6f3f4874848a0383956944314d6
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fda643307a7240228d822c4714832e03
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e38c086467eb4b96872686378bb88778
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4e38fbe2400849a8a076b90962e0c363
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e800b001123d4b9bad719882731c604f
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b2b46c9d93d940f590919e657bd50c96
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 13d1b6d8857943b8990185bb9c4be1e4
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2cd58d48d9c449c3a252d03107a59d31
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5744c00d34d04da6ad28fde35f1362cf
+SpectralSVR/operators/deeponet.py core/RemoveDecorator 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5fd33bbd826b4062a896334b4a669f8b
+SpectralSVR/operators/deeponet.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 885af07884b04cc3bdf022d148863d6f
+SpectralSVR/operators/deeponet.py core/ZeroIterationForLoop 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 260
+complete: 260 (100.00%)
+surviving mutants: 198 (76.15%)

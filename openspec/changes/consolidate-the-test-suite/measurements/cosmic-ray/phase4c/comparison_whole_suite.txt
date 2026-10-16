@@ -1,0 +1,2 @@
+basis___base: before 641, after 18, survivors after but not before 0, before but not after 623
+basis_FourierBasis: before 761, after 9, survivors after but not before 0, before but not after 752

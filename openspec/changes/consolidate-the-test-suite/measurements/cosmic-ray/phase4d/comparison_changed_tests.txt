@@ -1,0 +1,54 @@
+model___base: before 82, after 83, survivors after but not before 1, before but not after 0
+  only after x1: ReplaceComparisonOperator_Eq_Is: assert x.shape[0] == y.shape[0], (
+model_FNN: before 37, after 37, survivors after but not before 0, before but not after 0
+model_LSSVR: before 289, after 327, survivors after but not before 41, before but not after 3
+  only after x1: AddNot: if self.kernel in ["rbf", "poly"] and kernel_params.get("sigma") is None:
+  only after x1: NumberReplacer: A[0, 0] = 0
+  only after x4: NumberReplacer: B[0] = 0
+  only after x4: NumberReplacer: kernel_params = {**kernel_params, "sigma": X.var(0).sum().pow(0.5)}
+  only after x2: NumberReplacer: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x3: NumberReplacer: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: RemoveDecorator: @property
+  only after x1: ReplaceBinaryOperator_Add_Sub: + torch.ones((A[1:, 1:].shape[0],), device=self.device, dtype=self.dtype)
+  only after x1: ReplaceBinaryOperator_Add_Sub: y_pred = KxX @ self.alpha + self.b
+  only after x1: ReplaceBinaryOperator_Div_Mod: / self.C
+  only after x1: ReplaceBinaryOperator_Mul_Add: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Mul_Add: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Mul_Div: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Mul_Div: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Mul_Mod: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Mul_Sub: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Mul_Sub: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Pow_Add: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Pow_Add: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Pow_Div: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Pow_Div: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Pow_FloorDiv: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Pow_Mod: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Pow_Mod: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceBinaryOperator_Pow_Sub: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceBinaryOperator_Pow_Sub: return torch.exp(neg_gamma22 * torch.cdist(x_i, x_j, p=2.0) ** 2)
+  only after x1: ReplaceComparisonOperator_Is_IsNot: if self.kernel in ["rbf", "poly"] and kernel_params.get("sigma") is None:
+  only after x2: ReplaceUnaryOperator_Delete_USub: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x1: ReplaceUnaryOperator_USub_Not: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+  only after x2: ReplaceUnaryOperator_USub_UAdd: rbf, neg_gamma22=-((2 * params.get("sigma", 1.0)) ** -2)
+model_SpectralSVR: before 104, after 125, survivors after but not before 21, before but not after 0
+  only after x1: AddNot: if len(x.shape) == 1:
+  only after x1: AddNot: if self.output_is_complex:
+  only after x1: AddNot: if self.output_shape is None:
+  only after x1: AddNot: if self.time_dependent and domain is None:
+  only after x1: AddNot: if self.time_dependent:
+  only after x2: NumberReplacer: coeff = coeff.reshape((f.shape[0], *self.output_shape))
+  only after x1: NumberReplacer: if len(x.shape) == 1:
+  only after x2: NumberReplacer: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceAndWithOr: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceAndWithOr: if self.time_dependent and domain is None:
+  only after x1: ReplaceComparisonOperator_Eq_Gt: if len(x.shape) == 1:
+  only after x1: ReplaceComparisonOperator_Eq_GtE: if len(x.shape) == 1:
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: if len(x.shape) == 1:
+  only after x1: ReplaceComparisonOperator_Is_IsNot: if self.output_shape is None:
+  only after x1: ReplaceComparisonOperator_NotEq_Eq: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceComparisonOperator_NotEq_GtE: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceComparisonOperator_NotEq_Is: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceComparisonOperator_NotEq_LtE: if not self.time_dependent and x.shape[1] != len(self.modes):
+  only after x1: ReplaceFalseWithTrue: time_dependent=False,
