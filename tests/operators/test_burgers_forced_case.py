@@ -72,6 +72,7 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
             DEVICES_PRESENT, WHICH_SLICE, SLICE_EDGES
         ):
             self.slice_a_placed_field(device, slices, modes, which)
+        self.build_the_quick_case_and_the_full_one(0)
 
     @rule(
         target=built,
@@ -96,6 +97,16 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
     @rule(seed=SEEDS, sizes=SIZES, device=st.sampled_from(DEVICES_PRESENT))
     def build_the_forced_case_at_other_sizes(self, seed, sizes, device):
         build_forced(seed, True, device, sizes)
+
+    @rule(seed=SEEDS)
+    def build_the_quick_case_and_the_full_one(self, seed):
+        quick = bench.burgers_forced_case(seed, True, ACCELERATOR)
+        full = bench.burgers_forced_case(seed, False, ACCELERATOR)
+
+        assert quick.split.train.n_functions < full.split.train.n_functions
+        assert quick.split.test.n_functions < full.split.test.n_functions
+        assert quick.split.train.sensors.shape[0] < full.split.train.sensors.shape[0]
+        assert quick.split.train.u.coeff.shape[1] < full.split.train.u.coeff.shape[1]
 
     @rule(
         device=st.sampled_from(DEVICES_PRESENT),
@@ -199,18 +210,6 @@ def test_the_query_lies_on_the_output_time_grid_inside_the_domain(quick, sizes, 
     assert torch.equal(slice_index, slice_index.round())
     assert times.unique().numel() > 1
     assert space.unique().numel() > 1
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_quick_builds_a_smaller_case_than_full():
-    quick = bench.burgers_forced_case(0, True, HOST)
-    full = bench.burgers_forced_case(0, False, HOST)
-
-    assert quick.split.train.n_functions < full.split.train.n_functions
-    assert quick.split.test.n_functions < full.split.test.n_functions
-    assert quick.split.train.sensors.shape[0] < full.split.train.sensors.shape[0]
-    assert quick.split.train.u.coeff.shape[1] < full.split.train.u.coeff.shape[1]
 
 
 @pytest.mark.no_fuzz

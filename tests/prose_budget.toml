@@ -189,7 +189,7 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/operators/test_operators.py"]
-comments = 27
+comments = 21
 internal_docstrings = 4
 misshapen_docstrings = 1
 
