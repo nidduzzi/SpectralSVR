@@ -123,11 +123,6 @@ comments = 3
 internal_docstrings = 0
 misshapen_docstrings = 7
 
-["tests/basis/test_basis.py"]
-comments = 22
-internal_docstrings = 0
-misshapen_docstrings = 0
-
 ["tests/basis/test_coeff_anchors.py"]
 comments = 39
 internal_docstrings = 0
@@ -162,11 +157,6 @@ misshapen_docstrings = 2
 comments = 0
 internal_docstrings = 0
 misshapen_docstrings = 1
-
-["tests/model/test_SpectralSVR.py"]
-comments = 12
-internal_docstrings = 0
-misshapen_docstrings = 0
 
 ["tests/model/test_fnn.py"]
 comments = 1
@@ -204,7 +194,7 @@ internal_docstrings = 35
 misshapen_docstrings = 10
 
 ["tests/test_oracle_coverage.py"]
-comments = 13
+comments = 11
 internal_docstrings = 2
 misshapen_docstrings = 1
 

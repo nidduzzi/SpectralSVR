@@ -8,6 +8,7 @@ that affects both sides of a comparison -- see the Fourier rescale incident.
 """
 
 import ast
+import itertools
 from pathlib import Path
 
 import pytest
@@ -21,8 +22,6 @@ TESTS_DIR = Path(__file__).parent
 # (wrong shape/exception), not numerical.
 EXEMPT = {
     "basis/test_config.py",  # SpectralConfig plumbing: immutability/validation only
-    "basis/test_basis.py",  # legacy end-to-end scenario; numerics anchored in test_fourier_basis.py / test_coeff_anchors.py
-    "model/test_SpectralSVR.py",  # legacy end-to-end scenario; numerics anchored in test_spectralsvr_anchors.py
     "model/test_fnn.py",  # NN trainer has no closed form; overfit + serialization only
     "test_oracle_coverage.py",  # this guard
 }
@@ -120,27 +119,29 @@ class _FakeItem:
         return object() if name in self._markers else None
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_setup_enforcement_rejects_unmarked_test():
-    from .conftest import pytest_runtest_setup
-
-    with pytest.raises(Exception, match="exactly one oracle class"):
-        pytest_runtest_setup(_FakeItem({"no_fuzz"}))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_setup_enforcement_rejects_multiple_oracle_markers():
-    from .conftest import pytest_runtest_setup
-
-    with pytest.raises(Exception, match="oracle_analytic, oracle_smoke"):
-        pytest_runtest_setup(_FakeItem({"no_fuzz", "oracle_analytic", "oracle_smoke"}))
+ORACLE_MARKER_SETS = [
+    (set(), "found: none"),
+    *(({one}, None) for one in ORACLE_MARKERS),
+    *(
+        (set(pair), ", ".join(pair))
+        for pair in itertools.combinations(ORACLE_MARKERS, 2)
+    ),
+]
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_setup_enforcement_accepts_single_oracle_marker():
+@pytest.mark.parametrize(
+    "oracles, refusal",
+    ORACLE_MARKER_SETS,
+    ids=["+".join(sorted(oracles)) or "none" for oracles, _ in ORACLE_MARKER_SETS],
+)
+def test_setup_enforcement_judges_every_marker_set(oracles, refusal):
     from .conftest import pytest_runtest_setup
 
-    pytest_runtest_setup(_FakeItem({"no_fuzz", "oracle_invariant"}))
+    item = _FakeItem({"no_fuzz", *oracles})
+    if refusal is None:
+        pytest_runtest_setup(item)
+    else:
+        with pytest.raises(Exception, match=f"exactly one oracle class.*{refusal}"):
+            pytest_runtest_setup(item)
