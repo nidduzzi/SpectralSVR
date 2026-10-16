@@ -599,6 +599,64 @@ def test_evaluation_reads_real_and_complex_coefficients_alike(
     )
 
 
+PERIODIC_CONTINUATION_RMS_PER_AMPLITUDE = 1e-4
+LEGACY_CONTINUATION_L2 = 1e-3
+
+
+def sum_of_sines(components, t):
+    return sum(
+        amplitude * torch.sin(2 * torch.pi * frequency * t)
+        for frequency, amplitude in components
+    )
+
+
+def continued_error(samples, components, first_period, last_period, steps):
+    sample_times = torch.arange(samples) / samples
+    coeff = FourierBasis.transform((sum_of_sines(components, sample_times) + 0j)[None])
+    queried = torch.arange(first_period, last_period, 1.0 / steps)
+    return FourierBasis(coeff)(queried)[0].real - sum_of_sines(components, queried)
+
+
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(
+    samples=st.integers(30, 128),
+    components=st.lists(
+        st.tuples(st.integers(1, 14), st.floats(0.3, 4.0)),
+        min_size=1,
+        max_size=3,
+        unique_by=lambda component: component[0],
+    ),
+    first_period=st.integers(-3, 0),
+    periods=st.integers(1, 3),
+    steps=st.integers(20, 200),
+)
+@example(
+    samples=100,
+    components=[(1, 3.0), (4, 1.0), (7, 0.5)],
+    first_period=-1,
+    periods=2,
+    steps=150,
+)
+def test_a_band_limited_field_continues_periodically_beyond_its_domain(
+    samples, components, first_period, periods, steps
+):
+    error = continued_error(
+        samples, components, first_period, first_period + periods, steps
+    )
+    total_amplitude = sum(amplitude for _, amplitude in components)
+    rms = float(error.square().mean().sqrt())
+    assert rms < PERIODIC_CONTINUATION_RMS_PER_AMPLITUDE * total_amplitude
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+def test_the_legacy_sum_of_sines_continues_over_two_periods():
+    error = continued_error(100, [(1, 3.0), (4, 1.0), (7, 0.5)], -1, 1, 150)
+    assert error.shape == (300,)
+    assert torch.norm(error, 2) < LEGACY_CONTINUATION_L2
+
+
 @pytest.mark.oracle_analytic
 @SETTINGS
 @given(modes=st.integers(1, 64))

@@ -134,7 +134,7 @@ internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_config.py"]
-comments = 4
+comments = 1
 internal_docstrings = 0
 misshapen_docstrings = 0
 
@@ -144,7 +144,7 @@ internal_docstrings = 0
 misshapen_docstrings = 2
 
 ["tests/basis/test_nufft.py"]
-comments = 19
+comments = 18
 internal_docstrings = 0
 misshapen_docstrings = 1
 
