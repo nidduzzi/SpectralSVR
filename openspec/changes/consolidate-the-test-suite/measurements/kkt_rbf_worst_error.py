@@ -9,7 +9,7 @@ CASES = 2000
 def gram(kernel, x, z, sigma):
     if kernel == "linear":
         return x @ z.T
-    return torch.exp(-torch.cdist(x, z) ** 2 / (2 * sigma) ** 2)
+    return torch.exp(-(torch.cdist(x, z) ** 2) / (2 * sigma) ** 2)
 
 
 def worst_ratio(kernel, n, d, o, c, sigma, seed):
@@ -24,7 +24,11 @@ def worst_ratio(kernel, n, d, o, c, sigma, seed):
     rhs = torch.cat([torch.zeros(1, o, dtype=torch.float64), y])
     solution = torch.linalg.lstsq(a, rhs).solution
     expected = gram(kernel, xq, x, sigma) @ solution[1:] + solution[0]
-    got = LSSVR(kernel=kernel, sigma=sigma, C=c, dtype=torch.float64).fit(x, y).predict(xq)
+    got = (
+        LSSVR(kernel=kernel, sigma=sigma, C=c, dtype=torch.float64)
+        .fit(x, y)
+        .predict(xq)
+    )
     scale = float(expected.abs().max().clamp(min=1.0))
     allowed = ATOL * scale + RTOL * expected.abs()
     return float(((got - expected).abs() / allowed).max())
@@ -38,7 +42,10 @@ if __name__ == "__main__":
         n = int(torch.randint(5, 21, (1,), generator=draw)) if case % 10 else 300
         sigma = float(0.5 + 2.5 * torch.rand(1, generator=draw))
         c = float(0.5 + 99.5 * torch.rand(1, generator=draw))
-        d, o = int(torch.randint(1, 5, (1,), generator=draw)), int(torch.randint(1, 4, (1,), generator=draw))
+        d, o = (
+            int(torch.randint(1, 5, (1,), generator=draw)),
+            int(torch.randint(1, 4, (1,), generator=draw)),
+        )
         ratio = worst_ratio(kernel, n, d, o, c, sigma, case)
         key = (kernel, "300 rows" if n == 300 else "5-20 rows")
         worst[key] = max(worst.get(key, 0.0), ratio)

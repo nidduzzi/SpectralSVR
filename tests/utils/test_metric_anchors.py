@@ -20,19 +20,25 @@ from SpectralSVR.utils import get_metrics
 SETTINGS = settings(
     deadline=None, max_examples=60, suppress_health_check=[HealthCheck.too_slow]
 )
-INDEPENDENT_RTOL = 1e-10
+INDEPENDENT_TOLERANCE = 1e-10
 NEAR_CONSTANT_RTOL = 1e-6
 DEGENERATE_SPREAD = 1e-1
+TARGET_RAMP = 0.5
+MINIMUM_ERROR = 0.25
 
 
 @st.composite
 def predictions_and_targets(draw):
-    shape = (draw(st.integers(2, 20)), draw(st.integers(1, 5)))
+    rows, columns = draw(st.integers(2, 20)), draw(st.integers(1, 5))
+    shape = (rows, columns)
     elements = st.floats(-10.0, 10.0, allow_nan=False, allow_infinity=False)
-    return (
-        draw(hnp.arrays(numpy.float64, shape, elements=elements)),
-        draw(hnp.arrays(numpy.float64, shape, elements=elements)),
+    ramp = TARGET_RAMP * numpy.arange(1, rows + 1)[:, None]
+    targets = draw(hnp.arrays(numpy.float64, shape, elements=elements)) + ramp
+    magnitudes = draw(
+        hnp.arrays(numpy.float64, shape, elements=st.floats(MINIMUM_ERROR, 10.0))
     )
+    signs = draw(hnp.arrays(numpy.bool_, shape))
+    return targets + numpy.where(signs, magnitudes, -magnitudes), targets
 
 
 def metrics_by_numpy(p, t):
@@ -104,12 +110,12 @@ def test_get_metrics_hand_computed_values():
 def test_get_metrics_match_independent_numpy_formulas(pair):
     p, t = pair
     assume(((t - t.mean(0)) ** 2).sum(0).min() > DEGENERATE_SPREAD)
-    assume(((p - t) ** 2).sum(0).min() > DEGENERATE_SPREAD)
-    assume((numpy.abs(p) + numpy.abs(t)).min() > DEGENERATE_SPREAD)
     assume(numpy.linalg.norm(t, axis=1).min() > DEGENERATE_SPREAD)
     measured = get_metrics(torch.from_numpy(p), torch.from_numpy(t))
     for name, expected in metrics_by_numpy(p, t).items():
-        assert math.isclose(measured[name], expected, rel_tol=INDEPENDENT_RTOL), name
+        assert abs(measured[name] - expected) <= INDEPENDENT_TOLERANCE * (
+            1 + abs(expected)
+        ), name
     assert measured["pred_nan_sum"] == 0
 
 
