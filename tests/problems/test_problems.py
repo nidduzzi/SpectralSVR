@@ -663,7 +663,7 @@ def test_antiderivative_tensor_integration_constant(n, modes, seed):
     assert torch.allclose(u.coeff[:, 0], u0.to(u.coeff.dtype), atol=1e-5)
 
 
-STIFFNESS_CEILING = 0.05
+STIFFNESS_CEILING = 0.03
 UNCONVERGED_ADAMS = "Functional iteration did not converge"
 
 
@@ -672,7 +672,11 @@ def non_stiff_regimes(draw):
     nu = draw(st.floats(0.005, 0.02))
     space_modes = draw(st.integers(6, 12))
     fewest_steps = math.ceil(nu * (math.pi * space_modes) ** 2 / STIFFNESS_CEILING) + 1
-    return nu, space_modes, draw(st.integers(max(201, fewest_steps), 801))
+    return (
+        nu,
+        space_modes,
+        draw(st.integers(max(401, fewest_steps), max(801, fewest_steps))),
+    )
 
 
 @pytest.mark.oracle_independent

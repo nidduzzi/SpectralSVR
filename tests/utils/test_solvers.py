@@ -189,7 +189,6 @@ def _closed_form_weights(z: torch.Tensor, h: float):
 
 
 CLOSED_FORM_ATOL = 1e-10
-SMALLEST_STEP_TIMES_FREQUENCY = 0.1
 
 
 @pytest.mark.oracle_analytic
@@ -204,10 +203,6 @@ SMALLEST_STEP_TIMES_FREQUENCY = 0.1
 )
 @example(h=0.1, frequencies=[-2.0, -20.0, -200.0, 5.0])
 def test_etdrk4_complex_weights_match_closed_form(h, frequencies):
-    assume(
-        h * min(abs(frequency) for frequency in frequencies)
-        >= SMALLEST_STEP_TIMES_FREQUENCY
-    )
     linear = 1j * torch.tensor(frequencies, dtype=torch.float64).to(torch.complex128)
     contour = _etdrk4_weights(linear, h, contour_points=32)
     exact = _closed_form_weights(h * linear, h)
