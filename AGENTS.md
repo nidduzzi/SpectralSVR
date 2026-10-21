@@ -42,8 +42,11 @@ Every test and measurement run is hard-capped, so a runaway process is killed
 rather than taking the machine down. Host memory: `just test` and `just cov`
 run inside `host_memory_cap` (a systemd scope, 16 GiB, no swap), and the
 cosmic-ray test commands use the same limit; wrap an ad hoc measurement script
-the same way. Accelerator memory: `tests/conftest.py` limits the CUDA
-allocator to a quarter of the device; a script outside pytest calls
+the same way. Host CPU: `just test` runs on six pytest-xdist workers of two
+threads each, so it takes at most twelve cores; the shared host once hard-locked
+while parallel runs with unlimited torch threads held it saturated. Accelerator memory:
+`tests/conftest.py` limits the CUDA allocator to a quarter of the device, split
+evenly across the xdist workers; a script outside pytest calls
 `torch.cuda.set_per_process_memory_fraction` itself. Optional extras: `test`, `lint`, `baselines`
 (DeepONet via deepxde), `notebook`.
 

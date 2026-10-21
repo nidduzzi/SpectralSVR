@@ -44,6 +44,7 @@ baselines = [
 test = [
     "memory-profiler>=0.61.0,<0.62",
     "pytest>=9.1.1,<10",
+    "pytest-xdist>=3.8.0,<4",
     "hypothesis>=6.156.6,<7",
     "coverage>=7.15.0,<8",
     "ruff>=0.15.21,<0.16",
