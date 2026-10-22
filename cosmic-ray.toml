@@ -11,9 +11,9 @@
 
 [cosmic-ray]
 module-path = "SpectralSVR/operators"
-timeout = 60.0
+timeout = 600.0
 excluded-modules = []
-test-command = "uv run --extra test --extra baselines pytest -x -q tests/operators tests/test_scenario_coverage.py tests/test_oracle_coverage.py"
+test-command = "systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 --quiet uv run --extra test --extra baselines pytest -x -q tests/operators tests/test_scenario_coverage.py tests/test_oracle_coverage.py"
 
 [cosmic-ray.distributor]
 name = "local"

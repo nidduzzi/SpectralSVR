@@ -26,18 +26,12 @@ B = TypeVar("B", bound=Basis)
 
 
 class SpectralSVR(Generic[B, R]):
-    # The basis is decomposed at construction into its two useful halves: the
-    # basis *class* (holding the stateless transform/evaluate statics and coeff
-    # dtype) and the config (domain/sampling/strategy spec). Named ``basis_type``,
-    # not "kernel", to avoid confusion with the SVR/basis-function kernels.
-    # Time-dependence is model-owned state, learned at train time -- the model no
-    # longer reaches into a shared basis instance to flip it.
     basis_type: type[B]
     config: SpectralConfig
     regressor: R
     time_dependent: bool
+    output_shape: tuple[int, ...] | None = None
     complex_funcs: bool
-    # number of (real) input features seen at train/test time; None until then
     features: int | None = None
 
     def __init__(
@@ -68,6 +62,14 @@ class SpectralSVR(Generic[B, R]):
         self.logger = logger or logging.getLogger(f"{__name__}.{type(self).__name__}")
 
     @property
+    def modes(self) -> tuple[int, ...]:
+        if self.output_shape is None:
+            raise ValueError(
+                "modes are known once the model is trained; call train first"
+            )
+        return self.output_shape[1:] if self.time_dependent else self.output_shape
+
+    @property
     def output_is_complex(self) -> bool:
         """Whether output coefficients are complex, dictated by the basis.
 
@@ -82,47 +84,43 @@ class SpectralSVR(Generic[B, R]):
         x: torch.Tensor,
         domain: DomainInputType = None,
     ) -> torch.Tensor:
+        """``D(f)`` evaluated at the rows of ``x``: ``(m, Q)``.
+
+        For an output that varies in time, rows are ``(t, x_1, ..., x_d)`` with
+        time first, and ``domain``, whose first interval is time, is required.
+        Otherwise ``domain`` defaults to the model's configured domain.
         """
-        forward
-
-        Compute F = D(f) and evaluate F(x) where D is an abritrary operator and F is "transformed" function f
-
-        Arguments:
-            f {torch.Tensor} -- m discretized input functions to transform using the approximated operator
-            x {torch.Tensor} -- m evaluation points for the transformed input functions
-
-        Keyword Arguments:
-            domain {DomainInputType} -- per-axis (start, stop) interval override
-                for this call; defaults to the model's config domain (default: {None})
-
-        Returns:
-            torch.Tensor -- _description_
-        """
-        # TODO: add logic for multidimensional functions (2D+)
+        if self.output_shape is None:
+            raise ValueError("forward needs a trained model; call train first")
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
-
-        if x.shape[1] != len(self.modes):
+        if not self.time_dependent and x.shape[1] != len(self.modes):
             raise ValueError(
                 f"x must have shape (num_points, dimensions) or (num_points,) for "
                 f"1D. x has shape {tuple(x.shape)} and modes is {self.modes}"
             )
+        if self.time_dependent and domain is None:
+            raise ValueError(
+                "an output that varies in time is evaluated on its training "
+                "field's domain, whose first interval is time; pass domain"
+            )
 
-        # compute coefficients
         if torch.is_complex(f):
             f = to_real_coeff(f)
             self._check_precision(f, "input coefficients f")
         coeff = self.regressor.predict(f)
-        # convert to complex if the basis needs complex values so that the reshaping is correct
         if self.output_is_complex:
             coeff = to_complex_coeff(coeff)
-
         self.logger.debug(f"coeff: {coeff.shape}")
+        coeff = coeff.reshape((f.shape[0], *self.output_shape))
+
+        if self.time_dependent:
+            return self.basis_type.evaluate_time_dependent_at(coeff, x, domain=domain)
         return self.basis_type.evaluate(
-            coeff=coeff.reshape((f.shape[0], *self.modes)),
+            coeff=coeff,
             x=x,
             domain=domain if domain is not None else self.config.domain,
-            time_dependent=self.time_dependent,
+            time_dependent=False,
             strategy=self.config.strategy,
         )
 
@@ -146,14 +144,12 @@ class SpectralSVR(Generic[B, R]):
                 f"{'complex' if self.output_is_complex else 'real'} output coefficients"
             )
         self.time_dependent = u_time_dependent
-        self.modes = Basis.get_modes(u_coeff, u_time_dependent)
+        self.output_shape = tuple(u_coeff.shape[1:])
         f = f.flatten(1)
         u_coeff = u_coeff.flatten(1)
 
         self.logger.debug(f"modes: {self.modes}")
 
-        # the regressor works in real space; complex coefficients are stored as
-        # interleaved real/imag pairs
         if self.output_is_complex:
             u_coeff = to_real_coeff(u_coeff)
             self._check_precision(u_coeff, "output coefficients")

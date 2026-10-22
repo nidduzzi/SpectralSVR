@@ -25,7 +25,7 @@ SMALLEST_SIZES = (1, 1, 2)
 QUICK_SIZES = (24, 6, 8)
 FULL_SIZES = (60, 15, 12)
 AT_REST_ATOL = 1e-6
-PERIODIC_IN_TIME_RTOL = 2e-5
+END_OF_INTERVAL_RTOL = 5e-6
 FUZZ = settings(deadline=None, max_examples=6)
 
 needs_an_accelerator = pytest.mark.skipif(
@@ -158,12 +158,14 @@ def test_the_forced_case_has_the_shape_the_harness_expects(seed, quick, sizes, d
 def test_the_query_lies_on_the_output_time_grid_inside_the_domain(quick, sizes, device):
     case = build_forced(0, quick, device, sizes)
     times, space = case.query[:, 0].cpu(), case.query[:, 1].cpu()
-    periodic_slices = case.split.train.u.coeff.shape[1]
+    slices = case.split.train.u.coeff.shape[1]
 
-    assert ((0 <= times) & (times < 1)).all()
+    assert ((0 <= times) & (times <= 1)).all()
+    assert times.max() == 1
+    assert ((0 < times) & (times < 1)).any()
     assert ((0 <= space) & (space <= 1)).all()
-    grid_index = times * periodic_slices
-    assert torch.equal(grid_index, grid_index.round())
+    slice_index = times * (slices - 1)
+    assert torch.equal(slice_index, slice_index.round())
     assert times.unique().numel() > 1
     assert space.unique().numel() > 1
 
@@ -232,42 +234,24 @@ def test_the_stages_the_builder_places_follow_the_stated_device(
         assert half.u.coeff.device.type == stated.type
 
 
-@pytest.mark.oracle_invariant
+@pytest.mark.oracle_consistency
+@pytest.mark.scenario("The end of the interval is scored")
 @FUZZ
-@given(
-    seed=st.integers(0, 10_000),
-    functions=st.integers(1, 4),
-    slices=st.integers(2, 29),
-    modes=st.integers(2, 15),
-    device=st.sampled_from(DEVICES_PRESENT),
-)
-@example(seed=0, functions=1, slices=2, modes=2, device=HOST)
-@example(seed=0, functions=4, slices=29, modes=15, device=HOST)
-def test_periodic_in_time_passes_through_every_slice_but_the_last(
-    seed, functions, slices, modes, device
-):
-    generator = torch.Generator().manual_seed(seed)
-    values = torch.randn(functions, slices, modes, generator=generator).to(device)
-    per_slice = bench.FourierBasis(
-        coeff=bench.FourierBasis.transform(values.flatten(0, 1)).reshape(
-            functions, slices, modes
-        ),
-        domain=((0.0, 1.0), (0.0, 1.0)),
-        time_dependent=True,
-    )
-    times = torch.arange(slices - 1, dtype=torch.float64, device=device) / (slices - 1)
-    grid_points = torch.arange(modes, dtype=torch.float64, device=device) / modes
-    end_of_space = torch.ones(1, dtype=torch.float64, device=device)
+@given(seed=SEEDS, sizes=SIZES, device=st.sampled_from(DEVICES_PRESENT))
+@example(seed=0, sizes=SMALLEST_SIZES, device=HOST)
+@example(seed=2**32 - 1, sizes=QUICK_SIZES, device=HOST)
+def test_the_end_of_the_interval_is_scored(seed, sizes, device):
+    case = build_forced(seed, True, device, sizes)
+    at_the_end = case.query[case.query[:, 0] == 1.0]
 
-    periodic = bench.periodic_in_time(per_slice)
-    on_the_grid = periodic(bench.tensor_product_query(times, grid_points)).real
-    at_the_end_of_space = periodic(bench.tensor_product_query(times, end_of_space)).real
-
-    tolerance = PERIODIC_IN_TIME_RTOL * values.abs().max()
-    expected = values[:, : slices - 1].reshape(functions, -1)
-    assert (on_the_grid - expected).abs().max() <= tolerance
-    wrapped = on_the_grid.reshape(functions, slices - 1, modes)[:, :, 0]
-    assert (at_the_end_of_space - wrapped).abs().max() <= tolerance
+    assert len(at_the_end) > 0
+    for half in (case.split.train, case.split.test):
+        final_state = bench.FourierBasis(
+            coeff=half.u.coeff[:, -1], domain=((0.0, 1.0),)
+        )
+        expected = final_state(at_the_end[:, 1:]).real.to(torch.float64)
+        tolerance = END_OF_INTERVAL_RTOL * max(expected.abs().max().item(), 1e-12)
+        assert (half.targets(at_the_end) - expected).abs().max() <= tolerance
 
 
 @pytest.mark.oracle_smoke
