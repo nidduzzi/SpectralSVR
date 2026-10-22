@@ -1,4 +1,5 @@
 import math
+import tempfile
 
 import numpy as np
 import pytest
@@ -7,11 +8,15 @@ import torch
 from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    rule,
+)
 
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
     accelerator,
-    ExactModeCount,
     StandardScaler,
     WavenumberCutoff,
     euler_solver,
@@ -31,6 +36,7 @@ from SpectralSVR.utils import (
 SETTINGS = settings(
     deadline=None, max_examples=40, suppress_health_check=[HealthCheck.too_slow]
 )
+RRSE_SQUARED_RTOL = 1e-6
 _elements = st.floats(-8.0, 8.0, allow_nan=False, allow_infinity=False)
 
 
@@ -109,55 +115,9 @@ def test_resolve_device_follows_the_process_default(name):
     assert resolve_device(None) == torch.zeros(1).device
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("Naming the accelerator is a statement, not a search")
-def test_accelerator_names_whichever_one_is_present():
-    named = accelerator()
-    if torch.accelerator.is_available():
-        assert named == torch.accelerator.current_accelerator()
-        assert torch.zeros(1, device=named).device.type == named.type
-    else:
-        assert named == torch.get_default_device()
-    assert resolve_device(named) == named
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("The host is not overridden")
-def test_a_stated_host_survives_an_available_accelerator():
-    if not torch.accelerator.is_available():
-        pytest.skip(
-            "an accelerator must be present for the host to be overridable at all"
-        )
-    torch.set_default_device("cpu")
-    assert resolve_device(None) == torch.device("cpu")
-
-
-DISAGREEING_PAIRS = (
-    [(a, b) for a in STATABLE_DEVICES for b in STATABLE_DEVICES if a != b]
-    or None
-)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A stated index is part of the statement")
-def test_two_stated_indices_that_differ_are_a_disagreement():
-    if not torch.cuda.is_available():
-        pytest.skip("an indexed accelerator is needed to state two of them")
-    with pytest.raises(RuntimeError, match="move the source"):
-        refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda:1")
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A stated index is part of the statement")
-def test_an_unstated_index_agrees_with_a_stated_one():
-    if not torch.cuda.is_available():
-        pytest.skip("an indexed accelerator is needed for an index to be unstated")
-    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda")
-    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda"), "cuda:0")
+DISAGREEING_PAIRS = [
+    (a, b) for a in STATABLE_DEVICES for b in STATABLE_DEVICES if a != b
+] or None
 
 
 @pytest.mark.oracle_smoke
@@ -177,16 +137,6 @@ def test_a_misplaced_random_source_names_both_devices(pair):
     assert "move the source" in message
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A mismatched random source names both devices")
-def test_a_random_source_device_is_invisible_to_a_type_checker():
-    host = torch.Generator()
-    assert type(host) is type(torch.Generator(device=accelerator()))
-    if torch.accelerator.is_available():
-        assert host.device != accelerator()
-
-
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("An agreeing random source is unremarkable")
 @SETTINGS
@@ -203,7 +153,9 @@ def test_an_agreeing_random_source_is_unremarkable(name):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(rows=st.integers(2, 20), cols=st.integers(1, 5), seed=st.integers(0, 10_000))
+@given(rows=st.integers(1, 20), cols=st.integers(1, 5), seed=st.integers(0, 10_000))
+@example(rows=1, cols=3, seed=0)
+@example(rows=3, cols=1, seed=0)
 def test_get_metrics_default_keys(rows, cols, seed):
     g = torch.Generator().manual_seed(seed)
     preds = torch.randn(rows, cols, generator=g)
@@ -211,26 +163,23 @@ def test_get_metrics_default_keys(rows, cols, seed):
     m = get_metrics(preds, targets)
     assert set(m) == set(DEFAULT_METRICS) | {"pred_nan_sum"}
     assert m["mse"] >= 0.0
+    assert math.isnan(m["r2"]) == (rows == 1)
+    if rows > 1:
+        assert math.isclose(m["rrse"] ** 2, m["rse"], rel_tol=RRSE_SQUARED_RTOL)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_get_metrics_single_sample_r2_is_nan():
-    m = get_metrics(torch.randn(1, 3), torch.randn(1, 3))
-    assert m["r2"] != m["r2"]  # NaN
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_metrics_injected_metric_set():
+@SETTINGS
+@given(name=st.text(min_size=1).filter(lambda name: name != "pred_nan_sum"))
+@example(name="custom")
+def test_get_metrics_injected_metric_set(name):
     m = get_metrics(
         torch.zeros(4, 2),
         torch.zeros(4, 2),
-        metrics={"custom": lambda p, t: (p - t).abs().sum()},
+        metrics={name: lambda p, t: (p - t).abs().sum()},
     )
-    assert m["custom"] == 0.0
-    assert "mse" not in m
-    assert "pred_nan_sum" in m
+    assert set(m) == {name, "pred_nan_sum"}
+    assert m[name] == 0.0
 
 
 @pytest.mark.oracle_independent
@@ -335,39 +284,6 @@ def test_standard_scaler_roundtrip_complex(rows, cols, seed):
     assert torch.allclose(scaler.inverse(scaler.transform(c)), c, atol=1e-3)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-def test_standard_scaler_tuple_and_subset():
-    a = torch.randn(10, 3)
-    b = torch.randn(10, 2, dtype=torch.complex64)
-    scaler = StandardScaler().fit((a, b))
-    ta, tb = scaler.transform((a, b))
-    assert ta.shape == a.shape and tb.shape == b.shape
-    sub = scaler.get_subset_scaler(0)
-    assert torch.allclose(sub.inverse(sub.transform(a)), a, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_standard_scaler_consistency_checks():
-    scaler = StandardScaler().fit(torch.randn(8, 3))
-    with pytest.raises(AssertionError):
-        scaler.transform(torch.randn(8, 4))  # wrong 2nd dim
-    with pytest.raises(AssertionError):
-        scaler.transform(torch.randn(8, 3, dtype=torch.complex64))  # complex mismatch
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-def test_standard_scaler_save_load(tmp_path):
-    x = torch.randn(12, 4)
-    scaler = StandardScaler().fit(x)
-    path = str(tmp_path / "scaler.pt")
-    scaler.save(path)
-    loaded = StandardScaler.load(path)
-    assert torch.allclose(loaded.transform(x), scaler.transform(x), atol=1e-6)
-
-
 @pytest.mark.oracle_invariant
 @given(rows=st.integers(2, 30), cols=st.integers(1, 6), seed=st.integers(0, 10_000))
 @SETTINGS
@@ -393,62 +309,23 @@ def test_to_mag_angle_reconstructs(rows, cols, seed):
     assert torch.allclose(mag * torch.exp(1j * angle), c, atol=1e-4)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_to_mag_angle_idempotent_on_real():
-    r = torch.randn(3, 4)
+@SETTINGS
+@given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
+@example(rows=3, cols=4, seed=0)
+def test_to_mag_angle_idempotent_on_real(rows, cols, seed):
+    r = torch.randn(rows, cols, generator=torch.Generator().manual_seed(seed))
     assert torch.equal(to_mag_angle(r), r)
 
 
-POLAR_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_to_mag_angle_handles_any_number_of_mode_axes():
-    generator = torch.Generator().manual_seed(11)
-    for shape in POLAR_SHAPES:
-        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-        ma = to_mag_angle(c)
-        assert ma.shape == (*shape[:-1], shape[-1] * 2)
-        mag, angle = ma[..., ::2], ma[..., 1::2]
-        assert torch.allclose(mag * torch.exp(1j * angle), c, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_from_mag_angle_inverts_to_mag_angle():
-    generator = torch.Generator().manual_seed(12)
-    for shape in POLAR_SHAPES:
-        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-        assert torch.allclose(from_mag_angle(to_mag_angle(c)), c, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_polar_encoding_precision_corresponds():
-    for complex_dtype, real_dtype in (
-        (torch.complex64, torch.float32),
-        (torch.complex128, torch.float64),
-    ):
-        c = torch.randn(3, 4, dtype=complex_dtype)
-        assert to_mag_angle(c).dtype == real_dtype
-        assert from_mag_angle(to_mag_angle(c)).dtype == complex_dtype
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
-def test_polar_encoding_preserves_device():
-    c = torch.randn(3, 4, dtype=torch.complex64).cuda()
-    assert to_mag_angle(c).device.type == "cuda"
-    assert from_mag_angle(to_mag_angle(c)).device.type == "cuda"
-
-
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_from_mag_angle_idempotent_on_complex():
-    c = torch.randn(3, 4, dtype=torch.complex64)
+@SETTINGS
+@given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
+@example(rows=3, cols=4, seed=0)
+def test_from_mag_angle_idempotent_on_complex(rows, cols, seed):
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     assert torch.equal(from_mag_angle(c), c)
 
 
@@ -468,13 +345,6 @@ def test_euler_solver_linear_decay(a, seed):
     sol = euler_solver(rhs, y0, t)
     exact = y0 * torch.exp(-a * t[-1])
     assert torch.allclose(sol[-1], exact, atol=5e-2 * y0.abs().max())
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_euler_solver_requires_multiple_points():
-    with pytest.raises(AssertionError):
-        euler_solver(lambda ti, y: y, torch.zeros(2), torch.tensor([0.0]))
 
 
 # --------------------------------------------------------------------------- #
@@ -519,27 +389,6 @@ def test_zero_coeff_zeros_high_modes(n, cutoff, seed):
     out = zero_coeff(x, WavenumberCutoff(cutoff))
     assert out.shape == x.shape
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_zero_coeff_per_axis_bands():
-    x = torch.ones(2, 8, 8, dtype=torch.complex64)
-    # |k| <= 1 keeps 3 bins of an axis, an exact count of 4 keeps 4
-    mixed = zero_coeff(x, [WavenumberCutoff(1), ExactModeCount(4)])
-    assert int(torch.count_nonzero(mixed)) == 2 * 3 * 4
-    broadcast = zero_coeff(x, WavenumberCutoff(1))
-    assert int(torch.count_nonzero(broadcast)) == 2 * 3 * 3
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_zero_coeff_rejects_a_bare_count():
-    x = torch.ones(1, 8, dtype=torch.complex64)
-    with pytest.raises(TypeError):
-        zero_coeff(x, 4)
-    with pytest.raises(TypeError):
-        zero_coeff(x, [4])
 
 
 @pytest.mark.oracle_analytic
@@ -592,7 +441,6 @@ CONVERSIONS = (
     ("real/imag", to_real_coeff, to_complex_coeff),
     ("mag/angle", to_mag_angle, from_mag_angle),
 )
-CONVERSION_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
 
 
 @pytest.mark.no_fuzz
@@ -613,36 +461,311 @@ def test_conversion_registry_covers_every_exported_conversion():
     )
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_every_conversion_accepts_any_number_of_mode_axes():
-    generator = torch.Generator().manual_seed(21)
-    for label, forward, inverse in CONVERSIONS:
-        for shape in CONVERSION_SHAPES:
-            c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
-            out = forward(c)
-            assert out.shape == (*shape[:-1], shape[-1] * 2), f"{label} {shape}"
-            assert torch.allclose(inverse(out), c, atol=1e-4), f"{label} {shape}"
+CONVERSION_AXES = st.lists(st.integers(1, 9), min_size=2, max_size=4).map(tuple)
+CONVERSION_SPECS = st.sampled_from(CONVERSIONS)
+CONVERSION_PRECISIONS = st.sampled_from(
+    ((torch.complex64, torch.float32), (torch.complex128, torch.float64))
+)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
-def test_every_conversion_preserves_precision():
-    for label, forward, inverse in CONVERSIONS:
-        for complex_dtype, real_dtype in (
-            (torch.complex64, torch.float32),
-            (torch.complex128, torch.float64),
+@SETTINGS
+@given(conversion=CONVERSION_SPECS, shape=CONVERSION_AXES, seed=st.integers(0, 10_000))
+@example(conversion=CONVERSIONS[0], shape=(5, 9), seed=21)
+@example(conversion=CONVERSIONS[0], shape=(2, 8, 8), seed=21)
+@example(conversion=CONVERSIONS[0], shape=(2, 4, 4, 4), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(5, 9), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(2, 8, 8), seed=21)
+@example(conversion=CONVERSIONS[1], shape=(2, 4, 4, 4), seed=21)
+def test_every_conversion_accepts_any_number_of_mode_axes(conversion, shape, seed):
+    label, forward, inverse = conversion
+    generator = torch.Generator().manual_seed(seed)
+    c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
+    out = forward(c)
+    assert out.shape == (*shape[:-1], shape[-1] * 2), f"{label} {shape}"
+    assert torch.allclose(inverse(out), c, atol=1e-4), f"{label} {shape}"
+
+
+@pytest.mark.oracle_invariant
+@SETTINGS
+@given(
+    conversion=CONVERSION_SPECS, precision=CONVERSION_PRECISIONS, shape=CONVERSION_AXES
+)
+@example(
+    conversion=CONVERSIONS[0], precision=(torch.complex64, torch.float32), shape=(5, 9)
+)
+@example(
+    conversion=CONVERSIONS[0], precision=(torch.complex128, torch.float64), shape=(5, 9)
+)
+@example(
+    conversion=CONVERSIONS[0],
+    precision=(torch.complex64, torch.float32),
+    shape=(2, 8, 8),
+)
+@example(
+    conversion=CONVERSIONS[0],
+    precision=(torch.complex128, torch.float64),
+    shape=(2, 8, 8),
+)
+@example(
+    conversion=CONVERSIONS[1], precision=(torch.complex64, torch.float32), shape=(3, 4)
+)
+@example(
+    conversion=CONVERSIONS[1], precision=(torch.complex128, torch.float64), shape=(3, 4)
+)
+def test_every_conversion_preserves_precision(conversion, precision, shape):
+    label, forward, inverse = conversion
+    complex_dtype, real_dtype = precision
+    c = torch.randn(*shape, dtype=complex_dtype)
+    assert forward(c).dtype == real_dtype, label
+    assert inverse(forward(c)).dtype == complex_dtype, label
+    if forward is to_real_coeff:
+        assert torch.equal(inverse(forward(c)), c), label
+
+
+@pytest.mark.oracle_invariant
+@SETTINGS
+@given(
+    conversion=CONVERSION_SPECS,
+    device=st.sampled_from(STATABLE_DEVICES),
+    shape=CONVERSION_AXES,
+)
+@example(conversion=CONVERSIONS[0], device="cuda", shape=(3, 4))
+@example(conversion=CONVERSIONS[1], device="cuda", shape=(3, 4))
+def test_every_conversion_preserves_device(conversion, device, shape):
+    if device not in STATABLE_DEVICES:
+        pytest.skip("no accelerator available")
+    label, forward, inverse = conversion
+    c = torch.randn(*shape, dtype=torch.complex64, device=device)
+    assert forward(c).device.type == device, label
+    assert inverse(forward(c)).device.type == device, label
+
+
+SCALER_FIELD_KINDS = st.lists(
+    st.tuples(st.booleans(), st.integers(1, 5)), min_size=1, max_size=3
+)
+
+
+def scaler_field(is_complex, cols, rows, seed):
+    generator = torch.Generator().manual_seed(seed)
+    if is_complex:
+        return torch.randn(rows, cols, dtype=torch.complex64, generator=generator)
+    return torch.randn(rows, cols, generator=generator) * 3 + 1.5
+
+
+class ScalerLifecycle(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.directory = tempfile.TemporaryDirectory()
+        self.saves = 0
+        self.fit([(False, 3)], 8, 0, False)
+
+    def teardown(self):
+        self.directory.cleanup()
+
+    def tolerance(self, field):
+        return 1e-3 if field.is_complex() else 1e-4
+
+    @rule(
+        kinds=SCALER_FIELD_KINDS,
+        rows=st.integers(2, 30),
+        seed=st.integers(0, 10_000),
+        bare=st.booleans(),
+    )
+    def fit(self, kinds, rows, seed, bare):
+        self.fields = tuple(
+            scaler_field(is_complex, cols, rows, seed + i)
+            for i, (is_complex, cols) in enumerate(kinds)
+        )
+        self.bare = bare and len(self.fields) == 1
+        self.scaler = StandardScaler().fit(self.fields[0] if self.bare else self.fields)
+
+    @rule()
+    def transform_and_invert(self):
+        offered = self.fields[0] if self.bare else self.fields
+        transformed = self.scaler.transform(offered)
+        recovered = self.scaler.inverse(transformed)
+        if self.bare:
+            transformed, recovered = (transformed,), (recovered,)
+        for original, scaled, back in zip(
+            self.fields, transformed, recovered, strict=True
         ):
-            c = torch.randn(3, 4, dtype=complex_dtype)
-            assert forward(c).dtype == real_dtype, label
-            assert inverse(forward(c)).dtype == complex_dtype, label
+            assert scaled.shape == original.shape
+            assert scaled.is_complex() == original.is_complex()
+            assert torch.allclose(back, original, atol=self.tolerance(original))
+
+    @rule(first=st.integers(0, 2), count=st.integers(1, 3))
+    def take_a_subset(self, first, count):
+        indices = sorted({(first + step) % len(self.fields) for step in range(count)})
+        subset = self.scaler.get_subset_scaler(
+            indices if len(indices) > 1 else indices[0]
+        )
+        kept = tuple(self.fields[i] for i in indices)
+        recovered = subset.inverse(subset.transform(kept))
+        for original, back in zip(kept, recovered, strict=True):
+            assert torch.allclose(back, original, atol=self.tolerance(original))
+        self.scaler = subset
+        self.fields = kept
+        self.bare = False
+
+    @rule()
+    def save_and_load(self):
+        self.saves += 1
+        path = f"{self.directory.name}/scaler{self.saves}.pt"
+        self.scaler.save(path)
+        loaded = StandardScaler.load(path)
+        offered = self.fields[0] if self.bare else self.fields
+        expected = self.scaler.transform(offered)
+        actual = loaded.transform(offered)
+        if self.bare:
+            expected, actual = (expected,), (actual,)
+        for want, got in zip(expected, actual, strict=True):
+            assert torch.allclose(got, want, atol=1e-6)
+        self.scaler = loaded
+
+    @rule(chosen=st.integers(0, 2))
+    def misuse_a_field(self, chosen):
+        index = chosen % len(self.fields)
+        field = self.fields[index]
+        wrong_width = scaler_field(
+            field.is_complex(), field.shape[1] + 1, field.shape[0], 0
+        )
+        other_kind = scaler_field(
+            not field.is_complex(), field.shape[1], field.shape[0], 0
+        )
+        for misuse in (wrong_width, other_kind):
+            offered = list(self.fields)
+            offered[index] = misuse
+            for call in (self.scaler.transform, self.scaler.inverse):
+                with pytest.raises(AssertionError):
+                    call(tuple(offered))
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.transform_and_invert()
+        self.take_a_subset(0, 1)
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.take_a_subset(0, 2)
+        self.fit([(False, 3)], 8, 0, True)
+        self.misuse_a_field(0)
+        self.fit([(False, 4)], 12, 0, True)
+        self.save_and_load()
+        self.fit([(False, 3), (True, 2)], 10, 0, False)
+        self.misuse_a_field(1)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
-def test_every_conversion_preserves_device():
-    for label, forward, inverse in CONVERSIONS:
-        c = torch.randn(3, 4, dtype=torch.complex64).cuda()
-        assert forward(c).device.type == "cuda", label
-        assert inverse(forward(c)).device.type == "cuda", label
+ScalerLifecycle.TestCase.settings = settings(
+    deadline=None,
+    max_examples=25,
+    stateful_step_count=8,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+TestScalerLifecycle = pytest.mark.oracle_invariant(ScalerLifecycle.TestCase)
+
+
+INDEXED_ACCELERATOR_AVAILABLE = torch.cuda.is_available()
+DEFAULT_DEVICES = ("cpu", "cuda") if INDEXED_ACCELERATOR_AVAILABLE else ("cpu",)
+SOURCE_DEVICES = (
+    ("cpu", "cuda", "cuda:0") if INDEXED_ACCELERATOR_AVAILABLE else ("cpu",)
+)
+WORK_DEVICES = (
+    (None, "cpu", "cuda", "cuda:0", "cuda:1")
+    if INDEXED_ACCELERATOR_AVAILABLE
+    else (None, "cpu")
+)
+
+
+class DeviceStatements(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.process_default = torch.get_default_device()
+
+    def teardown(self):
+        torch.set_default_device(self.process_default)
+
+    @staticmethod
+    def stated(name):
+        return torch.zeros(1).device if name is None else torch.device(name)
+
+    @rule(name=st.sampled_from(DEFAULT_DEVICES))
+    def repoint_the_default(self, name):
+        torch.set_default_device(name)
+
+    @rule(work=st.sampled_from(WORK_DEVICES))
+    def resolve_a_statement(self, work):
+        assert resolve_device(work) == self.stated(work)
+
+    @rule(
+        source=st.sampled_from(SOURCE_DEVICES),
+        work=st.sampled_from(WORK_DEVICES),
+    )
+    def place_a_generator(self, source, work):
+        generator = torch.Generator(device=source)
+        stated_source, stated_work = torch.device(source), self.stated(work)
+        agrees = stated_source.type == stated_work.type and (
+            stated_source.index is None
+            or stated_work.index is None
+            or stated_source.index == stated_work.index
+        )
+        with warnings.catch_warnings(record=True) as raised:
+            warnings.simplefilter("always")
+            if agrees:
+                refuse_a_generator_placed_elsewhere(generator, work)
+            else:
+                with pytest.raises(RuntimeError) as refusal:
+                    refuse_a_generator_placed_elsewhere(generator, work)
+                message = str(refusal.value)
+                assert str(generator.device) in message
+                assert str(resolve_device(work)) in message
+                assert "move the source" in message
+        assert [str(w.message) for w in raised] == []
+
+    @rule()
+    def name_the_accelerator(self):
+        named = accelerator()
+        if torch.accelerator.is_available():
+            assert named == torch.accelerator.current_accelerator()
+            assert torch.zeros(1, device=named).device.type == named.type
+        else:
+            assert named == torch.get_default_device()
+        assert resolve_device(named) == named
+
+    @rule()
+    def read_a_generator_through_its_type(self):
+        host = torch.Generator()
+        assert type(host) is type(torch.Generator(device=accelerator()))
+        if torch.accelerator.is_available():
+            assert host.device != accelerator()
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        self.name_the_accelerator()
+        self.read_a_generator_through_its_type()
+        self.repoint_the_default("cpu")
+        self.resolve_a_statement(None)
+        if INDEXED_ACCELERATOR_AVAILABLE:
+            self.place_a_generator("cuda:0", "cuda:1")
+            self.place_a_generator("cuda:0", "cuda")
+            self.place_a_generator("cuda", "cuda:0")
+            self.repoint_the_default("cuda")
+            self.resolve_a_statement(None)
+            self.place_a_generator("cpu", None)
+            self.repoint_the_default("cpu")
+
+
+DeviceStatements.TestCase.settings = settings(
+    deadline=None,
+    max_examples=25,
+    stateful_step_count=8,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+TestDeviceStatements = DeviceStatements.TestCase
+for mark in (
+    pytest.mark.oracle_smoke,
+    pytest.mark.scenario("Naming the accelerator is a statement, not a search"),
+    pytest.mark.scenario("The host is not overridden"),
+    pytest.mark.scenario("A stated index is part of the statement"),
+    pytest.mark.scenario("A mismatched random source names both devices"),
+):
+    TestDeviceStatements = mark(TestDeviceStatements)

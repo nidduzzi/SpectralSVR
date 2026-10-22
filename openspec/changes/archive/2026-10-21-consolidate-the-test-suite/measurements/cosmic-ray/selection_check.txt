@@ -1,0 +1,6 @@
+Covering-test selection (selected_pytest.sh with a per-tree map from build_test_map.py), checked at 2d321a2 against the whole-suite audit outcomes.
+Sample: up to 6 survived and 6 killed audit mutants per module, all 21 modules, 197 mutants (prepare_selection_check.py, random seed 0).
+Result: 197 of 197 reproduce their whole-suite outcome.
+First attempt: 10 of 166 differed, all killed under selection against survived on the whole suite; 36 test ids contain spaces and the wrapper split them, so pytest ran nothing and exited 5. Fixed by passing one id per line and by rerunning the whole suite whenever pytest collects nothing; the first attempt's results were discarded and all 197 rerun.
+Time per mutant, two units at nice 10 with two threads: survivors median 19.9 s (103 s on the whole suite), killed median 4.4 s (15 s).
+Not established: the sample is 197 of 2776, so a selection miss on a line not sampled is possible; import-time lines fall back to the whole suite by construction.

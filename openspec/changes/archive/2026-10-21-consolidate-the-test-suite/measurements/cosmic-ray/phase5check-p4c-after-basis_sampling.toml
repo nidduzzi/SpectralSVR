@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/basis/sampling.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "/home/migi/Documents/projects/SpectralSVR/openspec/changes/consolidate-the-test-suite/measurements/cosmic-ray/selected_pytest.sh"
+
+[cosmic-ray.distributor]
+name = "local"

@@ -8,21 +8,25 @@ import pytest
 import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    invariant,
+    rule,
+)
 
 from tests._anchors import (
     half_open_grid,
     hermitian_error,
     hermitian_spectrum,
+    resized_by_frequency,
     single_mode_spectrum,
 )
 from SpectralSVR import FourierBasis
 from SpectralSVR.basis.sampling import ClosedUniform, PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
 from SpectralSVR.utils import (
-    ExactModeCount,
-    WavenumberCutoff,
     resize_modes,
-    zero_coeff,
 )
 
 SETTINGS = settings(deadline=None, max_examples=20)
@@ -79,75 +83,93 @@ RESIZE_SOURCE_MODES = (4, 5, 8, 9, 12)
 RESIZE_TOLERANCE = 1e-14
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_preserves_conjugate_symmetry():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        assert hermitian_error(source) == 0.0, f"n={n}: source is not Hermitian"
-        for target in (2 * n, 4 * n):
-            measured = hermitian_error(resize_modes(source, target, rescale=False))
-            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_then_truncating_returns_the_original():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        for target in (2 * n, 4 * n):
-            padded = resize_modes(source, target, rescale=False)
-            measured = float(
-                (resize_modes(padded, n, rescale=False) - source).abs().max()
-            )
-            assert measured < RESIZE_TOLERANCE, (
-                f"n={n} -> {target} -> {n}: {measured:.3e}"
-            )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_odd_source_counts_have_nothing_to_redistribute():
-    """Isolation control: odd counts read clean under either convention."""
-    for n in (5, 9):
-        source = hermitian_spectrum(n, seed=n)
-        for target in (2 * n, 4 * n):
-            padded = resize_modes(source, target, rescale=False)
-            for j in range(n):
-                k = j if j <= (n - 1) // 2 else j - n
-                assert padded[0, k % target] == source[0, j], (
-                    f"n={n} -> {target}: coefficient at frequency {k} was altered"
-                )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-def test_padding_preserves_the_function_at_the_original_sample_points():
-    for n in RESIZE_SOURCE_MODES:
-        source = hermitian_spectrum(n, seed=n)
-        coarse = torch.fft.ifft(source) * n
-        for target in (2 * n, 4 * n):
-            fine = torch.fft.ifft(resize_modes(source, target, rescale=False)) * target
-            measured = float((fine[:, :: target // n] - coarse).abs().max())
-            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_zero_coeff_values():
-    x = (
-        torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
-    )  # bins 0..7 = freqs [0, 1, 2, 3, -4, -3, -2, -1]
-    # |k| <= 2 keeps freqs {0, 1, 2, -2, -1} = bins {0, 1, 2, 6, 7}; zero the
-    # high-|frequency| middle block bins {3, 4, 5}
-    expected = torch.tensor([[1, 2, 3, 0, 0, 0, 7, 8]], dtype=torch.complex64)
-    assert torch.equal(zero_coeff(x, WavenumberCutoff(2)), expected)
-    # the same numeral as a raw count is a different band: 2 modes, freqs
-    # {0, -1} = bins {0, 7}
-    assert torch.equal(
-        zero_coeff(x, ExactModeCount(2)),
-        torch.tensor([[1, 0, 0, 0, 0, 0, 0, 8]], dtype=torch.complex64),
+@pytest.mark.oracle_independent
+@SETTINGS
+@given(
+    rows=st.integers(1, 3),
+    modes=st.integers(1, 24),
+    target=st.integers(1, 48),
+    seed=st.integers(0, 10_000),
+)
+@example(rows=1, modes=4, target=2, seed=0)
+@example(rows=1, modes=4, target=6, seed=0)
+def test_resizing_matches_an_independent_frequency_map(rows, modes, target, seed):
+    generator = numpy.random.default_rng(seed)
+    x = generator.standard_normal((rows, modes)) + 1j * generator.standard_normal(
+        (rows, modes)
     )
+    got = resize_modes(torch.from_numpy(x), target, rescale=False)
+    assert torch.equal(got, torch.from_numpy(resized_by_frequency(x, target)))
+
+
+class ResizeRoundTrips(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.start(4, 4)
+
+    @rule(modes=st.integers(2, 16), seed=st.integers(0, 10_000))
+    def start(self, modes, seed):
+        self.source = hermitian_spectrum(modes, seed=seed)
+        self.modes = modes
+        self.current = self.source
+        assert hermitian_error(self.source) == 0.0
+
+    @rule(growth=st.integers(0, 40))
+    def pad(self, growth):
+        target = self.current.shape[1] + growth
+        self.current = resize_modes(self.current, target, rescale=False)
+
+    @rule()
+    def truncate_back_to_the_source_count(self):
+        returned = resize_modes(self.current, self.modes, rescale=False)
+        assert float((returned - self.source).abs().max()) < RESIZE_TOLERANCE
+        self.current = returned
+
+    @invariant()
+    def the_padded_spectrum_describes_a_real_field(self):
+        assert hermitian_error(self.current) < RESIZE_TOLERANCE
+
+    @invariant()
+    def truncating_returns_the_source(self):
+        returned = resize_modes(self.current, self.modes, rescale=False)
+        assert float((returned - self.source).abs().max()) < RESIZE_TOLERANCE
+
+    @invariant()
+    def padding_preserves_the_function_at_the_source_points(self):
+        count = self.current.shape[1]
+        if count % self.modes:
+            return
+        coarse = torch.fft.ifft(self.source) * self.modes
+        fine = torch.fft.ifft(self.current) * count
+        measured = float((fine[:, :: count // self.modes] - coarse).abs().max())
+        assert measured < RESIZE_TOLERANCE
+
+    @invariant()
+    def an_odd_source_count_is_copied_through(self):
+        if self.modes % 2 == 0:
+            return
+        count = self.current.shape[1]
+        for j in range(self.modes):
+            frequency = j if j <= (self.modes - 1) // 2 else j - self.modes
+            assert self.current[0, frequency % count] == self.source[0, j]
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        for modes in RESIZE_SOURCE_MODES:
+            self.start(modes, modes)
+            self.pad(modes)
+            self.truncate_back_to_the_source_count()
+            self.pad(3 * modes)
+            self.truncate_back_to_the_source_count()
+            self.pad(modes)
+            self.pad(2 * modes)
+        self.start(4, 4)
+
+
+ResizeRoundTrips.TestCase.settings = settings(
+    deadline=None, max_examples=40, stateful_step_count=8
+)
+TestResizeRoundTrips = pytest.mark.oracle_invariant(ResizeRoundTrips.TestCase)
 
 
 # --------------------------------------------------------------------------- #
@@ -518,197 +540,6 @@ def test_to_time_independent_reads_as_its_time_dependent_source_at_its_nodes(
     )
     rounding = ROUNDING[precision] * float(slice_values.abs().max())
     assert numpy.abs(got - expected).max() <= rounding
-
-
-REFUSAL_SOURCE = time_periodic_field(
-    modes=(8, 4),
-    start=0.0,
-    span=1.0,
-    m_t=1,
-    m_x=1,
-    phase=0.0,
-    amplitudes=[1.0],
-    precision=torch.complex128,
-    sampling=None,
-    strategy=None,
-)
-
-
-TIME_DEPENDENT_REFUSAL_SOURCE = REFUSAL_SOURCE.to_time_dependent(nt=4)
-
-
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A conversion that cannot be placed in time is refused")
-@SETTINGS
-@given(
-    slices=st.one_of(
-        st.integers(-3, 1),
-        st.floats(allow_nan=False, allow_infinity=False),
-        st.booleans(),
-        st.sampled_from(
-            (
-                torch.tensor(2.0),
-                torch.tensor(True),
-                numpy.True_,
-                torch.tensor([3]),
-                numpy.array([3]),
-            )
-        ),
-    ),
-    time_dependent=st.booleans(),
-)
-@example(slices=1, time_dependent=False)
-@example(slices=0, time_dependent=False)
-@example(slices=2.0, time_dependent=False)
-@example(slices=True, time_dependent=False)
-@example(slices=4.0, time_dependent=True)
-@example(slices=False, time_dependent=True)
-@example(slices=torch.tensor(True), time_dependent=False)
-@example(slices=torch.tensor(True), time_dependent=True)
-@example(slices=numpy.True_, time_dependent=False)
-@example(slices=numpy.True_, time_dependent=True)
-@example(slices=torch.tensor([3]), time_dependent=False)
-@example(slices=torch.tensor([3]), time_dependent=True)
-@example(slices=numpy.array([3]), time_dependent=False)
-@example(slices=numpy.array([3]), time_dependent=True)
-def test_to_time_dependent_refuses_a_slice_count_it_cannot_place(
-    slices, time_dependent
-):
-    source = TIME_DEPENDENT_REFUSAL_SOURCE if time_dependent else REFUSAL_SOURCE
-    is_integer = isinstance(slices, int) and not isinstance(slices, bool)
-    if not is_integer:
-        with pytest.raises(
-            TypeError, match="a slice count is a zero-dimensional integer"
-        ):
-            source.to_time_dependent(nt=slices)
-        return
-    message = (
-        f"converts only to its own slice count; got {slices}$"
-        if time_dependent
-        else f"at least two slices; got {slices}$"
-    )
-    with pytest.raises(ValueError, match=message):
-        source.to_time_dependent(nt=slices)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A conversion that cannot be placed in time is refused")
-@pytest.mark.parametrize(
-    ("field", "slices", "message"),
-    [
-        (FourierBasis(), None, "holding no coefficients"),
-        (FourierBasis(time_dependent=True), 3, "holding no coefficients"),
-        (
-            FourierBasis(torch.zeros(1, 8, dtype=torch.complex128)),
-            None,
-            "a spatial axis beside time; got 0 spatial axes$",
-        ),
-        (
-            FourierBasis(
-                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            None,
-            "at least two slices; got 1$",
-        ),
-        (
-            FourierBasis(
-                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            1,
-            "at least two slices; got 1$",
-        ),
-        (
-            FourierBasis(
-                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            3,
-            "of 1 slices converts only to its own slice count; got 3$",
-        ),
-        (
-            FourierBasis(
-                torch.zeros(1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            None,
-            "a spatial axis beside time; got 0 spatial axes$",
-        ),
-    ],
-    ids=[
-        "empty",
-        "empty time-dependent",
-        "time only",
-        "one-slice no-op",
-        "one-slice own count",
-        "one-slice other count",
-        "time-dependent without spatial axis",
-    ],
-)
-def test_to_time_dependent_refuses_a_field_it_cannot_place(field, slices, message):
-    with pytest.raises(ValueError, match=message):
-        field.to_time_dependent(nt=slices)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A time-independent conversion that cannot be placed is refused")
-@pytest.mark.parametrize(
-    ("field", "message"),
-    [
-        (FourierBasis(time_dependent=True), "holding no coefficients"),
-        (
-            FourierBasis(
-                torch.zeros(1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            "a spatial axis beside time; got 0 spatial axes$",
-        ),
-        (
-            FourierBasis(
-                torch.zeros(1, 1, 4, dtype=torch.complex128), time_dependent=True
-            ),
-            "at least two slices; got 1$",
-        ),
-    ],
-    ids=["empty", "no spatial axis", "one slice"],
-)
-def test_to_time_independent_refuses_a_field_it_cannot_place(field, message):
-    with pytest.raises(ValueError, match=message):
-        field.to_time_independent()
-
-
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("A time-dependent field converts only to its own slice count")
-@SETTINGS
-@given(
-    own=st.integers(2, 8),
-    requested=st.one_of(st.none(), st.integers(0, 12)),
-    integer_type=INTEGER_TYPES,
-)
-@example(own=4, requested=None, integer_type=int)
-@example(own=4, requested=4, integer_type=int)
-@example(own=4, requested=4, integer_type=numpy.int64)
-@example(own=4, requested=4, integer_type=numpy.array)
-@example(own=4, requested=6, integer_type=numpy.array)
-@example(own=4, requested=4, integer_type=torch.tensor)
-@example(own=4, requested=5, integer_type=int)
-@example(own=4, requested=1, integer_type=torch.tensor)
-def test_a_time_dependent_field_converts_only_to_its_own_slice_count(
-    own, requested, integer_type
-):
-    field = REFUSAL_SOURCE.to_time_dependent(nt=own)
-    nt = None if requested is None else integer_type(requested)
-    if requested in (None, own):
-        again = field.to_time_dependent(nt=nt)
-        assert again is not field and again.config == field.config
-        assert again.coeff.data_ptr() == field.coeff.data_ptr()
-        unchanged = REFUSAL_SOURCE.to_time_independent()
-        assert unchanged is not REFUSAL_SOURCE
-        assert unchanged.coeff.data_ptr() == REFUSAL_SOURCE.coeff.data_ptr()
-        return
-    with pytest.raises(
-        ValueError,
-        match=f"of {own} slices converts only to its own slice count; got {requested}$",
-    ):
-        field.to_time_dependent(nt=nt)
 
 
 APPROXIMATE = EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)

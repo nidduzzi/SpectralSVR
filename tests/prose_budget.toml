@@ -123,28 +123,23 @@ comments = 3
 internal_docstrings = 0
 misshapen_docstrings = 7
 
-["tests/basis/test_basis.py"]
-comments = 22
-internal_docstrings = 0
-misshapen_docstrings = 0
-
 ["tests/basis/test_coeff_anchors.py"]
-comments = 44
+comments = 39
 internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_config.py"]
-comments = 4
+comments = 1
 internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/basis/test_fourier_basis.py"]
-comments = 71
+comments = 54
 internal_docstrings = 0
 misshapen_docstrings = 2
 
 ["tests/basis/test_nufft.py"]
-comments = 19
+comments = 18
 internal_docstrings = 0
 misshapen_docstrings = 1
 
@@ -163,18 +158,13 @@ comments = 0
 internal_docstrings = 0
 misshapen_docstrings = 1
 
-["tests/model/test_SpectralSVR.py"]
-comments = 12
-internal_docstrings = 0
-misshapen_docstrings = 0
-
 ["tests/model/test_fnn.py"]
-comments = 2
+comments = 1
 internal_docstrings = 0
 misshapen_docstrings = 0
 
 ["tests/model/test_lssvr.py"]
-comments = 19
+comments = 10
 internal_docstrings = 0
 misshapen_docstrings = 0
 
@@ -184,12 +174,12 @@ internal_docstrings = 5
 misshapen_docstrings = 2
 
 ["tests/model/test_spectralsvr_methods.py"]
-comments = 20
+comments = 10
 internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/operators/test_operators.py"]
-comments = 27
+comments = 21
 internal_docstrings = 4
 misshapen_docstrings = 1
 
@@ -204,7 +194,7 @@ internal_docstrings = 35
 misshapen_docstrings = 10
 
 ["tests/test_oracle_coverage.py"]
-comments = 13
+comments = 11
 internal_docstrings = 2
 misshapen_docstrings = 1
 
@@ -219,7 +209,7 @@ internal_docstrings = 0
 misshapen_docstrings = 4
 
 ["tests/utils/test_metric_anchors.py"]
-comments = 18
+comments = 16
 internal_docstrings = 0
 misshapen_docstrings = 1
 
@@ -229,6 +219,6 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/utils/test_utils.py"]
-comments = 35
+comments = 31
 internal_docstrings = 0
 misshapen_docstrings = 0

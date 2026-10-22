@@ -6,6 +6,8 @@ default:
     @just --list
 
 host_memory_cap := "systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 --quiet"
+test_workers := "-n 6"
+threads_per_worker := "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2"
 
 # create/refresh the full dev environment
 sync:
@@ -13,7 +15,7 @@ sync:
 
 # run the test suite (pass extra pytest args, e.g. `just test -k fourier`)
 test *args:
-    {{host_memory_cap}} uv run --extra test --extra baselines pytest {{args}}
+    {{threads_per_worker}} {{host_memory_cap}} uv run --extra test --extra baselines pytest {{test_workers}} {{args}}
 
 # run tests with coverage and print a missing-lines report
 cov *args:

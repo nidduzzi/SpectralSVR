@@ -8,12 +8,13 @@ solutions for every path.
 """
 
 import math
+import warnings
 from typing import NamedTuple
 from unittest.mock import patch
 
 import pytest
 import torch
-from hypothesis import given
+from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis, accelerator
@@ -62,10 +63,15 @@ def _residual_interior(problem, u, f, nu, res, ns, b):
 @SETTINGS
 @given(
     k=st.integers(1, 4),
-    order=st.sampled_from([1, 2]),
+    order=st.integers(-3, 5),
     periodic=st.booleans(),
 )
-def test_axis_diff_matches_analytic(k, order, periodic):
+@example(k=1, order=1, periodic=True)
+@example(k=1, order=1, periodic=False)
+@example(k=1, order=2, periodic=True)
+@example(k=1, order=2, periodic=False)
+@example(k=1, order=3, periodic=True)
+def test_axis_diff_matches_analytic_and_refuses_other_orders(k, order, periodic):
     N, length = 128, 1.0  # fine enough that the O((k*dx)^2) stencil error < tol
     kx = 2 * math.pi * k
     if periodic:  # half-open grid, spacing L/N
@@ -75,6 +81,10 @@ def test_axis_diff_matches_analytic(k, order, periodic):
         x = torch.linspace(0, length, N, dtype=torch.float64)
         spacing = length / (N - 1)
     u = torch.sin(kx * x).view(1, -1)
+    if order not in (1, 2):
+        with pytest.raises(ValueError, match="order 1 or 2"):
+            Burgers.axis_diff(u, spacing, dim=1, order=order, periodic=periodic)
+        return
     got = Burgers.axis_diff(u, spacing, dim=1, order=order, periodic=periodic)
     analytic = kx * torch.cos(kx * x) if order == 1 else -(kx**2) * torch.sin(kx * x)
     tol = 0.02 * float(analytic.abs().max().clamp(min=1.0))
@@ -82,13 +92,6 @@ def test_axis_diff_matches_analytic(k, order, periodic):
         assert torch.allclose(got.view(-1), analytic, atol=tol)
     else:  # torch.gradient is one-sided at the ends -> compare the interior
         assert torch.allclose(got.view(-1)[2:-2], analytic[2:-2], atol=tol)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_axis_diff_rejects_bad_order():
-    with pytest.raises(ValueError, match="order 1 or 2"):
-        Burgers.axis_diff(torch.zeros(1, 4), 1.0, dim=1, order=3, periodic=True)
 
 
 # =========================================================================== #
@@ -291,14 +294,19 @@ def test_burgers_finite_diff_residual_heat_mode(n, n_modes, nu, seed):
     assert torch.allclose(r_int, torch.zeros_like(r_int), atol=tol)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_antiderivative_rejects_bad_sizes():
-    problem = Antiderivative()
-    with pytest.raises(AssertionError):
-        problem.generate(FourierBasis, 0, 8)
-    with pytest.raises(AssertionError):
-        problem.generate(FourierBasis, 4, 0)
+@SETTINGS
+@given(refused=st.sampled_from(("samples", "modes")), size=st.integers(-8, 0))
+@example(refused="samples", size=0)
+@example(refused="modes", size=0)
+def test_antiderivative_rejects_bad_sizes(refused, size):
+    samples, modes = (size, 8) if refused == "samples" else (4, size)
+    message = {
+        "samples": "number of samples n must be more than 0",
+        "modes": "number of modes m must be more than 0 at dim 0",
+    }[refused]
+    with pytest.raises(AssertionError, match=message):
+        Antiderivative().generate(FourierBasis, samples, modes)
 
 
 # =========================================================================== #
@@ -407,16 +415,22 @@ def test_burgers_numerical_matches_cole_hopf_exact(n_modes, seed):
 
 
 @pytest.mark.oracle_invariant
-@pytest.mark.no_fuzz
-def test_burgers_numerical_solution_dissipates_energy():
+@SETTINGS
+@given(
+    nu=st.floats(0.01, 0.2),
+    modes=st.integers(16, 64),
+    seed=st.integers(0, 10_000),
+)
+@example(nu=0.05, modes=64, seed=0)
+def test_burgers_numerical_solution_dissipates_energy(nu, modes, seed):
     # Viscous Burgers with zero forcing must not gain energy over time.
     problem = Burgers()
     u, _ = problem.generate(
         FourierBasis,
         2,
-        (64, 64),
-        generator=torch.Generator().manual_seed(0),
-        nu=0.05,
+        (modes, modes),
+        generator=torch.Generator().manual_seed(seed),
+        nu=nu,
         space_domain=slice(0, 1, 64),
         time_domain=slice(0, 1, 100),
     )
@@ -450,48 +464,48 @@ def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
     assert u.coeff.shape[0] == n and not torch.isnan(u.coeff).any()
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_manufactured_branch_rejects_a_solver():
-    with pytest.raises(ValueError, match="integrates nothing"):
-        Burgers().generate(
-            FourierBasis,
-            1,
-            (8, 8),
-            u0="random",
-            f="random",
-            nu=0.05,
-            generator=torch.Generator().manual_seed(0),
-            solver=etdrk4_solver,
-        )
+BRANCH_ARGUMENTS = {
+    "manufactured": dict(n=1, modes=(8, 8), u0="random", f="random", nu=0.05),
+    "numerical": dict(
+        n=2,
+        modes=(16, 16),
+        u0="random",
+        f=0,
+        nu=0.01,
+        time_domain=slice(0, 1, 40),
+    ),
+}
+
+
+def failing_solver(linear, nonlinear, y0, t):
+    raise RuntimeError("solver was called")
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_numerical_branch_uses_the_supplied_solver():
-    def build(**kwargs):
+@pytest.mark.parametrize("solver", (None, etdrk4_solver, failing_solver))
+@pytest.mark.parametrize("branch", tuple(BRANCH_ARGUMENTS))
+def test_only_the_numerical_branch_takes_a_solver(branch, solver):
+    def build(**supplied):
         u, _ = Burgers().generate(
             FourierBasis,
-            2,
-            (16, 16),
-            u0="random",
-            f=0,
-            nu=0.01,
-            time_domain=slice(0, 1, 40),
             generator=torch.Generator().manual_seed(0),
-            **kwargs,
+            **BRANCH_ARGUMENTS[branch],
+            **supplied,
         )
         return u.coeff
 
-    assert torch.equal(build(), build(solver=etdrk4_solver))
-
-    boom = RuntimeError("solver was called")
-
-    def failing_solver(linear, nonlinear, y0, t):
-        raise boom
-
-    with pytest.raises(RuntimeError, match="solver was called"):
-        build(solver=failing_solver)
+    supplied = {} if solver is None else {"solver": solver}
+    if branch == "manufactured" and solver is not None:
+        with pytest.raises(ValueError, match="integrates nothing"):
+            build(**supplied)
+    elif solver is failing_solver:
+        with pytest.raises(RuntimeError, match="solver was called"):
+            build(**supplied)
+    elif branch == "numerical":
+        assert torch.equal(build(**supplied), build(solver=etdrk4_solver))
+    else:
+        assert not torch.isnan(build(**supplied)).any()
 
 
 CONSTANT_FORCING_CLOSED_FORM_TOLERANCE = 3e-5
@@ -649,9 +663,27 @@ def test_antiderivative_tensor_integration_constant(n, modes, seed):
     assert torch.allclose(u.coeff[:, 0], u0.to(u.coeff.dtype), atol=1e-5)
 
 
-@pytest.mark.no_fuzz
+STIFFNESS_CEILING = 0.03
+UNCONVERGED_ADAMS = "Functional iteration did not converge"
+
+
+@st.composite
+def non_stiff_regimes(draw):
+    nu = draw(st.floats(0.005, 0.02))
+    space_modes = draw(st.integers(6, 12))
+    fewest_steps = math.ceil(nu * (math.pi * space_modes) ** 2 / STIFFNESS_CEILING) + 1
+    return (
+        nu,
+        space_modes,
+        draw(st.integers(max(401, fewest_steps), max(801, fewest_steps))),
+    )
+
+
 @pytest.mark.oracle_independent
-def test_numerical_burgers_agrees_with_an_independent_integrator():
+@SETTINGS
+@given(regime=non_stiff_regimes(), seed=st.integers(0, 10_000))
+@example(regime=(0.01, 8, 401), seed=7)
+def test_numerical_burgers_agrees_with_an_independent_integrator(regime, seed):
     """ETDRK4 against torchdiffeq's implicit Adams, in a regime both resolve.
 
     The two schemes share no code: ETDRK4 is implemented in this repo, implicit
@@ -662,9 +694,7 @@ def test_numerical_burgers_agrees_with_an_independent_integrator():
     fourth order in time, so their difference is O(h^4); the bound is set from
     that, not from the observed value, and no stiffer regime is claimed.
     """
-    nu = 0.01
-    space_modes = 8
-    n_steps = 401
+    nu, space_modes, n_steps = regime
 
     def run(solver):
         u, _ = Burgers().generate(
@@ -675,13 +705,18 @@ def test_numerical_burgers_agrees_with_an_independent_integrator():
             f=0,
             nu=nu,
             time_domain=slice(0, 1, n_steps),
-            generator=torch.Generator().manual_seed(7),
+            generator=torch.Generator().manual_seed(seed),
             solver=solver,
         )
         return u.coeff.cpu()
 
     exponential = run(etdrk4_solver)
-    adams = run(as_semilinear_solver(implicit_adams_solver))
+    with warnings.catch_warnings(record=True) as raised:
+        warnings.simplefilter("always")
+        adams = run(as_semilinear_solver(implicit_adams_solver))
+    messages = [str(warning.message) for warning in raised]
+    assume(not any(UNCONVERGED_ADAMS in message for message in messages))
+    assert not messages
 
     assert not torch.equal(exponential, adams), (
         "identical output means the solver argument was ignored, not that the "
@@ -694,11 +729,9 @@ def test_numerical_burgers_agrees_with_an_independent_integrator():
 # --------------------------------------------------------------------------- #
 # The manufactured pair as a continuous solution
 # --------------------------------------------------------------------------- #
-MANUFACTURED_CONTINUOUS_RESIDUAL = {8: 2.565e-07, 16: 1.999e-07, 32: 2.954e-07}
 MANUFACTURED_RESIDUAL_TOLERANCE = 5e-6
 MANUFACTURED_RESIDUAL_CORRUPTED = 1.0e-2
 MANUFACTURED_IMAGINARY_FLOOR = 1e-6
-ANALYTIC_CONTROL_RESIDUAL = {12: 4.164e-08, 16: 3.887e-08, 32: 3.887e-08}
 
 DOMAIN_2D = ((0.0, 1.0), (0.0, 1.0))
 
@@ -744,43 +777,59 @@ def continuous_burgers_residual(u, f, nu, nq=96):
     return float((lhs - at(f)).abs().max() / lhs.abs().max())
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_analytic
-def test_manufactured_pair_satisfies_the_continuous_equation():
-    nu = 0.05
-    for modes, recorded in ANALYTIC_CONTROL_RESIDUAL.items():
-        u, f = analytic_periodic_pair(modes, nu)
-        measured = continuous_burgers_residual(u, f, nu)
-        assert measured < MANUFACTURED_RESIDUAL_TOLERANCE, (
-            f"positive control modes={modes}: {measured:.3e}, recorded {recorded:.3e}"
-        )
-
-    for modes, recorded in MANUFACTURED_CONTINUOUS_RESIDUAL.items():
-        u, f = Burgers().mms_solution(
-            FourierBasis,
-            1,
-            (modes, modes),
-            nu,
-            DOMAIN_2D,
-            generator=torch.Generator().manual_seed(3),
-        )
-        measured = continuous_burgers_residual(u, f, nu)
-        assert measured < MANUFACTURED_RESIDUAL_TOLERANCE, (
-            f"modes={modes}: {measured:.3e}, recorded {recorded:.3e}"
-        )
+@settings(SETTINGS, max_examples=8)
+@given(modes=st.integers(10, 40), nu=st.floats(0.01, 0.2))
+@example(modes=12, nu=0.05)
+@example(modes=16, nu=0.05)
+@example(modes=32, nu=0.05)
+def test_an_analytic_pair_satisfies_the_continuous_equation(modes, nu):
+    u, f = analytic_periodic_pair(modes, nu)
+    measured = continuous_burgers_residual(u, f, nu)
+    assert measured < MANUFACTURED_RESIDUAL_TOLERANCE, (
+        f"positive control modes={modes}: {measured:.3e}"
+    )
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_analytic
-def test_continuous_residual_detects_a_corrupted_forcing():
-    nu = 0.05
+@settings(SETTINGS, max_examples=8)
+@given(
+    modes=st.integers(6, 40),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=8, nu=0.05, seed=3)
+@example(modes=16, nu=0.05, seed=3)
+@example(modes=32, nu=0.05, seed=3)
+def test_manufactured_pair_satisfies_the_continuous_equation(modes, nu, seed):
     u, f = Burgers().mms_solution(
         FourierBasis,
         1,
-        (16, 16),
+        (modes, modes),
         nu,
         DOMAIN_2D,
-        generator=torch.Generator().manual_seed(3),
+        generator=torch.Generator().manual_seed(seed),
+    )
+    measured = continuous_burgers_residual(u, f, nu)
+    assert measured < MANUFACTURED_RESIDUAL_TOLERANCE, f"modes={modes}: {measured:.3e}"
+
+
+@pytest.mark.oracle_analytic
+@settings(SETTINGS, max_examples=8)
+@given(
+    modes=st.integers(6, 40),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=16, nu=0.05, seed=3)
+def test_continuous_residual_detects_a_corrupted_forcing(modes, nu, seed):
+    u, f = Burgers().mms_solution(
+        FourierBasis,
+        1,
+        (modes, modes),
+        nu,
+        DOMAIN_2D,
+        generator=torch.Generator().manual_seed(seed),
     )
     clean = continuous_burgers_residual(u, f, nu)
     corrupted = continuous_burgers_residual(
@@ -1126,11 +1175,27 @@ def test_numerical_forcing_rejects_a_bool(space_modes, nt, flag):
         _integrate_with_forcing(flag, space_modes, nt)
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_generate_rejects_a_time_domain_without_a_step():
+@SETTINGS
+@given(
+    step=st.integers(-10, 1),
+    time_modes=st.integers(1, 24),
+    space_modes=st.integers(8, 24),
+)
+@example(step=1, time_modes=1, space_modes=16)
+def test_generate_rejects_a_time_domain_without_a_step(step, time_modes, space_modes):
     with pytest.raises(AssertionError, match="at least two grid points"):
-        _integrate_with_forcing(0.0, 16, nt=1)
+        Burgers().generate(
+            FourierBasis,
+            2,
+            (time_modes, space_modes),
+            u0=0.0,
+            f=0.0,
+            nu=0.01,
+            space_domain=slice(0, 1, 200),
+            time_domain=slice(0, 1, step),
+            generator=torch.Generator().manual_seed(0),
+        )
 
 
 @pytest.mark.oracle_invariant
@@ -1562,19 +1627,30 @@ def test_generating_a_problem_is_placed_where_it_is_told(space_modes, nt, seed):
     assert stayed.coeff.device == torch.get_default_device()
 
 
+PLACEMENTS = {"cpu": lambda: torch.device("cpu"), "accelerator": accelerator}
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A workload placed against the process default still runs")
-def test_generation_survives_a_process_default_pointing_elsewhere():
-    if not torch.accelerator.is_available():
-        pytest.skip("two device types must be present for them to disagree")
-    torch.set_default_device(accelerator())
-    generator = torch.Generator(device="cpu").manual_seed(0)
+@pytest.mark.parametrize("stated", PLACEMENTS)
+@pytest.mark.parametrize("process_default", PLACEMENTS)
+def test_generation_survives_a_process_default_pointing_elsewhere(
+    process_default, stated
+):
+    if (
+        "accelerator" in (process_default, stated)
+        and not torch.accelerator.is_available()
+    ):
+        pytest.skip("an accelerator must be present to be named as a device")
+    torch.set_default_device(PLACEMENTS[process_default]())
+    placement = PLACEMENTS[stated]()
+    generator = torch.Generator(device=placement).manual_seed(0)
     u, ut = Antiderivative().generate(
-        FourierBasis, 8, 8, generator=generator, u0=0, device="cpu"
+        FourierBasis, 8, 8, generator=generator, u0=0, device=placement
     )
-    assert u.coeff.device.type == "cpu"
-    assert ut.coeff.device.type == "cpu"
+    assert u.coeff.device.type == placement.type
+    assert ut.coeff.device.type == placement.type
     assert u[:4].coeff.shape[0] == 4
-    values = u.get_values(res=8, device=torch.device("cpu"))[0]
-    assert values.device.type == "cpu"
+    values = u.get_values(res=8, device=placement)[0]
+    assert values.device.type == placement.type

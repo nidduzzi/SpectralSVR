@@ -9,7 +9,13 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
-from SpectralSVR import LSSVR, accelerator
+from SpectralSVR import (
+    LSSVR,
+    FourierBasis,
+    SpectralSVR,
+    accelerator,
+    to_complex_coeff,
+)
 from SpectralSVR.model.FNN import FNN
 
 from tests._devices import ACCELERATOR, DEVICES_PRESENT, HOST, needs_an_accelerator
@@ -51,21 +57,6 @@ def test_a_fitted_model_refuses_to_be_moved(kind):
     assert f"{type(model).__name__}(device='{elsewhere}')" in message
     assert f"{type(model).__name__}.load(..., device='{elsewhere}')" in message
     assert model.device == HOST
-
-
-@needs_an_accelerator
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("Every kind of model refuses alike")
-def test_every_kind_of_model_refuses_alike():
-    refusals = set()
-    for kind in EVERY_KIND:
-        model = kind(device=HOST).fit(X, Y)
-        with pytest.raises(RuntimeError) as refused:
-            model.device = accelerator()
-        refusals.add(str(refused.value).replace(type(model).__name__, "<kind>"))
-
-    assert len(refusals) == 1
 
 
 @pytest.mark.oracle_invariant
@@ -172,6 +163,18 @@ class DirectingAndFitting(RuleBasedStateMachine):
         if fitted:
             self.fit()
 
+    @initialize()
+    def every_kind_of_model_refuses_alike(self):
+        if ACCELERATOR == HOST:
+            return
+        refusals = set()
+        for kind in EVERY_KIND:
+            model = kind(device=HOST).fit(X, Y)
+            with pytest.raises(RuntimeError) as refused:
+                model.device = accelerator()
+            refusals.add(str(refused.value).replace(type(model).__name__, "<kind>"))
+        assert len(refusals) == 1
+
     @rule(device=st.sampled_from(DEVICES_PRESENT))
     def direct(self, device):
         if self.model.trained:
@@ -187,6 +190,35 @@ class DirectingAndFitting(RuleBasedStateMachine):
         self.fitted_on = self.model.device
         self.predicted = self.model.predict(X)
 
+    @rule(
+        kind=st.sampled_from(EVERY_KIND),
+        device=st.sampled_from(DEVICES_PRESENT),
+        source=st.sampled_from([None, *DEVICES_PRESENT]),
+    )
+    def invert_with_a_source(self, kind, device, source):
+        spectral = SpectralSVR(
+            FourierBasis(domain=(0.0, 1.0)), kind(device=device)
+        ).train(Y, to_complex_coeff(Y))
+        targets = to_complex_coeff(Y)
+        generator = None if source is None else torch.Generator(device=source)
+        if source is not None and source.type != device.type:
+            with pytest.raises(RuntimeError, match="move the source") as refused:
+                spectral.inverse_coeff(targets, epochs=3, generator=generator)
+            assert str(source) in str(refused.value)
+            assert str(device) in str(refused.value)
+        else:
+            recovered = spectral.inverse_coeff(targets, epochs=3, generator=generator)
+            assert spectral.regressor.device.type == device.type
+            assert recovered.shape == targets.shape
+            assert recovered.device == targets.device
+
+    @initialize()
+    def invert_with_every_kind_and_source(self):
+        for kind in EVERY_KIND:
+            for device in DEVICES_PRESENT:
+                for source in (None, *DEVICES_PRESENT):
+                    self.invert_with_a_source(kind, device, source)
+
     @invariant()
     def a_fitted_model_stays_where_it_was_fitted(self):
         if self.model.trained:
@@ -201,4 +233,13 @@ class DirectingAndFitting(RuleBasedStateMachine):
 DirectingAndFitting.TestCase.settings = settings(
     deadline=None, max_examples=50, stateful_step_count=8
 )
-TestDirectingAndFitting = pytest.mark.oracle_invariant(DirectingAndFitting.TestCase)
+TestDirectingAndFitting = DirectingAndFitting.TestCase
+for mark in (
+    pytest.mark.oracle_invariant,
+    pytest.mark.scenario("Every kind of model refuses alike"),
+    pytest.mark.scenario(
+        "A source the library builds for itself agrees by construction"
+    ),
+    pytest.mark.scenario("A mismatched random source names both devices"),
+):
+    TestDirectingAndFitting = mark(TestDirectingAndFitting)

@@ -1,0 +1,219 @@
+[job-id] e7ff66755526404484d34d70a34a1c1f
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 83d6817843ed421abac669cf2890a5ef
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0f49f6c3911f485eb7e7723eee52dac4
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9375cef8f06a4f5fa2c58dcc211c27f4
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 42cbfe5110f1404fbd707964665e1e59
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 04bd4a0da6dc43339ae5f8978002baf2
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ede1422fa57f4059981fbea12efd1fb4
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 632678b1cfa5478e9aae8457dacd1649
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fba1fb09db1f44d68081cc6e19c69549
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 06fae9edd75749a2b36487c0dfc88f94
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] da10e43177cb437eb57ad3bcfab88d70
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d4a256bb9c0c4dde8b3fd85c0a23566f
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f5761ff899547c893b5ab228d6ef7c0
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] def7eae632884b458a0ca235e8a5d04d
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d6483cb48014397ac4be016d3d47d34
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bde8619d91f5443dbc43c1e96d00b2d6
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] de497760425b41b18551fa1c73dddbfc
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 69169ba96943417bb441f6d0023f5d85
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2f6e7ce6c6a441ae8b11e705d5550dfb
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d02dabb4b1a64ab2ab38988d3831be64
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 33e9d3a2cb6a4e499d3a7a10decbcdc6
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5949d048e5d943be82c0c470c6054b24
+SpectralSVR/model/FNN.py core/ReplaceBinaryOperator_BitOr_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 691e3dc0938c4eebab2600ee07dff423
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b18dd59455c74eec91bf7fa98f69205e
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 75994db663c6487fab00ba049dd52bc8
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8d7b2bf951404ffaa79bfee64c5be57e
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2a3718f1e7364173b2bc75cae6d1bc03
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 819fe4268c994d148b19e97bc9f1f599
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 848018b4ff044d7b9da342074d40749a
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_NotEq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 112bc3b19fc74dc49f4fc8b5279d88fa
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_IsNot_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d2533ba199447cbaf626ac0bec86c6e
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_IsNot_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2b653e76331f434482137534c0f75f77
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_IsNot_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a3dcd9921298404b878af12c6e0b2f37
+SpectralSVR/model/FNN.py core/ReplaceComparisonOperator_IsNot_Is 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 293e409f1fd64c7ea644e3077e0aa3f2
+SpectralSVR/model/FNN.py core/ReplaceUnaryOperator_Delete_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a01d5550d7594f55af88f9a39aca252a
+SpectralSVR/model/FNN.py core/ReplaceUnaryOperator_Delete_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 26bdb3b0c63644f398e97cecc8ade77f
+SpectralSVR/model/FNN.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c09f19d1d544a629ff1bcb7197c08a5
+SpectralSVR/model/FNN.py core/AddNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ca4625c298d94735b887b7555fabccf8
+SpectralSVR/model/FNN.py core/AddNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d421207dbce44e02bccf8084ad711955
+SpectralSVR/model/FNN.py core/AddNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 262a198c391f4e0fa621d9434677b305
+SpectralSVR/model/FNN.py core/AddNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7d8d143d0d1a46c2a978c7810d974738
+SpectralSVR/model/FNN.py core/ReplaceFalseWithTrue 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 52ba6a31ae674e1c90ab9ea16c0abc8a
+SpectralSVR/model/FNN.py core/ReplaceFalseWithTrue 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9fedf971820f4700922b13a6e34e353d
+SpectralSVR/model/FNN.py core/ReplaceFalseWithTrue 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 450956ae1fa4419e827cb318a4587d7d
+SpectralSVR/model/FNN.py core/ReplaceFalseWithTrue 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 68de29d398d9457e894e8cbbd128dcbb
+SpectralSVR/model/FNN.py core/ReplaceFalseWithTrue 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3a92c23607944b81bb9b81aa5cbbb347
+SpectralSVR/model/FNN.py core/ReplaceAndWithOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 929127d23f264d1da41385086652fb12
+SpectralSVR/model/FNN.py core/ReplaceAndWithOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5c87a8922af548e7bbfee4b6282977e1
+SpectralSVR/model/FNN.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cd99c0a98e9e4b2fa402f6f65620196c
+SpectralSVR/model/FNN.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2798acb546cd4c84b4841354010c3126
+SpectralSVR/model/FNN.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 939664245c6f4bb89edbcbf775b1fe31
+SpectralSVR/model/FNN.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c1dc5f47add14e7cba35cc4788efbc96
+SpectralSVR/model/FNN.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 38ae49a2a7ec42b5a7bc6533ebdb38aa
+SpectralSVR/model/FNN.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] eece9e5ee3284eb0819e48a59cdc350e
+SpectralSVR/model/FNN.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] abf54f2772574980996a27d368cde3f7
+SpectralSVR/model/FNN.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a1e300c6a2974e0f99cb4026d2e54807
+SpectralSVR/model/FNN.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3b965c2948bf4de68f4ea1393c6a6dee
+SpectralSVR/model/FNN.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 543073f9e1fe4b988354ab41c9495f50
+SpectralSVR/model/FNN.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e376aacacc34440dba4a63316e300eff
+SpectralSVR/model/FNN.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 90726fc1b61e4c2592befca4a8a8fb09
+SpectralSVR/model/FNN.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3c331b5d5c824f9ba53166ebbeab8bae
+SpectralSVR/model/FNN.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e21e6ae2905c42af9a6a9980250603e2
+SpectralSVR/model/FNN.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a8df058a1ec34e3da4f2df319cc1ed8a
+SpectralSVR/model/FNN.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 76c2ab1aef374dbabbf8a7664f27553c
+SpectralSVR/model/FNN.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fa7724f848864bd79c38db93a8c784ed
+SpectralSVR/model/FNN.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eb4cc05541e54eebbdd68dfae97e17fd
+SpectralSVR/model/FNN.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6355d77e9ead42fa99bcc839621e26f0
+SpectralSVR/model/FNN.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e9bd3d329e1347ff8b1d9a9f258eb010
+SpectralSVR/model/FNN.py core/RemoveDecorator 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0c21148d9a6643e9a2b3c2863e989df1
+SpectralSVR/model/FNN.py core/RemoveDecorator 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f8a86d16ee340fdae9b928df91bbfb1
+SpectralSVR/model/FNN.py core/RemoveDecorator 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7a25e522275047d1a40810bdc49b4745
+SpectralSVR/model/FNN.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2066f37e89d4485d8b591c3a75b41299
+SpectralSVR/model/FNN.py core/ZeroIterationForLoop 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+total jobs: 72
+complete: 72 (100.00%)
+surviving mutants: 14 (19.44%)

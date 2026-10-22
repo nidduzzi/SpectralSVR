@@ -1,0 +1,251 @@
+{
+ "tests/basis/test_basis.py::test_basis": [],
+ "tests/basis/test_coeff_anchors.py::test_resize_modes_truncate_values": [],
+ "tests/basis/test_coeff_anchors.py::test_resize_modes_pad_values": [],
+ "tests/basis/test_coeff_anchors.py::test_padding_preserves_conjugate_symmetry": [],
+ "tests/basis/test_coeff_anchors.py::test_padding_then_truncating_returns_the_original": [],
+ "tests/basis/test_coeff_anchors.py::test_odd_source_counts_have_nothing_to_redistribute": [],
+ "tests/basis/test_coeff_anchors.py::test_padding_preserves_the_function_at_the_original_sample_points": [],
+ "tests/basis/test_coeff_anchors.py::test_zero_coeff_values": [],
+ "tests/basis/test_config.py::test_config_resolve_domain_broadcasts_single_pair": [],
+ "tests/basis/test_config.py::test_config_lengths": [],
+ "tests/basis/test_config.py::test_config_with_domain_is_immutable_copy": [],
+ "tests/basis/test_config.py::test_domain_setter_rebuilds_config": [],
+ "tests/basis/test_config.py::test_domain_malformed_pair_raises": [],
+ "tests/basis/test_fourier_basis.py::test_transform_requires_2d": [],
+ "tests/basis/test_fourier_basis.py::test_inv_transform_requires_2d": [],
+ "tests/basis/test_fourier_basis.py::test_transform_casts_real_to_complex": [],
+ "tests/basis/test_fourier_basis.py::test_inv_transform_casts_real_input": [],
+ "tests/basis/test_fourier_basis.py::test_transform_res_int_and_slice": [],
+ "tests/basis/test_fourier_basis.py::test_fn_requires_modes": [],
+ "tests/basis/test_fourier_basis.py::test_fn_dimension_mismatch": [],
+ "tests/basis/test_fourier_basis.py::test_fn_casts_integer_input": [],
+ "tests/basis/test_fourier_basis.py::test_fn_transpose_matches_shape": [],
+ "tests/basis/test_fourier_basis.py::test_coeff_setter_rejects_non_complex": [],
+ "tests/basis/test_fourier_basis.py::test_empty_basis_modes_and_len": [],
+ "tests/basis/test_fourier_basis.py::test_modes_ndim_domain_time_size": [],
+ "tests/basis/test_fourier_basis.py::test_len_matches_first_dim": [],
+ "tests/basis/test_fourier_basis.py::test_call_requires_coeff": [],
+ "tests/basis/test_fourier_basis.py::test_evaluate_accepts_real_coeff": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_res_slice": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_res_tuple": [],
+ "tests/basis/test_fourier_basis.py::test_evaluate_i_n_selection": [],
+ "tests/basis/test_fourier_basis.py::test_evaluate_time_dependent": [],
+ "tests/basis/test_fourier_basis.py::test_evaluate_time_dependent_requires_t": [],
+ "tests/basis/test_fourier_basis.py::test_generate_returns_basis": [],
+ "tests/basis/test_fourier_basis.py::test_generate_zero_value_type": [],
+ "tests/basis/test_fourier_basis.py::test_generate_empty_shape": [],
+ "tests/basis/test_fourier_basis.py::test_generate_complex_funcs_true": [],
+ "tests/basis/test_fourier_basis.py::test_generate_invalid_value_type": [],
+ "tests/basis/test_fourier_basis.py::test_add_type_error": [],
+ "tests/basis/test_fourier_basis.py::test_sub_type_error": [],
+ "tests/basis/test_fourier_basis.py::test_copy_is_independent": [],
+ "tests/basis/test_fourier_basis.py::test_prefered_evaluation_mode": [],
+ "tests/basis/test_fourier_basis.py::test_grid_1d_and_2d": [],
+ "tests/basis/test_fourier_basis.py::test_grid_int_arg": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_and_grid_shapes": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_basis_eval_1d": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_basis_eval_2d": [],
+ "tests/basis/test_fourier_basis.py::test_to_time_dependent_idempotent_when_already_time_dependent": [],
+ "tests/basis/test_fourier_basis.py::test_to_time_independent_noop_when_not_time_dependent": [],
+ "tests/basis/test_fourier_basis.py::test_time_dependent_grad_time_and_space": [],
+ "tests/basis/test_fourier_basis.py::test_time_dependent_integral_time_and_space": [],
+ "tests/basis/test_fourier_basis.py::test_get_values_time_dependent_inverse_and_basis": [],
+ "tests/basis/test_fourier_basis.py::test_resize_time_dependent_to_basis_interpolates_time": [],
+ "tests/basis/test_fourier_basis.py::test_plot_1d_real": [],
+ "tests/basis/test_fourier_basis.py::test_plot_1d_complex_both_components": [],
+ "tests/basis/test_fourier_basis.py::test_plot_1d_complex_scatter": [],
+ "tests/basis/test_fourier_basis.py::test_plot_2d_real": [],
+ "tests/basis/test_fourier_basis.py::test_plot_2d_complex_default_component_warns": [],
+ "tests/basis/test_fourier_basis.py::test_plot_2d_complex_scatter": [],
+ "tests/basis/test_fourier_basis.py::test_plot_out_of_bounds": [],
+ "tests/basis/test_fourier_basis.py::test_plot_coefficients_2d": [],
+ "tests/basis/test_fourier_basis.py::test_plot_coefficients_on_axes": [],
+ "tests/basis/test_fourier_basis.py::test_plot_coefficients_time_dependent_raises": [],
+ "tests/basis/test_fourier_basis.py::test_dealias_mask_keeps_low_frequencies": [],
+ "tests/basis/test_fourier_basis.py::test_basis_diagonal_hooks_default_to_none": [],
+ "tests/basis/test_fourier_basis.py::test_math_import_smoke": [],
+ "tests/basis/test_nufft.py::test_evaluate_switches_to_nufft_above_threshold": [],
+ "tests/basis/test_nufft.py::test_dense_evaluate_chunk_bounds_memory": [],
+ "tests/basis/test_nufft.py::test_nufft_available": [],
+ "tests/basis/test_nufft.py::test_nufft_evaluate_shape": [],
+ "tests/basis/test_nufft.py::test_nufft_evaluate_does_not_materialize_dense_matrix": [],
+ "tests/model/test_SpectralSVR.py::test_SpectralSVR": [],
+ "tests/model/test_fitted_placement.py::test_every_kind_of_model_refuses_alike": [
+  "Every kind of model refuses alike"
+ ],
+ "tests/model/test_fnn.py::test_fnn_dump_load_roundtrip": [],
+ "tests/model/test_fnn.py::test_fnn_dump_only_hyperparams": [],
+ "tests/model/test_fnn.py::test_fnn_load_wrong_type_raises": [],
+ "tests/model/test_lssvr.py::test_lssvr_dump_load_roundtrip": [],
+ "tests/model/test_lssvr.py::test_lssvr_predict_before_fit_raises": [],
+ "tests/model/test_lssvr.py::test_lssvr_invalid_kernel_raises": [],
+ "tests/model/test_lssvr.py::test_lssvr_correlation_and_p_matrix": [],
+ "tests/model/test_lssvr.py::test_lssvr_correlation_before_fit_raises": [],
+ "tests/model/test_lssvr.py::test_lssvr_dump_only_hyperparams": [],
+ "tests/model/test_lssvr.py::test_lssvr_kernel_property_before_fit_defaults_sigma": [],
+ "tests/model/test_lssvr.py::test_lssvr_load_type_mismatch_raises": [],
+ "tests/model/test_lssvr.py::test_torch_json_encoder_rejects_unknown_type": [],
+ "tests/model/test_lssvr.py::test_lssvr_keeps_a_stated_host_under_an_accelerator": [
+  "The host is not overridden"
+ ],
+ "tests/model/test_spectralsvr_anchors.py::test_inverse_recovers_known_input": [],
+ "tests/model/test_spectralsvr_methods.py::test_train_rejects_dtype_mismatch": [],
+ "tests/model/test_spectralsvr_methods.py::test_test_rejects_dtype_mismatch": [],
+ "tests/model/test_spectralsvr_methods.py::test_forward_rejects_wrong_x_dims": [],
+ "tests/model/test_spectralsvr_methods.py::test_inverse_before_train_raises": [],
+ "tests/model/test_spectralsvr_methods.py::test_inverse_features_none_when_regressor_prefitted": [],
+ "tests/model/test_spectralsvr_methods.py::test_boundary_refuses_a_regressor_that_would_narrow_coefficients": [],
+ "tests/model/test_spectralsvr_methods.py::test_boundary_allows_a_wider_regressor_but_reports_it": [],
+ "tests/model/test_spectralsvr_methods.py::test_boundary_refuses_on_every_path_that_reaches_the_regressor": [],
+ "tests/model/test_spectralsvr_methods.py::test_boundary_is_silent_when_the_precisions_match": [],
+ "tests/model/test_spectralsvr_methods.py::test_double_precision_survives_the_model_boundary": [],
+ "tests/model/test_spectralsvr_methods.py::test_bridge_round_trips_exactly_at_both_precisions": [],
+ "tests/model/test_spectralsvr_methods.py::test_the_inverse_builds_its_own_source_where_the_work_is": [
+  "A source the library builds for itself agrees by construction"
+ ],
+ "tests/model/test_spectralsvr_methods.py::test_the_inverse_refuses_a_source_placed_elsewhere": [
+  "A mismatched random source names both devices"
+ ],
+ "tests/operators/test_benchmark_record.py::test_provenance_reports_a_dirty_tree_and_a_clean_one": [],
+ "tests/operators/test_benchmark_record.py::test_one_recipe_regenerates_the_record_with_every_default_stated": [
+  "One command regenerates"
+ ],
+ "tests/operators/test_burgers_forced_case.py::test_quick_builds_a_smaller_case_than_full": [],
+ "tests/operators/test_burgers_forced_case.py::test_the_forced_case_sizes_are_stated_by_name": [],
+ "tests/operators/test_burgers_forced_case.py::test_every_registered_dataset_is_named_once": [
+  "Forced dataset is registered"
+ ],
+ "tests/operators/test_burgers_forced_case.py::test_every_forcing_to_solution_row_says_how_its_forcing_was_obtained": [
+  "The derived and drawn forcings are distinguishable"
+ ],
+ "tests/operators/test_deeponet.py::test_the_deeponet_value_types_are_immutable": [],
+ "tests/operators/test_operators.py::test_operator_dataset_shapes": [
+  "Targets are evaluated, not pre-sampled"
+ ],
+ "tests/operators/test_operators.py::test_spectralsvr_operator_learns_antiderivative": [
+  "Predict after fit",
+  "Query points are not restricted to the training grid"
+ ],
+ "tests/operators/test_operators.py::test_an_unfitted_operator_cannot_predict": [
+  "Predicting before fitting cannot be stated",
+  "Fitting yields the thing that predicts"
+ ],
+ "tests/operators/test_operators.py::test_benchmark_returns_metric_table": [
+  "One row per operator, same metrics"
+ ],
+ "tests/operators/test_operators.py::test_benchmark_propagates_a_failing_operator": [],
+ "tests/operators/test_operators.py::test_benchmark_scores_two_operators_against_the_same_targets": [
+  "Shared inputs and targets",
+  "Each method takes the view it needs"
+ ],
+ "tests/operators/test_operators.py::test_the_benchmark_script_states_what_its_table_establishes": [
+  "Scope of the claim is stated",
+  "Fit times are qualified",
+  "A single-seed table is not presented as a result",
+  "Run-to-run spread is stated per operator"
+ ],
+ "tests/operators/test_operators.py::test_benchmark_documents_its_measurement_protocol": [
+  "Fit time excludes prediction",
+  "A failing operator is not silently omitted from a run"
+ ],
+ "tests/operators/test_operators.py::test_a_missing_operator_extra_refuses_by_default": [
+  "A short table requires an explicit opt-in"
+ ],
+ "tests/operators/test_operators.py::test_fit_seconds_measures_the_fit_and_not_the_prediction": [
+  "Fit time excludes prediction"
+ ],
+ "tests/operators/test_operators.py::test_the_value_types_are_immutable": [],
+ "tests/operators/test_time_varying_scoring.py::test_the_prediction_bound_sits_within_ten_times_the_recorded_worst": [],
+ "tests/problems/test_problems.py::test_axis_diff_rejects_bad_order": [],
+ "tests/problems/test_problems.py::test_antiderivative_rejects_bad_sizes": [],
+ "tests/problems/test_problems.py::test_burgers_numerical_solution_dissipates_energy": [],
+ "tests/problems/test_problems.py::test_manufactured_branch_rejects_a_solver": [],
+ "tests/problems/test_problems.py::test_numerical_branch_uses_the_supplied_solver": [],
+ "tests/problems/test_problems.py::test_numerical_burgers_agrees_with_an_independent_integrator": [],
+ "tests/problems/test_problems.py::test_manufactured_pair_satisfies_the_continuous_equation": [],
+ "tests/problems/test_problems.py::test_continuous_residual_detects_a_corrupted_forcing": [],
+ "tests/problems/test_problems.py::test_generate_rejects_a_time_domain_without_a_step": [],
+ "tests/problems/test_problems.py::test_numerical_burgers_reproduces_manufactured_solution": [
+  "Round-trip matches the manufactured solution",
+  "Exact solution reached within time-stepping error"
+ ],
+ "tests/problems/test_problems.py::test_round_trip_is_not_satisfied_by_a_solver_that_stands_still": [
+  "The round-trip comparison is not satisfied by standing still",
+  "A full-period comparison states what the solver had to do"
+ ],
+ "tests/problems/test_problems.py::test_numerical_burgers_round_trip_converges_at_the_integrator_order": [
+  "Round-trip converges at the integrator's order",
+  "Rate, not just size, is asserted"
+ ],
+ "tests/problems/test_problems.py::test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order": [
+  "Forcing is evaluated at stage times, not step starts"
+ ],
+ "tests/problems/test_problems.py::test_generation_survives_a_process_default_pointing_elsewhere": [
+  "A workload placed against the process default still runs"
+ ],
+ "tests/test_oracle_coverage.py::test_every_module_has_an_anchor": [],
+ "tests/test_oracle_coverage.py::test_exempt_list_is_current": [],
+ "tests/test_oracle_coverage.py::test_mms_markers_are_retired": [],
+ "tests/test_oracle_coverage.py::test_oracle_marker_names_match_conftest": [],
+ "tests/test_oracle_coverage.py::test_setup_enforcement_rejects_unmarked_test": [],
+ "tests/test_oracle_coverage.py::test_setup_enforcement_rejects_multiple_oracle_markers": [],
+ "tests/test_oracle_coverage.py::test_setup_enforcement_accepts_single_oracle_marker": [],
+ "tests/test_prose_budget.py::test_no_file_carries_more_prose_than_its_budget": [],
+ "tests/test_prose_budget.py::test_no_budget_holds_slack": [],
+ "tests/test_prose_budget.py::test_every_ruff_docstring_finding_lands_in_a_counted_docstring": [],
+ "tests/test_prose_budget.py::test_a_cyclic_reexport_between_packages_terminates": [],
+ "tests/test_scenario_coverage.py::test_scenario_names_are_unique": [],
+ "tests/test_scenario_coverage.py::test_every_stated_scenario_is_covered_or_exempt": [],
+ "tests/test_scenario_coverage.py::test_no_exemption_is_stale": [],
+ "tests/test_scenario_coverage.py::test_every_in_flight_exemption_names_a_scenario_still_in_flight": [],
+ "tests/utils/test_band.py::test_the_forms_that_promise_a_real_result_are_exactly_two": [],
+ "tests/utils/test_band.py::test_the_raw_form_states_the_guarantee_it_does_not_make": [],
+ "tests/utils/test_band.py::test_exported_from_the_package_root": [],
+ "tests/utils/test_metric_anchors.py::test_get_metrics_hand_computed_values": [
+  "Neither replaces the other"
+ ],
+ "tests/utils/test_metric_anchors.py::test_get_metrics_rrse_near_constant_column": [],
+ "tests/utils/test_metric_anchors.py::test_get_metrics_rse_consistent_with_definition_rrse_squared": [],
+ "tests/utils/test_metric_anchors.py::test_get_metrics_nan_count": [],
+ "tests/utils/test_solvers.py::test_etdrk4_order_with_time_dependent_forcing": [],
+ "tests/utils/test_solvers.py::test_etdrk4_complex_weights_match_closed_form": [],
+ "tests/utils/test_solvers.py::test_etdrk4_real_weights_unchanged": [],
+ "tests/utils/test_solvers.py::test_etdrk4_rejects_non_uniform_grid": [],
+ "tests/utils/test_solvers.py::test_etdrk4_requires_matching_shapes": [],
+ "tests/utils/test_solvers.py::test_conversion_integrates_complex_spectral_state": [],
+ "tests/utils/test_solvers.py::test_conversion_forwards_the_time_grid_unchanged": [],
+ "tests/utils/test_utils.py::test_accelerator_names_whichever_one_is_present": [
+  "Naming the accelerator is a statement, not a search"
+ ],
+ "tests/utils/test_utils.py::test_a_stated_host_survives_an_available_accelerator": [
+  "The host is not overridden"
+ ],
+ "tests/utils/test_utils.py::test_two_stated_indices_that_differ_are_a_disagreement": [
+  "A stated index is part of the statement"
+ ],
+ "tests/utils/test_utils.py::test_an_unstated_index_agrees_with_a_stated_one": [
+  "A stated index is part of the statement"
+ ],
+ "tests/utils/test_utils.py::test_a_random_source_device_is_invisible_to_a_type_checker": [
+  "A mismatched random source names both devices"
+ ],
+ "tests/utils/test_utils.py::test_get_metrics_single_sample_r2_is_nan": [],
+ "tests/utils/test_utils.py::test_get_metrics_injected_metric_set": [],
+ "tests/utils/test_utils.py::test_standard_scaler_tuple_and_subset": [],
+ "tests/utils/test_utils.py::test_standard_scaler_consistency_checks": [],
+ "tests/utils/test_utils.py::test_standard_scaler_save_load": [],
+ "tests/utils/test_utils.py::test_to_mag_angle_idempotent_on_real": [],
+ "tests/utils/test_utils.py::test_to_mag_angle_handles_any_number_of_mode_axes": [],
+ "tests/utils/test_utils.py::test_from_mag_angle_inverts_to_mag_angle": [],
+ "tests/utils/test_utils.py::test_polar_encoding_precision_corresponds": [],
+ "tests/utils/test_utils.py::test_polar_encoding_preserves_device": [],
+ "tests/utils/test_utils.py::test_from_mag_angle_idempotent_on_complex": [],
+ "tests/utils/test_utils.py::test_euler_solver_requires_multiple_points": [],
+ "tests/utils/test_utils.py::test_zero_coeff_per_axis_bands": [],
+ "tests/utils/test_utils.py::test_zero_coeff_rejects_a_bare_count": [],
+ "tests/utils/test_utils.py::test_conversion_registry_covers_every_exported_conversion": [],
+ "tests/utils/test_utils.py::test_every_conversion_accepts_any_number_of_mode_axes": [],
+ "tests/utils/test_utils.py::test_every_conversion_preserves_precision": [],
+ "tests/utils/test_utils.py::test_every_conversion_preserves_device": []
+}

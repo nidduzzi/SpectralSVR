@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/operators/__base.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "/home/migi/Documents/projects/SpectralSVR/openspec/changes/consolidate-the-test-suite/measurements/cosmic-ray/timed_pytest.sh -x -q -p no:cacheprovider --hypothesis-seed=0 tests/operators/test_benchmark_record.py::test_provenance_reports_a_dirty_tree_and_a_clean_one tests/operators/test_burgers_forced_case.py::test_quick_builds_a_smaller_case_than_full tests/operators/test_burgers_forced_case.py::TestBenchmarkCasesStayPut tests/operators/test_deeponet.py::test_the_deeponet_value_types_are_immutable tests/operators/test_operators.py::test_operator_dataset_shapes tests/operators/test_operators.py::test_spectralsvr_operator_learns_antiderivative tests/operators/test_operators.py::test_benchmark_returns_metric_table tests/operators/test_operators.py::test_benchmark_propagates_a_failing_operator tests/operators/test_operators.py::test_benchmark_scores_two_operators_against_the_same_targets tests/operators/test_operators.py::test_a_missing_operator_extra_refuses_by_default tests/operators/test_operators.py::test_the_value_types_are_immutable tests/operators/test_operators.py::TestSensorsAndDatasets tests/operators/test_operators.py::TestBenchmarkRuns"
+
+[cosmic-ray.distributor]
+name = "local"
