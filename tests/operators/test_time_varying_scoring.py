@@ -1,8 +1,11 @@
+import json
+from pathlib import Path
+
 import pytest
 import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
-from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
+from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
 from SpectralSVR import FourierBasis, SpectralSVR
 from SpectralSVR.model import LSSVR
@@ -15,7 +18,7 @@ from tests._time_varying import grid_points, rows, slice_times, time_varying_fie
 DOMAIN = ((0.0, 1.0), (0.0, 1.0))
 ROUNDOFF_RTOL = 1e-6
 INTERPOLATING_C = 1e6
-PREDICTION_RTOL = 5e-4
+PREDICTION_RTOL = 1e-5
 FUZZ = settings(deadline=None, max_examples=20)
 FIELDS = dict(
     seed=st.integers(0, 10_000),
@@ -29,15 +32,33 @@ def interpolating_regressor():
     return LSSVR(kernel="linear", C=INTERPOLATING_C, dtype=torch.float32)
 
 
-def distinct_inputs(functions, sensors, seed):
+def seeded_draw(functions, sensors, seed):
     generator = torch.Generator().manual_seed(seed + 1)
-    return torch.randn(functions, sensors, generator=generator, dtype=torch.float64)
+    return torch.randn(sensors, functions, generator=generator, dtype=torch.float64)
+
+
+def orthonormal_rows(columns):
+    if torch.linalg.matrix_rank(columns) < columns.shape[1]:
+        raise ValueError(
+            f"a {tuple(columns.shape)} draw of rank below {columns.shape[1]} has no "
+            "orthonormal rows spanning it"
+        )
+    q, r = torch.linalg.qr(columns)
+    return (q * torch.sign(torch.diagonal(r))).T
+
+
+def orthonormal_inputs(functions, sensors, seed):
+    if functions > sensors:
+        raise ValueError(
+            f"{functions} orthonormal input functions cannot fit in {sensors} sensors"
+        )
+    return orthonormal_rows(seeded_draw(functions, sensors, seed))
 
 
 def dataset_over(u, seed):
     sensors = torch.linspace(0, 1, 4, dtype=torch.float64).unsqueeze(-1)
     return OperatorDataset(
-        sensors=sensors, f=distinct_inputs(len(u), len(sensors), seed), u=u
+        sensors=sensors, f=orthonormal_inputs(len(u), len(sensors), seed), u=u
     )
 
 
@@ -73,6 +94,8 @@ def test_targets_of_a_time_varying_output_are_read_at_a_time_and_a_place(
     assert torch.equal(targets, paired.real.to(torch.float64))
 
 
+@pytest.mark.scenario("An oracle's accuracy does not depend on the luck of the draw")
+@pytest.mark.scenario("A draw found to exceed the tolerance is pinned")
 @pytest.mark.oracle_analytic
 @pytest.mark.scenario(
     "Predictions of a time-varying output are read at the same points"
@@ -81,6 +104,8 @@ def test_targets_of_a_time_varying_output_are_read_at_a_time_and_a_place(
 @given(**FIELDS, query_device=st.sampled_from(DEVICES_PRESENT))
 @example(seed=0, functions=1, slices=1, modes=1, query_device=HOST)
 @example(seed=0, functions=4, slices=9, modes=9, query_device=HOST)
+@example(seed=2211, functions=4, slices=1, modes=3, query_device=HOST)
+@example(seed=253, functions=4, slices=1, modes=2, query_device=HOST)
 def test_predictions_of_a_time_varying_output_are_read_at_the_same_points(
     seed, functions, slices, modes, query_device
 ):
@@ -189,6 +214,11 @@ class FittingAndPredicting(RuleBasedStateMachine):
         self.model = SpectralSVR(FourierBasis(), interpolating_regressor())
         self.dataset = None
 
+    @initialize()
+    def fit_the_field_that_once_exceeded_the_bound(self):
+        self.fit(seed=2211, functions=4, slices=1, modes=3, varies_in_time=True)
+        self.predictions_follow_the_most_recent_fit()
+
     @rule(
         seed=st.integers(0, 10_000),
         functions=st.integers(1, 4),
@@ -222,4 +252,75 @@ class FittingAndPredicting(RuleBasedStateMachine):
 FittingAndPredicting.TestCase.settings = settings(
     deadline=None, max_examples=15, stateful_step_count=8
 )
-TestFittingAndPredicting = pytest.mark.oracle_invariant(FittingAndPredicting.TestCase)
+TestFittingAndPredicting = pytest.mark.scenario(
+    "An oracle's accuracy does not depend on the luck of the draw"
+)(
+    pytest.mark.scenario("A draw found to exceed the tolerance is pinned")(
+        pytest.mark.oracle_invariant(FittingAndPredicting.TestCase)
+    )
+)
+
+
+def classical_gram_schmidt(columns):
+    basis = []
+    for column in columns.T:
+        residual = column - sum((column @ b) * b for b in basis)
+        basis.append(residual / torch.linalg.vector_norm(residual))
+    return torch.stack(basis)
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("An oracle's accuracy does not depend on the luck of the draw")
+@FUZZ
+@given(seed=st.integers(0, 10_000), functions=st.integers(1, 4))
+@example(seed=2211, functions=4)
+@example(seed=253, functions=4)
+@example(seed=0, functions=1)
+def test_the_fixture_inputs_are_the_gram_schmidt_basis_of_their_seeded_draw(
+    seed, functions
+):
+    inputs = orthonormal_inputs(functions, 4, seed)
+
+    assert torch.allclose(
+        inputs, classical_gram_schmidt(seeded_draw(functions, 4, seed)), atol=1e-10
+    )
+    assert torch.allclose(
+        inputs @ inputs.T, torch.eye(functions, dtype=torch.float64), atol=1e-12
+    )
+    assert not torch.allclose(inputs, orthonormal_inputs(functions, 4, seed + 1))
+
+
+@pytest.mark.oracle_smoke
+@FUZZ
+@given(functions=st.integers(1, 6), sensors=st.integers(1, 6), deficient=st.booleans())
+@example(functions=5, sensors=4, deficient=False)
+@example(functions=4, sensors=4, deficient=False)
+@example(functions=2, sensors=4, deficient=True)
+def test_the_fixture_refuses_inputs_it_cannot_make_orthonormal(
+    functions, sensors, deficient
+):
+    if functions > sensors:
+        with pytest.raises(
+            ValueError,
+            match=f"{functions} orthonormal input functions cannot fit in {sensors} sensors",
+        ):
+            orthonormal_inputs(functions, sensors, 0)
+        return
+    columns = seeded_draw(functions, sensors, 0)
+    if deficient and functions > 1:
+        columns[:, -1] = columns[:, 0]
+        with pytest.raises(ValueError, match="no orthonormal rows"):
+            orthonormal_rows(columns)
+        return
+    assert orthonormal_rows(columns).shape == (functions, sensors)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_consistency
+def test_the_prediction_bound_sits_within_ten_times_the_recorded_worst():
+    record = json.loads(
+        (Path(__file__).parent / "prediction_error_record.json").read_text()
+    )
+    worst = max(record["worst_over_reruns"].values())
+
+    assert worst < PREDICTION_RTOL <= 10 * worst
