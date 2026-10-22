@@ -12,9 +12,19 @@ import torch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from tests._anchors import half_open_grid, single_mode_spectrum
+from tests._anchors import (
+    half_open_grid,
+    hermitian_error,
+    hermitian_spectrum,
+    single_mode_spectrum,
+)
 from SpectralSVR import FourierBasis
-from SpectralSVR.utils import resize_modes, zero_coeff
+from SpectralSVR.utils import (
+    ExactModeCount,
+    WavenumberCutoff,
+    resize_modes,
+    zero_coeff,
+)
 
 SETTINGS = settings(deadline=None, max_examples=20)
 
@@ -68,22 +78,6 @@ def test_resize_modes_pad_values():
 # --------------------------------------------------------------------------- #
 RESIZE_SOURCE_MODES = (4, 5, 8, 9, 12)
 RESIZE_TOLERANCE = 1e-14
-
-
-def hermitian_error(coeff):
-    """How far a coefficient grid is from describing a real field."""
-    mirrored = coeff
-    for dim in range(1, coeff.ndim):
-        index = (-torch.arange(coeff.shape[dim])) % coeff.shape[dim]
-        mirrored = mirrored.index_select(dim, index)
-    return float((coeff - mirrored.conj()).abs().max())
-
-
-def hermitian_spectrum(n, seed):
-    raw = torch.randn(
-        1, n, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed)
-    )
-    return 0.5 * (raw + raw.index_select(1, (-torch.arange(n)) % n).conj())
 
 
 @pytest.mark.no_fuzz
@@ -144,11 +138,17 @@ def test_padding_preserves_the_function_at_the_original_sample_points():
 def test_zero_coeff_values():
     x = (
         torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
-    )  # bins 0..7
-    # keep 4 modes -> keep freqs {0, 1, -2, -1} = bins {0, 1, 6, 7}; zero the
-    # high-|frequency| middle block bins {2, 3, 4, 5}
-    expected = torch.tensor([[1, 2, 0, 0, 0, 0, 7, 8]], dtype=torch.complex64)
-    assert torch.equal(zero_coeff(x, 4), expected)
+    )  # bins 0..7 = freqs [0, 1, 2, 3, -4, -3, -2, -1]
+    # |k| <= 2 keeps freqs {0, 1, 2, -2, -1} = bins {0, 1, 2, 6, 7}; zero the
+    # high-|frequency| middle block bins {3, 4, 5}
+    expected = torch.tensor([[1, 2, 3, 0, 0, 0, 7, 8]], dtype=torch.complex64)
+    assert torch.equal(zero_coeff(x, WavenumberCutoff(2)), expected)
+    # the same numeral as a raw count is a different band: 2 modes, freqs
+    # {0, -1} = bins {0, 7}
+    assert torch.equal(
+        zero_coeff(x, ExactModeCount(2)),
+        torch.tensor([[1, 0, 0, 0, 0, 0, 0, 8]], dtype=torch.complex64),
+    )
 
 
 # --------------------------------------------------------------------------- #

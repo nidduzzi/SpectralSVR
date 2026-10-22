@@ -7,7 +7,9 @@ from hypothesis.extra import numpy as hnp
 
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
+    ExactModeCount,
     StandardScaler,
+    WavenumberCutoff,
     euler_solver,
     get_metrics,
     interpolate_tensor,
@@ -338,14 +340,35 @@ def test_resize_modes_int_target(cur, target, seed):
 
 @pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(4, 16), keep=st.integers(1, 3), seed=st.integers(0, 10_000))
-def test_zero_coeff_zeros_high_modes(n, keep, seed):
+@given(n=st.integers(4, 16), cutoff=st.integers(0, 3), seed=st.integers(0, 10_000))
+def test_zero_coeff_zeros_high_modes(n, cutoff, seed):
     x = torch.randn(
         2, n, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
     )
-    out = zero_coeff(x, keep)
+    out = zero_coeff(x, WavenumberCutoff(cutoff))
     assert out.shape == x.shape
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+def test_zero_coeff_per_axis_bands():
+    x = torch.ones(2, 8, 8, dtype=torch.complex64)
+    # |k| <= 1 keeps 3 bins of an axis, an exact count of 4 keeps 4
+    mixed = zero_coeff(x, [WavenumberCutoff(1), ExactModeCount(4)])
+    assert int(torch.count_nonzero(mixed)) == 2 * 3 * 4
+    broadcast = zero_coeff(x, WavenumberCutoff(1))
+    assert int(torch.count_nonzero(broadcast)) == 2 * 3 * 3
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_zero_coeff_rejects_a_bare_count():
+    x = torch.ones(1, 8, dtype=torch.complex64)
+    with pytest.raises(TypeError):
+        zero_coeff(x, 4)
+    with pytest.raises(TypeError):
+        zero_coeff(x, [4])
 
 
 @pytest.mark.oracle_analytic

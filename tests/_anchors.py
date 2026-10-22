@@ -41,6 +41,27 @@ def single_mode_spectrum(
     return coeff
 
 
+def hermitian_error(coeff: torch.Tensor) -> float:
+    """How far a coefficient grid is from describing a real field.
+
+    Mirrors every mode axis about bin 0 and compares against the conjugate;
+    zero exactly when ``c[-k] == conj(c[k])`` on every axis.
+    """
+    mirrored = coeff
+    for dim in range(1, coeff.ndim):
+        index = (-torch.arange(coeff.shape[dim])) % coeff.shape[dim]
+        mirrored = mirrored.index_select(dim, index)
+    return float((coeff - mirrored.conj()).abs().max())
+
+
+def hermitian_spectrum(n: int, seed: int) -> torch.Tensor:
+    """A random spectrum symmetrised into one describing a real field."""
+    raw = torch.randn(
+        1, n, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed)
+    )
+    return 0.5 * (raw + raw.index_select(1, (-torch.arange(n)) % n).conj())
+
+
 def separable_time_field(
     g_coeffs: torch.Tensor,
     t: torch.Tensor,
