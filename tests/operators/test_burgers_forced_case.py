@@ -1,4 +1,5 @@
 import importlib.util
+import itertools
 import math
 import pathlib
 
@@ -6,10 +7,12 @@ import pytest
 import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
-from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
+from hypothesis.stateful import Bundle, RuleBasedStateMachine, initialize, rule
 
-from SpectralSVR import accelerator
 from SpectralSVR.utils import DEFAULT_COEFF_DTYPE
+
+from tests._devices import ACCELERATOR, DEVICES_PRESENT, HOST, needs_an_accelerator
+
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
 _spec = importlib.util.spec_from_file_location("_run_benchmark_forced", SCRIPT)
@@ -17,8 +20,6 @@ assert _spec is not None and _spec.loader is not None
 bench = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bench)
 
-HOST = torch.device("cpu")
-DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
 SEEDS = st.integers(0, 2**32 - 1)
 SIZES = st.tuples(st.integers(1, 6), st.integers(1, 4), st.integers(2, 10))
 SMALLEST_SIZES = (1, 1, 2)
@@ -27,11 +28,6 @@ FULL_SIZES = (60, 15, 12)
 AT_REST_ATOL = 1e-6
 END_OF_INTERVAL_RTOL = 5e-6
 FUZZ = settings(deadline=None, max_examples=6)
-
-needs_an_accelerator = pytest.mark.skipif(
-    not torch.accelerator.is_available(),
-    reason="placement against a process default pointing elsewhere needs a second device",
-)
 
 
 def build_forced(seed, quick, device, sizes, **options):
@@ -51,12 +47,16 @@ def the_same_case(first, second) -> bool:
         (second.split.train, second.split.test),
         strict=True,
     )
-    return torch.equal(first.query.cpu(), second.query.cpu()) and all(
-        torch.equal(a.f.cpu(), b.f.cpu())
-        and torch.equal(a.sensors.cpu(), b.sensors.cpu())
-        and torch.equal(a.u.coeff.cpu(), b.u.coeff.cpu())
+    tensor_pairs = [(first.query, second.query)] + [
+        pair
         for a, b in halves
-    )
+        for pair in ((a.f, b.f), (a.sensors, b.sensors), (a.u.coeff, b.u.coeff))
+    ]
+    return all(x.device == y.device and torch.equal(x, y) for x, y in tensor_pairs)
+
+
+SLICE_EDGES = [(1, 1), (6, 8)]
+WHICH_SLICE = ["first", "middle", "last"]
 
 
 class BenchmarkCasesStayPut(RuleBasedStateMachine):
@@ -65,6 +65,13 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
         self.first_builds = {}
+
+    @initialize()
+    def check_every_pinned_slice(self):
+        for device, which, (slices, modes) in itertools.product(
+            DEVICES_PRESENT, WHICH_SLICE, SLICE_EDGES
+        ):
+            self.slice_a_placed_field(device, slices, modes, which)
 
     @rule(
         target=built,
@@ -78,8 +85,10 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
         assert the_same_case(case, first)
         return (key, seed, device)
 
-    @rule(identity=built)
-    def rebuild(self, identity):
+    @rule(identity=built, default=st.sampled_from([None, *DEVICES_PRESENT]))
+    def rebuild(self, identity, default):
+        if default is not None:
+            torch.set_default_device(default)
         key, seed, device = identity
         case = bench.DATASETS[key].build(seed, True, device)
         assert the_same_case(case, self.first_builds[identity])
@@ -88,13 +97,35 @@ class BenchmarkCasesStayPut(RuleBasedStateMachine):
     def build_the_forced_case_at_other_sizes(self, seed, sizes, device):
         build_forced(seed, True, device, sizes)
 
+    @rule(
+        device=st.sampled_from(DEVICES_PRESENT),
+        slices=st.integers(1, 6),
+        modes=st.integers(1, 8),
+        which=st.sampled_from(WHICH_SLICE),
+    )
+    def slice_a_placed_field(self, device, slices, modes, which):
+        coeff = torch.randn(2, slices, modes, dtype=DEFAULT_COEFF_DTYPE).to(device)
+        field = bench.FourierBasis(
+            coeff=coeff, domain=((0.0, 1.0), (0.0, 1.0)), time_dependent=True
+        )
+        time_index = {"first": 0, "middle": slices // 2, "last": slices - 1}[which]
+
+        slice_ = bench.spatial_field_at(field, time_index)
+
+        assert slice_.coeff.device == device
+        assert torch.equal(slice_.coeff, coeff[:, time_index])
+
 
 BenchmarkCasesStayPut.TestCase.settings = settings(
     deadline=None, max_examples=10, stateful_step_count=10
 )
-TestBenchmarkCasesStayPut = pytest.mark.scenario(
-    "Adding a row leaves the others alone"
-)(pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase))
+TestBenchmarkCasesStayPut = pytest.mark.scenario("A slice keeps its field's device")(
+    pytest.mark.scenario("A case does not depend on the process default")(
+        pytest.mark.scenario("Adding a row leaves the others alone")(
+            pytest.mark.oracle_invariant(BenchmarkCasesStayPut.TestCase)
+        )
+    )
+)
 
 
 @pytest.mark.oracle_analytic
@@ -223,15 +254,15 @@ def test_the_stages_the_builder_places_follow_the_stated_device(
     seed, sizes, stated_on_the_accelerator
 ):
     stated, elsewhere = (
-        (accelerator(), HOST) if stated_on_the_accelerator else (HOST, accelerator())
+        (ACCELERATOR, HOST) if stated_on_the_accelerator else (HOST, ACCELERATOR)
     )
     torch.set_default_device(elsewhere)
 
     case = build_forced(seed, True, stated, sizes)
 
-    assert case.query.device.type == stated.type
+    assert case.query.device == stated
     for half in (case.split.train, case.split.test):
-        assert half.u.coeff.device.type == stated.type
+        assert half.u.coeff.device == stated
 
 
 @pytest.mark.oracle_consistency

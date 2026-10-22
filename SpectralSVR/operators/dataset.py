@@ -15,9 +15,12 @@ from dataclasses import dataclass
 import torch
 
 from ..basis import Basis, DomainAxis
+from ..utils import DeviceInput, resolve_device
 
 
-def sensor_grid(domain: tuple[DomainAxis, ...], n_per_axis: int) -> torch.Tensor:
+def sensor_grid(
+    domain: tuple[DomainAxis, ...], n_per_axis: int, *, device: DeviceInput = None
+) -> torch.Tensor:
     """Half-open (periodic) tensor-product grid over ``domain``.
 
     Parameters
@@ -27,14 +30,24 @@ def sensor_grid(domain: tuple[DomainAxis, ...], n_per_axis: int) -> torch.Tensor
     n_per_axis : int
         Points per axis; the returned grid has ``n_per_axis ** len(domain)``
         rows.
+    device : DeviceInput
+        Where the grid is placed; unstated, the process default.
 
     Returns
     -------
     torch.Tensor
         Shape ``(m, d)`` sensor coordinates, ``m = n_per_axis ** d``.
     """
+    if n_per_axis < 1 or len(domain) == 0:
+        raise ValueError(
+            f"a sensor grid needs at least one axis and at least one point per "
+            f"axis; got {len(domain)} axes and {n_per_axis} points per axis"
+        )
+    placement = resolve_device(device)
     axes = [
-        torch.linspace(start, stop, n_per_axis + 1, dtype=torch.float64)[:-1]
+        torch.linspace(
+            start, stop, n_per_axis + 1, dtype=torch.float64, device=placement
+        )[:-1]
         for start, stop in domain
     ]
     mesh = torch.meshgrid(axes, indexing="ij")
@@ -62,6 +75,11 @@ class OperatorDataset:
     u: Basis
 
     def __post_init__(self) -> None:
+        if self.sensors.device != self.f.device:
+            raise ValueError(
+                f"sensors are on {self.sensors.device} but their sampled values "
+                f"are on {self.f.device}; a dataset holds both on one device"
+            )
         if self.f.shape[1] != self.sensors.shape[0]:
             raise ValueError(
                 f"inputs are sampled at {self.f.shape[1]} points but the dataset "
@@ -94,7 +112,15 @@ class OperatorDataset:
         n_sensors : int
             Points per axis for the sensor grid.
         """
-        sensors = sensor_grid(input_field.domain, n_sensors)
+        if input_field.coeff.device != output_field.coeff.device:
+            raise ValueError(
+                f"the input field is on {input_field.coeff.device} but the output "
+                f"field is on {output_field.coeff.device}; a dataset is built "
+                "from fields on one device"
+            )
+        sensors = sensor_grid(
+            input_field.domain, n_sensors, device=input_field.coeff.device
+        )
         f = input_field(sensors).real.to(torch.float64)
         return cls(sensors=sensors, f=f, u=output_field)
 

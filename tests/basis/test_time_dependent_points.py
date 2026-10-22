@@ -3,9 +3,10 @@ import torch
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from SpectralSVR import FourierBasis, accelerator
+from SpectralSVR import FourierBasis
 from SpectralSVR.utils import to_real_coeff
 
+from tests._devices import DEVICES_PRESENT, HOST
 from tests._time_varying import (
     UNIT,
     grid_points,
@@ -14,8 +15,6 @@ from tests._time_varying import (
     time_varying_field,
 )
 
-HOST = torch.device("cpu")
-DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
 FUZZ = settings(deadline=None, max_examples=30)
 ROUNDOFF_RTOL = 1e-6
 SINGLE_PRECISION_QUERY_RTOL = 1e-4
