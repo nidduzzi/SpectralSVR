@@ -100,16 +100,14 @@ def samplings_to_tuple(
     ndim: int,
     default: SamplingScheme,
 ) -> tuple[SamplingScheme, ...]:
-    """Normalise a sampling input into one scheme per axis.
-
-    ``None`` uses ``default`` on every axis; a single scheme is broadcast; a
-    per-axis sequence is taken axis-for-axis (a scheme is not a ``Sequence``, so
-    the two are told apart by type).
-    """
     if sampling is None:
         return tuple(default for _ in range(ndim))
-    # peel the single scheme off first (runtime-checkable): a per-axis list/tuple
-    # has no scheme attributes, so it won't match, leaving the sequence case.
     if isinstance(sampling, SamplingScheme):
         return tuple(sampling for _ in range(ndim))
-    return tuple(scheme for scheme in sampling)
+    schemes = tuple(sampling)
+    if len(schemes) != ndim:
+        raise ValueError(
+            f"a per-axis sampling names one scheme per axis; got {len(schemes)} "
+            f"schemes for {ndim} axes"
+        )
+    return schemes

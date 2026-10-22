@@ -40,7 +40,9 @@ class FourierBasis(Basis):
         complex_funcs: bool = False,
         domain: DomainInputType = None,
         time_dependent: bool = False,
-        sampling: FourierAcceptableScheme | None = None,
+        sampling: FourierAcceptableScheme
+        | tuple[FourierAcceptableScheme, ...]
+        | None = None,
         strategy: EvaluationStrategy | None = None,
         coeff_dtype: torch.dtype | None = None,
     ) -> None:

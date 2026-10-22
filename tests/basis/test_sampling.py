@@ -2,7 +2,7 @@
 
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 
 from SpectralSVR import FourierBasis
@@ -103,3 +103,62 @@ def test_matmul_transform_leg_matches_closed_form(m, amp, phase):
     )[0]
     expected = single_mode_spectrum(n, m, amp, phase).to(got.dtype)
     assert torch.allclose(got, expected, atol=2e-3 * n * amp)
+
+
+RESOLVERS = {
+    "samplings_to_tuple": lambda field, schemes: samplings_to_tuple(
+        schemes, field.ndim, ClosedUniform()
+    ),
+    "transform": lambda field, schemes: FourierBasis.transform(
+        FourierBasis.inv_transform(field.coeff), sampling=schemes
+    ),
+    "inv_transform": lambda field, schemes: FourierBasis.inv_transform(
+        field.coeff, sampling=schemes
+    ),
+    "get_values": lambda field, schemes: FourierBasis(
+        field.coeff, sampling=schemes
+    ).get_values(device=CPU),
+    "to_time_dependent": lambda field, schemes: FourierBasis(
+        field.coeff, sampling=schemes
+    ).to_time_dependent(),
+}
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario(
+    "A sampling of the wrong length is refused wherever it is resolved"
+)
+@SETTINGS
+@given(
+    ndim=st.integers(2, 3),
+    length=st.integers(0, 5),
+    resolver=st.sampled_from(tuple(RESOLVERS)),
+)
+@example(ndim=2, length=1, resolver="transform")
+@example(ndim=2, length=3, resolver="inv_transform")
+@example(ndim=2, length=1, resolver="get_values")
+@example(ndim=2, length=3, resolver="to_time_dependent")
+@example(ndim=2, length=2, resolver="samplings_to_tuple")
+def test_a_sampling_of_the_wrong_length_is_refused_wherever_it_is_resolved(
+    ndim, length, resolver
+):
+    field = FourierBasis(torch.zeros(1, *(4,) * ndim, dtype=torch.complex128))
+    schemes = tuple(PeriodicUniform() for _ in range(length))
+    if length == ndim:
+        RESOLVERS[resolver](field, schemes)
+        return
+    with pytest.raises(ValueError, match=f"got {length} schemes for {ndim} axes$"):
+        RESOLVERS[resolver](field, schemes)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario(
+    "A sampling of the wrong length is refused wherever it is resolved"
+)
+@pytest.mark.parametrize(
+    "sampling", [None, PeriodicUniform(), (PeriodicUniform(), PeriodicUniform())]
+)
+def test_a_basis_without_coefficients_has_no_axes_to_sample(sampling):
+    with pytest.raises(ValueError, match="holding no coefficients has no axes"):
+        _ = FourierBasis(sampling=sampling).axis_sampling
