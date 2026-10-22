@@ -32,8 +32,9 @@ SETTINGS = settings(deadline=None, max_examples=20)
 def test_resize_modes_truncate_values():
     c0, c1, c2, c3 = 1.0 + 1j, 2.0 - 1j, -3.0 + 0j, 0.5 + 2j
     x = torch.tensor([[c0, c1, c2, c3]])  # freqs [0, 1, +-2, -1]
-    # target 2 modes -> keep freqs {0, -1} = bins {0, 3}
-    expected = torch.tensor([[c0, c3]])
+    # target 2 modes -> freqs {0, -1}. On a 2-point grid freqs +1 and -1 are the
+    # same sampled wave, (-1)^n, so the target's -1 bin carries c3 + c1.
+    expected = torch.tensor([[c0, c3 + c1]])
     got = resize_modes(x, 2, rescale=False)
     assert torch.equal(got, expected)
     # rescale multiplies by target/current = 2/4
@@ -47,19 +48,103 @@ def test_resize_modes_pad_values():
     c0, c1, c2, c3 = 1.0 + 1j, 2.0 - 1j, -3.0 + 0j, 0.5 + 2j
     x = torch.tensor([[c0, c1, c2, c3]])
     # target 6 modes: low block freqs {0, 1} = bins {0, 1}; high (negative)
-    # block freqs {-2, -1} = old bins {2, 3} land at new bins {4, 5}; the two
-    # new bins {2, 3} (freqs +2/3, -3) are zero-padding.
-    expected = torch.tensor([[c0, c1, 0, 0, c2, c3]])
+    # block freqs {-2, -1} = old bins {2, 3} land at new bins {4, 5}; new bin 3
+    # (freq -3) is zero-padding. c2 sat at freq -2, which the 4-mode grid held
+    # without a +2 partner; the 6-mode grid has one, so c2 halves across both.
+    expected = torch.tensor([[c0, c1, c2 / 2, 0, c2 / 2, c3]])
     got = resize_modes(x, 6, rescale=False)
     assert torch.equal(got, expected)
     got_rescaled = resize_modes(x, 6, rescale=True)
     assert torch.allclose(got_rescaled, expected * 6 / 4)
 
 
+# --------------------------------------------------------------------------- #
+# resize_modes boundary rule: invariants rather than literal spectra.
+#
+# On an even mode count the top magnitude has a negative bin and no positive
+# one, so it is its own conjugate partner. Padding splits it across both of the
+# target's bins; truncating folds both back into the one bin the target has.
+# The two are inverses, so reverting either alone breaks the round-trip.
+# --------------------------------------------------------------------------- #
+RESIZE_SOURCE_MODES = (4, 5, 8, 9, 12)
+RESIZE_TOLERANCE = 1e-14
+
+
+def hermitian_error(coeff):
+    """How far a coefficient grid is from describing a real field."""
+    mirrored = coeff
+    for dim in range(1, coeff.ndim):
+        index = (-torch.arange(coeff.shape[dim])) % coeff.shape[dim]
+        mirrored = mirrored.index_select(dim, index)
+    return float((coeff - mirrored.conj()).abs().max())
+
+
+def hermitian_spectrum(n, seed):
+    raw = torch.randn(
+        1, n, dtype=torch.complex128, generator=torch.Generator().manual_seed(seed)
+    )
+    return 0.5 * (raw + raw.index_select(1, (-torch.arange(n)) % n).conj())
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_padding_preserves_conjugate_symmetry():
+    for n in RESIZE_SOURCE_MODES:
+        source = hermitian_spectrum(n, seed=n)
+        assert hermitian_error(source) == 0.0, f"n={n}: source is not Hermitian"
+        for target in (2 * n, 4 * n):
+            measured = hermitian_error(resize_modes(source, target, rescale=False))
+            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_padding_then_truncating_returns_the_original():
+    for n in RESIZE_SOURCE_MODES:
+        source = hermitian_spectrum(n, seed=n)
+        for target in (2 * n, 4 * n):
+            padded = resize_modes(source, target, rescale=False)
+            measured = float(
+                (resize_modes(padded, n, rescale=False) - source).abs().max()
+            )
+            assert measured < RESIZE_TOLERANCE, (
+                f"n={n} -> {target} -> {n}: {measured:.3e}"
+            )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_odd_source_counts_have_nothing_to_redistribute():
+    """Isolation control: odd counts read clean under either convention."""
+    for n in (5, 9):
+        source = hermitian_spectrum(n, seed=n)
+        for target in (2 * n, 4 * n):
+            padded = resize_modes(source, target, rescale=False)
+            for j in range(n):
+                k = j if j <= (n - 1) // 2 else j - n
+                assert padded[0, k % target] == source[0, j], (
+                    f"n={n} -> {target}: coefficient at frequency {k} was altered"
+                )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_padding_preserves_the_function_at_the_original_sample_points():
+    for n in RESIZE_SOURCE_MODES:
+        source = hermitian_spectrum(n, seed=n)
+        coarse = torch.fft.ifft(source) * n
+        for target in (2 * n, 4 * n):
+            fine = torch.fft.ifft(resize_modes(source, target, rescale=False)) * target
+            measured = float((fine[:, :: target // n] - coarse).abs().max())
+            assert measured < RESIZE_TOLERANCE, f"n={n} -> {target}: {measured:.3e}"
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_analytic
 def test_zero_coeff_values():
-    x = torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)  # bins 0..7
+    x = (
+        torch.arange(1, 9, dtype=torch.float32).to(torch.complex64).unsqueeze(0)
+    )  # bins 0..7
     # keep 4 modes -> keep freqs {0, 1, -2, -1} = bins {0, 1, 6, 7}; zero the
     # high-|frequency| middle block bins {2, 3, 4, 5}
     expected = torch.tensor([[1, 2, 0, 0, 0, 0, 7, 8]], dtype=torch.complex64)

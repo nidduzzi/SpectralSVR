@@ -52,24 +52,49 @@ def to_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
     """
     to_mag_angle
 
-    convert a tensor containing rows of complex coefficient vectors into rows of real coefficient vectors
+    convert complex coefficients into interleaved magnitude/phase pairs
+
+    The trailing axis doubles; leading axes are untouched, so a grid with any
+    number of mode axes is accepted. Device and real precision follow the input.
+    A real input is returned unchanged.
 
     Arguments:
-        coeff {torch.Tensor} -- m by p complex tensor where p is the number modes
+        coeff {torch.Tensor} -- complex tensor whose trailing axis is p modes
 
     Returns:
-        torch.Tensor -- m by 2p tensor of elements in real numbers
+        torch.Tensor -- real tensor whose trailing axis is 2p, magnitude at even
+        positions and phase at odd
     """
     if not torch.is_complex(coeff):
         logger.debug("coeff is already real")
         return coeff
-    converted_coeff = torch.empty(
-        (coeff.shape[0], coeff.shape[1] * 2), dtype=coeff.real.dtype
-    )
-    converted_coeff[:, ::2] = coeff.abs()
-    converted_coeff[:, 1::2] = coeff.angle()
+    converted_coeff = torch.stack((coeff.abs(), coeff.angle()), dim=-1).flatten(-2)
 
     return converted_coeff
+
+
+def from_mag_angle(coeff: torch.Tensor) -> torch.Tensor:
+    """
+    from_mag_angle
+
+    convert interleaved magnitude/phase pairs back into complex coefficients
+
+    The inverse of :func:`to_mag_angle`, and its mirror for any number of mode
+    axes. A complex input is returned unchanged, matching what
+    :func:`to_complex_coeff` does for the interleaved-real pair.
+
+    Arguments:
+        coeff {torch.Tensor} -- real tensor whose trailing axis is 2p, magnitude
+        at even positions and phase at odd
+
+    Returns:
+        torch.Tensor -- complex tensor whose trailing axis is p modes
+    """
+    if torch.is_complex(coeff):
+        logger.debug("coeff is already complex")
+        return coeff
+    pairs = coeff.reshape((*coeff.shape[:-1], -1, 2))
+    return torch.polar(pairs[..., 0], pairs[..., 1])
 
 
 def to_real_coeff(coeff: torch.Tensor) -> torch.Tensor:
@@ -319,6 +344,16 @@ def get_metrics(
 
 
 def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=True):
+    """Resize a coefficient grid to a different mode count per axis.
+
+    ``rescale`` selects which of two quantities survives, since a change of
+    mode count cannot preserve both. ``True`` preserves the represented
+    function, multiplying by ``prod(target_modes) / prod(current_modes)`` to
+    compensate the transform normalisation. ``False`` preserves the stored
+    coefficient values, which scales the function by the mode-count ratio
+    raised to the number of axes -- ``0.2500`` for a doubling in two
+    dimensions, ``0.0625`` for a quadrupling.
+    """
     current_modes = tuple(x.shape[1:])
     ncurrent_modes = len(current_modes)
     if isinstance(target_modes, int):
@@ -339,6 +374,9 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 range(current_mode - target_mode // 2, current_mode), dtype=torch.int
             ).to(device=device)
 
+            aliased_onto_boundary = x_resized.index_select(
+                dim, torch.tensor([target_mode // 2], dtype=torch.long).to(device)
+            )
             x_resized = torch.concat(
                 (
                     x_resized.index_select(dim, start_range),
@@ -346,6 +384,13 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 ),
                 dim,
             )
+            if target_mode % 2 == 0:
+                boundary = torch.tensor([target_mode // 2], dtype=torch.long).to(device)
+                x_resized = x_resized.index_copy(
+                    dim,
+                    boundary,
+                    x_resized.index_select(dim, boundary) + aliased_onto_boundary,
+                )
         elif target_mode > current_mode:
             start_range = torch.tensor(
                 range((current_mode - 1) // 2 + 1), dtype=torch.int
@@ -372,6 +417,16 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
                 ),
                 dim,
             )
+            if current_mode % 2 == 0:
+                negative = torch.tensor(
+                    [target_mode - current_mode // 2], dtype=torch.long
+                ).to(device)
+                positive = torch.tensor([current_mode // 2], dtype=torch.long).to(
+                    device
+                )
+                unpaired = x_resized.index_select(dim, negative) / 2
+                x_resized = x_resized.index_copy(dim, negative, unpaired)
+                x_resized = x_resized.index_copy(dim, positive, unpaired)
 
     if rescale:
         modes = list(x.shape[1:])
@@ -383,6 +438,15 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
 
 
 def zero_coeff(x: torch.Tensor, zeroed_modes: int | list[int]):
+    """Band-limit a coefficient grid in place, keeping the lowest modes.
+
+    An even count returns a grid that does not describe a real field. Modes
+    pair as ``+-k`` around the lone mode ``0``, so a kept set whose inverse
+    transform is real is always odd-sized: keeping an even count necessarily
+    keeps one member of a pair without the other. No substitute result answers
+    the request that was made -- rounding either direction keeps a different
+    number of modes than asked for.
+    """
     if isinstance(zeroed_modes, int):
         zeroed_modes = [zeroed_modes] * len(x.shape[1:])
     assert len(x.shape[1:]) == len(zeroed_modes), (

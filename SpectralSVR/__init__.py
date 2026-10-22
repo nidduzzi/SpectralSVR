@@ -14,6 +14,7 @@ from .utils import (
     to_complex_coeff as to_complex_coeff,
     to_real_coeff as to_real_coeff,
     to_mag_angle as to_mag_angle,
+    from_mag_angle as from_mag_angle,
     StandardScaler as StandardScaler,
     scale_to_standard as scale_to_standard,
     get_metrics as get_metrics,
