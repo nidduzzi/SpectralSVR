@@ -37,13 +37,15 @@ def _exact_evaluate(coeff, x, domain):
 @pytest.mark.oracle_independent
 @SETTINGS
 @given(
-    modes=st.integers(8, 48),
+    modes=st.integers(1, 48),
     rows=st.integers(1, 3),
     npts=st.integers(20, 200),
     length=st.floats(0.5, 3.0),
     start=st.floats(-3.0, 3.0),
     seed=st.integers(0, 10_000),
 )
+@example(modes=1, rows=2, npts=20, length=1.0, start=0.0, seed=0)
+@example(modes=2, rows=2, npts=20, length=1.0, start=-0.5, seed=0)
 def test_nufft_matches_dense_1d(modes, rows, npts, length, start, seed):
     # ``start`` spans 0, so the NUFFT's (x - start) / L normalisation is checked
     # against the exact path on both canonical and shifted domains.
@@ -59,10 +61,12 @@ def test_nufft_matches_dense_1d(modes, rows, npts, length, start, seed):
 @pytest.mark.oracle_independent
 @SETTINGS
 @given(
-    m=st.integers(8, 24),
+    m=st.integers(1, 24),
     npts=st.integers(20, 120),
     seed=st.integers(0, 10_000),
 )
+@example(m=1, npts=20, seed=0)
+@example(m=2, npts=20, seed=0)
 def test_nufft_matches_dense_2d(m, npts, seed):
     g = torch.Generator().manual_seed(seed)
     coeff = FourierBasis.generate_coeff(1, (m, m), generator=g).to(torch.complex128)
@@ -129,12 +133,13 @@ def test_approximate_and_exact_agree_at_every_mode_count(modes, rows, npts, seed
 @pytest.mark.oracle_independent
 @SETTINGS
 @given(
-    modes=st.integers(8, 48),
+    modes=st.integers(1, 48),
     budget_mb=st.sampled_from(BUDGETS_MB),
     around_threshold=st.integers(-20, 20),
     seed=st.integers(0, 10_000),
 )
 @example(modes=32, budget_mb=0.0, around_threshold=2000, seed=0)
+@example(modes=2, budget_mb=0.0, around_threshold=2000, seed=0)
 def test_evaluate_switches_to_nufft_above_threshold(
     modes, budget_mb, around_threshold, seed
 ):
@@ -226,7 +231,8 @@ def test_dense_evaluate_chunk_bounds_memory():
 
 @pytest.mark.oracle_independent
 @SETTINGS
-@given(mode=st.integers(8, 40), big=st.integers(400, 2000), seed=st.integers(0, 10_000))
+@given(mode=st.integers(1, 40), big=st.integers(400, 2000), seed=st.integers(0, 10_000))
+@example(mode=2, big=400, seed=0)
 def test_inv_transform_large_res_matches_dense(mode, big, seed):
     # inv_transform at a resolution far above the mode count hits the dense
     # (res x mode) path; forcing the NUFFT there must match the exact matmul.

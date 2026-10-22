@@ -7,11 +7,13 @@
 
 - [x] 2.1 Make `nufft_evaluate` state a grid size per axis of the larger of twice the mode count and the operator's neighbourhood size, read from the operator's own default; verify the tests of 1.2 pass and the crash map of 1.1 now reports no failure
   - `nufft_evaluate` passes `grid_size` per axis as `max(2 * m, numpoints)`, with `numpoints` read from `KbNufft`'s own signature (6 in torchkbnufft 1.5.2). The two tests of 1.2 pass (12 of 12 in `test_nufft.py`) and the crash map reports 0 failing mode tuples. For axes of 3 or more modes the grid is the operator's default `2 * m`, and a direct comparison of the two operators over 30 mode tuples of one and two axes from 3 to 13 modes gives bitwise-equal values in all 30.
-- [ ] 2.2 Measure the worst relative error of approximate against exact evaluation over modes 1 to 48 on one axis and 1 to 12 on two and three axes, record it in `measurements/`, and verify the existing 5e-2 bound sits above it before the widened tests assert it
+- [x] 2.2 Measure the worst relative error of approximate against exact evaluation over modes 1 to 48 on one axis and 1 to 12 on two and three axes, record it in `measurements/`, and verify the existing 5e-2 bound sits above it before the widened tests assert it
+  - `measurements/nufft_worst_error.py`, 200 random points and 5 seeds per mode tuple, error relative to the largest exact value: one axis of 1 to 48 modes, worst 7.6e-4 (4.6e-4 with a 1- or 2-mode axis); two axes of 1 to 12, worst 1.4e-3 (1.1e-3); three axes of 1 to 12, worst 2.1e-3 (1.8e-3). The 5e-2 bound sits 24 times above the worst case, so the widened tests assert it unchanged.
 
 ## 3. Widen the guarded tests
 
-- [ ] 3.1 Draw time modes from 2 again in the strategy-conversion test of `tests/basis/test_coeff_anchors.py`, pinning the 2-mode case as an `@example`, and draw mode counts in the existing NUFFT agreement tests from 1 upward where they ran from 8; verify they pass and that no test still restricts a mode count to avoid the crash (grep the suite for the restriction)
+- [x] 3.1 Draw time modes from 2 again in the strategy-conversion test of `tests/basis/test_coeff_anchors.py`, pinning the 2-mode case as an `@example`, and draw mode counts in the existing NUFFT agreement tests from 1 upward where they ran from 8; verify they pass and that no test still restricts a mode count to avoid the crash (grep the suite for the restriction)
+  - `test_a_conversion_honours_its_evaluation_strategy` draws time modes from 2 (was 3) with `modes=(2, 4)` under the approximate strategy pinned. In `test_nufft.py` the 1-D, 2-D, threshold and large-resolution agreement tests draw from 1 mode (were 8), with 1- and 2-mode examples pinned. `test_nufft.py` and `test_coeff_anchors.py` pass in full, and a grep of `tests/` finds no other test that restricts a mode count under an approximate strategy.
 - [ ] 3.2 Verify by cosmic-ray over `SpectralSVR/basis/_nufft.py`, against the tests that cover each line, that the grid-size mutants (the comparison, the factor two, the neighbourhood read) are killed, and record the survivors with a verdict each
 
 ## 4. Verification

@@ -549,12 +549,13 @@ APPROXIMATE = EvaluationStrategy(memory_budget_mb=1e-6, allow_approximate=True)
 @pytest.mark.scenario("A conversion honours its evaluation strategy")
 @SETTINGS
 @given(
-    modes=st.tuples(st.integers(3, 12), st.integers(2, 8)),
+    modes=st.tuples(st.integers(2, 12), st.integers(2, 8)),
     slices=st.integers(2, 12),
     strategy=st.sampled_from((APPROXIMATE, EvaluationStrategy())),
     seed=st.integers(0, 10_000),
 )
 @example(modes=(4, 4), slices=3, strategy=APPROXIMATE, seed=0)
+@example(modes=(2, 4), slices=3, strategy=APPROXIMATE, seed=0)
 @example(modes=(12, 8), slices=12, strategy=APPROXIMATE, seed=1)
 @example(modes=(4, 4), slices=3, strategy=EvaluationStrategy(), seed=0)
 def test_a_conversion_honours_its_evaluation_strategy(modes, slices, strategy, seed):
