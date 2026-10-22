@@ -276,6 +276,7 @@ def test_trunk_features_repeat_with_the_period_and_pass_time_through(
 
 
 @pytest.mark.oracle_independent
+@pytest.mark.scenario("The reference protocol is followed and recorded")
 @settings(deadline=None, max_examples=50)
 @given(iterations=st.integers(-2, 600_000))
 @example(iterations=0)

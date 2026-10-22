@@ -1,4 +1,6 @@
+import contextlib
 import importlib.util
+import json
 import math
 import pathlib
 import shutil
@@ -9,7 +11,7 @@ import tempfile
 import pandas as pd
 import pytest
 import torch
-from hypothesis import settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
@@ -17,9 +19,8 @@ from SpectralSVR.operators import Lu2021DeepxdeExample, Lu2022Burgers, summarise
 from SpectralSVR.operators.benchmark import RUN_KEY, SUMMARISED_COLUMNS
 from tests._devices import DEVICES_PRESENT, HOST
 
-SCRIPT_PATH = (
-    pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
-)
+REPOSITORY = pathlib.Path(__file__).resolve().parents[2]
+SCRIPT_PATH = REPOSITORY / "scripts" / "run_benchmark.py"
 CHEAP_DATASETS = ["antiderivative", "antiderivative-grf"]
 PROVENANCE_COLUMNS = [
     "data_device",
@@ -244,7 +245,9 @@ TestBenchmarkRecord = pytest.mark.scenario("Every stage runs where the run says"
     pytest.mark.scenario("Provenance travels with the numbers")(
         pytest.mark.scenario("A changed condition is visible")(
             pytest.mark.scenario("Spread accompanies every metric")(
-                pytest.mark.oracle_independent(BenchmarkRecord.TestCase)
+                pytest.mark.scenario("The reference protocol is followed and recorded")(
+                    pytest.mark.oracle_independent(BenchmarkRecord.TestCase)
+                )
             )
         )
     )
@@ -285,3 +288,72 @@ def test_provenance_reports_a_dirty_tree_and_a_clean_one(tmp_path):
     assert clean.tree_clean and not dirty.tree_clean
     assert clean.revision == dirty.revision == head
     assert dirty._replace(tree_clean=True) == clean
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("One command regenerates")
+@pytest.mark.skipif(
+    shutil.which("just") is None, reason="needs just, which the gate runs under"
+)
+def test_one_recipe_regenerates_the_record_with_every_default_stated():
+    recipe = subprocess.run(
+        ["just", "--dry-run", "bench"],
+        cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stderr
+
+    assert "scripts/run_benchmark.py" in recipe
+    assert "--out benchmarks/operator_comparison.csv" in recipe
+    assert "--device cuda" in recipe
+    assert "--seeds" not in recipe and "--datasets" not in recipe
+    assert SCRIPT.SEED_SET == (0, 1, 2, 3, 4)
+
+
+NOTEBOOK = REPOSITORY / "notebooks" / "comparisons" / "deeponet_vs_spectralsvr.ipynb"
+FITTING_NAMES = {"DeepONetOperator", "SpectralSVROperator", "benchmark", "LSSVR"}
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("The notebook reads the record")
+@settings(deadline=None, max_examples=4)
+@given(
+    seeds=st.lists(st.integers(0, 2), min_size=1, max_size=3, unique=True),
+    datasets=st.lists(st.sampled_from(CHEAP_DATASETS), min_size=1, unique=True),
+)
+@example(seeds=[0], datasets=["antiderivative"])
+@example(seeds=[0, 1, 2], datasets=CHEAP_DATASETS)
+def test_the_notebook_presents_the_record_and_fits_nothing(seeds, datasets):
+    cells = [
+        "".join(cell["source"])
+        for cell in json.loads(NOTEBOOK.read_text())["cells"]
+        if cell["cell_type"] == "code"
+    ]
+    with tempfile.TemporaryDirectory() as directory:
+        record = pathlib.Path(directory) / "benchmarks" / "operator_comparison.csv"
+        record.parent.mkdir()
+        SCRIPT.main(
+            [
+                "--out",
+                str(record),
+                "--device",
+                "cpu",
+                "--operators",
+                "spectralsvr",
+                "--seeds",
+                *map(str, seeds),
+                "--datasets",
+                *datasets,
+            ]
+        )
+        namespace: dict = {}
+        with contextlib.chdir(directory):
+            for cell in cells:
+                exec(compile(cell, "notebook", "exec"), namespace)
+
+    expected_rows = [(SCRIPT.DATASETS[key].label, "SpectralSVR") for key in datasets]
+    assert sorted(namespace["summary"].index) == sorted(expected_rows)
+    assert (namespace["summary"]["n_seeds"] == len(seeds)).all()
+    assert FITTING_NAMES.isdisjoint(namespace)
