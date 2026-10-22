@@ -3,7 +3,10 @@ from ..basis import Basis, BasisSubType
 from ..basis.sampling import samplings_to_tuple
 from ..utils import (
     Number,
+    RealBand,
     SemilinearSolverSignatureType,
+    WavenumberCutoff,
+    WholeGrid,
     etdrk4_solver,
     resolve_device,
 )
@@ -44,6 +47,7 @@ class Burgers(Problem):
         space_domain: slice | None = None,
         time_domain: slice | None = None,
         solver: SemilinearSolverSignatureType | None = None,
+        band: RealBand | None = None,
         time_dependent_coeff: bool = True,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
@@ -71,22 +75,18 @@ class Burgers(Problem):
             f"Make sure that the result of generating t is consistent with dt ({dt}) and t[1]-t[0] ({t[1] - t[0]})"
         )
         domain = (time, space)
-        if (
+        manufactured = (
             isinstance(u0, str)
             and u0 == "random"
             and isinstance(f, str)
             and f == "random"
-        ):
+        )
+        self._reject_inapplicable(manufactured, solver, band)
+        if manufactured:
             # method of manufactured solutions: pick a band-limited solution u and
             # let the forcing be its exact Burgers residual (u0 just follows from u)
-            if solver is not None:
-                raise ValueError(
-                    "the manufactured-solution branch (u0='random' with f='random') "
-                    "builds u analytically and integrates nothing, so a solver "
-                    "would have no effect"
-                )
             u_gen, f_gen = self.mms_solution(
-                basis, n, modes, nu, domain, generator=generator
+                basis, n, modes, nu, domain, generator=generator, band=band
             )
 
             # convert the (time, space) fields to time-dependent coefficients
@@ -250,6 +250,7 @@ class Burgers(Problem):
         nu: float,
         domain: tuple[tuple[float, float], ...],
         generator: torch.Generator | None = None,
+        band: RealBand | None = None,
     ) -> tuple[BasisSubType, BasisSubType]:
         """Method of Manufactured Solutions for 1D viscous Burgers.
 
@@ -259,18 +260,28 @@ class Burgers(Problem):
         ``u_t + u u_x - nu u_xx = f`` by construction, so ``spectral_residual``
         of the returned pair is zero to machine precision.
 
-        ``u`` is band-limited to a third of the mode budget, which is the
-        threshold set by the de-aliasing band rather than a chosen margin:
-        multiplication doubles the highest frequency, so the product reaches
-        ``2 * kmax`` while the Orszag 2/3 mask keeps ``m / 3``. Any wider and
-        the mask discards content the product genuinely has, and the pair then
-        solves the de-aliased equation but not the continuous one.
+        ``band`` states how wide the manufactured field is, defaulting to
+        :meth:`widest_manufactured_band` and refused when it exceeds it. Any
+        wider and the mask discards content the product genuinely has, and the
+        pair then solves the de-aliased equation but not the continuous one --
+        self-consistently, since forcing and solver de-alias alike, which is why
+        it is refused here rather than detected later.
+
+        A :data:`RealBand` keeps a magnitude and its negative together, so the
+        manufactured field is conjugate-symmetric as generated.
 
         Returned as non-time-dependent 2D (time, space) Fourier fields.
         """
         if len(modes) != 2:
             raise NotImplementedError("MMS Burgers is implemented for 1D space")
-        band_limited = tuple(max(1, m // 3) for m in modes)
+        bands = tuple(
+            self.widest_manufactured_band(m) if band is None else band for m in modes
+        )
+        for axis_band, m in zip(bands, modes, strict=True):
+            self._check_band(axis_band, m)
+        band_limited = tuple(
+            axis_band.mode_count(m) for axis_band, m in zip(bands, modes, strict=True)
+        )
         u = basis.generate(
             n, band_limited, domain=domain, generator=generator
         ).resize_modes(modes, rescale=False)
@@ -278,6 +289,81 @@ class Burgers(Problem):
         zero_forcing = basis(basis.generate_empty(n, modes), domain=domain)
         f = self.spectral_residual(u, zero_forcing, nu)
         return u, f
+
+    @staticmethod
+    def widest_manufactured_band(modes: int) -> WavenumberCutoff:
+        """Widest cutoff a manufactured field may use at ``modes`` modes.
+
+        Multiplication doubles the highest frequency, so a cutoff ``K`` produces
+        a product reaching ``2 K`` while the Orszag 2/3 mask keeps ``modes / 3``.
+        The widest admissible cutoff is therefore the largest ``K`` satisfying
+        ``2 K <= modes / 3``.
+        """
+        return WavenumberCutoff(modes // 6)
+
+    @staticmethod
+    def _reject_inapplicable(
+        manufactured: bool,
+        solver: SemilinearSolverSignatureType | None,
+        band: RealBand | None,
+    ) -> None:
+        """Refuse an argument the dispatched branch cannot act on.
+
+        The manufactured branch builds ``u`` analytically and integrates
+        nothing; the numerical branch integrates a given pair and manufactures
+        nothing. An argument meant for the other branch is refused rather than
+        silently dropped.
+        """
+        if manufactured and solver is not None:
+            raise ValueError(
+                "the manufactured-solution branch (u0='random' with f='random') "
+                "builds u analytically and integrates nothing, so a solver "
+                "would have no effect"
+            )
+        if not manufactured and band is not None:
+            raise ValueError(
+                "the numerical branch integrates a given initial condition and "
+                "forcing rather than manufacturing a field, so a band would "
+                "have nothing to limit"
+            )
+
+    @staticmethod
+    def highest_frequency(band: RealBand, modes: int) -> int:
+        """Largest ``|k|`` ``band`` keeps on a grid of ``modes`` modes.
+
+        A wavenumber, not a mode count. :class:`WholeGrid` keeps every bin, so
+        on an even grid its largest is the self-paired Nyquist bin at
+        ``modes // 2``.
+        """
+        match band:
+            case WavenumberCutoff(cutoff=cutoff):
+                return cutoff
+            case WholeGrid():
+                return modes // 2
+
+    @classmethod
+    def _check_band(cls, band: RealBand, modes: int) -> None:
+        """Refuse a band the grid cannot hold or the de-aliasing mask would cut.
+
+        Only a stated cutoff can ask for more modes than the grid has;
+        :class:`WholeGrid` is bounded by the grid by definition, so it can reach
+        only the second refusal.
+        """
+        if isinstance(band, WavenumberCutoff) and 2 * band.cutoff + 1 > modes:
+            raise ValueError(
+                f"a cutoff keeping |k| <= {band.cutoff} needs "
+                f"{2 * band.cutoff + 1} modes, more than the {modes} this grid has"
+            )
+        widest = cls.widest_manufactured_band(modes)
+        stated = cls.highest_frequency(band, modes)
+        if stated > widest.cutoff:
+            raise ValueError(
+                f"a band keeping |k| <= {stated} squares to a product reaching "
+                f"|k| <= {2 * stated}, past the |k| <= {modes / 3:.6g} the "
+                f"de-aliasing mask keeps at {modes} modes; the widest admissible "
+                f"band keeps |k| <= {widest.cutoff}, which is "
+                f"{widest.mode_count(modes)} modes"
+            )
 
     def spectral_residual(
         self, u: BasisSubType, f: BasisSubType, nu: float

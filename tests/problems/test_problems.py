@@ -8,6 +8,7 @@ solutions for every path.
 """
 
 import math
+from unittest.mock import patch
 
 import pytest
 import torch
@@ -16,7 +17,9 @@ from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.problems import Burgers
+from SpectralSVR.basis import __base as base_module
 from SpectralSVR.utils import (
+    WavenumberCutoff,
     as_semilinear_solver,
     etdrk4_solver,
     implicit_adams_solver,
@@ -680,9 +683,10 @@ def test_numerical_burgers_agrees_with_an_independent_integrator():
 # --------------------------------------------------------------------------- #
 # The manufactured pair as a continuous solution
 # --------------------------------------------------------------------------- #
-MANUFACTURED_CONTINUOUS_RESIDUAL = {8: 2.151e-07, 16: 2.099e-07, 32: 2.623e-07}
+MANUFACTURED_CONTINUOUS_RESIDUAL = {8: 2.565e-07, 16: 1.999e-07, 32: 2.954e-07}
 MANUFACTURED_RESIDUAL_TOLERANCE = 5e-6
 MANUFACTURED_RESIDUAL_CORRUPTED = 1.0e-2
+MANUFACTURED_IMAGINARY_FLOOR = 1e-6
 ANALYTIC_CONTROL_RESIDUAL = {12: 4.164e-08, 16: 3.887e-08, 32: 3.887e-08}
 
 DOMAIN_2D = ((0.0, 1.0), (0.0, 1.0))
@@ -777,3 +781,225 @@ def test_continuous_residual_detects_a_corrupted_forcing():
         f"corrupted {corrupted:.3e}"
     )
     assert corrupted / clean > 1e3
+
+
+# ---------------------------------------------------------------------------
+# Burgers -- the manufactured band (manufactured-band-derivation)
+
+
+def _pad_without_boundary_repair(coeff, target_modes, rescale=True):
+    """``resize_modes`` with the even-source boundary repair cut out.
+
+    Stands in for ``resize_modes`` everywhere ``mms_solution`` reaches it,
+    including the no-op resizes ``Basis``'s arithmetic performs at
+    ``rescale=True``, so it takes the same arguments and rescales the same way.
+    Only the boundary repair differs.
+
+    That repair is what makes a padded even-sized band conjugate-symmetric
+    downstream. Removing it is what distinguishes a field generated symmetric
+    from one corrected afterwards.
+    """
+    padded = coeff
+    for dim, target in enumerate(target_modes, 1):
+        current = padded.shape[dim]
+        if target <= current:
+            continue
+        low = torch.arange((current - 1) // 2 + 1)
+        high = (
+            torch.arange(current - current // 2, current)
+            if current > 1
+            else torch.arange(0)
+        )
+        shape = list(padded.shape)
+        shape[dim] = target - current
+        padded = torch.concat(
+            (
+                padded.index_select(dim, low),
+                torch.zeros(shape).to(padded),
+                padded.index_select(dim, high),
+            ),
+            dim,
+        )
+    if rescale:
+        source = torch.tensor(list(coeff.shape[1:])).prod()
+        padded = padded * torch.tensor(target_modes).prod() / source
+    return padded
+
+
+def _hermitian_error(coeff):
+    """``max |c[k] - conj(c[-k])|`` over every mode axis."""
+    axes = tuple(range(1, coeff.ndim))
+    mirrored = torch.flip(
+        torch.roll(coeff, shifts=(-1,) * len(axes), dims=axes), dims=axes
+    )
+    return float((coeff - mirrored.conj()).abs().max())
+
+
+def _worst_outside_band(coeff, cutoff):
+    """Largest coefficient at ``|k| > cutoff`` on any mode axis."""
+    axes = torch.meshgrid(
+        *(FourierBasis.wave_number(m).flatten().abs() for m in coeff.shape[1:]),
+        indexing="ij",
+    )
+    keep = torch.stack([k <= cutoff for k in axes]).all(dim=0)
+    outside = coeff[:, ~keep]
+    return float(outside.abs().max()) if outside.numel() else 0.0
+
+
+def _manufactured_without_repair(modes, nu, seed, band=None):
+    """``mms_solution``'s own output with the resize boundary repair disabled.
+
+    Patched as a context manager rather than through the ``monkeypatch``
+    fixture, which Hypothesis refuses to reset between generated inputs.
+    """
+    with patch.object(base_module, "resize_modes", _pad_without_boundary_repair):
+        return Burgers().mms_solution(
+            FourierBasis,
+            2,
+            (modes, modes),
+            nu,
+            DOMAIN_2D,
+            generator=torch.Generator().manual_seed(seed),
+            band=band,
+        )
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("The generated field is conjugate-symmetric at every mode count")
+@pytest.mark.scenario("The band cannot be stated in a form that breaks symmetry")
+@given(modes=st.integers(min_value=6, max_value=40), seed=st.integers(0, 2**32 - 1))
+@SETTINGS
+def test_manufactured_field_is_conjugate_symmetric_as_generated(modes, seed):
+    kept = Burgers.widest_manufactured_band(modes).mode_count(modes)
+    assert kept % 2 == 1, f"kept set {kept} is even, so a mode has no partner"
+
+    u, _ = _manufactured_without_repair(modes, 0.05, seed)
+    generated = _hermitian_error(u.coeff)
+    assert generated == 0.0, (
+        f"modes={modes}: mms_solution's field is symmetric only after repair, "
+        f"error {generated:.3e}"
+    )
+    values = FourierBasis.inv_transform(u.coeff)
+    imaginary = float(values.imag.abs().max() / values.real.abs().max())
+    assert imaginary < MANUFACTURED_IMAGINARY_FLOOR, (
+        f"modes={modes}: the field describes a complex function, imaginary part "
+        f"{imaginary:.3e} of the real part"
+    )
+
+    if kept + 1 <= modes:
+        unpaired = FourierBasis.generate_coeff(
+            2, (kept + 1, kept + 1), generator=torch.Generator().manual_seed(seed)
+        )
+        control = _hermitian_error(
+            _pad_without_boundary_repair(unpaired, (modes, modes))
+        )
+        assert control > 0.0, (
+            f"modes={modes}: an even band read zero too, so the measurement is "
+            "blind rather than the field being symmetric"
+        )
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("The bandwidth the caller can state is visible")
+@given(
+    modes=st.integers(min_value=6, max_value=40),
+    seed=st.integers(0, 2**32 - 1),
+    narrower=st.integers(min_value=0, max_value=8),
+)
+@SETTINGS
+def test_a_stated_band_is_the_field_support(modes, seed, narrower):
+    widest = Burgers.widest_manufactured_band(modes)
+    cutoff = WavenumberCutoff(max(0, widest.cutoff - narrower))
+
+    def support(band):
+        u, _ = Burgers().mms_solution(
+            FourierBasis,
+            2,
+            (modes, modes),
+            0.05,
+            DOMAIN_2D,
+            generator=torch.Generator().manual_seed(seed),
+            band=band,
+        )
+        return u.coeff
+
+    stated = support(cutoff)
+    outside = _worst_outside_band(stated, cutoff.cutoff)
+    assert outside == 0.0, (
+        f"modes={modes}, |k|<={cutoff.cutoff}: {outside:.3e} outside the stated band"
+    )
+    assert int(stated[0].abs().sum(dim=0).ne(0).sum()) == cutoff.mode_count(modes)
+
+    if cutoff != widest:
+        assert not torch.equal(stated, support(None)), (
+            f"modes={modes}: a stated band narrower than the default changed nothing"
+        )
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Self-consistency is not accepted in place of the guarantee")
+@pytest.mark.scenario("Bandwidth that overruns the grid is rejected or resolved")
+@given(
+    modes=st.integers(min_value=12, max_value=40),
+    seed=st.integers(0, 2**32 - 1),
+    over_by=st.integers(min_value=1, max_value=6),
+)
+@SETTINGS
+def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent(
+    modes, seed, over_by
+):
+    nu = 0.05
+    widest = Burgers.widest_manufactured_band(modes)
+    assert 2 * widest.cutoff <= modes / 3
+    assert 2 * (widest.cutoff + 1) > modes / 3
+
+    def manufacture(band):
+        return Burgers().mms_solution(
+            FourierBasis,
+            1,
+            (modes, modes),
+            nu,
+            DOMAIN_2D,
+            generator=torch.Generator().manual_seed(seed),
+            band=band,
+        )
+
+    u, f = manufacture(widest)
+    admitted = continuous_burgers_residual(u, f, nu)
+    assert admitted < MANUFACTURED_RESIDUAL_TOLERANCE, (
+        f"modes={modes}: the widest admitted band leaves {admitted:.3e}, so the "
+        "threshold is too wide rather than exact"
+    )
+
+    over = WavenumberCutoff(widest.cutoff + over_by)
+    with pytest.raises(ValueError, match=r"past the|more than"):
+        manufacture(over)
+
+    if 2 * over.cutoff + 1 > modes:
+        return
+    coeff = FourierBasis.generate_coeff(
+        1, (over.mode_count(modes),) * 2, generator=torch.Generator().manual_seed(seed)
+    )
+    u_over = FourierBasis(
+        FourierBasis(coeff, domain=DOMAIN_2D)
+        .resize_modes((modes, modes), rescale=False)
+        .coeff,
+        domain=DOMAIN_2D,
+    )
+    f_over = Burgers().spectral_residual(
+        u_over,
+        FourierBasis(FourierBasis.generate_empty(1, (modes, modes)), domain=DOMAIN_2D),
+        nu,
+    )
+    refused_discrete = float(
+        Burgers().spectral_residual(u_over, f_over, nu).coeff.abs().max()
+    )
+    refused_continuous = continuous_burgers_residual(u_over, f_over, nu)
+    assert refused_discrete < 1e-10, (
+        f"modes={modes}: the refused pair fails its own de-aliased equation at "
+        f"{refused_discrete:.3e}, so this is not the self-consistency case"
+    )
+    assert refused_continuous > admitted * 100, (
+        f"modes={modes}: the refused pair leaves {refused_continuous:.3e} against "
+        f"{admitted:.3e} admitted, so the refusal has little to prevent"
+    )
