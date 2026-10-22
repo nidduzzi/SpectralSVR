@@ -31,9 +31,7 @@ SETTINGS = settings(
 
 def _exact_evaluate(coeff, x, domain):
     # exact dense path: disable the NUFFT for this call only
-    return FourierBasis.evaluate(
-        coeff, x, domain=domain, strategy=_EXACT
-    )
+    return FourierBasis.evaluate(coeff, x, domain=domain, strategy=_EXACT)
 
 
 @pytest.mark.oracle_independent
@@ -73,6 +71,59 @@ def test_nufft_matches_dense_2d(m, npts, seed):
     approx = nufft_evaluate(coeff, x, domain)
     exact = _exact_evaluate(coeff, x, domain)
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
+
+
+MODE_TUPLES = st.lists(st.integers(1, 12), min_size=1, max_size=3).map(tuple)
+SMALL_AXIS_CASES = ((1,), (2,), (2, 5), (3, 1, 2))
+APPROXIMATION_BOUND = 5e-2
+
+
+def _field_and_points(modes, rows, npts, seed):
+    generator = torch.Generator().manual_seed(seed)
+    coeff = FourierBasis.generate_coeff(rows, modes, generator=generator).to(
+        torch.complex128
+    )
+    points = torch.rand(npts, len(modes), generator=generator, dtype=torch.float64)
+    return coeff, points, tuple((0.0, 1.0) for _ in modes)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A field with a one- or two-mode axis evaluates approximately")
+@SETTINGS
+@given(
+    modes=MODE_TUPLES,
+    rows=st.integers(1, 3),
+    npts=st.integers(1, 50),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=SMALL_AXIS_CASES[0], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[1], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[2], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[3], rows=2, npts=5, seed=0)
+def test_every_mode_count_evaluates_approximately(modes, rows, npts, seed):
+    coeff, points, domain = _field_and_points(modes, rows, npts, seed)
+    values = FourierBasis.evaluate(coeff, points, domain=domain, strategy=_FORCE_NUFFT)
+    assert values.shape == (rows, npts)
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("Approximate and exact values agree at every mode count")
+@SETTINGS
+@given(
+    modes=MODE_TUPLES,
+    rows=st.integers(1, 3),
+    npts=st.integers(1, 50),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=SMALL_AXIS_CASES[0], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[1], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[2], rows=2, npts=5, seed=0)
+@example(modes=SMALL_AXIS_CASES[3], rows=2, npts=5, seed=0)
+def test_approximate_and_exact_agree_at_every_mode_count(modes, rows, npts, seed):
+    coeff, points, domain = _field_and_points(modes, rows, npts, seed)
+    approx = FourierBasis.evaluate(coeff, points, domain=domain, strategy=_FORCE_NUFFT)
+    exact = _exact_evaluate(coeff, points, domain)
+    assert (approx - exact).abs().max() <= APPROXIMATION_BOUND * exact.abs().max()
 
 
 @pytest.mark.oracle_independent
@@ -125,10 +176,16 @@ def test_dense_evaluate_chunking_is_exact(modes, rows, npts, seed):
 
     # exact matmul (inf threshold); one block vs many small chunks -- per instance
     whole = FourierBasis(
-        coeff, domain=(0.0, 1.0), strategy=EvaluationStrategy(allow_approximate=False, memory_budget_mb=float("inf"))
+        coeff,
+        domain=(0.0, 1.0),
+        strategy=EvaluationStrategy(
+            allow_approximate=False, memory_budget_mb=float("inf")
+        ),
     )(x, device=CPU)
     chunked = FourierBasis(
-        coeff, domain=(0.0, 1.0), strategy=EvaluationStrategy(allow_approximate=False, memory_budget_mb=1e-4)
+        coeff,
+        domain=(0.0, 1.0),
+        strategy=EvaluationStrategy(allow_approximate=False, memory_budget_mb=1e-4),
     )(x, device=CPU)
     assert torch.allclose(whole, chunked, atol=1e-12)
 
@@ -149,7 +206,9 @@ def test_dense_evaluate_chunk_bounds_memory():
         x = (torch.rand(npts, dtype=torch.float64)).cpu()
         # exact path (inf threshold), ~1M-entry chunks -- per instance
         basis = FourierBasis(
-            coeff, domain=(0.0, 1.0), strategy=EvaluationStrategy(allow_approximate=False, memory_budget_mb=16.0)
+            coeff,
+            domain=(0.0, 1.0),
+            strategy=EvaluationStrategy(allow_approximate=False, memory_budget_mb=16.0),
         )
         holder: dict = {}
 

@@ -1,7 +1,7 @@
 ## 1. Failing first
 
-- [ ] 1.1 Record the crash map as a measurement script in `measurements/` (every mode tuple of one to three axes, 1 to 6 modes per axis) and verify it reproduces the 174 failures, exactly the tuples with an axis of 1 or 2 modes, on the unchanged library
-- [ ] 1.2 Add to `tests/basis/test_nufft.py` a fuzzed test of the scenario "A field with a one- or two-mode axis evaluates approximately" (one to three axes, modes drawn from 1 upward, a 1-mode and a 2-mode axis pinned as `@example`s) and a fuzzed `oracle_independent` test of "Approximate and exact values agree at every mode count" against exact dense evaluation, each carrying its scenario mark; verify both fail with the torchkbnufft `IndexError` on the unchanged library
+- [x] 1.1 Record the crash map as a measurement script in `measurements/` (every mode tuple of one to three axes, 1 to 6 modes per axis) and verify it reproduces the 174 failures, exactly the tuples with an axis of 1 or 2 modes, on the unchanged library
+- [x] 1.2 Add to `tests/basis/test_nufft.py` a fuzzed test of the scenario "A field with a one- or two-mode axis evaluates approximately" (one to three axes, modes drawn from 1 upward, a 1-mode and a 2-mode axis pinned as `@example`s) and a fuzzed `oracle_independent` test of "Approximate and exact values agree at every mode count" against exact dense evaluation, each carrying its scenario mark; verify both fail with the torchkbnufft `IndexError` on the unchanged library
 
 ## 2. Fix
 
