@@ -5,7 +5,8 @@
 
 ## 2. Fix
 
-- [ ] 2.1 Make `nufft_evaluate` state a grid size per axis of the larger of twice the mode count and the operator's neighbourhood size, read from the operator's own default; verify the tests of 1.2 pass and the crash map of 1.1 now reports no failure
+- [x] 2.1 Make `nufft_evaluate` state a grid size per axis of the larger of twice the mode count and the operator's neighbourhood size, read from the operator's own default; verify the tests of 1.2 pass and the crash map of 1.1 now reports no failure
+  - `nufft_evaluate` passes `grid_size` per axis as `max(2 * m, numpoints)`, with `numpoints` read from `KbNufft`'s own signature (6 in torchkbnufft 1.5.2). The two tests of 1.2 pass (12 of 12 in `test_nufft.py`) and the crash map reports 0 failing mode tuples. For axes of 3 or more modes the grid is the operator's default `2 * m`, and a direct comparison of the two operators over 30 mode tuples of one and two axes from 3 to 13 modes gives bitwise-equal values in all 30.
 - [ ] 2.2 Measure the worst relative error of approximate against exact evaluation over modes 1 to 48 on one axis and 1 to 12 on two and three axes, record it in `measurements/`, and verify the existing 5e-2 bound sits above it before the widened tests assert it
 
 ## 3. Widen the guarded tests
