@@ -14,10 +14,11 @@ divide the result by ``prod(modes)`` to match ``FourierBasis.evaluate``.
 
 from __future__ import annotations
 
-import inspect
 import math
 
 import torch
+
+INTERPOLATION_NEIGHBOURS = 6
 
 
 def nufft_available() -> bool:
@@ -63,10 +64,9 @@ def nufft_evaluate(
         ]
     ).to(device=device, dtype=x.real.dtype if x.is_complex() else x.dtype)
 
-    neighbours = inspect.signature(tkbn.KbNufft).parameters["numpoints"].default
-    grid_size = tuple(max(2 * m, neighbours) for m in modes)
-    nufft = tkbn.KbNufft(im_size=modes, grid_size=grid_size).to(
-        device=device, dtype=image.dtype
-    )
+    grid_size = tuple(max(2 * m, INTERPOLATION_NEIGHBOURS) for m in modes)
+    nufft = tkbn.KbNufft(
+        im_size=modes, grid_size=grid_size, numpoints=INTERPOLATION_NEIGHBOURS
+    ).to(device=device, dtype=image.dtype)
     values = nufft(image, ktraj).squeeze(1)  # (batch, npts)
     return values / math.prod(modes)

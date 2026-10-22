@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+import torchkbnufft
 from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 
@@ -128,6 +129,22 @@ def test_approximate_and_exact_agree_at_every_mode_count(modes, rows, npts, seed
     approx = FourierBasis.evaluate(coeff, points, domain=domain, strategy=_FORCE_NUFFT)
     exact = _exact_evaluate(coeff, points, domain)
     assert (approx - exact).abs().max() <= APPROXIMATION_BOUND * exact.abs().max()
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(modes=MODE_TUPLES, seed=st.integers(0, 10_000))
+@example(modes=(3,), seed=0)
+@example(modes=(2, 7), seed=0)
+def test_only_axes_below_the_kernel_width_get_a_wider_grid(modes, seed):
+    coeff, points, domain = _field_and_points(modes, 1, 5, seed)
+    with patch.object(torchkbnufft, "KbNufft", wraps=torchkbnufft.KbNufft) as operator:
+        nufft_evaluate(coeff, points, domain)
+    kernel_width = 6
+    assert operator.call_args.kwargs["numpoints"] == kernel_width
+    assert operator.call_args.kwargs["grid_size"] == tuple(
+        2 * m if 2 * m >= kernel_width else kernel_width for m in modes
+    )
 
 
 @pytest.mark.oracle_independent
