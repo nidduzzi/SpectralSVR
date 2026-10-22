@@ -1,0 +1,354 @@
+[job-id] cb858b15c79d4be8be904a4eaa575530
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a87b5b51961c446e87a4b4063757fb16
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 57deb1cb17684fcda4ed87f8727c90aa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f8cd60fff32443ca9abc2ee2983b2aa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fbe655e0be4d4cef86c085f06844bbde
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 38e548a894e04239bde04dc0a1c64ffa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 655bf17cc66448ac9e05719fd56b034f
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9ffbdab19173471aad26cf97a0b614f8
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fe68f7e2d7f04aa296725d698b9365f3
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cc4f86063c0a43ce997a95eca6142010
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 46a3ca7c32a6484699b487220d4cdf1f
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Add_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f4db679828764d26be11e864a155d71b
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f83730d60b0245caad24576ebc59f359
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fd26bd27a0ea4a3e8f9e6cb4c7200f14
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1788606d36764c288005942188ab53bf
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2456cb92de7149fdbe8b4105b38fe9d4
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e7bd64f613564be7981c36e48e375a55
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 867c2ccfe3144580919b42a67a07bcd3
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4c5ab0cadac140acbc55f5fbfde44ed7
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ca842558fe3047b899baab1602882008
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] def44f0e19cd4d4b9aca9dbcb33944d6
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f48850fcc19e4d1096406681cc0c8a52
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 900dff84eba742b19b571e7eac1f26f2
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cd2899749156457bb6fbf3e233258a66
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 63039bd76e144c50a862dd6a0e5c3cc8
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 67fb1d25056244909b5fe9dbd90db221
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 044979ef22814eb68b1017c2c99504ca
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b50423df506d47b2984411bc8fc327d4
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5bfa47bb7f9d4843ab6734517d3d1c63
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 933985fb60054e8fbbf0d9a4478a63d9
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5a2a595dab6348f59bb37bd722589278
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c5a1f01e20f542e98742f04e5bb35e25
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c0c22795b81548e7b465bcb09ca14e3d
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Sub_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d7433dd9c3204657a1518a21f1355951
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 76b278ce06eb4904bf95a39a45060d39
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9019158125da41cea08bc757cebc0898
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7c971acf1d7d43df876917408bd6528f
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cadf27ecab1e47d39a732a714706e6fa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b1a2343295e64e929ce097200944cee6
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0bc2624c8e634549b945d52e583c5e58
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0b45a27ae9e044a195f6b01e0e738cf0
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] caabcf5b1aee421ea2a9437344bf92e6
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9bce3253b4c1498f9a0cc2035cf356f5
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 477bacdea852417abe773969ee1bfb58
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7ef7a2eaed6e47409276e49d0c0b3f00
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 33dd9fa6e17548578486e7c62df3d2ef
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bf3c1c74463244abac9eecc8990aabec
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 04dd8216521647119488dd65c895ab77
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e271f1ba8ca04cb7bc7b75c5920b9e87
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 47481acc82524a8da0dc93c9b13bb2b1
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c362f109a7f485db1dc51e8578c697d
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b453bc215c7c4a92854846e006d754b7
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 593e3c4a955444c58ab6a58125c8a1dd
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6fea8661466147d0bfafc43296cfc3e2
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 055cfa3024864d2783b35b8331a3756e
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 45d7af206cb34b088160dc4475db45ed
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7ffd86d0366a47469d63b6b816d261b7
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff930565c39f4f7cb6110c630144a884
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0b5e3787abd1481f9ba573cafb69d51b
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 30fe84f9c6894265b6eeb1cf24a7f8b5
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 55fe1251e1014eb4a478e7c05ed9b447
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 507c1b61bdfb4524981a34fd3fa9599c
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ffd08d0349ea45839e8da5b0016947fa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1f257e1c1d814b338fc08425cecce684
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cc642eaa513c4270bac69330b9c5d555
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f02536268b564ffd89b334f47eae6980
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Mul_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ed39f1caacf94f97ac446d9712fb3abc
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 967ea6375f0240c2951901f49afd1624
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f9d449b27a34a4abd7be862f0cb9947
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1711d0b039394a13af982372cce0e846
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a8b1175dd9554a3fb899e8ac6a380410
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 06658e8c839c46efb82097b7a493742d
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dd2e18aefd484ab6a22102eae521e7b0
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4cb2ff0518aa4a3b8ecfcd5cb00146aa
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8ca566b8a49c44229fd10b997eb2e292
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3caf7716a84f4650bbab6b2ba7071dcd
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c776b0673d484a0599a4f8b92c3f1e73
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ebdfdd141c784326b28d4ce733dab4a4
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 05f3094ff870445aa17c18a92884a13f
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cdf31eed0d594523948b33d9c02a1a0b
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 446180b438644595b90636d10abf92ab
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d55a88b2114d4206b285ffca657dede9
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 52c7adae8b994facbe6d9a40ff59c890
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1c278006b6064503870d49f54bdb5ac6
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 059de49d6e2a40ee9aaafb2d48ab967a
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8fa005765b1a49ba85a05239f78ab12a
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3ff0ef0bf5014d9f96fdd9c47e55ac53
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 47fe95150af74898b56fc10f0d381a08
+SpectralSVR/basis/_nufft.py core/ReplaceBinaryOperator_Div_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 709e54cdc76b417781269d140b2fefc3
+SpectralSVR/basis/_nufft.py core/ReplaceUnaryOperator_USub_UAdd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 79572ec4fc1c45eab8a11f3f8a471a64
+SpectralSVR/basis/_nufft.py core/ReplaceUnaryOperator_USub_Invert 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f3c4587ee6c448df9fbd5b7fffc94e45
+SpectralSVR/basis/_nufft.py core/ReplaceUnaryOperator_USub_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e37986fce0554c8a81cb220b7f3fb406
+SpectralSVR/basis/_nufft.py core/ReplaceUnaryOperator_Delete_USub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 863ef32008034ed7a1363acf77104c37
+SpectralSVR/basis/_nufft.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5946c3f63150488b9980471158375ac3
+SpectralSVR/basis/_nufft.py core/ReplaceTrueWithFalse 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e447870b99f24258b38dcd89141f0ba2
+SpectralSVR/basis/_nufft.py core/ReplaceFalseWithTrue 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 038bd6fd57e043da849452c6fc3a8a1c
+SpectralSVR/basis/_nufft.py core/ExceptionReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b3610be1d1d146debcb51e1a41027e2d
+SpectralSVR/basis/_nufft.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d9ba59e173e44143b227299e4ad4fc54
+SpectralSVR/basis/_nufft.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 541ee934aa0f419590d5160ee728ea16
+SpectralSVR/basis/_nufft.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c0a66a0279444109b510771b9d73c4f
+SpectralSVR/basis/_nufft.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 231f7193dc1f478eabbbcefc513ae860
+SpectralSVR/basis/_nufft.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ab8b3b6f9db1494daa8be04ebd68e7bc
+SpectralSVR/basis/_nufft.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c5b190426ae9499284d43ed3d8fdb7a1
+SpectralSVR/basis/_nufft.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5230f66d465c4764ae248da70e7523dd
+SpectralSVR/basis/_nufft.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 721bf609d1b84da4851195bf3c301887
+SpectralSVR/basis/_nufft.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1025260c2b204cf09b6f78e799659510
+SpectralSVR/basis/_nufft.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 869d8d21b0e74637a697b28bff63cfb2
+SpectralSVR/basis/_nufft.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d7adf55ab9e74fecab84de600761b97c
+SpectralSVR/basis/_nufft.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a88ae818de95448d8d585b647fb4c58d
+SpectralSVR/basis/_nufft.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f4990fced0bb46fcaecbf286a5fc25f7
+SpectralSVR/basis/_nufft.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dd41451b30b64ef490aa430e3ddb8279
+SpectralSVR/basis/_nufft.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6bbcd9f3d4d14f3bb55acb40c61b48cd
+SpectralSVR/basis/_nufft.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bb2de2728fef4ec8b7ae689772ab1557
+SpectralSVR/basis/_nufft.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8b373dc7b89b47638ff01749f83959ee
+SpectralSVR/basis/_nufft.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 05d14de8188246aba182ca5bd1c7229a
+SpectralSVR/basis/_nufft.py core/NumberReplacer 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0851c29239514833a833c0db17a403b6
+SpectralSVR/basis/_nufft.py core/NumberReplacer 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 367755e4d8dc430f91a117fa6a6c5206
+SpectralSVR/basis/_nufft.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+total jobs: 117
+complete: 117 (100.00%)
+surviving mutants: 5 (4.27%)

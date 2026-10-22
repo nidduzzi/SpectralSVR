@@ -1,0 +1,368 @@
+# Commit hashes before and after the author-email rewrite of 2026-10-23
+#
+# The commits not yet on GitHub were rewritten from a private author address to the GitHub noreply address.
+# Hashes cited in files written before the rewrite (archived openspec records, task evidence) are the old ones; this map resolves them.
+# Commit messages were rewritten with the new hashes. Columns: old new subject.
+00b4c6d7d47158d5beacd7b6ac89abe70f103700 3eb18e853a5d94b9866e03bf3f588d826ac83896 docs(openspec): propose explicit-band-type
+026ae53163bee85e80b1eba1a86537ca622992e0 1c4672fca2b5ea2175deca8b95d091011457a6ed docs(openspec): propose condition-the-interpolating-fixture
+02e54a0eb6de53a7cea5766952ad8514037e6317 acf5f7c8638cae71ebb68ef4f16111bb8db4fb54 docs(openspec): make the boundary check asymmetric
+03027df61fc0118d2eab37f4d3cb3cb6b54deb00 fd4d05d99368bae747165bea2d0f34bc6c6358a6 docs(openspec): fold the second review into fix-time-dependent-resampling
+05702c11e1fa1d8cdec98b2c9fe76e465dd762b5 84593cd713b8dfbbb2f9655a413e286665f96926 test: consolidate this change's device tests into two state machines
+06786b53835b1a03fc807ed5b7986063113a5889 bad5281097ec11f5291bb02d309770fadefa7927 test(utils): fold, fuzz and merge the utils single tests
+06b60ad6c5053217fdd54a649fc3754b937e9433 80f194fa63198d31d3d34bd016b4c31806c71eff test(utils): fold the device-statement tests into DeviceStatements
+07c9a32aa4c3318fd119dab7f7804f67187edc85 af54755460daaf308c62c0c964cbec53414ee836 docs(openspec): reconcile burgers-forced-benchmark with the stack beneath it
+0805f7b70a31ccb07e968b9542cdb826ecb9b552 871e7e308988e571992e276d5d07a636b3696142 test(utils): name the relative-error scenarios the per-sample tests already check
+0820c7e736f1665bf5906c3b896d00e41013b83d a54900d055076c5796df1276eb2358674ad2506e test: loosen atol on torch.fft grad value-space cross-check
+0931dbc4f5ee4f59dfd486eb30c288827e406868 43aa782a1090059ab66f4d08561033fabea1454e docs(openspec): record benchmark-reproducibility's measurements and tasks 2.7a to 5.2
+09e3d466e308696f42bf6586f4cb41ebdb5145dc 4fe8b58a7da3ac57ddbc74c7397ec47c8c96f9cc docs(openspec): record the completed stack ordering
+0d3074416dfdf42de620b93928203b3daf5cc0ff 74a3bbd6a44e6e351a08424b6c86d13513ae6e7f docs(agents): keep the guide to what this branch actually provides
+0d407c3eca270f61ba08fa55aa64577e0f620f2c 589e0914d9838544cdf5c673b61a632c658927b5 docs(openspec): propose ratchet-code-prose
+0d9480557aefa652e40614484ac851a788c583c7 9326133ba5fdeed769c2e43e90e291d868c36856 feat(operators): DeepONet baseline + comparison harness (vertical slice)
+0e0f4832a5e930fcb86f519a186e1dc15cfda262 cfb3f484ecfbeeca04a7cd745783fc0c4dd7b4f9 fix(operators): sample sensors on the device of the field they sample
+0f8b1d7982dea520fa527eab771830606ba4d215 8546376466009a53e3a628eb91733d35588f32d1 test: cover utils (StandardScaler, to_mag_angle, euler_solver); fix load
+0f9037c35ec20d26b746438b2fb40a08dc475a3a 26f5a04358a746b18c2b8c8cb7bbe3f6c577b12d feat: plot_coefficients + Hermitian helper + resolve assorted TODOs
+0f967a080a43e2d302eeeb43a4257ff72cb47066 5bf58e8b7842d4869b7b741f29520f6da8bcedb6 test: hypothesis fuzzing + MMS for basis; 100% FourierBasis/__base coverage
+10923848cbb30a902b200ad9d5766ca78540893d 60f4652264cf368588fa92cd8dda0cf558cf84f7 fix(basis): place sampling nodes in double, not single, precision
+10c6e30bf60b5a59cd4575bbe0d478d9148c9994 b3b85013a8441f2a77566bd05ce9ba260a8f687a test: extend fuzzing + MMS policy to all suites; add model/problem tests
+1101d7c8c7bab8589f851ab74125868d9874dbbc 31a6cf4b3ec5e93aa4f8c42777dfc4418f9cf51f docs(openspec): fold the review of sensors-follow-the-stated-device into its plan
+116b157ad6772dc197a568ec14a3ac24f6a341c5 c46d0dc712f17ffe84d5a076b2cbcadbc91fdb8e docs(openspec): propose sensors-follow-the-stated-device
+125775facb7b816ee5a9f8439e892237f3a4b025 3811af590f28b8573c41ca36b37db4ff0de418b6 ignore, binaries, datasets, etc
+1335282c2cca7eba92eb27e4198b52dc2a1f0abb f21c5f5117474a17e18a331caf66638419fddc06 docs(openspec): archive refuse-moving-a-fitted-model
+153f3f03a980a606d56b3d808b07cb876dc89ee8 1cfd8507f3a8c68d70057710854f4dca4d63ed38 docs(openspec): amend refuse-moving-a-fitted-model after review
+165411806143709a7304e5bf32f3f32e8f59b482 df115101cd421dc35d22ecd3f385ec8e43f70f6f feat(operators)!: make the harness's invalid states unconstructible
+1693511950e6aeca26b77aabc45451b3335145ee 1856d77e89a83b1b692df1fd36c6b1c620c0094f docs(openspec): withdraw the superseded align-device-resolution
+178c2f84cef8e1e27a203d5b595d5c787a2e8703 9eea4c7816fd36969e8e8ef0d390557cc9e88729 fix(utils): split the unpaired top coefficient when padding
+17b8d53596cfcd6c0b7c033a5b9c1ba30c6798f1 5390bbcd61c37772b7186e1a431361d60b0335bc docs(openspec): archive follow-the-stated-device
+17d857b503fe2dcfc5987e8753de600245d92b5c 85368b42c0c3ec024ac371ecc486fe1a875abdab docs(openspec): configure phase 3's cosmic-ray run over the device and resize code
+1820579ec0f3badce0c85a90bae73ee06c802414 655ec083c1facc193e6a1063da7132eebec081e2 docs(openspec): put the bridge anchor before the bridge edits
+19bbd7446a16ccabc2564ba56581ec34a8cf7a8a 01f30b850ab340a1e09d676c69fa094c17434536 docs(openspec): widen utils-encoding-cleanup to repair resize_modes
+1a60c723ee3cd25b613c8a7624bdbeae025ebc87 0c0e6a1c7cd3a3ba06980429776ae0009c51a6b5 docs(openspec): record ratchet-code-prose tasks 1.1 to 2.5 and 4.2
+1ab82654b1ff94caadc5d9e8124cee36a484ce3a 31c8dcf923536ff481b9f5c9e394631b60ce6077 data(benchmark): regenerate the comparison record over seeds 0 to 4
+1bc1c59173031b58476f6022d3bb20f562e1d211 995122cc3b86d8694091adb060b610dda925fa12 test(problems): fuzz, merge and enumerate the problem-generator single tests
+1bd56d147726a87d3cece3b78d96206f8f09327f 17d08cbf7db9676ed19a3f53220b857bc9316a64 test(scenarios): record condition-the-interpolating-fixture's scenarios as debt
+1c0966fafde644e6df0883a78abfa028c6116eda 19cf59570a1f021827d84c0f225f4c52c8fdfe90 docs(openspec): propose burgers-forced-benchmark
+1d800593cf5cd2a15740a5bf7ccb531c1fa85773 aa2d1756b129ad4edc7b1bec9dd71ae7e9a45327 test(scenarios): record condition-the-interpolating-fixture's scenarios as debt
+1ea7e5c052478f2ead6ff68f1ef18e47f90883bc 487eed9e54ad9a579b63c06a511dad28c06ee0ec test(scenarios): record benchmark-reproducibility's scenarios as debt
+1f13bfd03e01b482acafcddbfa9bbfc8cee949e5 83309b44e195450d45bbd85b843b9389ac119ff0 test(scenarios): record discharge-archived-scenario-debt's scenario as debt
+20816be26eee5b2cae0c8f582b26664623b27dd4 6ef8571cc4fefad3690e7e00f48f60f91fb0b8c1 refactor: centralize device selection via resolve_device (DI)
+21c9bb73740e8866f736a2401169a04999ad7ff9 11e1582f7015b4255add948c3d2f055ede6fb333 feat(benchmark): score the forced-Burgers row over its whole time interval
+236d5764fa840a126deb4723405e6174be2b7c71 e61388b740e3465f04efb51293152360dc6b54f4 docs(openspec): sync and archive unify-solver-protocol
+2432846a586009d71afa23fe4568e765acd376ee efd1d2ebae77e2381e7667219e642e368fc54e67 feat(problems): accept time-dependent forcing in numerical Burgers
+24789020d58fad615b339351af7f31c05c8d3cc1 b3884e9e1cdcbb4adf40671b805e0c4cd6df8e79 docs(openspec): fold the third review into fix-time-dependent-resampling
+25e02fc7a333dc8621ef9f035c7b0300c6841aaf 7ab62b7e38c199ae6b10e470ea1cee605f43258c chore: add Justfile for test/coverage/lint tasks
+2631bfec6da7336f4f5cabff2e85ce6a132ab973 d09fb2aeb80c9558d9e6482bebee5bc7db356667 fix(basis,utils,problems): make derived intermediates follow their data
+284b8862d69ce8062b4716feff24c234ab885648 5bb96a9624071747544aef0f50f4ae53c4e3bf97 refactor(tests): drop the section banners this change added
+287b82770507e5cfa85242679c9bd1efc8918d14 da28b6744b07bf9da7884c8da1111ae3b5ab993c perf: separable N-D evaluation of the Fourier kernel
+28bb0754ff3dcab509be3e38b4648431b50fff68 f96efa51fec5098bf4ef4705c8acede14e11c36d docs(openspec): close dtype-seam, restating the benchmark check
+2a98fa675a533cae252dc3c6be76e622aaecf0f1 bb8273b4ae8c30131cfe134899cc35f9a458d0e0 fix(utils): treat two stated device indices that differ as a disagreement
+2ba30c35b46ecebeb39ebbb6e5594232e19f19a3 7db78886175004a374b89de45b2271ccbce8c1ce feat(operators): train DeepONet by a named recipe taken from reference code
+2bf6846685923ccc9ec732a7d2bef09f8fa0c792 464532e2098d0b77926546fb7d0d57b8ee8a086d migrate to uv
+2c786c6c6b08e49824944fc1b87f38d0ea5e03c3 6191a30b90f37eb8c1010e27e8ffb5d9cb4dc539 docs(openspec): fold DeepONet reproducibility and its reference protocol into benchmark-reproducibility
+2d1c8fd4c08df6e7e658c10c9b727a1ae3b135ab 873a302cc26c1d1a3a6507a371e770f10221c583 docs(openspec): keep a no-op conversion's coefficients shared
+2d321a273668bf477ee8d51325f10f7825292a6d f756f14d2d3710fc5b5c4a3b35537b840aab97a6 test: run the suite on six two-thread pytest-xdist workers
+2d91f4264f73bcf28998e19a34ae180312125796 31fa4a3e47d08602d58fe3599fd300bb47dc931e docs(openspec): record consolidate-the-test-suite tasks 3.1 and 3.2
+2dba1dce983dee0c123baa91003a00d1e768fd41 b431c409a6f96f2afd824b43bf317816c21e1813 test(model): fold the placement singles into DirectingAndFitting and fuzz the inverse anchor
+2f48859779f46485782532921909d45809362dc9 83c9eb422f0b3118ee8f55b61091a537873b34b9 feat(utils)!: make an unsatisfiable band unstatable
+30b88d4429ff848c3c2a08a92747a8feeec9b538 9f1369996be8975e4f43b08bbe91d543fd63123a docs(openspec): record the burgers mutants rerun after narrowing the Adams comparison
+310ff66d4aaf02579c13b3f198663bab5bddc397 2931324ec506a8858c02d5bc8776ef479f70554e fix(problems): raise on a wrong-shaped forcing instead of asserting
+315a9c19ff437ceb6a617f75486f2be3959158c6 c27715ac5e60bc191d53d6ce3c421e861daf53c0 test(operators): give the interpolating fixture orthonormal inputs and bound its error by measurement
+31ca6ae62007d58b2c67e70cef31b1df387e32b9 9d3c280f253685f5141c7cf68971a02f77178763 fix(basis): place time-dependent slices where they are read, in both conversions
+323c68d971d2b7060147e988304bfae85df80769 83575087e396ddc2e71ed2a65075ce53183f5b30 docs(openspec): fold the ratchet-code-prose review into its plan
+32c6ea307c02399615d5cb4f330584914d810efe 585e23304bd10944685c9ef17a95613343e96ac0 refactor: explicit SpectralSVR output dtype; asserts -> raises
+339d3b10f7a2e7e8c806a79357c707f01a9176fa 1131d89402c13f5d8715447261a880fdbe63a498 docs(openspec): record consolidate-the-test-suite phase 5 and discharge task 0.2
+33a8c3abed46c9796eb0a3b0a8c6cec581c38ae9 e4a135afeeaaceb9f03960ea2269122973bb7efe fix(model): accept a move that moves nothing, and name load as a remedy
+346f53bf6ab6535c5e513433130367e44c50f6be 9979380cf5d3eaede1a4bef304a3d9c0e1bbb301 docs(openspec): record phase 2's first cosmic-ray comparison and its timings
+34e50c641da5ac050ccd5a472ffff5ba00b9a350 35dd5caf867bd6192d1371bd90d2a70bb87deb34 docs(openspec): record ratchet-code-prose tasks 1.1 to 2.5 and 4.2
+352c62ec88b334becccc7d447db96abf53944ef9 c20e0f7e7e0ed43981c4e723243c1b46e62f1438 docs(openspec): cap each mutant's test run so one runaway cannot kill the phase 1 unit
+353c3f6fba85a002a56a7de3b3dbfca02bcb29cd 16558d657b8ceb3488a2be6cd8ae638f8561af68 build(just): lint and type-check scripts/ alongside the package
+36973f2a24112fd9f18aa9741c979aa545ccef6e 5376b3b4a29c83e242f7e6943a1ecd2418257586 test(problems): anchor the numerical path against a manufactured solution
+37bded284275f6c867f9f4a7945f0190a461bd0d 3423d073be6a6a3b374b75773c868fefd391ca2e refactor(model): assign fitted state together, once fitting returns
+3930e6683f8eec8cf76d648fe6b1c01dee4a52b2 69cbf1fc79c0d00bf0474197169164b005943acb docs(openspec): configure phase 2's cosmic-ray runs over the model modules
+39f82374fa1a6353f9758a8b15b90b5a9c154b40 7c9865b929af501efba0197d88e239d1fa526fb3 fix(benchmark): record each device as the memory it names
+3a9280b2b7d23f5e6c081a19eee9cf9b55c6a542 4f50567c90ef23e6995246c22d71e54170020cfa fix(model): build the inverse's own random source where the work is
+3afe38691a6cf3b7d938d52f64ecbb721ae80f73 90015ae0ee801aae048448bb3cbfd31afaec3c2d docs(utils): state what resize_modes and zero_coeff preserve
+3b6cc412948bab218994d21c131da117a2f24702 222b3c0a5e8da7862fa2e5cca491ac4dc6ca3207 docs(openspec): close utils-encoding-cleanup verification
+3b8634d57929885fc361979a52a794630081dd0a 137ebc29af6ba95e5b72df2e9ae856d07abeeaf6 docs(openspec): propose operator-harness-spec
+3ea858af0a5d1a1b8988e987c299bf4298a76822 77efd29833dd8d9443df5d65c99f7cb7d2192201 docs(openspec): record consolidate-the-test-suite tasks 4.1 to 4.4
+3f23df549206a3748a922f259ecd96be2058ef83 80cc2a78e99e6faf167de9273246cbce7f4227fa docs(openspec): widen W1 to delete Burgers.rhs
+3f7b1d4c2503a69ab4559e7796c6836438356032 c74a30181aefa71375d948dd19cdda005bb16e33 chore: ignore .claude and .codegraph agent tooling dirs
+3fb5ed64a5a45013171614fc90cc577b85acdc5d e9d1397a7004354b4622436eb1797eb80d8273c1 feat: ETDRK4 Burgers solver, fix spectral_residual, exact-solution tests, GPLv3
+4096e9343259c5dbebb1f0035a6c1f16090774e1 d21bfa5e75edb71f618627b5a6aea236fd0f01c3 feat(model): report precision mismatches at the regressor boundary
+40cade239b74d72f4094fb3570a616e67a7bcc9e fc18f073b2c26645c854d3f6c31f0eb3966024cf docs(openspec): archive dtype-seam
+41ae836216cc6e45e73f3db80c28bf100464b0e1 d00e7502a53e852912bb43cd52244442c39c76c2 test(problems): pin the two non-constant forcing forms against a closed form
+42110f61e5cc097ff8e4dfe2d0ecd32ad9279110 01aceb3c1552bce8ef5057a22b160771572683eb chore: standardize on Python 3.13
+4238a5e70c26fa1182936ec8dda81d168b704b59 07889597378bcc5eae7b530aafe06ebccd5dbf86 docs(openspec): archive fix-time-dependent-resampling
+4366f8536f9e024f144c81ff3955986494855fd9 6699e934ba8185b3c6b0deaa163af0e59ec14f9f refactor: basis-agnostic spectral differentiation (wave_number generalization)
+437088c9d92327e9278e8306fe7f32ec4e1474e6 16157e02a2a97713fd177849b7696c3686ef747e test: end every pytest run with its slowest phases
+439b96d070645021eaee1d60b4c97755c3d7599f d92fbb6dcdb9c6d7613b33e31d5fb22ecb545d2c docs(openspec): replace the odd-mode-count control with an analytic one
+43a1608775e270c07e013c06d2a08330f7c1a71e 25dcd0b85ec041c1d54c648dc6a0bd43751abb6d docs(openspec): record sensors-follow-the-stated-device verification
+43a21c9c35e8bce4f85794305bed7359d2ef5ad6 314ae33d89b681d86b5671508e1cd019fd958155 docs(openspec): make operator-harness-spec breaking, and its scenarios verifiable
+448ae238a62a1f4db393de3b5c26125e865e7e0d 34e979cbe15812936a1358b7934dba03783ea6ad test(problems): assert the anchor sits above the precision floor
+44c444fc648080c1ad4b33c3b99460f0e9ace0c4 1e0de7a0308f5699e0c2e291f197cd9e1d401dcd docs(openspec): reconcile benchmark-reproducibility with the capability that landed
+475867edd9a4be0d2f03d22fee09d40c73b40f48 28b3ad05d540344b45f7721b95f2aaa08b6c8cc8 docs(openspec): settle ratchet-code-prose's open question and its census
+47972c972c508dbcee1c09486857d0406772072f 654877c778080f61b2e7d31551c0d0e801724b08 docs(openspec): fold the review of score-time-dependent-outputs into its plan
+4982d43a829da1df17d0eb715f1d606696dbbe72 f3fb8ba38c7bd70d0bcd1d9a3e13b1674ace5b7e docs(openspec): fold the condition-the-interpolating-fixture review into its plan
+49d3dbbac2ac862ea35ff8f00c23514bfa23c3dc e4d2b5cd00ac1dd73921929ff73e4ef523be5831 docs(openspec): propose condition-the-interpolating-fixture
+4c4f0b30fbfe8813372ddec7fcaa4b8a7caa43aa bf613b709b1d3dad2dfa5ad5fa5dc61a93e7579a build(just): mutation-test the benchmark script's changed lines with cosmic-ray
+4c77a4c97b0e24b8c61b900f8d5531a14ed24818 45a5675f4be12194deb1cd94a21fef18c67bd9f3 fix(basis): give the NUFFT grid at least as many points as its interpolation kernel
+4cdb0bdd467b0ddcbed8c4dd2aed07900550cda4 9ba6198bf8876c8ebae5d03d5f5ace1abfce4075 fix(basis): state the NUFFT kernel width once and pin the grid the operator gets
+4cdc4ae868f92d089ac1321e24b54c30db1244dc 074f97e2fac895aaed766eb27f98b9f8a062b5f7 test(model): fuzz the remaining LSSVR single tests and merge the stated-host case
+4d85b3ad2ca02cce0a7764ef6abfcbd203035f7b 5dfbdf0c977312bc807c89ebde7c2ea17692ae9e feat(problems): make a forcing declare what it is, and refuse what aliases
+4dfb158d5a7c3656ff047ca6a8f3f3f75ff18691 8b4c08655f6698f1284f2b1c6a8b02cecd89abc5 docs(openspec): propose benchmark-reproducibility
+4e2b786ca2c45a47640dfd1c4ea96d5fa6ef4ba0 626dd7ce53da309c81ca0a2c48a78b8db48b2edb refactor(problems): cut the narration and let the names carry the intent
+4ea885c38d8ce284849cdcd997a2984e03128517 fc8aa3414fdc9b01880c0fd12a17787f366c41d4 test(operators): anchor time-varying predictions on the manufactured values
+4ed01be62534283ebd001d83a98d5d7f09da8cb7 ed37c35d6b16d9001d6b8ceb4fc94e7c13781280 Merge pull request #1 from nidduzzi/refactor/basis-domain-config
+4f67faba9b3db1b5226fe2bf1aa3bd950bd9a558 17b88c21713d46017448a7b8131aea12953b82b4 test(basis): pin the two-slice conversion and evaluate's function selection in BasisLifecycle
+4fa48ee4d6143c0d096426338a22f3fe46caf9e6 df962fce2f51ed87bb24072c91aa671d2bd61cf1 test(scenarios): follow this change's own spec edits in the exemption list
+50d37485984599fd59048f2f7fadd098cda60274 72b0e6f48359348a4f50f4f1d49f8c49f8250b32 docs(openspec): sync and archive fix-etdrk4-stage-times-and-complex-weights
+50d4f184acc217e85aecdb8d5a2aa70e923d40fd 538bf6f0c7a812201195b79e6ff25f281f4aedbe test: close the real gaps cosmic-ray found in time-varying scoring
+511caace556e6b295894b43cac9f4e847c352052 fe7492554434c255bce78f273badf5fa19eb50b0 docs(openspec): record sensors-follow-the-stated-device sections 2 to 4
+51efd91c6c62d7d9a106731cedfd145c20effa9a 793feef83205dc8aee7485f66dfcbc737c6fd8bd test(basis): fold the lifecycle tests and the conversion refusals into BasisLifecycle
+52cee6cbffaa40a37fd8b02da2d5dc92eca63f2c 661ce404803f6eb359fc26b61b4ea5f5c77163ed docs(openspec): configure the metric recheck after phase 4a's degeneracy-floor change
+53469376e0b0eeae86b7fd30b066d4457b39263d 7b8c1936052039e500afe54f38ec617e0ae47d3d fix(operators): refuse a dataset whose parts sit on different devices
+54321dda06d9f3fd05122c0bc4976fdea2cb5cbc bf4f200c3b015f7aa36a8a1e57aff17d4d9f1011 docs(openspec): propose unify-solver-protocol change
+54a5e2875e94f5dc7c379d8c53afd8dead504f55 e2658367b561a04ab3ae7ed2fa3c28345f1bb961 docs(openspec): propose ratchet-code-prose
+55c192e0574c01b795710f65fe82027dc9e71fbf 1409029086bc35bb4003090743cca619216bfe3c docs(agents): document the scenario guard and the mutation recipe
+55c3e2efe36987587dbd20ec2f289efd7c8e5332 f998725acd0ce91f6a38ad443386f8707c509893 docs(openspec): archive operator-harness-spec
+562d1b7eaaff695c421019cf49799b133f83f4e5 0901c9f6e07dd790e1b27ec9b199dd8da1a1cbfd migrate to uv, fix some formatting issues
+562d366427383fb71b4171e950bb24a79ae14482 522380f6411eb81387d0fb9e219836c6c6e1df03 test: hold every docstring to the numpy shape, with one sentence per part
+5644033afbb82b7e389fba80b3fa2cc2506e7de5 ba86df7ccdfecee8163110c2d9795e032f447d4b feat(utils): follow the stated device instead of preferring an accelerator
+5790d2965e472a43dde66a70207676edf4a560ec 199515c1b69ac025cae6874e9c9f5a6a80420cb4 docs(openspec): propose burgers-forced-benchmark
+57b1d7b5cca9e3c4bef433c85dcba209985da865 7dccf67f9ee0a486588cb5696a65acf670d5bce2 feat(benchmark): train DeepONet per dataset by the plan the five-seed measurement chose
+58060c974d83144a393299bdca3ac5a444e1b4ba 882cd5daf6021bb177ea29b0c46275efbd904b59 test(basis): fuzz the config and nufft singles and pin the periodic continuation
+58c6f57b8a848e27a972f8c6579eb7a9d70ad293 0ca1edfb80df1eb539cb0bbd75f7c23742bd9636 test(scenarios): record manufactured-band-derivation's scenarios on its own branch
+596786477f42342633a41f736fc205ae6f8205c1 50a42cd721e23e2c92c9931fe75712c3423ff294 docs(openspec): record score-time-dependent-outputs sections 2 and 3
+5a5b4ed5865a4531bbe9984079153d2da2916a6b 57cfc8d85c9de3b5479794b075eba23f54425a3b test(model): bound the failed-fit comparison by the host-solve noise floor
+5af6db634cfd87789b4c0d5852e4fb82c8093a31 75de16f79cabc17ce510942e282a2172280f2904 feat(model): let load state the device a model is placed on
+5b19880af7064e86ff513b156d8d92e629747db6 46f7a2689e7cc0e66ea71c73675cf3657657dd09 docs(agents): claim only the type discipline this branch actually has
+5b264a9bf9cdb3c32f48e1b687f8622e093f2f77 2f6e2bfc3bf12fcbe7d3aa9bb9a00ac843297e7d test(operators): guard every scenario, fuzz what ranges, model what sequences
+5b742c9548058f637806a97261379d2df73fa70c d0079d2911e9673b5810d7b9e96cd6869c2c435f docs(openspec): replace burgers-forced-benchmark's test plan with fuzzed and stateful tests
+5bb6affb8b3b3e49274421fe4fa88e36d18a2706 aec09fe32a4541d268f7b4d3978373b369f67ae5 docs(openspec): reconcile benchmark-reproducibility with the capability that landed
+5bd4fd6cd95fd759166bb798a3ba77e64eaf6621 e7e0363d2ec9ae7da746706cef6973c0b4d87661 docs(openspec): record benchmark-reproducibility task 2.6 and correct the per-point scaling
+5c6ea30f97653b723ffafc5ba9c7bedc5ba39b72 8e9490fb25a33dba44ba0cf92d81063b10ad15f7 docs(openspec): record the measured noise floor and the two-device split
+5cf1d3d44a3ce814452b52b7e1c49076494250aa d6ed67827de052e704c90a70875ec72c888e6275 docs(openspec): propose ratchet-code-prose
+5e9d1044c76e0375b613c53c121c2e3e2fe611ec a1321f7f34a35992c5768bdb212c226b5d32eca3 fix(model,problems): remove the last two device answers that were not the caller's
+5ebbbf96e75e9f4772cfc8744e620707523b41f8 acc857aaa5ddf9214996d228a7c2b9857f287968 refactor: injectable get_metrics returning a TypedDict; capture warnings
+5f049618c5f4e6e5e21c9b526933fd0bbf5b8bb1 bed4b89b2cfa8f684804cdb4236e8905cc57293f test(scenarios): reshape the scenario guard's module docstring, a touched file
+5f6be0b1ec5a58b8e412c49f1101aab28bb30afc 4079a884fe83bd47670be951cc94701ef4bcafe2 test(model): fold the dump and load tests into RegressorPersistence
+61df51b9b689443b5d2fa697dfda720ac975d7b2 b59f057dfeb946272c187ad0d65c99eb02db97b6 fix(basis): accept any integer slice count and refuse every field a conversion cannot place
+624f272141494a937f044d05e9378a91ec9164aa 36de74cf64c1a4590fbf2507e2c8ba052e3422de build: declare ruff in the test extra, which the prose guard runs
+66a605c3b6b3f78059d1d84482ee04e8f2c395a9 ab00b72f2a99c09e207f1005f000e9e838e78e12 docs(openspec): archive sensors-follow-the-stated-device
+686522411c22aee0e21e83a5ee918dbd4326d5a0 945bf1d6aee4a386bd1bdeb80acd26dfe5d70b90 feat(utils): harden the interleaved-real bridge
+69c637796e9f56bb9c52d2cdd002697245d02233 d1b69a7725f005a60f73c1b14e4171e9cef5b921 docs(openspec): re-record consolidate-the-test-suite's baseline on the rebased base
+6ae21b9a5b3ff22c9cac4072b2de845829a21f2c 27e5de64b6cf5b86d14eaf450b7c9cc282909916 docs(openspec): record the metric mutants rerun after the strategy was rebuilt
+6b37afc4f9fa4bd7902a8ee60c8895131fb8ec30 17f85e549d8166eb45a781766fc32dd6713d1fb3 refactor(notebooks): state the band the two zero_coeff callers meant
+6c57e74176d862a5ff99b1681a6d3a47c7aaeb0a f2532f698a8b2d47c7eb60496d1dd509dd37ec3c docs(openspec): propose benchmark-reproducibility
+6c7876afc4ad05b66801f6f0cb6828e72e770ab5 ffc41c3b38bcdbd5af49f49023776994ee6bcc2a docs(openspec): fold the fourth review into fix-time-dependent-resampling
+6cb83220866156c2e132bb5ff65444e2c9545472 b13fce87ce7937fbb2b6c3d9fe5b866eb477141f feat(utils): make the Burgers solver knob real via a semilinear protocol
+6d2c4bd13d8dd27733ce71864efd393dcace11ce 5e13a9ae7f86303a95cdcf59ea1058ab3a719d3d fix(basis): construct converted fields explicitly and refuse what cannot be placed in time
+6d304f2e1ff3e915dbf8803fdba333f1707a9f0c b573cd75cb1ea2bd89810b47e38cfa8d999d3c29 test(operators): anchor the orthonormal fixture to Gram-Schmidt and refuse inputs it cannot make
+6e79a1254fc18744b0c8825072af9fbe64d11f9a 88ef2eb1975f3b87f017aed43869dcebf667fdfa docs(openspec): propose utils-encoding-cleanup
+6f13511f8dab71b7aac1c9d5079e3266a2834e0f c17f19202aa6e9b60c4df25056e1aeb1269a7ee3 docs: rewrite stale README; export etdrk4_solver and resolve_device
+700834d26d55f08fee70c494503a4e26b3d23f3c 9d8dd5fecdd27e4ec1b2104e5870a90ed5517069 feat(problems): derive the manufactured band as a cutoff, not a grid size
+708079fb33180e549209efd00e16f3c25abeb05f 6dc1dd749cbde2a6735c792537f78338f725b2ee feat(scripts): reproducible operator-baseline benchmark
+70d7d5c9ce54048686c21dbbc4575ad95ac3025a 4277f7b8df5d56851c7364252bb94087d077d8d4 docs(openspec): take DeepONet's recipes from the reference code, and record why the first plan was dropped
+72e1b58e8f5f9ec0014fed59d197001029827cda 3e092313ec80a720ebea607fdeea7cc3a66f81b0 test(scenarios): record the in-flight forcing change's scenarios as debt
+72ed6ead41288d72f9293cdd72bb5e4493b48af9 dba58ed8c60a7c3110cb4d010fe86083dee514dd perf: chunk the exact evaluate path; make NUFFT threshold/chunk per-instance
+734d7f98326693688b486cfbe08c71e315d9b6f5 c3b2e72b5e9252098b1456c23833a44a9c58aa14 docs(openspec): archive condition-the-interpolating-fixture
+73c8baef34c91f3e1b79e2fe957735fb9aba1bfb bc442ef1fdaba67570f3e6aedd306a52f442abf1 build: hard-cap host memory and accelerator memory for every test run
+754a80a4fba01968f6f73828e5dafee4687973eb 8f67eaa77a98367b818f85ec67abb505cde42c67 docs(openspec): settle ratchet-code-prose's open question and its census
+7588b14300479715f026590b67103bb1e63ee2bb 1a7c7eca952130fdb570f60783ee339e4ffbc16f fix(utils): global rse/rrse instead of per-column mean
+75a735777174dbc214e1606305516c2cd0dd530f 24de8750dea361a773df6343de166bc6abcdd381 docs(openspec): record the measured noise floor and the two-device split
+772bb3d2ecbc55b22510aaf7173c049ecf38e112 fa76f45b7c7884796816fa676f79acc20a1f93c0 test(operators): anchor the harness and withdraw its exemption
+796d313c2396c2f9d33e26e05d207c42bbdde6a5 151dea3fdd122a8f3cd061a9b6401798e8909892 test(basis): anchor the resize boundary rule by its invariants
+7a31389c92b60b58642bee0a1a2b3421c4801c34 ace917b3f2c7d679f1798f66088e42da75dbbda1 docs(openspec): record consolidate-the-test-suite task 1.1
+7b1b4f623e403845dd3cb98382671c93b2789b69 e85d2fc8617f78ad0840ddd278535ad979ff1c3f test: 100% coverage on models, problems, utils; fix resize_modes + StandardScaler.load
+7b4456aa232a3041ecf1a2ad67caf0092fe67630 0d5271ae4e6e729b0b1dfbd3921a03f38030f63a docs(openspec): propose time-dependent-forcing-in-numerical-burgers
+7bb4082078c171b06b7d6e90afd9868139cb6000 b49a070025bb851b142edd78b9a6a7418ef8d201 docs(openspec): record the coverage and prose verification
+7bcfe114c7a64347323dbb013aa448829c7e06a3 e30afb046a9be845c6a90a897899a2b3cb7b9ac0 fix(prose guard): close the review's misclassifications and anchor every rule it found held by consistency
+7c0e3526daec9c3f2f7e0b2ef35a622511a06352 6c927a12e78740f92327a2710d8105778af0d699 test(problems): make the band anchors fuzz the generator, not the arithmetic
+7d2da1ce062eda99c899efc963be6014a96fbee9 eeec58cd4bbd03da502f567295c9b96aa0c1106b chore: remove dead basis stubs and commented burgers code
+7da8e6679fea9ea7403cef164cb4015f14ad45d1 b0e4b0a48b25fab2b63a2613138b20f964fa30f7 fix mypy and ruff errors
+7e408ba3634e68c46c0d6122dcb953a215b70841 9a481e502b41b27b87cbdec5c232745e4b4c9c49 test(benchmark): close the real gaps cosmic-ray left in the forced case
+7e631b47a9ec8e8bdb6e4e19bc79130771891180 a9614436cda128bbc93236b4a6f229e7d50c12bc docs(openspec): propose fix-etdrk4-stage-times-and-complex-weights
+7f9b97e29903bf79a96920244862c901b9cb9894 424f890e7513209143f93e61514a365bc538242d test(device): anchor placement invariance and drop three weak assertions
+7ffd603926ec2b7f2410fc241cdbec0b3000e9db 99a989a1a0244ce2e99c796bb419c0b123fb7dd4 test: enumerate every refused query and pin the modes a model reports
+80695019c662c1ae8016eae63dc11284d34a41c1 a18e25a36ad8666d499b990841c99a40e51bed1b docs(openspec): propose consolidate-the-test-suite
+8146e623d0ace2ff5aaa42e5441535506a05f880 5fdb5c34d137358350e269ff5d09159c98d245b0 docs(openspec): configure phase 4a's cosmic-ray run over the rest of utils
+81b3e32c3deeaf2e83623f39ed7a83db73beb911 acd741f9e87a1db328841739f4c3d174f38f8bad feat(scripts): make the benchmark state the device it runs on
+81c84418b0b4182831137877ef8b281083a6e38a dcf069bc8e736cb61c9c74c07cdddda473896796 docs(openspec): archive benchmark-reproducibility
+820464b3168429cacce058f8b80641123221b150 dc8957c3279052b8440c9ecefc14059f5af52a2f test(model): check the LSSVR solve against an independent KKT system for the rbf kernel and a 300-row fit
+825ec4eac1ba1043612d077eecc14219a231e892 565f504552cbce1dbb3a0f0596434d404aa25e0e docs(agents): state the memory caps every test and measurement run carries
+84a727c379872a1d195d74690ec92044c378bf54 c8ec1ecbdc5387758299ad32d34e661614e8baa7 fix(operators): seed DeepONet before building its network, and predict where the query is
+859357c25df4c98117e3764d0bf3a2949e143b67 e8d7ba43e0475c7def867986c0cad6b4ae7dc82f docs(openspec): retarget the forcing change's dependency gate
+85982f20feb4ffede83354e81df591cbb696e597 d5af0a3bb0ef25fe29b8df55fdeec1086fa96148 test(operators): mutation-test the harness with cosmic-ray
+867de1b43a3721ea988f400ffbd82a46e9f41875 13fad57cb4089bbe285a8dc0d3f982c8b6f56de9 perf: NUFFT-backed non-uniform evaluation (fixes dense-matrix bottleneck)
+86bbb1cf71c7f68d3ec93f40661c5c58e1fb6da8 0cd8719b02eb89837a9c0507ba0051b9a3008988 docs(openspec): amend consolidate-the-test-suite after its rebase
+86bda4b23d04ef1af591ceb3155ad9ed2e910c4c e19bd28773fd4d622ca705f859ad84680df2393a build(just): mutation-test any module's changed lines, one config per target
+8893120f2fa27b17ae5070d87c69bbeb42ca1447 1cd2256922992c2c7bd90b7938a267a6ab3c72b5 docs(openspec): reopen the change on four adversarial review findings
+88c2b0c9cccdfa59bbfa568bf23fb848224595ae b948146a6aab14aaa9a18e51693d52b140c00639 test(benchmark): pin the forced case's query to the output's time grid and domain
+8926588b612762578d131c5727042db99f9dde56 a33f286ef3ea1b601f2495ab4114e7eff2a1c2fa refactor: injected EvaluationStrategy replaces class-attr transform thresholds
+8aba09df5609092a73a2fa6601985891c0196d45 bbda527939cf0c1929152f4322a1e59e2e5d4d2e test(utils): raise the metric comparison's degeneracy floor to 0.1 after a flaky draw
+8b74d95e998133eb588da71b49add09c16b2e300 5af2fd0292fad2a520db7f7b455a172c18666217 Merge feat/operator-baselines: operator comparison harness and solver work
+8c3fe0fcd28dca99ddc620c39bfe2961c5d3be12 c54fcbc4139bf7cbfa2da53c2fb13cad952cad60 feat(basis): resolve coefficient precision per instance
+8cbad3eb05647123087eaa2e5dd4fa6e28622b41 8e0646cc57d68cbec526e0f38dd54a4a93888221 docs(openspec): archive fix-nufft-two-mode-axis and sync the basis-evaluation spec
+8dddd6e8cce4fe7bc76305f16ee6103ebb8462f8 871a7bac23a24fa73c1a5a8f0fb56018f341e150 docs(openspec): record sensors-follow-the-stated-device section 6
+8ef0d55c63d366da2cbfe82a744f774e99b2fed0 d2722a7807ec090089559b92fd2cc513e2dea107 docs(openspec): sync the forcing change into the main specs
+907fed2297d9434009039484dd010ef1853c38f8 a6b55a5619423506c8075eac699195f58494d644 docs(openspec): archive consolidate-the-test-suite
+915f5a8d60cd49fcad232248cf07257376324bea d8b34f40263ee4c904a0068f48960fc9a84c19a1 docs(openspec): record fix-time-dependent-resampling's second review fixes
+91983ddf7cc1ea5e8322ac072e4c421ac433cf49 c421d04d4f3064e68f5aaccb68d99290f964b30f test(scenarios): record benchmark-reproducibility's scenarios as debt
+92feef44e87d091e651023d2159bbd78b3de40cb 46153e23fada4df6b8dc273555eaf7d3e42e7c84 docs(openspec): record score-time-dependent-outputs section 6
+933ebefbb5c92a4c956c68513f62838a767f705f fcef48d64ef9c79f77b474256dbf109d2306340e docs(openspec): propose manufactured-band-derivation
+9384fe454016a55e53cd28620cb5260f455065c7 6e97b166221d145c4db431e74d673b578607909f fix(basis): refuse invalid times and keep an end time on the last slice
+939ce17062355a44b710553c70d56dce41cc9115 585be7fa8cd3cbcf5d6ab66c3812510b8180db4c refactor(tests): move the measured numbers out of comments and into the record
+947774e7b577a76987649b4170212ec114581f7d 14dbb192f1ce6e8ce1b75a714a1b99b156291ba1 docs(openspec): rederive the anchor's resolution from the band the code has
+949005b85f5d382ec430bfd128edf77bd4fc4afc cf913550a7736a710e40d2df03fb38d0d3f81c78 feat(utils): make the polar encoding multi-axis, device-safe and invertible
+94ceef7610c9671a3bd5772ab0d4bfed45f7b745 12438631348726b893fad875bfdc7c4bb71a49a5 docs(openspec): record discharge-archived-scenario-debt's tasks
+95e6e82109ac40fc599e7c640a50ba81bb8ebb31 ad1770f437beb19da81161aeda4890417657229e feat(benchmark): add a forced-Burgers row whose forcing is drawn first, as a pilot
+974045307f1c237e4b6a754f2731c344927e732f 88b432e5fa39e7d4cf448cce3abcdc1c2c79ba31 docs(notebook): read the committed comparison record instead of recomputing it
+9798f8225071bd7201c3edfe78d26278e99b9181 a116e2b0cb8ed7a0088c07a1f61ff9dc049bb31b test(basis): fold the resize invariants into ResizeRoundTrips and check resizing independently
+97e50d00258d8683081667bf93137f38083f6db4 7ab75407bb8bb4fad87f67f989d1fe57d7d95839 docs(openspec): correct the order assertion's direction and plan two review findings
+9922058ea3052f0d26c63df5307ab4144b4c5a8d d819e85bb97b0d8001d51912e3d8ee3b35f3f8a1 test(utils): anchor every exported conversion before the bridge moves
+998f18e13956feaec8c3b5b9745634ef7cfee631 265fbb29c4b76bbd6f2d34912ae035b9ad94196a refactor: add injected SamplingScheme (periodicity DI foundation)
+9a51640e68b6d5d8e4982592064120b147d7abed 233e1146793917c7a0bf1bb88a16211f93923279 add updated notebooks, add resolution to residual for burgers' equation
+9a55e3f246dd2afc001fb40b57c41472dc2ad947 a2118df12e9ca451d4e51d34d4e7fe1eaf04cb31 fix(operators): take sensor_grid's device by keyword and refuse an empty grid
+9aac81da6ad61ce03dd4e0b0e0f53ce47532628a 43f41627fb171f2f8544db82beec49baf64b7a2e docs(openspec): propose follow-the-stated-device
+9b3ddeb345a02f50c7048d58bcb1232d50372ef2 1b82fb71d9bff0585590399ffe518b5e9658506e docs(openspec): fold the review into fix-time-dependent-resampling
+9bb25eac8bb312544e3a1309200dcd0b78db40a0 7ac83195075b036b21085754c67fdc123a7ed366 docs(openspec): archive manufactured-band-derivation
+9caf842e8893afbae40ce7ed053819c9a7cb46c0 406c893380059c425842185d07f4a9ee232a1758 fix(basis): take only zero-dimensional integer slice counts and refuse a one-slice field both ways
+9d0796c8fe1e2e504a26085d25b261970317bff4 87990e8e72d4f4f338d33a9e91ad425e2a21b412 fix(basis): evaluate paired (t, x) rows on the coefficients' device
+9d7cc972ef2dc444ef5c918ff401ddbd4e6e9a01 e18099b8aa607f6be1d32d61ac21f838106918c4 docs(openspec): archive score-time-dependent-outputs
+9db16be60c6ab51d3282443fd9f8dec5a9ffd931 de3303a1e65ddb30c730f9bd1e99131097cacc9b docs(openspec): make derivations structurally impossible in ratchet-code-prose
+9e4a9110f62071178eed8e17de2d19088091733d 78738af44ef44e41d960330f3ad884bc083a7679 refactor: extract Basis.plot into basis/_plot.py
+9ecb45901c919036caf375ccb948bedf740c170f 909d5d0af8ea21b987ed7888b6a9184473aea326 test(problems): hold the constant-forcing path to its closed form
+a0d1542ebce8cc3f2dd1ba561dc62610c416bef8 e445b41fcd92be6cc97b9c666e104ec0c6e9c6cc docs(openspec): record discharge-archived-scenario-debt's consolidation
+a15ba5bfac04fc78a7a23dfcb08f318635505899 e7e5aa6ae5c5d5926dbef87adf374b8a0ab7608d test: hold the prose in code to a per-file budget that only shrinks
+a268d9720e111f741b011b0b391cfa5c6b8fd32e f97c4b0b9ccb45413f9f9b092eb826d25c3cc3f3 docs(openspec): fold the encoding-anchor gap into dtype-seam
+a2a37577b56eff69668cd5e1ad01617a9a61ecda 00545cf4dcf2038e0a1eaa9ac805e8848710fff3 test: cross-check MMS tests against torch.fft
+a2b40e3a1378786a4972363f441556a55a5e43dc 2217e09edbabe1f61135eb4eaaa5891257792a43 test: share one set of device constants and compare devices by index
+a312de4cb9db310e38fc983b9a7216c0064c5459 d57873e7664bd3066bfb8bd13ec90c80a9d86a82 test(problems): let the refusal anchor's assertions carry their own reasoning
+a3a6d8e3021a2bafd23924c77c2357807adba68e 7a16d4c7baeba6e2ba81131d1dcc69e4f854310d docs(openspec): record consolidate-the-test-suite task 1.2
+a3d332042e5b2b5bda7edf6f098f56572ca010e4 9c9d2d194237b63cfac32c3ad077f4f096c87720 docs(problems): state the three forcing forms and the resolution condition
+a41d000f882dfc3326c06ef4f90c1f09a193adda f97994838354dd7f8e7f4054b3bcd743f62154a4 build(just): regenerate the comparison record with one command
+a4a8f70e86415f33294af26e195acd23a5545b70 27097961d550043180f7c239379feb77ce38d313 test(basis): require approximate evaluation at every mode count, failing first
+a4ef1deb3d8e2ef8fdb5d6dd8db7bf56b8d83bb0 8889cf9c4cece3ee0ce585ce367696b45b9f53e0 feat(benchmark): record runs as a long, provenanced table over a seed set
+a55efef7a1b56ffe9a1243d964544ff3ff412977 c168eab82610b184b2863508f8fe0d924abdf23f docs(agents): document closed-union modelling and the Protocol limits
+a650109045916b30319aafc8125dc6a93629688e 50bf270efbc5b36c2782003e8bcf953d0fa1af73 test(problems): anchor the manufactured band's symmetry and its refusal
+a650deddc607aa8061bd0c1609d4bbdef1740e07 f1c078be10ac927dbfa6373e82536402cb73466a docs(openspec): propose score-time-dependent-outputs
+a7e3a14387f752fa728bc42da1bc61f25ce5b499 dc9ce678d7769087c3d3b2a5825fb2b8ba1bf1de test: hold the prose in code to a per-file budget that only shrinks
+a85b9355871a8c5fc79be03725d64e9b7d67a3f2 77d23782ff042def203875e8f1342cd4db0d4273 build(cosmic-ray): cap each script mutant's test run at 16G of resident memory
+aa0cf528c37488aa11d7e5d9bb27781f69609bd1 172dabd30759e47ef2ce1d95a0df097ebfbdd37d docs(openspec): record score-time-dependent-outputs sections 4 and 5
+aa43d79fe0fff12686cac7f62da2dbbf26cd64a1 6daa8e1257a5ed612f0f2d2903c10bb22d4a59cb docs(openspec): record refuse-moving-a-fitted-model verification
+aaa2faedb5ce33923375defdb8a3ab0e4c383c90 5816e3195c39fffe7fd9928132652cf2eeb9a1f9 test(utils): draw the metric comparison's data non-degenerate instead of filtering it
+aaaead584dda0cf31e60dc561654bb43f940cb87 41f306297de9daa6fb847ab3a53c34363e68c8df test(operators): close the real gaps cosmic-ray found in the DeepONet recipes and the record
+ab02d20701a330cb897a2f39ced5173b7bdcd05f 7b3a5b856c2722bc5f8e3896a4f55a01e4e47bad fix(problems): one nonlinear term for the solver and the residual
+ab2ecd73d330588878e4255c45522d4f346c3ce9 d89bb42c5a2a4ee38fb4f66ee2b76513ec1f93c0 docs: add AGENTS.md and point CLAUDE.md at it
+ab482c34cb8b922259449ddefdecbcb69247132e 60ccd3548d871c35d4623eed02a71f69781e6d18 fix(benchmark): fit every operator on the stated device, and train DeepONet only on an accelerator
+ac5d83a2e2254322d6845541585c8c4500f390b1 fc966bde1f2d8014b53af8bb78b11d116afdd44f fix(tests): take the convergence order from the step sizes, not from log2
+acae0bf23d1702b84b7e3edc882a15fda12f4013 c8f89e6498f3c7022248819a664adcbaed4e7138 docs(openspec): sync manufactured-solutions with the band the generator now derives
+acfc1d3ddb06cff6970b771a3bfbf671db18dacc e0753e59844c4a8d64808014fe09acc0b9dccfea test: independent round-trip anchors; exact solutions to library
+ad0a026bcc25ddbcff02010335a54561f2b5ac5c 808f5197b4d307213f0aaacb7b4b51db10bd8997 docs(openspec): record burgers-forced-benchmark's pilot and its verification
+ad3c081e4227dfab2748cf3ecdeda9530e0dc11e 093c3ac6f665f54d4669ddb44793a3b3ae3fc42d docs(agents): document the precision seam this change introduces
+ad4d9e069013edd34422964c8d212edb0461b857 d9538a558aa53c693733fe38ca4257fe8b175ef1 refactor: inject logging.Logger into models, drop verbose/print plumbing
+afcc2e5134c2b093dab18a960f1f3324bc15c94b 5b10c438b1b570df4f51ed75e98cb98407e5e315 test(operators): fold the benchmark, dataset and case singles into their machines
+b0230b26675b3982f8d10a24b42d743be90cc5a4 fd26f050e168c023f6f4376925b664de0254336b docs(openspec): propose align-spectral-residual-with-solver
+b0db8b26a386f57de5f99dfd5548d22cd63a6d28 2778c7a476cbb9aac659107138e7c6aa4927d145 docs(openspec): propose ratchet-code-prose
+b172a2030c51d99a40fa347eb2fd33c35b049487 ffd902f64850f2dda4162abfa6765f15c4cbc6e4 feat(operators): score a time-varying output at (t, x) rows in targets and forward
+b1f570d2989b2329e45a825cb83992507c652e66 2b48d19923a7d93e9ee07d9124cca14c22d880a3 fix(model): check precision on the forward path too
+b27a7e028d9b4f2bcb03eaf6b6998686356489d2 609c0e9df2ef4756d2c0b120047b96059b916d93 docs(openspec): record fix-time-dependent-resampling's fourth review fixes
+b2c1334387124b8dc476ba36994d26e1ff42718f f6faefc788b307dfb1ff2c57bd629c0e1d1859cf feat(utils): refuse a random source placed away from the work
+b36f5259c68051e57c761d91976ff432f4a6c3c7 c6cf183322c5620edb45ab8de603fbde280b9580 docs(openspec): propose benchmark-reproducibility
+b5f9ee84553395dceb386559f377371378ecf063 230441dea785f7c888aeb505b01ff315aa4cff3a docs(openspec): add OpenSpec specs and change archive
+b7e414e3e6a65ab1640567139e4198b0969b9ae4 efddb4cad09e459a825dc8d44f4cf40e20555e79 merge readme update to local version
+b8c9f7601a51a0bc298e09a42e2acaefe3de52a0 9797b5b8bc5d99fe212233a321fba5bb839c7a4b feat(basis): refuse a misplaced random source at coefficient generation
+b8f7807c32f49bd7a065d011e4dbd746ef3dc013 ffab83cfb973e0fb102d33504d239efb81cadb83 docs(openspec): align explicit-band-type's plan with the closed sum type
+b97758465dd53c7ffbf9ca3955b62f42f2490f5c a51a8f030da7564023cfb9308a90376c4a173f6d feat(utils): report per-sample relative L2 beside the global rrse
+ba20364da418e902ad256b9109b16102b5bc1c80 28470f8ef76efe151e8a161dc5496d3bc7ab5b32 test(scenarios): record benchmark-reproducibility's scenarios as debt
+bafd16ec4f0b3ceb3fd7e7294605d05652d822d4 e4e2361a989ab36e9fb647497d5a6c3f9b14b1df test(band): fuzz the band contract and model band composition statefully
+bb40a9733782a0ea968cef9f280952a3e0f6cb46 c481b18b6f083fc64095a74f8a842ea7d215863e docs(openspec): archive ratchet-code-prose
+bb70379284141529d5ba53e3566b7c053e269dcb 206eb2fd91a433e4a469aca321a019781a7cbd84 fix(benchmark): keep a time slice on the device of its field
+bdb887f6e705ffd54a8df76cb413ceefa437d516 4c2e8c2eb5237fa5983863382ca5378268389bb3 docs(openspec): time every cosmic-ray mutant's test run
+be3192fd262739f7d679b3c5d314ca105abd8b5e d791ed77dd9be053a6bb732c48d3c7d549dd8c6e refactor: replace periodic/allow_fft flags with injected SamplingScheme
+bebc105f4f8a299cd7051e850962ad15c4ba4ea2 513b07b735fcf6a7388ea0132791588c65e2e22b docs(agents): state the conventions once, for the whole project
+bf516105458aa3d3b18695099a48bf6ff1f36b38 c79e727f99b2ebb69e9d953bf402ec94ee32d351 fix: dtype bugs, py version cap, mypy/lint clean
+bf90ac5997b93733c17c4203000b340ac3ff52ee 3616c26aa49ebf45cc2695962c46b696f16627a4 test(model): fold the precision-boundary tests into SpectralSVRBoundary
+c005dfd2a60e9c82b571094c5e1c1c99da00067c 914a459624f90a26c4e0b4e19a0f223dff099742 docs(openspec): propose fix-time-dependent-resampling
+c021988605ad8b8ebd501c4df0c7237cabff2c82 8f6a62adf81d3484b4ae7defd49a5663deb3c33d fix(basis): refuse a time-dependent field without a spatial axis on the no-op path, and pin every refusal
+c24601963c7c3996515e68a06a5bbad64f089ad3 ac626a3a84d4c9cef1be8ce6d2d9e4cef82a983b docs(openspec): fold the inverse conversion into fix-time-dependent-resampling
+c275e9366f1847b6714f09f45745d08cb0a7ef6b d9035eb88254f3e2930ef0650ea7cda2740f5a55 docs(openspec): record benchmark-reproducibility's regeneration and its comparisons
+c3757dc577fad57903ca765f49041e3e9cb2c037 c1f6d7e258501811a022a7f0c82c4ea8966bf581 feat(basis,problems): let a caller state where generation is placed
+c42e2580459b3f968dc6eac34b3e51060e04deb2 64747aa69347d1ae657ddfbfa98bbb6eb97b1c6e test(operators): test sensor grids and datasets across their valid and refused ranges
+c45297681d20a41b946ac3dfc5442f349b19dbdd d5c1e69a9e7cc33e27a7e576048cf3865ea27d33 test(basis): draw 1- and 2-mode axes in the tests that stepped around the NUFFT crash
+c46cc9a72a269eada3fc8bf3c45da8bafaae86e8 bf242a22a7e882a08bac6e2bb449e4e50feaac08 test(operators): measure both tests' metrics, record the spread, and anchor the bound's tightness
+c477b9fc38ed703f6701e4ad20fd58c024530c14 3f0afcda4ca908db4a8df6754196e07257288d68 docs(openspec): record benchmark-reproducibility task 2.10 and the pre-existing gate failure it surfaced
+c58f6e012f7940cc29098ef04999fcd3b542edbf f1be7a2892aea8fc527a5086413d54a1975952f0 docs(openspec): record consolidate-the-test-suite tasks 2.1 to 2.3
+c65eeae5e925925903fba136e3887484f67d59e7 6313caf0a0e4e1932be2b8a0c86125a0bd5c8a80 docs(openspec): record fix-time-dependent-resampling's third review fixes
+c6785184b24928dc4c35c703a2b57368e592afce b5d91fe5ed1a7762c7df0638cff2dcd72aea8f23 docs(openspec): archive time-dependent-forcing-in-numerical-burgers
+c7246860cbc03bce2e430a5424f2c5ec3bc52197 4ca07700656c193cf5224abdf3934b3b61a8face docs(openspec): propose ratchet-code-prose
+c852894321d1f5eae31847700c1dbff4cff927d7 8ab99b2e51eca9911b477fa9445e827231d8de3e docs(openspec): configure phase 4b to 4e's cosmic-ray runs over the changed tests
+c86bc240c04acb14a3cae5708b74c0167d80c459 557bb3bef4d3f820fe3753dffb1d6563e443be76 test: add FourierBasis suite; fix unbound res_t in basis eval
+c96a1e6255d344e53b7afca572765b45860c37df b708594e7b4660491095f934550b2bc617ffac36 test(problems): re-verify byte identity after the review findings landed
+c9d292a41b5608d24c3acb14ee652a7560ff01a1 4eda809c942024c704f66eaebc43a8e491143947 Merge pull request #2 from nidduzzi/refactor/per-axis-boundary
+c9f72960c96d91af58bec1c5ccf3b6b1845d3512 053d94db9ebaaf4791de6cf99b41e566a730bf81 docs(openspec): archive explicit-band-type
+ca10bd4dee90403b9635225981264fc776b08634 2cfa06d1074f6878d50b87b13ac83b72bc78a4bd fix(model): refuse to move a fitted model to another device
+ca77982d35a543f5a85a5de91ae960b238903b00 53e20e78db1ea0ac6c10e791ad22c3bdafe1716e style(tests): apply ruff format to solver and problem tests
+ca91b0699e0203fc34b8bf75d1e3f620df71c436 902c0126051618bb628a96314f4b1987d5c7df5b test(anchors): build single_mode_spectrum's phase in double precision
+cb64a168b235507f0cf2aae21c795b7d5fe4caff e4d34d2e61b212ae3d40d5d8d631718523c34366 docs(openspec): plan fix-nufft-two-mode-axis
+ccfbe180b54cb0e4b7fceef7782816cfd2ae94b3 d77cee34d646069509571d8c198de47b17b50b96 docs(openspec): archive discharge-archived-scenario-debt
+cde24a6f095c2eaed8cc999015cbc739e478fe69 75dd06c2a1a132bc1af81c0cc20424e715d6edbe docs(openspec): propose discharge-archived-scenario-debt
+ce22107101360fbe6c7a20e4870083750b371325 f19d1ea8b93b07b007c4c39cb6719d7f9da63ec5 docs(utils): describe the polar encodings as multi-axis
+ced8d83c589793342d3d99d099d894d52afdc899 bdc12098e8664cb7014c477e8d31056e39ecc670 docs(openspec): record condition-the-interpolating-fixture's review fixes
+cf03f02031853421d29f8696950e706c812b7a4b 2cb34f4e6177f51503b59a834fbdf8222f6f3f8f docs(openspec): split the forced dataset out and stop predicting the rate
+cf4a8c59cd7ef4bc6759e1f884915b3a54ab2463 d36baf9808db179ea8f6b0d3c901483cda520194 test: remove the two legacy end-to-end modules and tighten the guards
+d049908b9c086762410fa6f83f800e8f118cedf9 42f1ec0d24f086bf1ab945a4258c959ad2eed8dc docs(openspec): record benchmark-reproducibility tasks 2.11, 2.12, 4.1, 6.1 and 6.3
+d17ce8e56e39e2d31ccb48573e8e07dc5ee4e3b0 b17a1e4c1a552ddf534be9df7f103df9b75790e6 test: drive the scenario guard's verdicts through a state machine, and fuzz the notebook test
+d3ce89556dd98eeaef7da6c13b4eefb40fa81c30 52e901a1024932e0815fe8b8dd768609d124aaa3 fix(problems): refuse WholeGrid for the reason it is actually wrong
+d3e2b023159c73a505ca7d6e06376293b42fbbff 90c73e3f86b0f4a7a08ba6877d72ed1171729710 test(problems): anchor the continuous residual with an analytic control
+d442334ca8d94aa3bd06f2757be29a8c8cf0ce3b 211ed9f6eed54c28670ea3fe22dda0f1160ded42 docs(openspec): record the measured noise floor and the two-device split
+d5250734ad91a3c0e05d306799982b47aff27a69 449474137aa35fdecc067872668dd4718713db1a docs(openspec): archive burgers-forced-benchmark
+d52514d6957249a850c84c3d892c7fa10d4ea308 85d0b9bf4a68d3c3f247b960d281de5c23a5bcac docs(openspec): record the resize fix's effect on the manufactured pair
+d5a3ede55d143442287d657fd42a0539426c7275 17d26fa13d49edba16c2dce415660707138c2542 test(benchmark): require a case to be the same under any process default
+d6828944340d51dcb0a007cb03e8674af91f045a 8a49319af545f9b3370a61f8f38aab13c35a1e50 refactor(basis): split period into domain, extract SpectralConfig
+d7599c882d238b6a3f80477d7c40c89f91119ece e17eb2e5655767d1064d4846b41ab86ca6f10604 docs(openspec): record condition-the-interpolating-fixture's measurement and tasks
+d82b47b327bc77cc2bcde7f1e5af40e5d0459cd1 6f6774611fa6b15c14ae28e006310e930de19516 docs(openspec): record ratchet-code-prose's shape decisions and its remaining tasks
+d9bc3a1f47fc2ad116219f2eba1ef9d114c11b67 6f906534ba3a99b6f6eccff16e0b60110ffed4c2 fix(utils): ETDRK4 stage times and complex-eigenvalue contour weights
+da3d024b0c24fbb3b937c805034bdc2296231c76 5d31692e872b70c59468a729cec096cd339e96e8 test: refuse an in-flight exemption its change outlived, and discharge the three it finds
+da84cb17bf49be92996334eed3ba6fc86d04dd19 c59b52943614a2c81bd3749a2ee5f3f6fbdea6e8 feat(problems): refuse a forcing field the integration grid cannot read
+db49a60c443dc29445bc3bf2ff7a360a91ddaebd 8dbbec9cb8d904c0f313afd9f5b32c5978bff6f1 docs(openspec): record ratchet-code-prose's review fixes
+dc6b2d5d6cfb5527deb76329eb98a053d10ab3cd a8ed50df58461edcbe0b4a696bdf4cad43180f33 docs(openspec): give task 3.1 a stated verification
+dc9acc3aa11eab2e241f5c0cb03c4558e98a9008 e1af7a8477c272dbbc2fdc1b11bcbb448ff9b1e1 docs(openspec): verify consolidate-the-test-suite's phases by cosmic-ray
+dccbc922abab1d7ad7b8bfc39c503ed216031187 67e2e8027931ba063b460836cd640a76ab24e7df docs(openspec): record consolidate-the-test-suite task 1.2's cosmic-ray comparison
+dcf2fb119e9297f6457ee91d596b90bc3b62f9e7 52baf32d3ba19a9305753563f5fdd268903eb3f6 test(model): fold the LSSVR and scaler single tests into two machines
+dcf88f4a8cc87069ad1bd0f8523f82cf416ddeca 8489dc9f92bdc987ee2edf1f0c762a101476b281 test(basis): fuzz test_fourier_basis.py's single tests into tables and drawn properties
+dda5941780c59eb4ad172ac79cc48d4529c81a5d 2fbc43964866419cdb0e996534995b4b77f78d3d chore(deps): Bump the uv group across 1 directory with 5 updates
+dea6a31357d870bb2c9ebc874c070321f5e6c4df 21d998e462384bab227066697c2162500af86a6d docs(openspec): audit the mutants that survive the whole suite and classify each by source line
+df61d23ef043c525fd70800aeb9a67791da54d7b d54b8ba440383bfd9b84b43ddb9c91feadd295a7 refactor(model): derive modes from the output shape instead of storing both
+df8f541ee8b852c9f1a233e59a73199752508d35 67fa1a5873439640fab4c2be265f9182bfa8783f fix(basis): correct grad/integral DC axis and inv_transform scaling
+e11e7449b1f9548d1635b66b8aad1f56e66a60ce 7c79e1fce63ac1fa3ee6f03c4d350f59684052e6 feat(basis): make coefficient precision a configuration field
+e188161061ec02cb0dc5c3cd4b4f5fe7f632f4a3 ae8351fc0e3b1ca88d2f00fd81b7319b7b15f3f6 Update README.md
+e265355d876f124e19f854975baeac1d7534186e f1f73b56c105a7bb6ca737465d2a409238ccc610 chore: fix ty findings, drop dead branches, upgrade deps
+e45cca53d9eb58f7fe40805f08f81308739a14e2 f92c688be15c11c8da857999b5ac4376a4ce63ef fix(utils): fold the boundary mode when truncating a coefficient grid
+e6015c5ce740ad74d24a90b7e9e529da3ce980ad 7f827a6d915bd9ee6dc54eca2558d7335024edfb docs(openspec): record fix-nufft-two-mode-axis tasks 3.2 to 4.2
+e63f11e8a697c72dff4dbc75447b7314e0143373 1d3beabe9ba19858d30f0958169e417fa1fe7161 docs(openspec): propose refuse-moving-a-fitted-model
+e6c954e0783e0adb9c8ea0711a2fb916baa88c52 0e82cebdeba90f693bf7759d488edb85e038cf8b docs(openspec): reconcile benchmark-reproducibility with the capability that landed
+e71e49adb56fe949b1ca682013aea9fdfb415423 6b4fbd487e37d2089eed489817dbd83f54a19ba8 docs(openspec): record burgers-forced-benchmark's enumerated mutation results
+e86c87e1f6c58aeb6b8f173a080131559dfe5fbc 98919c61cfe65865bfc3246493235c0edd048f81 feat(problems): state the manufactured band at the call site
+ea059ce0a93b3b759fee73de4f3878ff5b86e94f 9f914dd5e0578979d05fd9906bb39c378700d07b docs(openspec): record fix-time-dependent-resampling's review fixes
+ead08062900d16dcdee25fe2015d5a49a9ead35a 32bbc9f51a3fe121318096cea2bfef9e25cccbaa docs(benchmark): state each operator's run-to-run spread at a fixed seed
+ec499572a731220115aefdf75bfa34c1bcb32299 0b9400da06b5f1e204377e63960ee7a36b87ed4c docs(openspec): record fix-time-dependent-resampling's verification
+ed4d134e5fbe2db96289798c1110c40bde8479fb fb52f916ca49e7759abf01c10d0fe524eb00e134 test(scenarios): record condition-the-interpolating-fixture's scenarios as debt
+f138e4939748d08fea2ade8e58f53fa3184349c1 0af828ce9f8c085ad41c932e31e06ee6b708d919 test(model): prove double precision survives end to end
+f1989e8c19bf05df26e793ce540df31155ccc862 84cb22b42ac8ab6b24dc62e330e0d2975c125e56 test: narrow the Burgers comparison, drop the ETDRK4 weight filter and record the widened ranges' measurements
+f3e3afceba3a7a8e4247e21470c2ca5b01cae4de b4fc49cb8c213e36aa2a0f30df80167acf3a5f10 docs(openspec): archive utils-encoding-cleanup
+f48674598222ef4599842ed7f8bbe6887457b2ba 4ccb4fdc103c1616cbea1edeeeeb2a916dcf9e38 feat(basis): evaluate a time-dependent field at paired (t, x) rows
+f49bed5f43c465e4d124774f7265cbc0e0667b1d 39eec9041826c0d68ed62891f7f7ec5351aaee69 fix: implement FNN dump/load; LSSVR docstring; name batch-size default
+f514cc628f66c9215fc8d72196cfbb75cc5a6bbe d4aa48dc3b0e213c951f301409730dd94ef065ac docs(openspec): archive align-spectral-residual-with-solver
+f5e7e35d011de801f3256ad11d1ccbae6d6ceff3 86602ed22094683066f577237686467310ccb28e feat(basis): per-axis sampling; get_values uses own scheme; periodic residual
+f81d5ecb89cb70d7577e9445cfbc9c55a08c414c cc1fdc7d4b6c23c27ad4a3ed4fe04a00a505b394 docs(openspec): propose dtype-seam
+f8272946d69f02a6462b1bd2bc53aa821ba8d612 d88e69e726fcd720b39e4fa8d749fe984fc0dbf1 docs(openspec): run each mutant against the tests that cover its line, checked on 197 known outcomes
+f82abc7546367e3c3cf94d31604eb8b897fa4a81 4bf989d979c4c688f24e3c55d66b843266c3d019 docs(openspec): record what explicit-band-type verified, and what it could not
+f8c50c7b0bc9465660623b24e9edb5511d754a04 4dcee27093701ff1ea29fa6f6e2935529db8b956 docs(openspec): design utils-encoding-cleanup and scope zero_coeff out
+f94029122cef6cb52f9cd1b0e8862b7ffbbddd14 47537b94fcb1f9e0b39fa70bab710475e8b62f50 test(basis): import memory_profiler at collection, not inside a fuzzed test
+fa34b100c26be17524022ced1d4f989fdf486dfc 171bb1317da54a753098ff6da80396a1303f9d2e docs(openspec): propose condition-the-interpolating-fixture
+fa6bc432fe4eb7e6a6791f81775fb68a86626fcc a6ba2c80961a560a2bba68ba4a985df3e7ee16c8 update gitignore to ignore images in notebooks folder
+fae4a40cc0dfb596ec106496db1ac3c90a1f0f09 f2531454c1f9c85356e65edbc01aad0a52eac4c6 docs(openspec): give task 2.2 a stated verification
+fafc1930b3e46bd50a15a0f31e63bc7be5770e53 93fa2522e6c44bead733024c41b88b1a7521dffc test(problems): compare the round trip over the trajectory, not the endpoint
+fd8f5fadfa44b5b4b2c90abf95ebd0a85d69bae2 7a55d9e92cb736fea0b4345c716f818d1e75c66b refactor(basis): place the inclusive-slice index map on Basis
+feb5eea11a2b5175835b340ee09ee3b7c4552558 dae7f90836743dda1796d155f388f9cad842a28d docs(openspec): make the deltas self-contained before they become contract
+ff166f45c8d56cc80e3a0685d2ba3834ecffe8b6 5eb89f21d51077c71e088ec10c94ec73c8fd644a docs(openspec): add the scaler to phase 2's cosmic-ray scope

@@ -18,6 +18,8 @@ import math
 
 import torch
 
+INTERPOLATION_NEIGHBOURS = 6
+
 
 def nufft_available() -> bool:
     try:
@@ -62,6 +64,9 @@ def nufft_evaluate(
         ]
     ).to(device=device, dtype=x.real.dtype if x.is_complex() else x.dtype)
 
-    nufft = tkbn.KbNufft(im_size=modes).to(device=device, dtype=image.dtype)
+    grid_size = tuple(max(2 * m, INTERPOLATION_NEIGHBOURS) for m in modes)
+    nufft = tkbn.KbNufft(
+        im_size=modes, grid_size=grid_size, numpoints=INTERPOLATION_NEIGHBOURS
+    ).to(device=device, dtype=image.dtype)
     values = nufft(image, ktraj).squeeze(1)  # (batch, npts)
     return values / math.prod(modes)
