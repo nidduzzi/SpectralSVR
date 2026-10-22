@@ -190,7 +190,12 @@ class LSSVR(MultiRegression):
 
         return self._K
 
-    def _batched_K(self, x_i: torch.Tensor, x_j: torch.Tensor):
+    def _batched_K(
+        self,
+        kernel: typing.Callable[..., torch.Tensor],
+        x_i: torch.Tensor,
+        x_j: torch.Tensor,
+    ):
         batch_size_i = self.batch_size_func(x_i.shape[1])
         batch_size_j = self.batch_size_func(x_j.shape[1])
         self.logger.debug(f"batch_size_i: {batch_size_i}")
@@ -198,7 +203,7 @@ class LSSVR(MultiRegression):
         num_samples_i = x_i.shape[0]
         num_samples_j = x_j.shape[0]
         if num_samples_i <= batch_size_i and num_samples_j <= batch_size_j:
-            return self.K(x_i, x_j)
+            return kernel(x_i, x_j)
         KXX = torch.empty(
             (num_samples_i, num_samples_j), device=self.device, dtype=self.dtype
         )
@@ -207,21 +212,17 @@ class LSSVR(MultiRegression):
             i_end = min(i + batch_size_i, num_samples_i)
             for j in range(0, num_samples_j, batch_size_j):
                 j_end = min(j + batch_size_j, num_samples_j)
-                KXX[i:i_end, j:j_end] = self.K(x_i[i:i_end, :], x_j[j:j_end, :])
+                KXX[i:i_end, j:j_end] = kernel(x_i[i:i_end, :], x_j[j:j_end, :])
         return KXX
 
     def _optimize_parameters_and_set(self, X: torch.Tensor, y: torch.Tensor):
-        """Helper function that optimizes the dual variables through the
-        use of the kernel matrix pseudo-inverse.
-        """
-
-        self.sv_x = X
-        self.sv_y = y
-        self.y_indicies = torch.arange(0, y.shape[1])
+        kernel_params = self.kernel_params
+        if self.kernel in ["rbf", "poly"] and kernel_params.get("sigma") is None:
+            kernel_params = {**kernel_params, "sigma": X.var(0).sum().pow(0.5)}
+        kernel = torch_get_kernel(self._kernel, **kernel_params)
 
         A = torch.empty((X.shape[0] + 1,) * 2, device=self.device, dtype=self.dtype)
-        A[1:, 1:] = self._batched_K(X, X)
-        # KXX = A[1:, 1:]
+        A[1:, 1:] = self._batched_K(kernel, X, X)
         self.logger.debug("Omega:")
         self.logger.debug(A[1:, 1:])
         A[1:, 1:].diagonal().copy_(
@@ -255,6 +256,10 @@ class LSSVR(MultiRegression):
         self.logger.debug("alpha:")
         self.logger.debug(alpha)
 
+        self.kernel_params = kernel_params
+        self.sv_x = X
+        self.sv_y = y
+        self.y_indicies = torch.arange(0, y.shape[1])
         self.alpha = alpha
         self.b = b
 
@@ -266,7 +271,7 @@ class LSSVR(MultiRegression):
         ), "The model doesn't see to be fitted, try running .fit() method first"
         self.logger.debug(f"X:{X_.shape}")
         self.logger.debug(f"sv_x:{self.sv_x.shape}")
-        KxX = self._batched_K(X_, self.sv_x)
+        KxX = self._batched_K(self.K, X_, self.sv_x)
 
         self.logger.debug("Omega:")
         self.logger.debug(KxX)
@@ -280,7 +285,7 @@ class LSSVR(MultiRegression):
         assert self.sv_x is not None, (
             "The model needs to be trained first before correlation image can be generated"
         )
-        return self._batched_K(self.sv_x, self.sv_x).mm(self.sv_x)
+        return self._batched_K(self.K, self.sv_x, self.sv_x).mm(self.sv_x)
 
     def get_p_matrix(self):
         assert self.sv_x is not None and self.alpha is not None, (
@@ -319,7 +324,7 @@ class LSSVR(MultiRegression):
         )
 
     @classmethod
-    def load(cls, filepath, only_hyperparams=False):
+    def load(cls, filepath, only_hyperparams=False, device: DeviceInput = None):
         """This class method loads a model from a .json file.
         - filepath: string
             The model's .json file path.
@@ -336,20 +341,21 @@ class LSSVR(MultiRegression):
         lssvr = cls(
             C=model_json["hyperparameters"]["C"],
             kernel=model_json["hyperparameters"]["kernel"],
+            device=device,
             **model_json["hyperparameters"]["kernel_params"],
         )
 
         if (model_json.get("parameters") is not None) and (not only_hyperparams):
             params = model_json["parameters"]
-            device = lssvr.device
+            placement = lssvr.device
             dtype = lssvr.dtype
 
-            lssvr.alpha = torch.tensor(params["alpha"], dtype=dtype, device=device)
-            lssvr.b = torch.tensor(params["b"], dtype=dtype, device=device)
-            lssvr.sv_x = torch.tensor(params["sv_x"], dtype=dtype, device=device)
-            lssvr.sv_y = torch.tensor(params["sv_y"], dtype=dtype, device=device)
+            lssvr.alpha = torch.tensor(params["alpha"], dtype=dtype, device=placement)
+            lssvr.b = torch.tensor(params["b"], dtype=dtype, device=placement)
+            lssvr.sv_x = torch.tensor(params["sv_x"], dtype=dtype, device=placement)
+            lssvr.sv_y = torch.tensor(params["sv_y"], dtype=dtype, device=placement)
             lssvr.y_indicies = torch.tensor(
-                params["y_indicies"], dtype=torch.long, device=device
+                params["y_indicies"], dtype=torch.long, device=placement
             )
 
         return lssvr
