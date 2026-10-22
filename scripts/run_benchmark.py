@@ -38,7 +38,7 @@ from SpectralSVR.operators import (
     SpectralSVROperator,
     benchmark,
 )
-from SpectralSVR.utils import etdrk4_solver
+from SpectralSVR.utils import DEFAULT_COEFF_DTYPE, etdrk4_solver
 
 DEFAULT_OUT = Path("results") / "bench_results.csv"
 
@@ -101,7 +101,7 @@ def grf_coeff(
 
     def sample(
         size: tuple[int, ...],
-        dtype: torch.dtype = torch.complex64,
+        dtype: torch.dtype = DEFAULT_COEFF_DTYPE,
         generator: torch.Generator | None = None,
     ) -> torch.Tensor:
         white = torch.randn(size, dtype=dtype, generator=generator)

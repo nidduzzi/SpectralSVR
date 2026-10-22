@@ -14,8 +14,8 @@ from SpectralSVR.utils import (
     resize_modes,
     resolve_device,
     scale_to_standard,
-    to_complex_coeff,
     from_mag_angle,
+    to_complex_coeff,
     to_mag_angle,
     to_real_coeff,
     zero_coeff,
@@ -384,3 +384,71 @@ def test_interpolate_tensor_integer_indices(slope, intercept, n, seed):
     got = interpolate_tensor(y, idx, dim=1)
     exact = (slope * idx + intercept).reshape(1, -1)
     assert torch.allclose(got, exact, atol=1e-10)
+
+
+# --------------------------------------------------------------------------- #
+# Every conversion the package exports, not only the polar pair.
+#
+# coefficient-encodings binds *every* conversion to accept any number of mode
+# axes and to preserve device and precision. Built from a list of pairs rather
+# than one test per function, so a conversion added later is either covered here
+# or fails the registry check.
+# --------------------------------------------------------------------------- #
+CONVERSIONS = (
+    ("real/imag", to_real_coeff, to_complex_coeff),
+    ("mag/angle", to_mag_angle, from_mag_angle),
+)
+CONVERSION_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_conversion_registry_covers_every_exported_conversion():
+    """The registry must track the package's exports, not drift from them."""
+    import SpectralSVR
+
+    exported = {
+        name
+        for name in dir(SpectralSVR)
+        if name.startswith(("to_", "from_")) and name.endswith(("_coeff", "_angle"))
+    }
+    covered = {fn.__name__ for _, fwd, inv in CONVERSIONS for fn in (fwd, inv)}
+    assert exported == covered, (
+        f"registry and exports disagree: only exported {exported - covered}, "
+        f"only in registry {covered - exported}"
+    )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_every_conversion_accepts_any_number_of_mode_axes():
+    generator = torch.Generator().manual_seed(21)
+    for label, forward, inverse in CONVERSIONS:
+        for shape in CONVERSION_SHAPES:
+            c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
+            out = forward(c)
+            assert out.shape == (*shape[:-1], shape[-1] * 2), f"{label} {shape}"
+            assert torch.allclose(inverse(out), c, atol=1e-4), f"{label} {shape}"
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_every_conversion_preserves_precision():
+    for label, forward, inverse in CONVERSIONS:
+        for complex_dtype, real_dtype in (
+            (torch.complex64, torch.float32),
+            (torch.complex128, torch.float64),
+        ):
+            c = torch.randn(3, 4, dtype=complex_dtype)
+            assert forward(c).dtype == real_dtype, label
+            assert inverse(forward(c)).dtype == complex_dtype, label
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
+def test_every_conversion_preserves_device():
+    for label, forward, inverse in CONVERSIONS:
+        c = torch.randn(3, 4, dtype=torch.complex64).cuda()
+        assert forward(c).device.type == "cuda", label
+        assert inverse(forward(c)).device.type == "cuda", label

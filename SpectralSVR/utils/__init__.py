@@ -13,6 +13,10 @@ from torchmetrics.functional.regression import (
 
 logger = logging.getLogger(__name__)
 
+
+DEFAULT_COEFF_DTYPE = torch.complex64
+DEFAULT_REAL_DTYPE = torch.empty(0, dtype=DEFAULT_COEFF_DTYPE).real.dtype
+
 Number = int | float
 
 DeviceInput = torch.device | str | None
@@ -29,22 +33,38 @@ def resolve_device(device: DeviceInput = None) -> torch.device:
     return torch.device(device)
 
 
-def to_complex_coeff(coeff: torch.Tensor) -> torch.Tensor:
+def to_complex_coeff(
+    coeff: torch.Tensor, coeff_dtype: torch.dtype | None = None
+) -> torch.Tensor:
     """
     to_complex_coeff
 
-    convert a tensor containing rows of real coefficient vectors into rows of complex coefficient vectors
+    convert interleaved real pairs back into complex coefficients
+
+    The trailing axis halves; leading axes are untouched, so a grid with any
+    number of mode axes is accepted. Device follows the input. A complex input
+    is returned unchanged.
 
     Arguments:
-        coeff {torch.Tensor} -- m by p tensor where p is twice the number modes
+        coeff {torch.Tensor} -- real tensor whose trailing axis is twice the
+        number of modes
+
+    Keyword Arguments:
+        coeff_dtype {torch.dtype | None} -- the complex precision to produce.
+        Inference cannot recover a precision the input no longer carries, so
+        state it when the values passed through a stage that reduced them
+        (default: {None})
 
     Returns:
-        torch.Tensor -- m by p/2 tensor of elements in complex numbers
+        torch.Tensor -- complex tensor whose trailing axis is the number of modes
     """
     if torch.is_complex(coeff):
         logger.debug("coeff is already complex")
         return coeff
-    converted_coeff = torch.view_as_complex(coeff.reshape((*coeff.shape[:-1], -1, 2)))
+    pairs = coeff.reshape((*coeff.shape[:-1], -1, 2)).contiguous()
+    converted_coeff = torch.view_as_complex(pairs)
+    if coeff_dtype is not None:
+        converted_coeff = converted_coeff.to(coeff_dtype)
     return converted_coeff
 
 
@@ -672,7 +692,7 @@ def etdrk4_solver(
 
     Q, f1, f2, f3 = _etdrk4_weights(lin, h, contour_points)
 
-    cdtype = y0.dtype if y0.is_complex() else torch.complex64
+    cdtype = y0.dtype if y0.is_complex() else DEFAULT_COEFF_DTYPE
     rdtype = torch.tensor([], dtype=cdtype).real.dtype
     weight_dtype = cdtype if Q.is_complex() else rdtype
     E, E2 = E.to(cdtype), E2.to(cdtype)

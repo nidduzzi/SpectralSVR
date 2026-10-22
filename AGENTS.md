@@ -79,6 +79,17 @@ worktree **with its own environment** and compare. A `PYTHONPATH` override loses
 to an editable install, which silently benchmarks the wrong library — print the
 signature of what loaded before trusting the numbers.
 
+**Precision is configuration, not a constant.** `SpectralConfig.coeff_dtype`
+carries the complex dtype of a coefficient grid, `real_dtype` derives the matching
+real precision, and `with_precision` returns a new config rather than mutating
+one. A basis and the model consuming it move together, and `SpectralSVR` checks
+that at the regressor boundary on train, test, forward and inverse. The check is
+asymmetric by design: converting to a **lower** precision than the regressor
+expects raises, because it discards information the caller asked to keep;
+converting to a **higher** one warns, because it only wastes memory. Double
+precision costs twice the memory for the coefficient grid — choose it for work
+whose accuracy demands it, not by default.
+
 ## Planning lives in openspec/
 
 `openspec/` is the audit trail, not documentation-after-the-fact.
