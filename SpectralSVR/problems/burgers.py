@@ -130,6 +130,33 @@ class Burgers(Problem):
         return results
 
     @staticmethod
+    def advection_spectrum(
+        basis: Type[BasisSubType] | type[Basis],
+        u_hat: torch.Tensor,
+        d1: torch.Tensor,
+        dealias: torch.Tensor | float,
+    ) -> torch.Tensor:
+        """Spectral ``-0.5 (u^2)_x`` for the Burgers advection term.
+
+        The single definition of the nonlinear term: the sampled field's real
+        part is squared, differentiated once spectrally, and de-aliased. Every
+        caller uses this so none can drift from another -- the manufactured
+        forcing must be the residual of the equation the solver integrates, and
+        it is only that if both form this term identically.
+
+        Arguments:
+            basis {Type[Basis]} -- basis supplying the transforms.
+            u_hat {torch.Tensor} -- (samples, *modes) field in spectral space.
+            d1 {torch.Tensor} -- first-derivative eigenvalues for the mode grid.
+            dealias {torch.Tensor | float} -- de-aliasing mask, or 1.0 for none.
+
+        Returns:
+            torch.Tensor -- the term's spectrum, shaped like ``u_hat``.
+        """
+        u = basis.inv_transform(u_hat).real.to(u_hat.dtype)
+        return -0.5 * d1 * basis.transform(u * u) * dealias
+
+    @staticmethod
     def _solve_spectral(
         basis: Type[BasisSubType],
         n: int,
@@ -205,9 +232,7 @@ class Burgers(Problem):
             raise NotImplementedError("numerical Burgers supports a constant forcing f")
 
         def nonlinear(ti: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-            # -0.5 (u^2)_x  in spectral space, with optional de-aliasing
-            u = basis.inv_transform(v).real.to(v.dtype)
-            return -0.5 * d1 * basis.transform(u * u) * dealias + f_hat
+            return Burgers.advection_spectrum(basis, v, d1, dealias) + f_hat
 
         sol = solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
         u_coeff = sol.movedim(0, 1).to(basis.coeff_dtype)  # (n, nt, ns)
@@ -234,41 +259,25 @@ class Burgers(Problem):
         ``u_t + u u_x - nu u_xx = f`` by construction, so ``spectral_residual``
         of the returned pair is zero to machine precision.
 
-        ``u`` is band-limited to half the mode budget so the nonlinear term
-        (which doubles the highest frequency) stays resolved and alias-free.
+        ``u`` is band-limited to a third of the mode budget, which is the
+        threshold set by the de-aliasing band rather than a chosen margin:
+        multiplication doubles the highest frequency, so the product reaches
+        ``2 * kmax`` while the Orszag 2/3 mask keeps ``m / 3``. Any wider and
+        the mask discards content the product genuinely has, and the pair then
+        solves the de-aliased equation but not the continuous one.
+
         Returned as non-time-dependent 2D (time, space) Fourier fields.
         """
         if len(modes) != 2:
             raise NotImplementedError("MMS Burgers is implemented for 1D space")
-        half = tuple(max(1, m // 2) for m in modes)
-        u = basis.generate(n, half, domain=domain, generator=generator).resize_modes(
-            modes, rescale=False
-        )
+        band_limited = tuple(max(1, m // 3) for m in modes)
+        u = basis.generate(
+            n, band_limited, domain=domain, generator=generator
+        ).resize_modes(modes, rescale=False)
         u = basis(coeff=u.coeff, domain=domain)
         zero_forcing = basis(basis.generate_empty(n, modes), domain=domain)
         f = self.spectral_residual(u, zero_forcing, nu)
         return u, f
-
-    # rhs spectral formulation adapted from
-    # https://math.stackexchange.com/q/3834917 (Gokul, 2020-09-21)
-    @staticmethod
-    def rhs(
-        basis: type[Basis],
-        nu: float,
-        u_hat: torch.Tensor,
-        f_hat: torch.Tensor,
-    ) -> torch.Tensor:
-        u = basis(u_hat)
-        dealias_modes = tuple(int(mode * 1.5) for mode in u.modes)
-        u_dealiased = u.resize_modes(dealias_modes, rescale=False)
-        u_val = basis.inv_transform(u_dealiased.coeff)
-        uu_x_hat_dealiased = 0.5 * basis.transform(u_val**2)
-        uu_x = basis(uu_x_hat_dealiased).resize_modes(u.modes, rescale=False).grad()
-
-        u_u_x_hat = uu_x.coeff
-        u_xx_hat = u.grad().grad().coeff
-        u_t_hat = nu * u_xx_hat + f_hat - u_u_x_hat
-        return u_t_hat
 
     def spectral_residual(
         self, u: BasisSubType, f: BasisSubType, nu: float
@@ -283,16 +292,21 @@ class Burgers(Problem):
         manufactured solution the residual is zero to machine precision.
         """
         u_t = u.grad(dim=0, ord=1)
-        u_x = u.grad(dim=1, ord=1)
         u_xx = u.grad(dim=1, ord=2)
 
-        # nonlinear term u * u_x formed in physical space via the basis
-        # transforms (transform . inv_transform is the identity, so no manual
-        # rescaling is needed).
-        u_val = u.inv_transform(u.coeff)
-        u_x_val = u.inv_transform(u_x.coeff)
+        spatial_modes = u.modes[-1]
+        d1 = u.derivative_eigenvalues(spatial_modes, u.lengths[-1], ord=1)
+        if d1 is None:
+            raise NotImplementedError(
+                f"{type(u).__name__} differentiation is not diagonal; the "
+                "Burgers residual requires a diagonally-differentiable basis"
+            )
+        mask = u.dealias_mask(spatial_modes)
+        dealias = mask.to(device=u.coeff.device) if mask is not None else 1.0
         uu_x = u.copy()
-        uu_x.coeff = u.transform(u_val * u_x_val)
+        uu_x.coeff = -self.advection_spectrum(
+            type(u), u.coeff, d1.to(device=u.coeff.device), dealias
+        )
 
         nu_u_xx = u_xx.copy()
         nu_u_xx.coeff = nu_u_xx.coeff * nu
