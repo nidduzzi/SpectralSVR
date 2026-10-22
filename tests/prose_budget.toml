@@ -1,0 +1,234 @@
+["SpectralSVR/basis/FourierBasis.py"]
+comments = 46
+internal_docstrings = 24
+misshapen_docstrings = 6
+
+["SpectralSVR/basis/__base.py"]
+comments = 20
+internal_docstrings = 6
+misshapen_docstrings = 27
+
+["SpectralSVR/basis/_nufft.py"]
+comments = 3
+internal_docstrings = 24
+misshapen_docstrings = 2
+
+["SpectralSVR/basis/_plot.py"]
+comments = 4
+internal_docstrings = 7
+misshapen_docstrings = 2
+
+["SpectralSVR/basis/config.py"]
+comments = 0
+internal_docstrings = 7
+misshapen_docstrings = 6
+
+["SpectralSVR/basis/domain.py"]
+comments = 5
+internal_docstrings = 14
+misshapen_docstrings = 3
+
+["SpectralSVR/basis/sampling.py"]
+comments = 12
+internal_docstrings = 34
+misshapen_docstrings = 5
+
+["SpectralSVR/basis/strategy.py"]
+comments = 1
+internal_docstrings = 26
+misshapen_docstrings = 3
+
+["SpectralSVR/model/FNN.py"]
+comments = 1
+internal_docstrings = 0
+misshapen_docstrings = 3
+
+["SpectralSVR/model/LSSVR.py"]
+comments = 6
+internal_docstrings = 8
+misshapen_docstrings = 5
+
+["SpectralSVR/model/SpectralSVR.py"]
+comments = 5
+internal_docstrings = 7
+misshapen_docstrings = 5
+
+["SpectralSVR/model/__base.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 2
+
+["SpectralSVR/operators/__base.py"]
+comments = 3
+internal_docstrings = 0
+misshapen_docstrings = 3
+
+["SpectralSVR/operators/__init__.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["SpectralSVR/operators/benchmark.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 2
+
+["SpectralSVR/operators/dataset.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 2
+
+["SpectralSVR/operators/deeponet.py"]
+comments = 0
+internal_docstrings = 2
+misshapen_docstrings = 4
+
+["SpectralSVR/operators/spectralsvr.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["SpectralSVR/problems/__base.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["SpectralSVR/problems/antiderivative.py"]
+comments = 5
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["SpectralSVR/problems/burgers.py"]
+comments = 21
+internal_docstrings = 56
+misshapen_docstrings = 13
+
+["SpectralSVR/problems/exact.py"]
+comments = 26
+internal_docstrings = 164
+misshapen_docstrings = 6
+
+["SpectralSVR/utils/__init__.py"]
+comments = 34
+internal_docstrings = 17
+misshapen_docstrings = 17
+
+["scripts/run_benchmark.py"]
+comments = 12
+internal_docstrings = 0
+misshapen_docstrings = 7
+
+["tests/_anchors.py"]
+comments = 3
+internal_docstrings = 0
+misshapen_docstrings = 7
+
+["tests/basis/test_basis.py"]
+comments = 22
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/basis/test_coeff_anchors.py"]
+comments = 58
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/basis/test_config.py"]
+comments = 4
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/basis/test_fourier_basis.py"]
+comments = 77
+internal_docstrings = 0
+misshapen_docstrings = 2
+
+["tests/basis/test_nufft.py"]
+comments = 19
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/basis/test_sampling.py"]
+comments = 10
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/conftest.py"]
+comments = 2
+internal_docstrings = 6
+misshapen_docstrings = 2
+
+["tests/model/_model_data.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/model/test_SpectralSVR.py"]
+comments = 12
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/model/test_fnn.py"]
+comments = 2
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/model/test_lssvr.py"]
+comments = 19
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/model/test_spectralsvr_anchors.py"]
+comments = 12
+internal_docstrings = 5
+misshapen_docstrings = 2
+
+["tests/model/test_spectralsvr_methods.py"]
+comments = 20
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/operators/test_operators.py"]
+comments = 27
+internal_docstrings = 4
+misshapen_docstrings = 1
+
+["tests/problems/_exact.py"]
+comments = 0
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/problems/test_problems.py"]
+comments = 82
+internal_docstrings = 35
+misshapen_docstrings = 10
+
+["tests/test_oracle_coverage.py"]
+comments = 13
+internal_docstrings = 2
+misshapen_docstrings = 1
+
+["tests/test_scenario_coverage.py"]
+comments = 10
+internal_docstrings = 0
+misshapen_docstrings = 0
+
+["tests/utils/test_band.py"]
+comments = 11
+internal_docstrings = 0
+misshapen_docstrings = 4
+
+["tests/utils/test_metric_anchors.py"]
+comments = 18
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/utils/test_solvers.py"]
+comments = 11
+internal_docstrings = 0
+misshapen_docstrings = 1
+
+["tests/utils/test_utils.py"]
+comments = 35
+internal_docstrings = 0
+misshapen_docstrings = 0

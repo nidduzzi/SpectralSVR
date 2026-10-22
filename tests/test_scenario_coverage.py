@@ -1,14 +1,4 @@
-"""Scenario-level coverage guard.
-
-Every scenario the specs state is either covered by a test naming it with
-``@pytest.mark.scenario(...)`` or listed in ``EXEMPT`` with a reason. Reads the
-main specs, which are the permanent contract, and the delta specs of changes
-still in flight. Archived deltas are excluded: their requirements have already
-been synced into the main specs, so counting both would double-count.
-
-``EXEMPT`` is debt, not furniture. Entries come off it as scenarios gain tests;
-nothing should be added without a reason that says why a test cannot exist.
-"""
+"""Every scenario the main specs and in-flight deltas state is named by a test or exempt with a reason."""
 
 import ast
 import re
