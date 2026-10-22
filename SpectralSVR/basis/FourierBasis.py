@@ -18,7 +18,13 @@ from .sampling import (
 from .strategy import DEFAULT_EVALUATION_STRATEGY
 from .config import ResolvedCoeffDtype
 from ._nufft import nufft_available, nufft_evaluate
-from ..utils import DEFAULT_COEFF_DTYPE, DEFAULT_REAL_DTYPE, to_complex_coeff
+from ..utils import (
+    DEFAULT_COEFF_DTYPE,
+    DEFAULT_REAL_DTYPE,
+    DeviceInput,
+    refuse_a_generator_placed_elsewhere,
+    to_complex_coeff,
+)
 import torch
 import math
 from typing_extensions import Self, Literal, Callable
@@ -151,7 +157,7 @@ class FourierBasis(Basis):
                 coeff, x, modes, domain_tuple, strategy
             )
 
-        scaling = 1.0 / torch.prod(torch.Tensor(modes))
+        scaling = 1.0 / math.prod(modes)
         return scaling * sum_coeff_x_basis
 
     @classmethod
@@ -311,6 +317,8 @@ class FourierBasis(Basis):
         complex_funcs: bool = False,
         domain: DomainInputType = None,
         value_type: Literal["random", "zero"] = "random",
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> Self:
         match value_type:
@@ -321,9 +329,10 @@ class FourierBasis(Basis):
                     generator=generator,
                     random_func=random_func,
                     complex_funcs=complex_funcs,
+                    device=device,
                 )
             case "zero":
-                coeff = cls.generate_empty(n, modes)
+                coeff = cls.generate_empty(n, modes, device=device)
             case _:
                 raise RuntimeError(
                     f"FourierBasis generate expects value_type random or zero but got {value_type}"
@@ -341,13 +350,14 @@ class FourierBasis(Basis):
         n: int,
         modes: int | tuple[int, ...],
         coeff_dtype: torch.dtype | None = None,
+        device: DeviceInput = None,
     ) -> torch.Tensor:
         if isinstance(modes, int):
             modes = (modes,)
         n_modes = len(modes)
         assert n_modes > 0, "modes should have at least one dimension"
         resolved = DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype
-        coeff = torch.zeros((n, *modes), dtype=resolved)
+        coeff = torch.zeros((n, *modes), dtype=resolved, device=device)
         return coeff
 
     @classmethod
@@ -360,12 +370,15 @@ class FourierBasis(Basis):
         complex_funcs: bool = False,
         scale: bool = True,
         coeff_dtype: torch.dtype | None = None,
+        device: DeviceInput = None,
     ) -> torch.Tensor:
         if isinstance(modes, int):
             modes = (modes,)
         n_modes = len(modes)
         assert n_modes > 0, "modes should have at least one element"
-        random_func = partial(random_func, generator=generator)
+        refuse_a_generator_placed_elsewhere(generator, device)
+        stated_placement = {} if device is None else {"device": device}
+        random_func = partial(random_func, generator=generator, **stated_placement)
         resolved = DEFAULT_COEFF_DTYPE if coeff_dtype is None else coeff_dtype
         coeff = random_func((n, *modes), dtype=resolved)
         if not complex_funcs:
@@ -374,7 +387,7 @@ class FourierBasis(Basis):
         if scale:
             # Heuristic amplitude so generated functions have O(1) magnitude
             # regardless of mode count (the inverse DFT sums prod(modes) terms).
-            scaler = torch.tensor(modes).sum() * 0.2
+            scaler = torch.tensor(modes, device=coeff.device).sum() * 0.2
             coeff = coeff.mul(scaler)
         return coeff
 
@@ -600,7 +613,7 @@ class FourierBasis(Basis):
             )
 
         if scale:
-            f = f.div(torch.tensor(modes).prod())
+            f = f.div(math.prod(modes))
         return f
 
     def _diff_multiplier(self, dim: int, ord: int) -> torch.Tensor:

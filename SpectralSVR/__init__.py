@@ -30,6 +30,8 @@ from .utils import (
     SemilinearSolverSignatureType as SemilinearSolverSignatureType,
     as_semilinear_solver as as_semilinear_solver,
     etdrk4_solver as etdrk4_solver,
+    accelerator as accelerator,
+    refuse_a_generator_placed_elsewhere as refuse_a_generator_placed_elsewhere,
     resolve_device as resolve_device,
 )
 from .basis import (

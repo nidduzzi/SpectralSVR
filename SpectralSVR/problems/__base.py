@@ -1,6 +1,7 @@
 import abc
 import torch
 from ..basis import BasisSubType
+from ..utils import DeviceInput
 
 
 class Problem(abc.ABC):
@@ -38,6 +39,8 @@ class Problem(abc.ABC):
         n: int,
         modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> tuple[BasisSubType, ...]:
         pass
