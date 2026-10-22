@@ -210,6 +210,9 @@ class FourierBasis(Basis):
 
     @staticmethod
     def sum_mul(coeff_flat: torch.Tensor, basis: torch.Tensor):
+        # nodes are placed in double and rounded once here: the basis carries the
+        # coefficients' precision, not the precision its coordinates were built in
+        basis = basis.to(coeff_flat.dtype)
         sum_coeff_x_basis = coeff_flat.matmul(basis.movedim(0, -1).flatten(0, -2))
         return sum_coeff_x_basis
 

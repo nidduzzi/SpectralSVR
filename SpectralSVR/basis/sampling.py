@@ -65,7 +65,9 @@ class PeriodicUniform:
 
     def nodes(self, n: int, start: float, stop: float) -> torch.Tensor:
         step = (stop - start) / n
-        return torch.arange(start, start + step * n, step)[:n]
+        return torch.arange(
+            start, start + step * n, step, dtype=torch.float64
+        )[:n]
 
 
 class ClosedUniform:
@@ -79,7 +81,7 @@ class ClosedUniform:
     supports_fft = False
 
     def nodes(self, n: int, start: float, stop: float) -> torch.Tensor:
-        return torch.linspace(start, stop, n)
+        return torch.linspace(start, stop, n, dtype=torch.float64)
 
 
 # A sampling input may be a single scheme (broadcast to every axis) or one scheme
