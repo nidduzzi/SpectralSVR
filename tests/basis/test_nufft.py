@@ -13,6 +13,7 @@ import torch
 import torchkbnufft
 from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
+from memory_profiler import memory_usage
 
 from SpectralSVR import FourierBasis
 from SpectralSVR.basis._nufft import nufft_available, nufft_evaluate
@@ -217,8 +218,6 @@ def test_dense_evaluate_chunking_is_exact(modes, rows, npts, seed):
 def test_dense_evaluate_chunk_bounds_memory():
     # The exact (matmul) path, chunked, must also stay well under the full
     # dense (npts x modes) basis matrix.
-    from memory_profiler import memory_usage
-
     torch.set_default_dtype(torch.float64)
     try:
         modes = 128
@@ -272,8 +271,6 @@ def test_inv_transform_large_res_matches_dense(mode, big, seed):
 def test_inv_transform_nufft_memory_bounded(mode, res, seed):
     # The NUFFT inverse path must not materialize the dense (res x mode) basis
     # matrix. Force the NUFFT and check the peak RSS stays well under it.
-    from memory_profiler import memory_usage
-
     torch.set_default_dtype(torch.float64)
     try:
         g = torch.Generator().manual_seed(seed)
@@ -325,8 +322,6 @@ def test_nufft_evaluate_does_not_materialize_dense_matrix():
     # The bottleneck the NUFFT fixes: the dense path builds a (npts x modes)
     # complex basis matrix. Here that would be ~0.8 GB; the NUFFT must stay far
     # below that. Run on CPU and measure the peak RSS increase.
-    from memory_profiler import memory_usage
-
     modes = 128
     npts = 400_000
     dense_bytes = npts * modes * 16  # complex128 basis matrix (~0.8 GiB)
