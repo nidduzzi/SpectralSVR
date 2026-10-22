@@ -8,6 +8,7 @@ solutions for every path.
 """
 
 import math
+from typing import NamedTuple
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +17,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis
-from SpectralSVR.problems import Burgers
+from SpectralSVR.problems import BandLimited, Burgers, SampledForcing, SpectralForcing
 from SpectralSVR.basis import __base as base_module
 from SpectralSVR.utils import (
     WavenumberCutoff,
@@ -493,7 +494,10 @@ def test_numerical_branch_uses_the_supplied_solver():
         build(solver=failing_solver)
 
 
-@pytest.mark.oracle_smoke
+CONSTANT_FORCING_CLOSED_FORM_TOLERANCE = 3e-5
+
+
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     u0=st.floats(-1.0, 1.0),
@@ -502,7 +506,7 @@ def test_numerical_branch_uses_the_supplied_solver():
     seed=st.integers(0, 10_000),
 )
 def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
-    # constant initial condition + constant forcing exercise the Number branches
+    steps = 40
     u, f = Burgers().generate(
         FourierBasis,
         2,
@@ -511,12 +515,19 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
         f=fval,
         nu=0.05,
         space_domain=slice(0, 1, space_modes),
-        time_domain=slice(0, 1, 40),
+        time_domain=slice(0, 1, steps),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent
-    assert f.coeff.abs().max() > 0  # non-zero constant forcing
+    assert f.coeff.abs().max() > 0
     assert not torch.isnan(u.coeff).any()
+
+    t = FourierBasis.grid(slice(0, 1, steps)).flatten().to(u.coeff.device)
+    values = FourierBasis.inv_transform(u.coeff.flatten(0, 1)).real.reshape(
+        2, steps, space_modes
+    )
+    closed_form = (u0 + fval * t)[None, :, None].expand(2, steps, space_modes)
+    assert (values - closed_form).abs().max() < CONSTANT_FORCING_CLOSED_FORM_TOLERANCE
 
 
 @pytest.mark.oracle_smoke
@@ -1003,3 +1014,496 @@ def test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
         f"modes={modes}: the refused pair leaves {refused_continuous:.3e} against "
         f"{admitted:.3e} admitted, so the refusal has little to prevent"
     )
+
+
+def _integrate_with_forcing(f, space_modes, nt=20, n=2, space_domain=slice(0, 1, 200)):
+    return Burgers().generate(
+        FourierBasis,
+        n,
+        (nt, space_modes),
+        u0=0.0,
+        f=f,
+        nu=0.01,
+        space_domain=space_domain,
+        time_domain=slice(0, 1, nt),
+        generator=torch.Generator().manual_seed(0),
+    )
+
+
+def _spectral_forcing(space_modes, time=(0.0, 1.0), space=(0.0, 1.0), seed=0):
+    """A (time, space) field spectral in both axes, on the stated intervals."""
+    return FourierBasis.generate(
+        2,
+        (space_modes, space_modes),
+        domain=(time, space),
+        generator=torch.Generator().manual_seed(seed),
+    )
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Sampled-time field raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(6, 20),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_per_time_slice_field(space_modes, nt, seed):
+    values = torch.rand(
+        2, nt, space_modes, generator=torch.Generator().manual_seed(seed)
+    )
+    sampled = _time_dependent_field(values, 1.0, 1.0)
+    with pytest.raises(ValueError, match="per-time-slice"):
+        _integrate_with_forcing(sampled, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Mismatched time domain raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    offset=st.floats(0.1, 3.0),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_mismatched_time_domain(space_modes, offset, seed):
+    shifted = _spectral_forcing(space_modes, time=(offset, offset + 1.0), seed=seed)
+    with pytest.raises(ValueError, match="forcing time domain"):
+        _integrate_with_forcing(shifted, space_modes)
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Mismatched space domain raises")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    stretch=st.floats(0.1, 3.0),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_mismatched_space_domain(
+    space_modes, stretch, seed
+):
+    stretched = _spectral_forcing(space_modes, space=(0.0, 1.0 + stretch), seed=seed)
+    with pytest.raises(ValueError, match="forcing space domain"):
+        _integrate_with_forcing(stretched, space_modes)
+
+    matching = _spectral_forcing(space_modes, seed=seed)
+    u, _ = _integrate_with_forcing(matching, space_modes)
+    assert not torch.isnan(u.coeff).any()
+
+
+def _forcing_field(space_modes, nt, field_modes, n=2):
+    time_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
+    space_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
+    values = _travelling_forcing(time_nodes[:, None], space_nodes[None, :]) + 0j
+    coeff = FourierBasis.transform(values.reshape(1, nt, field_modes))
+    return FourierBasis(
+        coeff=coeff.expand(n, nt, field_modes).clone(),
+        domain=((0.0, 1.0), (0.0, 1.0)),
+    )
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), nt=st.integers(12, 24))
+def test_numerical_forcing_rejects_a_bare_callable(space_modes, nt):
+    nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
+
+    def undeclared(t):
+        return FourierBasis.transform(
+            _travelling_forcing(torch.as_tensor(float(t)), nodes).expand(2, space_modes)
+            + 0j
+        )
+
+    with pytest.raises(ValueError, match="SpectralForcing or SampledForcing"):
+        _integrate_with_forcing(undeclared, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), nt=st.integers(12, 24), flag=st.booleans())
+def test_numerical_forcing_rejects_a_bool(space_modes, nt, flag):
+    with pytest.raises(ValueError, match="bool is not a forcing"):
+        _integrate_with_forcing(flag, space_modes, nt)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_generate_rejects_a_time_domain_without_a_step():
+    with pytest.raises(AssertionError, match="at least two grid points"):
+        _integrate_with_forcing(0.0, 16, nt=1)
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("A forcing the grid cannot represent is refused")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    wider=st.integers(1, 12),
+)
+def test_a_forcing_the_grid_cannot_represent_is_refused(space_modes, nt, wider):
+    field_modes = space_modes + wider
+    field = _forcing_field(space_modes, nt, field_modes)
+
+    with pytest.raises(ValueError, match="fold its highest wavenumbers"):
+        _integrate_with_forcing(field, space_modes, nt)
+
+    _, by_hatch = _integrate_with_forcing(BandLimited(field), space_modes, nt)
+    _, by_hand = _integrate_with_forcing(
+        field.resize_modes((nt, space_modes)), space_modes, nt
+    )
+    assert torch.equal(by_hatch.coeff, by_hand.coeff)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    wrong=st.integers(1, 8),
+)
+def test_numerical_forcing_rejects_a_wrong_shaped_callable(space_modes, nt, wrong):
+    def misshaped(t):
+        return FourierBasis.transform(torch.zeros(2, space_modes + wrong) + 0j)
+
+    with pytest.raises(ValueError, match="forcing callable must return"):
+        _integrate_with_forcing(SpectralForcing(misshaped), space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 24),
+    nt=st.integers(12, 24),
+    seed=st.integers(0, 10_000),
+)
+def test_numerical_forcing_rejects_a_field_without_a_time_axis(space_modes, nt, seed):
+    values = torch.randn(2, space_modes, generator=torch.Generator().manual_seed(seed))
+    one_axis = FourierBasis(FourierBasis.transform(values + 0j), domain=(0.0, 1.0))
+    with pytest.raises(ValueError, match="must span .time, space."):
+        _integrate_with_forcing(one_axis, space_modes, nt)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), seed=st.integers(0, 10_000))
+def test_numerical_forcing_rejects_a_bare_tensor(space_modes, seed):
+    values = torch.rand(2, space_modes, generator=torch.Generator().manual_seed(seed))
+    with pytest.raises(NotImplementedError, match="bare tensor"):
+        _integrate_with_forcing(values, space_modes)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(space_modes=st.integers(8, 24), u0=st.floats(-1.0, 1.0))
+def test_numerical_branch_rejects_a_manufactured_forcing(space_modes, u0):
+    with pytest.raises(ValueError, match="manufactures a forcing"):
+        Burgers().generate(
+            FourierBasis,
+            2,
+            (20, space_modes),
+            u0=u0,
+            f="random",
+            nu=0.01,
+            time_domain=slice(0, 1, 20),
+            generator=torch.Generator().manual_seed(0),
+        )
+
+
+FORCING_ROUND_TRIP_TOLERANCE = 5e-6
+
+
+def _travelling_forcing(t, x):
+    return torch.sin(2 * math.pi * x) * torch.cos(2 * math.pi * t)
+
+
+def _forcing_values_on_grid(f_gen, n, nt, ns):
+    flat = FourierBasis.inv_transform(f_gen.coeff.flatten(0, 1))
+    return flat.real.reshape(n, nt, ns)
+
+
+def _analytic_on_grid(nt, ns, n):
+    t = FourierBasis.grid(slice(0.0, 1.0, nt)).flatten()
+    x = FourierBasis.default_sampling().nodes(ns, 0.0, 1.0).to(t.dtype)
+    return _travelling_forcing(t[None, :, None], x[None, None, :]).expand(n, nt, ns)
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Callable forcing is integrated")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 32),
+    nt=st.integers(12, 40),
+    n=st.integers(1, 3),
+    seed=st.integers(0, 10_000),
+)
+def test_callable_forcing_is_integrated_and_returned(space_modes, nt, n, seed):
+    nodes = FourierBasis.default_sampling().nodes(space_modes, 0.0, 1.0)
+
+    def coefficients_at(t):
+        values = _travelling_forcing(torch.as_tensor(float(t)), nodes)
+        return FourierBasis.transform(values.expand(n, space_modes) + 0j)
+
+    def values_at(t):
+        values = _travelling_forcing(torch.as_tensor(float(t)), nodes)
+        return values.expand(n, space_modes)
+
+    u, f = _integrate_with_forcing(
+        SpectralForcing(coefficients_at), space_modes, nt, n=n
+    )
+    _, same = _integrate_with_forcing(SampledForcing(values_at), space_modes, nt, n=n)
+    assert torch.allclose(f.coeff, same.coeff, atol=1e-6)
+
+    assert u.time_dependent and f.time_dependent
+    assert f.coeff.shape == (n, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, n, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, n).to(on_grid.device)
+    assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Fully spectral forcing field is integrated")
+@SETTINGS
+@given(
+    space_modes=st.integers(12, 32),
+    nt=st.integers(12, 40),
+    narrower=st.integers(0, 4),
+    n=st.integers(1, 3),
+)
+def test_spectral_forcing_field_is_integrated_and_upsampled(
+    space_modes, nt, narrower, n
+):
+    field_modes = max(8, space_modes - narrower)
+    t_nodes = FourierBasis.default_sampling().nodes(nt, 0.0, 1.0)
+    x_nodes = FourierBasis.default_sampling().nodes(field_modes, 0.0, 1.0)
+    values = _travelling_forcing(t_nodes[:, None], x_nodes[None, :]) + 0j
+    coeff = FourierBasis.transform(values.reshape(1, nt, field_modes))
+    field = FourierBasis(
+        coeff=coeff.expand(n, nt, field_modes).clone(),
+        domain=((0.0, 1.0), (0.0, 1.0)),
+    )
+
+    _, f = _integrate_with_forcing(field, space_modes, nt, n=n)
+
+    assert f.coeff.shape == (n, nt, space_modes)
+    on_grid = _forcing_values_on_grid(f, n, nt, space_modes)
+    want = _analytic_on_grid(nt, space_modes, n).to(on_grid.device)
+    assert (on_grid - want).abs().max() < FORCING_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Constant forcing byte-identity")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 32),
+    nt=st.integers(12, 40),
+    n=st.integers(1, 3),
+    value=st.floats(-2.0, 2.0),
+)
+def test_constant_forcing_is_the_exact_constant_spectrum(space_modes, nt, n, value):
+    _, f = _integrate_with_forcing(value, space_modes, nt, n=n)
+
+    expected = FourierBasis.transform(
+        torch.full((n, space_modes), value, device=f.coeff.device) + 0j
+    ).to(f.coeff.dtype)
+    for step in range(nt):
+        assert torch.equal(f.coeff[:, step, :], expected)
+
+
+MANUFACTURED_ROUND_TRIP_MODES = 24
+MANUFACTURED_ROUND_TRIP_STEPS = (13, 25, 49, 97)
+MANUFACTURED_ROUND_TRIP_WORST_ERROR = 3.422348e-06
+MANUFACTURED_ROUND_TRIP_TOLERANCE = 3e-5
+MANUFACTURED_ROUND_TRIP_ORDERS = (3.867, 4.017, 4.150)
+MANUFACTURED_ROUND_TRIP_ORDER_BOUND = 3.8
+MANUFACTURED_ROUND_TRIP_TRAVEL = 1.1738
+MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR = 1.0
+COMPLEX64_ROUND_OFF_FLOOR = 1.5e-6
+STANDING_STILL_WORST_ERROR = 1.173838e00
+FROZEN_FORCING_ORDERS = (1.165, 1.012, 0.942)
+FROZEN_FORCING_ORDER_CEILING = 2.0
+
+
+class RoundTrip(NamedTuple):
+    endpoint_error: float
+    worst_error: float
+    travel_from_initial: float
+
+
+def _stand_still_solver(linear, nonlinear, y0, t):
+    return y0.unsqueeze(0).expand(t.shape[0], *y0.shape).clone()
+
+
+def _manufactured_round_trip(nt, freeze=False, solver=None, nu=0.01, n=2, seed=1234):
+    """Integrate a manufactured pair over one period and measure the error.
+
+    ``endpoint_error`` compares the final slice, ``worst_error`` every output
+    time, and ``travel_from_initial`` is how far the manufactured solution moves
+    from its own initial slice. All three are relative to the solution's scale.
+    """
+    modes = MANUFACTURED_ROUND_TRIP_MODES
+    problem = Burgers()
+    domain = ((0.0, 1.0), (0.0, 1.0))
+    exact_field, forcing_field = problem.mms_solution(
+        FourierBasis,
+        n,
+        (modes, modes),
+        nu,
+        domain,
+        generator=torch.Generator().manual_seed(seed),
+    )
+    ns = 2 * modes
+    nodes = FourierBasis.default_sampling().nodes(ns, 0.0, 1.0)
+
+    def sample(field, time):
+        query = torch.stack([torch.full_like(nodes, float(time)), nodes], dim=-1)
+        return field(query)
+
+    step = 1.0 / (nt - 1)
+
+    def frozen_at_step_start(t):
+        start = math.floor(float(t) / step + 1e-9) * step
+        return FourierBasis.transform(sample(forcing_field, start))
+
+    frozen_forcing = SpectralForcing(frozen_at_step_start)
+
+    solution, _ = problem.generate(
+        FourierBasis,
+        n,
+        (nt, ns),
+        u0=sample(exact_field, 0.0).real,
+        f=frozen_forcing if freeze else forcing_field,
+        nu=nu,
+        space_domain=slice(0.0, 1.0, 200),
+        time_domain=slice(0.0, 1.0, nt),
+        generator=torch.Generator().manual_seed(seed),
+        **({} if solver is None else {"solver": solver}),
+    )
+    grid = FourierBasis.grid(slice(0.0, 1.0, nt)).flatten()
+    numeric = FourierBasis.inv_transform(solution.coeff.flatten(0, 1)).reshape(
+        n, nt, ns
+    )
+    exact = torch.stack([sample(exact_field, float(time)) for time in grid], dim=1).to(
+        numeric.device
+    )
+    scale = exact.abs().max()
+    initial = exact[:, 0, :].unsqueeze(1)
+    return RoundTrip(
+        endpoint_error=float((numeric[:, -1, :] - exact[:, -1, :]).abs().max() / scale),
+        worst_error=float((numeric - exact).abs().max() / scale),
+        travel_from_initial=float((exact - initial).abs().max() / scale),
+    )
+
+
+def _observed_orders(errors, steps):
+    """Convergence order between consecutive runs, from the step sizes used.
+
+    ``nt`` counts grid points, so the step is ``1 / (nt - 1)`` and consecutive
+    counts need not halve it exactly; the ratio is taken from the steps rather
+    than assumed to be two.
+    """
+    h = [1.0 / (nt - 1) for nt in steps]
+    return [
+        math.log(a / b) / math.log(ha / hb)
+        for a, b, ha, hb in zip(errors, errors[1:], h, h[1:], strict=False)
+    ]
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("Round-trip matches the manufactured solution")
+@pytest.mark.scenario("Exact solution reached within time-stepping error")
+def test_numerical_burgers_reproduces_manufactured_solution():
+    result = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
+    assert result.travel_from_initial == pytest.approx(
+        MANUFACTURED_ROUND_TRIP_TRAVEL, rel=0.05
+    )
+    assert result.travel_from_initial > MANUFACTURED_ROUND_TRIP_TRAVEL_FLOOR
+    assert result.worst_error == pytest.approx(
+        MANUFACTURED_ROUND_TRIP_WORST_ERROR, rel=0.2
+    )
+    assert result.worst_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert result.worst_error > COMPLEX64_ROUND_OFF_FLOOR
+
+
+MANUFACTURED_TIME_PERIODICITY = 1e-5
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("The manufactured field returns to its initial slice")
+@SETTINGS
+@given(modes=st.integers(12, 40), seed=st.integers(0, 10_000))
+def test_manufactured_field_returns_to_its_initial_slice(modes, seed):
+    u, _ = Burgers().mms_solution(
+        FourierBasis,
+        2,
+        (modes, modes),
+        0.05,
+        DOMAIN_2D,
+        generator=torch.Generator().manual_seed(seed),
+    )
+    nodes = FourierBasis.default_sampling().nodes(modes, 0.0, 1.0)
+
+    def slice_at(time):
+        query = torch.stack([torch.full_like(nodes, time), nodes], dim=-1)
+        return u(query)
+
+    start, end = slice_at(0.0), slice_at(1.0)
+    assert (end - start).abs().max() / start.abs().max() < MANUFACTURED_TIME_PERIODICITY
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("The round-trip comparison is not satisfied by standing still")
+@pytest.mark.scenario("A full-period comparison states what the solver had to do")
+def test_round_trip_is_not_satisfied_by_a_solver_that_stands_still():
+    standing = _manufactured_round_trip(
+        MANUFACTURED_ROUND_TRIP_STEPS[-1], solver=_stand_still_solver
+    )
+    integrating = _manufactured_round_trip(MANUFACTURED_ROUND_TRIP_STEPS[-1])
+
+    assert standing.endpoint_error < MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert standing.endpoint_error < integrating.endpoint_error
+
+    assert standing.worst_error == pytest.approx(STANDING_STILL_WORST_ERROR, rel=0.2)
+    assert standing.worst_error > MANUFACTURED_ROUND_TRIP_TOLERANCE
+    assert integrating.worst_error < standing.worst_error / 1e4
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Round-trip converges at the integrator's order")
+@pytest.mark.scenario("Rate, not just size, is asserted")
+def test_numerical_burgers_round_trip_converges_at_the_integrator_order():
+    errors = [
+        _manufactured_round_trip(nt).endpoint_error
+        for nt in MANUFACTURED_ROUND_TRIP_STEPS
+    ]
+    assert min(errors) > COMPLEX64_ROUND_OFF_FLOOR, (
+        f"finest error {min(errors):.6e} is at or beneath the complex64 floor "
+        f"{COMPLEX64_ROUND_OFF_FLOOR:.6e}; the sweep is measuring round-off, not "
+        "the method, so the orders below are saturation rather than a rate"
+    )
+    orders = _observed_orders(errors, MANUFACTURED_ROUND_TRIP_STEPS)
+    assert orders == pytest.approx(list(MANUFACTURED_ROUND_TRIP_ORDERS), abs=0.15)
+    assert min(orders) > MANUFACTURED_ROUND_TRIP_ORDER_BOUND, (
+        f"measured orders {orders} against a bound of "
+        f"{MANUFACTURED_ROUND_TRIP_ORDER_BOUND}; an order materially under 4 is "
+        "a finding to chase, not a bound to lower"
+    )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Forcing is evaluated at stage times, not step starts")
+def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
+    frozen = [
+        _manufactured_round_trip(nt, freeze=True).endpoint_error
+        for nt in MANUFACTURED_ROUND_TRIP_STEPS
+    ]
+    orders = _observed_orders(frozen, MANUFACTURED_ROUND_TRIP_STEPS)
+    assert orders == pytest.approx(list(FROZEN_FORCING_ORDERS), abs=0.15)
+    assert (
+        max(orders) < FROZEN_FORCING_ORDER_CEILING < min(MANUFACTURED_ROUND_TRIP_ORDERS)
+    )
+    assert frozen[-1] > MANUFACTURED_ROUND_TRIP_TOLERANCE

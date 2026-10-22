@@ -21,7 +21,9 @@ TESTS_DIR = Path(__file__).parent
 SCENARIO = re.compile(r"^#### Scenario:\s*(.+?)\s*$", re.M)
 
 PREDATES = "predates scenario-level coverage; capability is anchored at module level"
-DECISION = "records a decision taken while writing the change; no run-time behaviour to test"
+DECISION = (
+    "records a decision taken while writing the change; no run-time behaviour to test"
+)
 POLICY = "a rule about how tests are written; the guard cannot check it of itself"
 IN_FLIGHT = "stated by a change still being implemented; covered as its tasks complete"
 
@@ -44,7 +46,6 @@ EXEMPT: dict[str, str] = {
     "Documenting is not a substitute for a fix that exists": PREDATES,
     "Unstatable beats documented": PREDATES,
     "Band-limiting is no longer an instance of this": PREDATES,
-
     # coefficient-precision
     "Two precisions coexist": PREDATES,
     "Default is unchanged": PREDATES,
@@ -57,13 +58,11 @@ EXEMPT: dict[str, str] = {
     "Non-contiguous input is accepted": PREDATES,
     "Target precision can be stated": PREDATES,
     "Cost is stated at the point of choice": PREDATES,
-
     # manufactured-solutions
     "Residual vanishes off the sample grid": PREDATES,
     "Real part taken before multiplying": PREDATES,
     "Same de-aliasing on both sides": PREDATES,
     "A wrong pair is caught": PREDATES,
-
     # numerical-anchor-tests
     "Fixed-array metric check": PREDATES,
     "rrse on near-constant target": PREDATES,
@@ -86,9 +85,7 @@ EXEMPT: dict[str, str] = {
     "Deliberate corruption is detected": PREDATES,
     "A convergence anchor runs at double precision": PREDATES,
     "Saturation is distinguished from order loss": PREDATES,
-
     # operator-comparison
-
     # pde-solver-protocol
     "Monolithic solvers remain callable": PREDATES,
     "Semilinear solver requires the split form": PREDATES,
@@ -101,7 +98,6 @@ EXEMPT: dict[str, str] = {
     "Default generation is unchanged": PREDATES,
     "Regime is documented": PREDATES,
     "Time grid is passed through unchanged": PREDATES,
-
     # semilinear-time-integration
     "Convergence rate under time-dependent forcing": PREDATES,
     "Time-independent nonlinear term is unaffected": PREDATES,
@@ -111,7 +107,6 @@ EXEMPT: dict[str, str] = {
     "Non-uniform grid is rejected": PREDATES,
     "Uniform grid from linspace is accepted": PREDATES,
     "Docstrings match behaviour": PREDATES,
-
     # spectral-band-selection
     "The kept set is evident at the call site": PREDATES,
     "A bare count is not accepted": PREDATES,
@@ -124,7 +119,6 @@ EXEMPT: dict[str, str] = {
     "An exact count is honoured": PREDATES,
     "The absent guarantee is stated": PREDATES,
     "Choosing it is deliberate": PREDATES,
-
     # test-oracle-convention
     "Unmarked test fails at setup": PREDATES,
     "Multiply-marked test fails at setup": PREDATES,
@@ -188,9 +182,7 @@ def _covered() -> set[str]:
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_invariant
 def test_scenario_names_are_unique():
-    collisions = {
-        name: caps for name, caps in _stated().items() if len(set(caps)) > 1
-    }
+    collisions = {name: caps for name, caps in _stated().items() if len(set(caps)) > 1}
     assert not collisions, (
         f"scenario names reused across capabilities: {collisions}. The scenario "
         "marker keys on the name alone; rename one side."
