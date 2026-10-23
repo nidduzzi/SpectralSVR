@@ -1,7 +1,7 @@
 """Tests for the NUFFT-backed non-uniform evaluation path.
 
 The NUFFT is validated against the exact dense (matmul) evaluation, which is
-the ground truth here (not a manufactured PDE solution), so these are no_mms.
+the ground truth here (not a manufactured PDE solution).
 Kaiser-Bessel gridding is approximate, hence the loose tolerance.
 """
 
@@ -30,7 +30,7 @@ def _exact_evaluate(coeff, x, domain):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(
     modes=st.integers(8, 48),
@@ -52,7 +52,7 @@ def test_nufft_matches_dense_1d(modes, rows, npts, length, start, seed):
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(
     m=st.integers(8, 24),
@@ -70,7 +70,7 @@ def test_nufft_matches_dense_2d(m, npts, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 def test_evaluate_switches_to_nufft_above_threshold():
     torch.set_default_dtype(torch.float64)
     try:
@@ -87,7 +87,7 @@ def test_evaluate_switches_to_nufft_above_threshold():
         torch.set_default_dtype(torch.float32)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     modes=st.integers(4, 32),
@@ -112,7 +112,7 @@ def test_dense_evaluate_chunking_is_exact(modes, rows, npts, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_dense_evaluate_chunk_bounds_memory():
     # The exact (matmul) path, chunked, must also stay well under the full
     # dense (npts x modes) basis matrix.
@@ -143,7 +143,7 @@ def test_dense_evaluate_chunk_bounds_memory():
         torch.set_default_dtype(torch.float32)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(mode=st.integers(8, 40), big=st.integers(400, 2000), seed=st.integers(0, 10_000))
 def test_inv_transform_large_res_matches_dense(mode, big, seed):
@@ -158,7 +158,7 @@ def test_inv_transform_large_res_matches_dense(mode, big, seed):
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @settings(deadline=None, max_examples=4, suppress_health_check=[HealthCheck.too_slow])
 @given(
     mode=st.sampled_from([64, 128]),
@@ -193,13 +193,13 @@ def test_inv_transform_nufft_memory_bounded(mode, res, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_nufft_available():
     assert nufft_available() is True
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_nufft_evaluate_shape():
     coeff = FourierBasis.generate_coeff(3, 16).to(torch.complex64)
     x = torch.rand(50, 1)
@@ -209,7 +209,7 @@ def test_nufft_evaluate_shape():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_nufft_evaluate_does_not_materialize_dense_matrix():
     # The bottleneck the NUFFT fixes: the dense path builds a (npts x modes)
     # complex basis matrix. Here that would be ~0.8 GB; the NUFFT must stay far

@@ -4,13 +4,9 @@ Testing strategy (enforced by ``conftest.py``):
 
 * Every test is either fuzzed with Hypothesis (``@given``) or explicitly
   opts out with ``@pytest.mark.no_fuzz``.
-* Every test either uses the Method of Manufactured Solutions
-  (``@pytest.mark.mms``) or opts out with ``@pytest.mark.no_mms``.
-
-MMS here means: we *choose* an exact spectrum ``c``, manufacture the
-function ``u = inv_transform(c)`` from it, and then assert that the code
-recovers the known analytic answer (the spectrum itself, its spectral
-derivative/integral, or the closed-form point evaluation).
+* Every test carries exactly one oracle marker
+  (``@pytest.mark.oracle_{independent,analytic,invariant,consistency,smoke}``)
+  classifying the kind of oracle it asserts against.
 
 Correctness is additionally cross-checked against PyTorch's own FFT.
 """
@@ -84,7 +80,7 @@ def spectra_2d(draw, min_n=2, max_n=10, max_rows=2):
 # =========================================================================== #
 # MMS tests: manufacture a solution from a known spectrum, recover the answer
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_mms_transform_recovers_spectrum(coeff):
@@ -98,7 +94,7 @@ def test_mms_transform_recovers_spectrum(coeff):
     assert torch.allclose(recovered, torch.fft.fft(u, dim=1), atol=1e-6)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(coeff=spectra_2d())
 def test_mms_transform_recovers_spectrum_2d(coeff):
@@ -110,7 +106,7 @@ def test_mms_transform_recovers_spectrum_2d(coeff):
     assert torch.allclose(recovered, torch.fft.fft2(u, dim=(1, 2)), atol=1e-5)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_mms_grad_is_spectral_derivative(coeff):
@@ -133,7 +129,7 @@ def test_mms_grad_is_spectral_derivative(coeff):
     assert torch.allclose(dval_ours, dval_torch, atol=1e-4, rtol=1e-6)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_mms_integral_inverts_grad(coeff):
@@ -145,7 +141,7 @@ def test_mms_integral_inverts_grad(coeff):
     assert torch.allclose(recovered, coeff, atol=1e-6)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(coeff=spectra_1d(max_n=12, max_rows=2))
 def test_mms_evaluate_closed_form(coeff):
@@ -158,7 +154,7 @@ def test_mms_evaluate_closed_form(coeff):
     assert torch.allclose(out, closed, atol=1e-6)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_mms_evaluate_matches_inv_transform_on_grid(coeff):
@@ -174,7 +170,7 @@ def test_mms_evaluate_matches_inv_transform_on_grid(coeff):
     assert torch.allclose(ev, torch.fft.ifft(coeff, dim=1), atol=1e-6)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_mms_parseval(coeff):
@@ -186,7 +182,6 @@ def test_mms_parseval(coeff):
     assert torch.isclose(lhs, rhs, atol=1e-5, rtol=1e-5)
 
 
-@pytest.mark.mms
 @SETTINGS
 @given(
     amp=st.floats(0.5, 5.0),
@@ -194,6 +189,7 @@ def test_mms_parseval(coeff):
     length=st.floats(0.5, 4.0),
     start=st.floats(-3.0, 3.0),
 )
+@pytest.mark.oracle_analytic
 def test_mms_derivative_of_sine_with_period(amp, freq, length, start):
     # Manufactured u = A sin(2*pi*m*(x-a)/L) on the domain [a, a+L); its
     # derivative is A(2*pi*m/L) cos(2*pi*m*(x-a)/L). Fuzzing ``start`` (which
@@ -215,7 +211,7 @@ def test_mms_derivative_of_sine_with_period(amp, freq, length, start):
     assert torch.allclose(dval, analytic, atol=1e-2)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(amp=st.floats(0.5, 5.0), freq=st.integers(1, 6))
 def test_mms_integral_of_cosine(amp, freq):
@@ -230,7 +226,7 @@ def test_mms_integral_of_cosine(amp, freq):
     assert torch.allclose(val, analytic, atol=1e-2)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(amp=st.floats(-5.0, 5.0))
 def test_mms_constant_is_dc_only(amp):
@@ -244,7 +240,7 @@ def test_mms_constant_is_dc_only(amp):
     assert coeff[0, 1:].abs().max() < 1e-4
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(freq=st.integers(1, 7), amp=st.floats(0.5, 4.0))
 def test_mms_cosine_spectrum(freq, amp):
@@ -263,14 +259,14 @@ def test_mms_cosine_spectrum(freq, amp):
 # =========================================================================== #
 # Fuzzed cross-checks against torch.fft and structural invariants (no MMS)
 # =========================================================================== #
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(f=real_signals_1d())
 def test_fuzz_transform_matches_torch_fft(f):
     assert torch.allclose(FourierBasis.transform(f), torch.fft.fft(f, dim=1), atol=1e-6)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_fuzz_inv_transform_matches_torch_ifft(coeff):
@@ -281,7 +277,7 @@ def test_fuzz_inv_transform_matches_torch_ifft(coeff):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(f=spectra_2d())
 def test_fuzz_transform_matches_torch_fft2(f):
@@ -292,7 +288,7 @@ def test_fuzz_transform_matches_torch_fft2(f):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(f=real_signals_1d())
 def test_fuzz_roundtrip_real(f):
@@ -301,7 +297,7 @@ def test_fuzz_roundtrip_real(f):
     assert torch.allclose(back, f, atol=1e-6)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(f=real_signals_1d())
 def test_fuzz_transform_non_fft_path_matches_fft_path(f):
@@ -311,7 +307,7 @@ def test_fuzz_transform_non_fft_path_matches_fft_path(f):
     assert torch.allclose(fft_path, mm_path, atol=1e-3, rtol=1e-4)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(a=st.floats(-3, 3), b=st.floats(-3, 3), f=spectra_1d(), g=spectra_1d())
 def test_fuzz_transform_linearity(a, b, f, g):
@@ -323,7 +319,7 @@ def test_fuzz_transform_linearity(a, b, f, g):
     assert torch.allclose(lhs, rhs, atol=1e-5)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(modes=st.integers(1, 64))
 def test_fuzz_wave_number_matches_fftfreq(modes):
@@ -331,7 +327,7 @@ def test_fuzz_wave_number_matches_fftfreq(modes):
     assert torch.allclose(k, torch.fft.fftfreq(modes) * modes)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_fuzz_real_complex_coeff_roundtrip(coeff):
@@ -339,12 +335,12 @@ def test_fuzz_real_complex_coeff_roundtrip(coeff):
     assert torch.equal(to_complex_coeff(to_real_coeff(c64)), c64)
 
 
-@pytest.mark.no_mms
 @SETTINGS
 @given(
     points=st.integers(2, 20),
     modes=st.integers(1, 16),
 )
+@pytest.mark.oracle_analytic
 def test_fuzz_fn_columns_are_complex_exponentials(points, modes):
     x = torch.linspace(0, 1, points, dtype=torch.float64).view(-1, 1)
     basis = FourierBasis.fn(x, modes=modes)
@@ -354,7 +350,7 @@ def test_fuzz_fn_columns_are_complex_exponentials(points, modes):
     assert torch.allclose(basis, expected, atol=1e-6)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(1, 5), modes=st.integers(2, 16), seed=st.integers(0, 10_000))
 def test_fuzz_generate_coeff_reproducible(n, modes, seed):
@@ -368,7 +364,7 @@ def test_fuzz_generate_coeff_reproducible(n, modes, seed):
     assert a.shape == (n, modes)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(n=st.integers(1, 4), modes=st.integers(4, 32), seed=st.integers(0, 10_000))
 def test_fuzz_generate_real_signal_has_no_imaginary_part(n, modes, seed):
@@ -379,7 +375,7 @@ def test_fuzz_generate_real_signal_has_no_imaginary_part(n, modes, seed):
     assert vals.imag.abs().max() < 1e-4
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(target=st.integers(2, 64))
 def test_fuzz_resize_modes_sets_target(target):
@@ -388,7 +384,7 @@ def test_fuzz_resize_modes_sets_target(target):
     assert resized.modes[0] == target
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(seed=st.integers(0, 10_000), std=st.floats(0.01, 0.5))
 def test_fuzz_perturb_keeps_shape_and_changes_values(seed, std):
@@ -399,7 +395,7 @@ def test_fuzz_perturb_keeps_shape_and_changes_values(seed, std):
     assert not torch.allclose(perturbed.coeff, basis.coeff)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(coeff=spectra_1d())
 def test_fuzz_add_doubles_and_sub_zeroes(coeff):
@@ -408,7 +404,7 @@ def test_fuzz_add_doubles_and_sub_zeroes(coeff):
     assert torch.allclose((basis - basis).coeff, torch.zeros_like(coeff), atol=1e-6)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(rows=st.integers(2, 6), stop=st.integers(1, 2))
 def test_fuzz_getitem_selects_rows(rows, stop):
@@ -421,33 +417,33 @@ def test_fuzz_getitem_selects_rows(rows, stop):
 # Structural / error-path tests: explicitly not fuzzed, no MMS
 # =========================================================================== #
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_transform_requires_2d():
     with pytest.raises(AssertionError):
         FourierBasis.transform(torch.randn(8) + 0j)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_inv_transform_requires_2d():
     with pytest.raises(AssertionError):
         FourierBasis.inv_transform(torch.randn(8) + 0j)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_transform_casts_real_to_complex():
     assert FourierBasis.transform(torch.randn(1, 8)).is_complex()
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_inv_transform_casts_real_input():
     assert FourierBasis.inv_transform(torch.randn(1, 8)).is_complex()
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_transform_res_int_and_slice():
     f = torch.randn(1, 8) + 0j
     assert FourierBasis.transform(f, res=8).shape == (1, 8)
@@ -455,42 +451,42 @@ def test_transform_res_int_and_slice():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fn_requires_modes():
     with pytest.raises(ValueError):
         FourierBasis.fn(torch.zeros(2, 1))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fn_dimension_mismatch():
     with pytest.raises(AssertionError):
         FourierBasis.fn(torch.zeros(2, 1), modes=(4, 4))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fn_casts_integer_input():
     basis = FourierBasis.fn(torch.arange(4).view(-1, 1), modes=4)
     assert basis.shape == (4, 4) and basis.is_complex()
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_fn_transpose_matches_shape():
     x = torch.linspace(0, 1, 4).view(-1, 1)
     assert FourierBasis.fn(x, 4, transpose=True).shape == FourierBasis.fn(x, 4).shape
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_coeff_setter_rejects_non_complex():
     with pytest.raises(AssertionError):
         FourierBasis(torch.randn(1, 8))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_empty_basis_modes_and_len():
     basis = FourierBasis()
     assert basis.coeff.numel() == 0
@@ -500,7 +496,7 @@ def test_empty_basis_modes_and_len():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_modes_ndim_domain_time_size():
     basis = FourierBasis(
         FourierBasis.generate_empty(2, (8, 4)), domain=((0.0, 2.0), (0.0, 3.0))
@@ -513,20 +509,20 @@ def test_modes_ndim_domain_time_size():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_len_matches_first_dim():
     assert len(FourierBasis(FourierBasis.generate_empty(7, 8))) == 7
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_call_requires_coeff():
     with pytest.raises(AssertionError):
         FourierBasis()(torch.linspace(0, 1, 10))
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 def test_evaluate_accepts_real_coeff():
     coeff = FourierBasis.transform(torch.randn(1, 16) + 0j)
     x = torch.linspace(0, 1, 20)
@@ -536,7 +532,7 @@ def test_evaluate_accepts_real_coeff():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_res_slice():
     basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
     vals = basis.get_values(res=slice(0, 1, 20), device=CPU)
@@ -544,7 +540,7 @@ def test_get_values_res_slice():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_res_tuple():
     basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
     vals = basis.get_values(res=(slice(0, 1, 20),), device=CPU)
@@ -552,7 +548,7 @@ def test_get_values_res_tuple():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_evaluate_i_n_selection():
     coeff = FourierBasis.transform(torch.randn(4, 16) + 0j)
     out = FourierBasis.evaluate(coeff, torch.linspace(0, 1, 20), i=1, n=2)
@@ -560,7 +556,7 @@ def test_evaluate_i_n_selection():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_evaluate_time_dependent():
     coeff = FourierBasis.transform(torch.randn(2, 8, 8) + 0j)
     out = FourierBasis.evaluate(
@@ -574,7 +570,7 @@ def test_evaluate_time_dependent():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_evaluate_time_dependent_requires_t():
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
     with pytest.raises(AssertionError):
@@ -587,14 +583,14 @@ def test_evaluate_time_dependent_requires_t():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_generate_returns_basis():
     basis = FourierBasis.generate(2, 8, generator=torch.Generator().manual_seed(0))
     assert isinstance(basis, FourierBasis) and basis.modes == (8,) and len(basis) == 2
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_generate_zero_value_type():
     assert (
         torch.count_nonzero(FourierBasis.generate(2, 8, value_type="zero").coeff) == 0
@@ -602,7 +598,7 @@ def test_generate_zero_value_type():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_generate_empty_shape():
     coeff = FourierBasis.generate_empty(3, (8, 4))
     assert coeff.shape == (3, 8, 4) and coeff.is_complex()
@@ -610,7 +606,7 @@ def test_generate_empty_shape():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_generate_complex_funcs_true():
     basis = FourierBasis.generate(
         1, 16, complex_funcs=True, generator=torch.Generator().manual_seed(1)
@@ -621,28 +617,28 @@ def test_generate_complex_funcs_true():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_generate_invalid_value_type():
     with pytest.raises(RuntimeError):
         FourierBasis.generate(2, 8, value_type="bogus")  # type: ignore[arg-type]
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_add_type_error():
     with pytest.raises(TypeError):
         _ = FourierBasis(FourierBasis.generate_empty(1, 8)) + 5  # type: ignore[operator]
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_sub_type_error():
     with pytest.raises(TypeError):
         _ = FourierBasis(FourierBasis.generate_empty(1, 8)) - 5  # type: ignore[operator]
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_copy_is_independent():
     coeff = FourierBasis.transform(torch.randn(1, 16) + 0j)
     a = FourierBasis(coeff)
@@ -652,13 +648,13 @@ def test_copy_is_independent():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_prefered_evaluation_mode():
     assert FourierBasis.prefered_evaluation_mode() == "inverse transform"
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_grid_1d_and_2d():
     g1 = FourierBasis.grid(slice(0, 1, 10))
     assert g1.shape == (10, 1)
@@ -668,7 +664,7 @@ def test_grid_1d_and_2d():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_grid_int_arg():
     assert FourierBasis.grid(10).shape == (10, 1)
 
@@ -677,7 +673,7 @@ def test_grid_int_arg():
 # get_values / evaluation modes (inverse-transform and basis-eval)
 # --------------------------------------------------------------------------- #
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_and_grid_shapes():
     basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
     vals, grid = basis.get_values_and_grid(res=50, device=CPU)
@@ -685,7 +681,7 @@ def test_get_values_and_grid_shapes():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_basis_eval_1d():
     basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
     assert basis.get_values(res=16, evaluation_mode="basis", device=CPU).shape == (
@@ -695,7 +691,7 @@ def test_get_values_basis_eval_1d():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_basis_eval_2d():
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
     vals = FourierBasis(coeff).get_values(res=8, evaluation_mode="basis", device=CPU)
@@ -712,7 +708,7 @@ def _time_dependent_basis(modes=8, nt=8):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_to_time_dependent_and_back():
     td = _time_dependent_basis()
     assert td.time_dependent and td.time_size == 8
@@ -720,7 +716,7 @@ def test_to_time_dependent_and_back():
     assert not ti.time_dependent
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(m=st.integers(2, 8), seed=st.integers(0, 10_000))
 def test_to_time_dependent_preserves_values(m, seed):
@@ -742,7 +738,7 @@ def test_to_time_dependent_preserves_values(m, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_to_time_dependent_default_nt():
     torch.manual_seed(0)
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
@@ -751,7 +747,7 @@ def test_to_time_dependent_default_nt():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_to_time_dependent_idempotent_when_already_time_dependent():
     td = _time_dependent_basis()
     again = td.to_time_dependent()  # early-return branch
@@ -759,7 +755,7 @@ def test_to_time_dependent_idempotent_when_already_time_dependent():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_to_time_independent_noop_when_not_time_dependent():
     basis = FourierBasis(FourierBasis.transform(torch.randn(1, 8) + 0j))
     out = basis.to_time_independent()  # early-return branch
@@ -767,7 +763,7 @@ def test_to_time_independent_noop_when_not_time_dependent():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_time_dependent_grad_time_and_space():
     td = _time_dependent_basis()
     assert td.grad(dim=0).coeff.shape == td.coeff.shape  # finite-diff in time
@@ -775,7 +771,7 @@ def test_time_dependent_grad_time_and_space():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_time_dependent_integral_time_and_space():
     td = _time_dependent_basis()
     assert td.integral(dim=0).coeff.shape == td.coeff.shape
@@ -783,7 +779,7 @@ def test_time_dependent_integral_time_and_space():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_values_time_dependent_inverse_and_basis():
     td = _time_dependent_basis()
     assert td.get_values(device=CPU).shape == (2, 8, 8)
@@ -794,7 +790,7 @@ def test_get_values_time_dependent_inverse_and_basis():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_resize_time_dependent_to_basis_interpolates_time():
     td = _time_dependent_basis(modes=8, nt=8)
     other = FourierBasis(
@@ -827,46 +823,46 @@ def _complex_2d():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_1d_real():
     _real_1d().plot(device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_1d_complex_both_components():
     _complex_1d().plot(device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("component", ["real", "imag"])
 def test_plot_1d_complex_single_component(component):
     _complex_1d().plot(plot_component=component, device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_1d_complex_scatter():
     _complex_1d().plot(complex_scatter=True, device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_2d_real():
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
     FourierBasis(coeff).plot(device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_2d_complex_default_component_warns():
     # complex 2D with no component defaults to real and logs a warning.
     _complex_2d().plot(device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("component", ["real", "imag"])
 def test_plot_2d_component_on_axes(component):
     _fig, ax = plt.subplots()
@@ -875,34 +871,34 @@ def test_plot_2d_component_on_axes(component):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_2d_complex_scatter():
     _complex_2d().plot(complex_scatter=True, device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_out_of_bounds():
     with pytest.raises(AssertionError):
         FourierBasis(FourierBasis.generate_empty(1, 8)).plot(i=0, n=5, device=CPU)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("component", ["magnitude", "real", "imag"])
 def test_plot_coefficients_1d(component):
     _real_1d().plot_coefficients(n=1, component=component)
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_coefficients_2d():
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
     FourierBasis(coeff).plot_coefficients()
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_coefficients_on_axes():
     _fig, ax = plt.subplots()
     _complex_1d().plot_coefficients(plt=ax)
@@ -910,7 +906,7 @@ def test_plot_coefficients_on_axes():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_plot_coefficients_time_dependent_raises():
     coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
     td = FourierBasis(coeff).to_time_dependent(nt=8)
@@ -921,7 +917,6 @@ def test_plot_coefficients_time_dependent_raises():
 _EXACT = EvaluationStrategy(allow_approximate=False)
 
 
-@pytest.mark.mms
 @SETTINGS
 @given(
     freq=st.integers(1, 14),
@@ -931,6 +926,7 @@ _EXACT = EvaluationStrategy(allow_approximate=False)
     npts=st.integers(1, 60),
     seed=st.integers(0, 10_000),
 )
+@pytest.mark.oracle_analytic
 def test_separable_evaluate_single_mode_1d(freq, amp, length, start, npts, seed):
     # MMS: coeff of A*exp(2*pi*i*m*(x-a)/L) is A*N at wavenumber m on domain
     # [a, a+L). The separable (exact) evaluate must reproduce that closed form at
@@ -953,7 +949,6 @@ def test_separable_evaluate_single_mode_1d(freq, amp, length, start, npts, seed)
     assert torch.allclose(got[0], exact, atol=1e-9)
 
 
-@pytest.mark.mms
 @SETTINGS
 @given(
     mx=st.integers(1, 3),
@@ -965,6 +960,7 @@ def test_separable_evaluate_single_mode_1d(freq, amp, length, start, npts, seed)
     npts=st.integers(1, 40),
     seed=st.integers(0, 10_000),
 )
+@pytest.mark.oracle_analytic
 def test_separable_evaluate_single_mode_2d(mx, my, ax, ay, lx, ly, npts, seed):
     # MMS in 2D on a per-axis domain [ax, ax+Lx) x [ay, ay+Ly): the separable
     # kernel must reproduce exp(2*pi*i*(mx*(x-ax)/Lx + my*(y-ay)/Ly)). Fuzzing the
@@ -986,7 +982,7 @@ def test_separable_evaluate_single_mode_2d(mx, my, ax, ay, lx, ly, npts, seed):
     assert torch.allclose(got[0], exact, atol=1e-9)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(n=st.integers(2, 32), rows=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_separable_evaluate_on_grid_matches_torch_ifft(n, rows, seed):
@@ -998,7 +994,7 @@ def test_separable_evaluate_on_grid_matches_torch_ifft(n, rows, seed):
     assert torch.allclose(got, torch.fft.ifft(coeff, dim=1), atol=1e-9)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(m=st.integers(2, 10), seed=st.integers(0, 10_000))
 def test_separable_evaluate_on_grid_matches_torch_ifft2(m, seed):
@@ -1014,13 +1010,13 @@ def test_separable_evaluate_on_grid_matches_torch_ifft2(m, seed):
     assert torch.allclose(got, ref, atol=1e-9)
 
 
-@pytest.mark.no_mms
 @SETTINGS
 @given(
     n=st.integers(2, 24),
     npts=st.integers(1, 100),
     seed=st.integers(0, 10_000),
 )
+@pytest.mark.oracle_consistency
 def test_separable_evaluate_chunking_is_exact(n, npts, seed):
     # Chunking the separable path over points must not change the result.
     g = torch.Generator().manual_seed(seed)
@@ -1042,7 +1038,7 @@ def test_separable_evaluate_chunking_is_exact(n, npts, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 def test_dealias_mask_keeps_low_frequencies():
     mask = FourierBasis.dealias_mask(12)
     k = FourierBasis.wave_number(12).flatten()
@@ -1050,13 +1046,13 @@ def test_dealias_mask_keeps_low_frequencies():
     assert torch.equal(mask, k.abs() <= (2.0 / 3.0) * 6)
 
 
-@pytest.mark.no_mms
 @SETTINGS
 @given(
     budget_mb=st.floats(1e-4, 64.0),
     per_point=st.integers(1, 4096),
     itemsize=st.sampled_from([8, 16]),
 )
+@pytest.mark.oracle_invariant
 def test_strategy_chunk_and_approx_from_budget(budget_mb, per_point, itemsize):
     s = EvaluationStrategy(memory_budget_mb=budget_mb, allow_approximate=True)
     budget = s.max_elements(itemsize)
@@ -1069,7 +1065,7 @@ def test_strategy_chunk_and_approx_from_budget(budget_mb, per_point, itemsize):
     assert s.use_approximate(budget - 1 if budget > 1 else 0, itemsize) is False
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(budget_mb=st.floats(1e-3, 128.0), per_point=st.integers(1, 4096))
 def test_strategy_budget_scales_with_dtype(budget_mb, per_point):
@@ -1081,20 +1077,20 @@ def test_strategy_budget_scales_with_dtype(budget_mb, per_point):
     assert s.chunk_points(per_point, 16) <= s.chunk_points(per_point, 8)
 
 
-@pytest.mark.no_mms
 @SETTINGS
 @given(
     per_point=st.integers(1, 8192),
     itemsize=st.sampled_from([8, 16]),
     dense=st.floats(1.0, 1e18),
 )
+@pytest.mark.oracle_invariant
 def test_strategy_infinite_budget_never_approximates(per_point, itemsize, dense):
     s = EvaluationStrategy(memory_budget_mb=float("inf"))
     assert s.use_approximate(dense, itemsize) is False
     assert s.chunk_points(per_point, itemsize) >= 10**6  # effectively one block
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @SETTINGS
 @given(dense=st.floats(1.0, 1e18), itemsize=st.sampled_from([8, 16]))
 def test_strategy_disallow_approximate(dense, itemsize):
@@ -1103,7 +1099,7 @@ def test_strategy_disallow_approximate(dense, itemsize):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_basis_diagonal_hooks_default_to_none():
     # Base defaults signal "not diagonally differentiable / no de-aliasing rule"
     # for bases that don't override them (Chebyshev, wavelet).
@@ -1112,6 +1108,6 @@ def test_basis_diagonal_hooks_default_to_none():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_math_import_smoke():
     assert math.isclose(float(torch.pi), math.pi, rel_tol=1e-6)

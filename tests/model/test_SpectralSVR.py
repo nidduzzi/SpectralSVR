@@ -15,7 +15,7 @@ from torchmetrics.functional import symmetric_mean_absolute_percentage_error
 
 # End-to-end scenario: manufactured antiderivative operator (MMS), single
 # fixed configuration rather than a fuzzed one.
-pytestmark = [pytest.mark.mms, pytest.mark.no_fuzz]
+pytestmark = [pytest.mark.oracle_consistency, pytest.mark.no_fuzz]
 
 
 def test_SpectralSVR():
