@@ -1,0 +1,60 @@
+[job-id] 1545be71d1db4f2492e0e3ccf1a94737
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7e7218ca2bf344049cbb2a2c43ac74af
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9b90c1a198e94ce1ab49d9b6803a1eb7
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 52fb75d172b049aebad7136cbbde1e57
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b9788072b8e24bdfa57d13888167cc2c
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a78a4765e1ea4f0385bee857f2644ce8
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8c7b3a2772c64253b7d5f21cda5a2d5c
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c5b11419ec5345a8bdc853ee39462f0c
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d475d2820be4808b2f1617d2ab0a205
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3949dd8e2b594a6987ef8c90b8452f97
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 826d13fb90214d83bb397bcdeb6440c5
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2c7c56925117430889eb594c7b9d07ca
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a691dea4b5db4b51832e42fdff2b4f45
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee9c1c0bddc047f495a046ad070614be
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d1c184260b44f6d8f55c3b4df0912ba
+SpectralSVR/problems/burgers.py core/AddNot 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] da836af479a043459c68f7f2a6ceb2ce
+SpectralSVR/problems/burgers.py core/AddNot 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8900dd8e1fa0496d814eb1bd580fceee
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fc186b04cc40486bad1c6b3c52f6e9de
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2df2ae071e3f46269c412541942ded00
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 19
+complete: 19 (100.00%)
+surviving mutants: 5 (26.32%)
