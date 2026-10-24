@@ -158,20 +158,8 @@ class Burgers(Problem):
             )
 
             if time_dependent_coeff:
-                spatial_modes = modes[1:]
-                res_modes = tuple(
-                    slice(space[0], space[1], mode) for mode in spatial_modes
-                )
-
-                def to_time_dependent(field: BasisSubType) -> BasisSubType:
-                    val = field.get_values(res=(time_domain, *res_modes))
-                    coeff = basis.transform(val.flatten(0, 1)).reshape(
-                        (n, nt, *spatial_modes)
-                    )
-                    return basis(coeff=coeff, time_dependent=True, domain=domain)
-
-                u_gen = to_time_dependent(u_gen)
-                f_gen = to_time_dependent(f_gen)
+                u_gen = u_gen.to_time_dependent(nt=nt)
+                f_gen = f_gen.to_time_dependent(nt=nt)
 
         else:
             if not time_dependent_coeff:

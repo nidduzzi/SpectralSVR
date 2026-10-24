@@ -843,6 +843,58 @@ def test_continuous_residual_detects_a_corrupted_forcing(modes, nu, seed):
     assert corrupted / clean > 1e3
 
 
+SLICE_TIME_TOLERANCE = 1e-5
+
+
+def inclusive_slice_points(slices, space_points):
+    times = torch.linspace(0.0, 1.0, slices, dtype=torch.float64)
+    space = torch.arange(space_points, dtype=torch.float64) / space_points
+    mesh = torch.meshgrid(times, space, indexing="ij")
+    return torch.stack([axis.flatten() for axis in mesh], dim=-1)
+
+
+@pytest.mark.oracle_consistency
+@pytest.mark.scenario("Each slice reads as the manufactured field at its time")
+@SETTINGS
+@given(
+    slices=st.integers(2, 40),
+    time_modes=st.integers(4, 16),
+    space_modes=st.integers(4, 16),
+    seed=st.integers(0, 10_000),
+)
+@example(slices=2, time_modes=8, space_modes=8, seed=0)
+@example(slices=8, time_modes=8, space_modes=8, seed=0)
+@example(slices=7, time_modes=7, space_modes=8, seed=0)
+@example(slices=5, time_modes=8, space_modes=8, seed=0)
+@example(slices=4, time_modes=9, space_modes=8, seed=0)
+@example(slices=11, time_modes=8, space_modes=8, seed=0)
+@example(slices=12, time_modes=9, space_modes=8, seed=0)
+def test_each_manufactured_slice_holds_the_field_at_its_time(
+    slices, time_modes, space_modes, seed
+):
+    def manufacture(time_dependent_coeff):
+        return Burgers().generate(
+            FourierBasis,
+            2,
+            (time_modes, space_modes),
+            u0="random",
+            f="random",
+            nu=0.05,
+            time_domain=slice(0.0, 1.0, slices),
+            time_dependent_coeff=time_dependent_coeff,
+            generator=torch.Generator().manual_seed(seed),
+        )
+
+    points = inclusive_slice_points(slices, space_modes)
+    for stored, manufactured in zip(manufacture(True), manufacture(False), strict=True):
+        expected = manufactured(points)
+        displacement = (stored.get_values().flatten(1) - expected).abs().max()
+        scaled = float(displacement / expected.abs().max().clamp_min(1.0))
+        assert scaled < SLICE_TIME_TOLERANCE, (
+            f"slices={slices}, modes=({time_modes}, {space_modes}): {scaled:.3e}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Burgers -- the manufactured band (manufactured-band-derivation)
 
