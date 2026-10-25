@@ -1083,7 +1083,7 @@ class BasisLifecycle(RuleBasedStateMachine):
     @initialize()
     def reproduce_every_pinned_case(self):
         self.start_empty(functions=2, modes=(8, 4))
-        self.set_domain(spans=(2.0, 3.0))
+        self.set_domain(intervals=((0.0, 2.0), (0.0, 3.0)))
         self.start_empty(functions=7, modes=(8,))
         self.generate(functions=1, modes=(16,), complex_funcs=True, seed=1)
         self.read_values_at_a_resolution(points=20)
@@ -1102,6 +1102,7 @@ class BasisLifecycle(RuleBasedStateMachine):
         self.integrate(axis=0)
         self.integrate(axis=1)
         self.evaluate_through_time(times=5, points=10)
+        self.set_domain(intervals=((-1.0, 2.5), (0.5, 1.0)))
         self.resize_through_time(modes=4, slices=4)
         self.convert_to_time_independent()
         self.convert_again_and_mutate_the_result()
@@ -1226,10 +1227,16 @@ class BasisLifecycle(RuleBasedStateMachine):
         )
 
     @precondition(lambda self: self.basis.coeff.numel() > 0)
-    @rule(spans=st.lists(st.floats(0.5, 4.0), min_size=1, max_size=3).map(tuple))
-    def set_domain(self, spans):
+    @rule(
+        intervals=st.lists(
+            st.tuples(st.floats(-2.0, 2.0), st.floats(0.5, 4.0)), min_size=2, max_size=3
+        ).map(tuple)
+    )
+    def set_domain(self, intervals):
         axes = self.basis.coeff.ndim - 1
-        stated = tuple((0.0, span) for span in (spans * axes)[:axes])
+        stated = tuple(
+            (start, start + span) for start, span in (intervals * axes)[:axes]
+        )
         self.basis.domain = stated
         self.stated_domain = stated
 
