@@ -97,6 +97,7 @@ def test_paired_evaluation_equals_the_grid_form_at_every_pair(
 
 @pytest.mark.oracle_analytic
 @FUZZ
+@pytest.mark.scenario("A read at either end of any interval returns the end slice")
 @given(**FIELDS)
 @example(
     seed=0,
@@ -125,6 +126,15 @@ def test_paired_evaluation_equals_the_grid_form_at_every_pair(
     time_interval=SHIFTED_TIME,
     space_interval=UNIT,
 )
+@example(
+    seed=0,
+    functions=1,
+    slices=2,
+    modes=4,
+    device=HOST,
+    time_interval=(-1.8088874256383793, 1.0668033610193028),
+    space_interval=UNIT,
+)
 def test_paired_evaluation_reads_slices_exactly_and_lerps_between_them(
     seed, functions, slices, modes, device, time_interval, space_interval
 ):
@@ -146,6 +156,9 @@ def test_paired_evaluation_reads_slices_exactly_and_lerps_between_them(
         ).real
         means = (slice_values[:, :-1] + slice_values[:, 1:]) / 2
         assert (between - means.flatten(1)).abs().max() <= tolerance
+
+    on_its_grid = FourierBasis(coeff, time_dependent=True, domain=domain).get_values()
+    assert (on_its_grid.real - slice_values).abs().max() <= tolerance
 
 
 @pytest.mark.oracle_invariant

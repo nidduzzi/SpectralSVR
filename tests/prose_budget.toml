@@ -4,7 +4,7 @@ internal_docstrings = 24
 misshapen_docstrings = 6
 
 ["SpectralSVR/basis/__base.py"]
-comments = 17
+comments = 15
 internal_docstrings = 6
 misshapen_docstrings = 27
 
@@ -109,7 +109,7 @@ internal_docstrings = 164
 misshapen_docstrings = 6
 
 ["SpectralSVR/utils/__init__.py"]
-comments = 34
+comments = 31
 internal_docstrings = 17
 misshapen_docstrings = 17
 
@@ -219,6 +219,6 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/utils/test_utils.py"]
-comments = 31
+comments = 27
 internal_docstrings = 0
 misshapen_docstrings = 0
