@@ -1023,6 +1023,7 @@ def test_how_a_device_is_stated_does_not_change_the_draw(rows, modes, seed):
     assert torch.equal(stated_at_the_call, followed_the_process)
 
 
+RESIZE_THROUGH_TIME_ROUNDING = 2e-6
 LIFECYCLE_MODES = st.integers(2, 8)
 LIFECYCLE_FUNCTIONS = st.integers(1, 4)
 NOT_AN_INTEGER = "not an integer"
@@ -1413,6 +1414,18 @@ class BasisLifecycle(RuleBasedStateMachine):
         resized = self.basis.resize_modes(target)
         assert resized.modes == (modes,)
         assert resized.time_size == slices
+
+        own_slices = self.basis.resize_modes(modes).coeff
+        last = self.basis.time_size - 1
+        position = torch.arange(slices, dtype=torch.float64) * last / (slices - 1)
+        lower = position.floor().long()
+        upper = (lower + 1).clamp(max=last)
+        weight = (position - lower).to(own_slices).view(1, -1, 1)
+        expected = own_slices[:, lower] * (1 - weight) + own_slices[:, upper] * weight
+        scale = expected.abs().max().clamp_min(1.0)
+        assert (
+            resized.coeff - expected
+        ).abs().max() <= RESIZE_THROUGH_TIME_ROUNDING * scale
 
     @invariant()
     def the_shape_properties_follow_the_coefficients(self):

@@ -1,3 +1,4 @@
+import dataclasses
 import math
 import tempfile
 
@@ -451,6 +452,7 @@ def test_slice_positions_stay_among_the_slices_and_read_a_ramp_exactly(
         "a backward interval",
         "an infinite interval",
         "no slices",
+        "a position moved past the last slice",
     ],
 )
 @SETTINGS
@@ -458,16 +460,40 @@ def test_slice_positions_stay_among_the_slices_and_read_a_ramp_exactly(
 @example(slices=1)
 def test_slice_positions_refuse_what_addresses_no_slice(refused, slices):
     inside = torch.tensor([0.5], dtype=torch.float64)
-    times, interval, slice_count = {
-        "a time that is not a number": (torch.tensor([math.nan]), (0.0, 1.0), slices),
-        "an infinite time": (torch.tensor([math.inf]), (0.0, 1.0), slices),
-        "an empty interval": (inside, (1.0, 1.0), slices),
-        "a backward interval": (inside, (1.0, 0.0), slices),
-        "an infinite interval": (inside, (0.0, math.inf), slices),
-        "no slices": (inside, (0.0, 1.0), 0),
+
+    def move_past_the_last_slice():
+        positions = SlicePositions(inside, (0.0, 1.0), slices)
+        positions.upper = positions.upper + slices
+
+    attempt, refusal = {
+        "a time that is not a number": (
+            lambda: SlicePositions(torch.tensor([math.nan]), (0.0, 1.0), slices),
+            ValueError,
+        ),
+        "an infinite time": (
+            lambda: SlicePositions(torch.tensor([math.inf]), (0.0, 1.0), slices),
+            ValueError,
+        ),
+        "an empty interval": (
+            lambda: SlicePositions(inside, (1.0, 1.0), slices),
+            ValueError,
+        ),
+        "a backward interval": (
+            lambda: SlicePositions(inside, (1.0, 0.0), slices),
+            ValueError,
+        ),
+        "an infinite interval": (
+            lambda: SlicePositions(inside, (0.0, math.inf), slices),
+            ValueError,
+        ),
+        "no slices": (lambda: SlicePositions(inside, (0.0, 1.0), 0), ValueError),
+        "a position moved past the last slice": (
+            move_past_the_last_slice,
+            dataclasses.FrozenInstanceError,
+        ),
     }[refused]
-    with pytest.raises(ValueError, match="slice positions"):
-        SlicePositions(times, interval, slice_count)
+    with pytest.raises(refusal):
+        attempt()
 
 
 # --------------------------------------------------------------------------- #
