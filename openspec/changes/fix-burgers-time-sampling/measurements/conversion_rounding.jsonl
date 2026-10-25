@@ -1,2 +1,0 @@
-{"commit": "1a5eebd", "coeff_dtype": "torch.complex64", "seed": 6211, "slices": 38, "modes": [13, 14], "field": "f", "relative_rounding": 8.047913411246554e-07}
-{"commit": "1a5eebd", "coeff_dtype": "torch.complex128", "seed": 4522, "slices": 28, "modes": [13, 15], "field": "f", "relative_rounding": 2.110040863760861e-15}
