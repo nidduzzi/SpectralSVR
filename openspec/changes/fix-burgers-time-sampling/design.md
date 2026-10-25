@@ -40,6 +40,8 @@ See proposal.md for the defect and its measurement. `Burgers.generate` dispatche
 
 Each limit was checked from inside the scope. Accelerator memory is capped by the process itself: `tests/conftest.py` gives pytest a quarter of the device split across its workers, and `scripts/run_benchmark.py` sets the same quarter.
 
+**Generators refuse what they do not take.** `**kwargs` comes off `Problem.generate`, `Burgers.generate`, `Antiderivative.generate`, `Basis.generate` and `FourierBasis.generate`. Python then refuses an unknown keyword itself, at the call, with a `TypeError` that names it, so no check is written and none can be forgotten. `Antiderivative.generate` names the basis parameters it passes on (`random_func`, `complex_funcs`, `domain`, `value_type`) instead of forwarding whatever arrives. Honouring a precision argument through `generate` would be new behaviour on the numerical branch, needing its own measurement, and is left out by the user's choice: a stated precision is refused, not honoured.
+
 ## Risks / Trade-offs
 
 - [A cgroup cannot cap total disk use, and GPU compute cannot be capped below a whole device without CUDA MPS] → the per-file size limit, the dedicated temporary directory and a free-space check before and after each heavy run bound storage. GPU use is bounded by allowing one device and capping its memory, not its compute share. Both limits are stated rather than implied.

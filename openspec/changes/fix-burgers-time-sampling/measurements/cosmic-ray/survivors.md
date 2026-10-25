@@ -27,3 +27,11 @@ Run at `3917c0a`, each mutant against the tests that cover its line. Covered ran
 | __base:911 | resize positions on `domain[-1]` | survives | gap | same |
 
 All 31 FourierBasis mutants are killed, among them every mutant of the positions' lower, upper and weight in `evaluate_time_dependent_at`.
+
+# Survivors over the generator signatures
+
+Run at `95d21ff` over rows 28 to 30 and 40 to 48 of `SpectralSVR/problems/antiderivative.py`: the three parameters `Antiderivative.generate` now names, and the call that passes them on. Removing `**kwargs` from the other four signatures leaves no operator to mutate. 1 mutant, and it survived.
+
+| row | mutant | whole suite at 95d21ff | verdict | after |
+| --- | --- | --- | --- | --- |
+| 29 | default `complex_funcs=False` to `True` | survives (466 passed) | gap: an undocumented default | killed: `test_antiderivative_spectral_residual_is_zero` asserts the default field is real, imaginary part under 1e-6 of the real part. The measured worst over 2000 draws is 8.8e-8; the mutant reaches 0.22 to 29. The whole suite then fails 1 of 466 |

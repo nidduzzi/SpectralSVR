@@ -4,6 +4,8 @@ The Burgers generator's manufactured branch, asked for a time-dependent pair (th
 
 Measuring the fix on drawn domains exposed a second defect on the same path. Reading a time-dependent field on its own grid computes each time's slice index in single precision without bounding it. On 1611 of 8000 drawn intervals, the last time's index rounds past the last slice and the read raises `RuntimeError: INDICES element is out of DATA bounds`. Three other read paths bound the index, one of them repeating the interpolation by hand, and resizing in time builds its own index.
 
+The adversarial review found a third defect on the same entry point. `Burgers.generate` takes `**kwargs` and reads none of them, so `dtype=torch.complex128` or `coeff_dtype=torch.complex128` returns single-precision coefficients without a word. The abstract `Problem.generate`, `Basis.generate` and `FourierBasis.generate` swallow the same way, and `Antiderivative.generate` forwards its extras into the last. The committed `burgers.ipynb` passes `periods=` to `FourierBasis.generate`, which has never read it.
+
 ## What Changes
 
 - The manufactured branch converts its pair through the library's time-dependent conversion instead of sampling the field by hand, so each slice holds the manufactured field at its stated time.
@@ -11,6 +13,7 @@ Measuring the fix on drawn domains exposed a second defect on the same path. Rea
 - A fuzzed test checks each slice against the manufactured field's closed-form Fourier series at the slice times, over slice counts, mode counts and domains, with the edge cases pinned. It absorbs the two smoke tests of the same branch.
 - One value type places times between neighbouring slices, computed in double precision. It is the only way to address slices, so an index past the last slice cannot be formed. All five read paths use it.
 - A requirement in `coefficient-encodings` states that a read addresses only the slices the field holds.
+- Every problem and basis `generate` names its parameters and takes no `**kwargs`, so an argument it does not take is refused with `TypeError` at the call. `Antiderivative.generate` passes on only named parameters. A requirement in `coefficient-precision` states it.
 
 ## Capabilities
 
@@ -21,9 +24,10 @@ None.
 ### Modified Capabilities
 - `manufactured-solutions`: adds the requirement that a time-dependent manufactured pair holds the field at its slice times.
 - `coefficient-encodings`: adds the requirement that a read of a time-dependent field addresses only the slices it holds.
+- `coefficient-precision`: adds the requirement that a generator refuses an argument it does not take.
 
 ## Impact
 
-- Code: `SpectralSVR/problems/burgers.py` (`Burgers.generate`, manufactured branch only); `SpectralSVR/utils` (`interpolate_tensor` takes slice positions); `SpectralSVR/basis/__base.py` and `FourierBasis.py` (every time-dependent read).
+- Code: `SpectralSVR/problems/burgers.py` (`Burgers.generate`, manufactured branch only); `SpectralSVR/utils` (`interpolate_tensor` takes slice positions); `SpectralSVR/basis/__base.py` and `FourierBasis.py` (every time-dependent read, and `generate`); `SpectralSVR/problems/__base.py` and `antiderivative.py` (`generate`). A caller passing an argument a generator never read now gets `TypeError`; the committed notebook call with `periods=` is one, and it changed nothing when it ran.
 - Tests: `tests/problems/test_problems.py` gains the new test and loses the two smoke tests it absorbs; `tests/utils/test_utils.py` and `tests/basis/` test the slice positions and the reads. The four existing call sites of the default path check shapes, devices and that a residual runs, not slice values, so none pins the defect.
 - Recorded numbers: none move. The benchmark's manufactured case asks for a non-time-dependent pair, and its forced and numerical cases use the numerical branch. Every Burgers generator call in the committed notebooks passes `time_dependent_coeff=False`. The design gives the argument and the check.
