@@ -625,7 +625,6 @@ class Basis(abc.ABC):
         domain: DomainInputType = None,
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> Self:
         """
         generate

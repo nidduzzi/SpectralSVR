@@ -7,6 +7,7 @@ solutions for every path.
   ETDRK4 solver.
 """
 
+import inspect
 import math
 import warnings
 from typing import NamedTuple
@@ -428,6 +429,46 @@ BRANCH_ARGUMENTS = {
         time_domain=slice(0, 1, 40),
     ),
 }
+
+
+GENERATORS = {
+    "Burgers": (
+        Burgers.generate,
+        lambda **stated: Burgers().generate(
+            FourierBasis, 1, (8, 8), u0="random", f="random", **stated
+        ),
+    ),
+    "antiderivative": (
+        Antiderivative.generate,
+        lambda **stated: Antiderivative().generate(FourierBasis, 1, 8, **stated),
+    ),
+    "basis": (
+        FourierBasis.generate,
+        lambda **stated: FourierBasis.generate(1, 8, **stated),
+    ),
+}
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A stated precision a generator does not take is refused")
+@pytest.mark.scenario("Any argument a generator does not name is refused")
+@pytest.mark.parametrize("generator", tuple(GENERATORS))
+@SETTINGS
+@given(
+    keyword=st.one_of(
+        st.sampled_from(("dtype", "coeff_dtype", "periods")),
+        st.from_regex(r"[a-z_]{2,16}", fullmatch=True),
+    ),
+    value=st.sampled_from((torch.complex128, torch.float64, (1.0,), 0)),
+)
+@example(keyword="dtype", value=torch.complex128)
+@example(keyword="coeff_dtype", value=torch.complex128)
+@example(keyword="periods", value=(1.0,))
+def test_a_generator_refuses_an_argument_it_does_not_take(generator, keyword, value):
+    signature, call = GENERATORS[generator]
+    assume(keyword not in inspect.signature(signature).parameters)
+    with pytest.raises(TypeError, match=f"'{keyword}'"):
+        call(**{keyword: value})
 
 
 def failing_solver(linear, nonlinear, y0, t):

@@ -94,7 +94,7 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["SpectralSVR/problems/antiderivative.py"]
-comments = 5
+comments = 4
 internal_docstrings = 0
 misshapen_docstrings = 1
 

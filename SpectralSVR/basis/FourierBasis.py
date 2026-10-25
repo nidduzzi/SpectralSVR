@@ -364,7 +364,6 @@ class FourierBasis(Basis):
         value_type: Literal["random", "zero"] = "random",
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> Self:
         match value_type:
             case "random":

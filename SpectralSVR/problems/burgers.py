@@ -86,7 +86,6 @@ class Burgers(Problem):
         time_dependent_coeff: bool = True,
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
         """Generate a Burgers ``(u, f)`` pair, manufactured or integrated.
 
