@@ -27,6 +27,9 @@ from SpectralSVR.utils import (
     implicit_adams_solver,
 )
 
+from tests._devices import HOST
+from tests._time_varying import grid_points, slice_times
+
 from _exact import (
     SETTINGS,
     burgers_periodic_manufactured,
@@ -347,31 +350,6 @@ def test_burgers_mms_solution_satisfies_equation(
     assert u.domain == domain
 
 
-@pytest.mark.oracle_smoke
-@SETTINGS
-@given(
-    x_start=st.floats(-3.0, 3.0),
-    x_len=st.floats(0.5, 3.0),
-    t_start=st.floats(-3.0, 3.0),
-    t_len=st.floats(0.5, 3.0),
-    seed=st.integers(0, 10_000),
-)
-def test_burgers_generate_honors_domain_start(x_start, x_len, t_start, t_len, seed):
-    # generate() must thread space_domain.start / time_domain.start into the
-    # output field's domain, not just the lengths.
-    problem = Burgers()
-    u_gen, _ = problem.generate(
-        FourierBasis,
-        2,
-        (8, 8),
-        space_domain=slice(x_start, x_start + x_len, 64),
-        time_domain=slice(t_start, t_start + t_len, 16),
-        generator=torch.Generator().manual_seed(seed),
-    )
-    assert u_gen.domain[0] == (t_start, t_start + t_len)  # time axis start honored
-    assert u_gen.domain[1] == (x_start, x_start + x_len)  # space axis start honored
-
-
 # =========================================================================== #
 # Burgers -- numerical path (ETDRK4) reproduces an exact Cole-Hopf solution
 # =========================================================================== #
@@ -437,31 +415,6 @@ def test_burgers_numerical_solution_dissipates_energy(nu, modes, seed):
     vals = u.get_values(res=64).real
     energy = (vals**2).mean(dim=(0, 2))
     assert energy[-1] <= energy[0] + 1e-6
-
-
-# --------------------------------------------------------------------------- #
-# Additional coverage
-# --------------------------------------------------------------------------- #
-@pytest.mark.oracle_smoke
-@SETTINGS
-@given(
-    n=st.integers(1, 3),
-    space_modes=st.integers(8, 16),
-    seed=st.integers(0, 10_000),
-)
-def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
-    # u0="random", f="random" -> spectral manufactured-solution branch
-    u, f = Burgers().generate(
-        FourierBasis,
-        n,
-        (space_modes, space_modes),
-        u0="random",
-        f="random",
-        nu=0.05,
-        generator=torch.Generator().manual_seed(seed),
-    )
-    assert u.time_dependent and f.time_dependent
-    assert u.coeff.shape[0] == n and not torch.isnan(u.coeff).any()
 
 
 BRANCH_ARGUMENTS = {
@@ -843,55 +796,112 @@ def test_continuous_residual_detects_a_corrupted_forcing(modes, nu, seed):
     assert corrupted / clean > 1e3
 
 
-SLICE_TIME_TOLERANCE = 1e-5
+SLICE_TIME_TOLERANCE = 1e-4
+UNIT_START_AND_LENGTH = dict(
+    time_start=0.0, time_length=1.0, space_start=0.0, space_length=1.0
+)
 
 
-def inclusive_slice_points(slices, space_points):
-    times = torch.linspace(0.0, 1.0, slices, dtype=torch.float64)
-    space = torch.arange(space_points, dtype=torch.float64) / space_points
-    mesh = torch.meshgrid(times, space, indexing="ij")
-    return torch.stack([axis.flatten() for axis in mesh], dim=-1)
+def fourier_series_at(coeff, domain, times, space):
+    (time_start, time_stop), (space_start, space_stop) = domain
+    time_modes, space_modes = coeff.shape[-2:]
+    time_wavenumbers = torch.fft.fftfreq(
+        time_modes, 1 / time_modes, dtype=torch.float64
+    )
+    space_wavenumbers = torch.fft.fftfreq(
+        space_modes, 1 / space_modes, dtype=torch.float64
+    )
+    time_phase = torch.outer(times - time_start, time_wavenumbers) / (
+        time_stop - time_start
+    )
+    space_phase = torch.outer(space - space_start, space_wavenumbers) / (
+        space_stop - space_start
+    )
+    series = torch.einsum(
+        "nkl,tk,xl->ntx",
+        coeff.to(torch.complex128),
+        torch.exp(2j * torch.pi * time_phase),
+        torch.exp(2j * torch.pi * space_phase),
+    )
+    return series / (time_modes * space_modes)
 
 
-@pytest.mark.oracle_consistency
+@pytest.mark.oracle_analytic
 @pytest.mark.scenario("Each slice reads as the manufactured field at its time")
 @SETTINGS
 @given(
+    n=st.integers(1, 3),
     slices=st.integers(2, 40),
-    time_modes=st.integers(4, 16),
-    space_modes=st.integers(4, 16),
+    time_modes=st.integers(6, 16),
+    space_modes=st.integers(6, 16),
+    time_start=st.floats(-3.0, 3.0),
+    time_length=st.floats(0.5, 3.0),
+    space_start=st.floats(-3.0, 3.0),
+    space_length=st.floats(0.5, 3.0),
     seed=st.integers(0, 10_000),
 )
-@example(slices=2, time_modes=8, space_modes=8, seed=0)
-@example(slices=8, time_modes=8, space_modes=8, seed=0)
-@example(slices=7, time_modes=7, space_modes=8, seed=0)
-@example(slices=5, time_modes=8, space_modes=8, seed=0)
-@example(slices=4, time_modes=9, space_modes=8, seed=0)
-@example(slices=11, time_modes=8, space_modes=8, seed=0)
-@example(slices=12, time_modes=9, space_modes=8, seed=0)
+@example(n=1, slices=2, time_modes=8, space_modes=8, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=2, slices=8, time_modes=8, space_modes=8, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=2, slices=7, time_modes=7, space_modes=9, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=2, slices=5, time_modes=8, space_modes=8, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=2, slices=4, time_modes=9, space_modes=7, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=2, slices=11, time_modes=8, space_modes=8, seed=0, **UNIT_START_AND_LENGTH)
+@example(n=3, slices=12, time_modes=9, space_modes=6, seed=0, **UNIT_START_AND_LENGTH)
+@example(
+    n=2,
+    slices=9,
+    time_modes=6,
+    space_modes=13,
+    seed=0,
+    time_start=0.5,
+    time_length=2.7,
+    space_start=-1.0,
+    space_length=3.0,
+)
 def test_each_manufactured_slice_holds_the_field_at_its_time(
-    slices, time_modes, space_modes, seed
+    n,
+    slices,
+    time_modes,
+    space_modes,
+    time_start,
+    time_length,
+    space_start,
+    space_length,
+    seed,
 ):
+    domain = (
+        (time_start, time_start + time_length),
+        (space_start, space_start + space_length),
+    )
+
     def manufacture(time_dependent_coeff):
         return Burgers().generate(
             FourierBasis,
-            2,
+            n,
             (time_modes, space_modes),
             u0="random",
             f="random",
             nu=0.05,
-            time_domain=slice(0.0, 1.0, slices),
+            time_domain=slice(*domain[0], slices),
+            space_domain=slice(*domain[1], space_modes),
             time_dependent_coeff=time_dependent_coeff,
             generator=torch.Generator().manual_seed(seed),
         )
 
-    points = inclusive_slice_points(slices, space_modes)
+    times = slice_times(slices, HOST, domain[0])
+    space = grid_points(space_modes, HOST, domain[1])
     for stored, manufactured in zip(manufacture(True), manufacture(False), strict=True):
-        expected = manufactured(points)
-        displacement = (stored.get_values().flatten(1) - expected).abs().max()
-        scaled = float(displacement / expected.abs().max().clamp_min(1.0))
-        assert scaled < SLICE_TIME_TOLERANCE, (
-            f"slices={slices}, modes=({time_modes}, {space_modes}): {scaled:.3e}"
+        assert stored.time_dependent
+        assert stored.domain == domain
+        assert stored.coeff.shape == (n, slices, space_modes)
+        expected = fourier_series_at(
+            manufactured.coeff, manufactured.domain, times, space
+        )
+        displacement = (stored.get_values() - expected).abs().max()
+        relative = float(displacement / expected.abs().max())
+        assert relative < SLICE_TIME_TOLERANCE, (
+            f"slices={slices}, modes=({time_modes}, {space_modes}), "
+            f"domain={domain}: {relative:.3e}"
         )
 
 

@@ -189,7 +189,7 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/problems/test_problems.py"]
-comments = 82
+comments = 74
 internal_docstrings = 35
 misshapen_docstrings = 10
 
