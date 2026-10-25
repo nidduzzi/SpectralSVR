@@ -87,27 +87,33 @@ def swept_domain(draw):
     return (time_start, time_start + time_length), (space_start, space_start + space_length)
 
 
-commit = clean_checkout_commit()
-for case in CASES:
-    json.dump({"commit": commit, "record": "case", **case, **relative_displacements(**case)}, sys.stdout)
-    sys.stdout.write("\n")
+def record_cases(commit):
+    for case in CASES:
+        json.dump({"commit": commit, "record": "case", **case, **relative_displacements(**case)}, sys.stdout)
+        sys.stdout.write("\n")
 
-worst = {"u": dict(relative=-1.0), "f": dict(relative=-1.0)}
-draws = list(itertools.product(SWEEP_SLICES, SWEEP_MODES, SWEEP_MODES))
-for draw, (slices, time_modes, space_modes) in enumerate(draws):
-    time_domain, space_domain = swept_domain(draw)
-    case = dict(
-        n=2,
-        slices=slices,
-        time_modes=time_modes,
-        space_modes=space_modes,
-        time_domain=time_domain,
-        space_domain=space_domain,
-        seed=draw,
-    )
-    for name, relative in relative_displacements(**case).items():
-        if relative > worst[name]["relative"]:
-            worst[name] = dict(relative=relative, **case)
-for name, record in worst.items():
-    json.dump({"commit": commit, "record": "sweep_worst", "draws": len(draws), "field": name, **record}, sys.stdout)
-    sys.stdout.write("\n")
+
+def record_sweep_worst(commit):
+    worst = {"u": dict(relative=-1.0), "f": dict(relative=-1.0)}
+    draws = list(itertools.product(SWEEP_SLICES, SWEEP_MODES, SWEEP_MODES))
+    for draw, (slices, time_modes, space_modes) in enumerate(draws):
+        time_domain, space_domain = swept_domain(draw)
+        case = dict(
+            n=2,
+            slices=slices,
+            time_modes=time_modes,
+            space_modes=space_modes,
+            time_domain=time_domain,
+            space_domain=space_domain,
+            seed=draw,
+        )
+        for name, relative in relative_displacements(**case).items():
+            if relative > worst[name]["relative"]:
+                worst[name] = dict(relative=relative, **case)
+    for name, record in worst.items():
+        json.dump({"commit": commit, "record": "sweep_worst", "draws": len(draws), "field": name, **record}, sys.stdout)
+        sys.stdout.write("\n")
+
+
+RECORDS = {"cases": record_cases, "sweep": record_sweep_worst}
+RECORDS[sys.argv[1]](clean_checkout_commit())
