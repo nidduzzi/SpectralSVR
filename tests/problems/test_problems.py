@@ -124,6 +124,9 @@ def test_antiderivative_exact_derivative_of_known_field(n, m, modes, seed):
     assert torch.allclose(du_val, analytic, atol=1e-3)
 
 
+ANTIDERIVATIVE_IMAGINARY_FLOOR = 1e-6
+
+
 @pytest.mark.oracle_consistency
 @SETTINGS
 @given(n=st.integers(1, 5), modes=st.integers(3, 16), seed=st.integers(0, 10_000))
@@ -134,6 +137,9 @@ def test_antiderivative_spectral_residual_is_zero(n, modes, seed):
     )
     residual = problem.spectral_residual(u, ut)
     assert residual.coeff.abs().max() < 1e-3
+    values = u.get_values()
+    imaginary = float(values.imag.abs().max() / values.real.abs().max())
+    assert imaginary < ANTIDERIVATIVE_IMAGINARY_FLOOR
 
 
 # --------------------------------------------------------------------------- #
