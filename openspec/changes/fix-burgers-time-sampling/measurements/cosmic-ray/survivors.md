@@ -13,3 +13,17 @@ The changed lines, 160 to 162, carry two mutants, both `not` inserted in `if tim
 | 145 | `f == "random"` to `>=` | survives | gap | same |
 
 None of the gaps is in a line this change touches.
+
+# Survivors over the slice-position change
+
+Run at `3917c0a`, each mutant against the tests that cover its line. Covered ranges: `SlicePositions` and `interpolate_tensor` in `SpectralSVR/utils/__init__.py` (rows 634 to 677, 130 mutants); the routed reads in `SpectralSVR/basis/__base.py`, which are `get_values`, resizing in time and `to_time_independent` (rows 300 to 305, 905 to 913 and 1088 to 1092, 20 mutants); and the time-dependent `evaluate` and `evaluate_time_dependent_at` in `SpectralSVR/basis/FourierBasis.py` (rows 139 to 145 and 196 to 205, 31 mutants). Of 181 mutants, 5 survived. Each was then applied by hand and run against the whole suite, at `--hypothesis-seed=0`.
+
+| file:row | mutant | whole suite at 3917c0a | verdict | after |
+| --- | --- | --- | --- | --- |
+| utils:634 | `frozen=True` to `False` | survives (the decorator runs at import, so every test covers it) | gap | killed at `008890c`: the refusal test pins that moving a position past the last slice raises `FrozenInstanceError`; the whole suite then fails 1 of 463 |
+| __base:908 | resize target times on `domain[1]` | survives (463 passed) | gap | killed at `cada220`: `resize_through_time` compares coefficients with an explicit lerp, and `set_domain` separates the axes' intervals |
+| __base:908 | resize target times on `domain[-1]` | survives | gap | same |
+| __base:911 | resize positions on `domain[1]` | survives | gap | same |
+| __base:911 | resize positions on `domain[-1]` | survives | gap | same |
+
+All 31 FourierBasis mutants are killed, among them every mutant of the positions' lower, upper and weight in `evaluate_time_dependent_at`.
