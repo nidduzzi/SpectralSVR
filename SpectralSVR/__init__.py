@@ -26,6 +26,7 @@ from .utils import (
     ExactModeCount as ExactModeCount,
     zero_coeff as zero_coeff,
     interpolate_tensor as interpolate_tensor,
+    SlicePositions as SlicePositions,
     SolverSignatureType as SolverSignatureType,
     SemilinearSolverSignatureType as SemilinearSolverSignatureType,
     as_semilinear_solver as as_semilinear_solver,

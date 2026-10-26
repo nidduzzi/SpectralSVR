@@ -4,7 +4,7 @@ internal_docstrings = 24
 misshapen_docstrings = 6
 
 ["SpectralSVR/basis/__base.py"]
-comments = 17
+comments = 15
 internal_docstrings = 6
 misshapen_docstrings = 27
 
@@ -94,7 +94,7 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["SpectralSVR/problems/antiderivative.py"]
-comments = 5
+comments = 4
 internal_docstrings = 0
 misshapen_docstrings = 1
 
@@ -109,7 +109,7 @@ internal_docstrings = 164
 misshapen_docstrings = 6
 
 ["SpectralSVR/utils/__init__.py"]
-comments = 34
+comments = 31
 internal_docstrings = 17
 misshapen_docstrings = 17
 
@@ -189,7 +189,7 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/problems/test_problems.py"]
-comments = 82
+comments = 74
 internal_docstrings = 35
 misshapen_docstrings = 10
 
@@ -219,6 +219,6 @@ internal_docstrings = 0
 misshapen_docstrings = 1
 
 ["tests/utils/test_utils.py"]
-comments = 31
+comments = 27
 internal_docstrings = 0
 misshapen_docstrings = 0

@@ -22,6 +22,8 @@ from ..utils import (
     DEFAULT_COEFF_DTYPE,
     DEFAULT_REAL_DTYPE,
     DeviceInput,
+    SlicePositions,
+    interpolate_tensor,
     refuse_a_generator_placed_elsewhere,
     to_complex_coeff,
 )
@@ -136,11 +138,9 @@ class FourierBasis(Basis):
             )
             basis = cls.fn(x, modes, domain=domain_t[1:])
             sum_coeff_x_basis = cls.sum_mul(coeff.flatten(2), basis)
-            index_float = cls.fractional_slice_index(
-                t.flatten().real, domain_t[0], coeff.shape[1]
-            )
-            sum_coeff_x_basis = cls.interpolate_time_tensor(
-                sum_coeff_x_basis, index_float
+            sum_coeff_x_basis = interpolate_tensor(
+                sum_coeff_x_basis,
+                SlicePositions(t.flatten().real, domain_t[0], coeff.shape[1]),
             )
 
         else:
@@ -195,15 +195,12 @@ class FourierBasis(Basis):
         per_slice = cls.sum_mul(
             coeff.flatten(2), cls.fn(points[:, 1:], modes, domain=domain_t[1:])
         )
-        index_float = cls.fractional_slice_index(times, domain_t[0], coeff.shape[1])
-        index_floor = index_float.floor().to(torch.int)
-        index_ceil = index_float.ceil().to(torch.int)
-        weight = ((index_float - index_floor) / (index_ceil - index_floor)).nan_to_num()
+        positions = SlicePositions(times, domain_t[0], coeff.shape[1])
         rows = torch.arange(len(points), device=per_slice.device)
         at_points = torch.lerp(
-            per_slice[:, index_floor, rows],
-            per_slice[:, index_ceil, rows],
-            weight.to(per_slice),
+            per_slice[:, positions.lower, rows],
+            per_slice[:, positions.upper, rows],
+            positions.weight.to(per_slice),
         )
         scaling = 1.0 / math.prod(modes)
         return scaling * at_points
@@ -367,7 +364,6 @@ class FourierBasis(Basis):
         value_type: Literal["random", "zero"] = "random",
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> Self:
         match value_type:
             case "random":

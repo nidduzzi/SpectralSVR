@@ -1,0 +1,10 @@
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 2, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 1.798465553105293, "f": 1.886556378257826}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 5, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.8596847837574983, "f": 0.817281324120239}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 11, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.4912611318904447, "f": 0.4322750400247762}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 50, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.11133545589738124, "f": 0.09526204702580239}
+{"commit": "1a5eebd", "record": "case", "n": 1, "slices": 2, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 2.524776583986723, "f": 1.5283644627852966}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 8, "time_modes": 8, "space_modes": 8, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.6499853071634389, "f": 0.6209772613891608}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 7, "time_modes": 7, "space_modes": 9, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.7596478995283454, "f": 0.720016785167055}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 4, "time_modes": 9, "space_modes": 7, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 1.1437569017064952, "f": 1.0950921682207793}
+{"commit": "1a5eebd", "record": "case", "n": 3, "slices": 12, "time_modes": 9, "space_modes": 6, "time_domain": [0.0, 1.0], "space_domain": [0.0, 1.0], "seed": 0, "u": 0.4301934598511836, "f": 0.4592525499920814}
+{"commit": "1a5eebd", "record": "case", "n": 2, "slices": 9, "time_modes": 6, "space_modes": 13, "time_domain": [0.5, 3.2], "space_domain": [-1.0, 2.0], "seed": 0, "u": 0.4415231609952727, "f": 0.60766507867484}
