@@ -30,8 +30,13 @@
 
 ## 4. Recorded numbers
 
-- [ ] 4.1 Run the probe of 1.2 in clean worktrees of the parent and the fixed commit, and record which datasets' splits, targets and SpectralSVR predictions move, and by how much. Verify the Burgers datasets come back bit-identical, as the design predicts, or record why not.
-- [ ] 4.2 Regenerate `benchmarks/operator_comparison.csv` with `scripts/run_benchmark.py` in a clean worktree of the fixed commit, with free disk checked before and after. Verify the rows of every unmoved dataset are bit-identical to the recorded ones. For each moved row, record its movement against a base rerun next to the DeepONet noise floor of 1.2.
+- [x] 4.1 Run the probe of 1.2 in clean worktrees of the parent and the fixed commit, and record which datasets' splits, targets and SpectralSVR predictions move, and by how much. Verify the Burgers datasets come back bit-identical, as the design predicts, or record why not. Done (`benchmark_reads_d5106a5.jsonl` against `_6b577e9`; a fresh base rerun matches its record bitwise). All five datasets move, the Burgers ones included, against the design's prediction. Their sensors and targets are read off the grid, and every such read now sums over one more mode on an even axis, even where the boundary coefficient is zero; `burgers-forced` also moves its stored `u`, through its forcing. The size is rounding: targets by at most 1.7e-7 of their largest value, SpectralSVR predictions by at most 1.4e-5. Amended: the design's Burgers prediction was wrong, and 4.2 measures every row
+- [x] 4.2 Regenerate `benchmarks/operator_comparison.csv` with `scripts/run_benchmark.py` in a clean worktree of the fixed commit, with free disk checked before and after. Verify the rows of every unmoved dataset are bit-identical to the recorded ones. For each moved row, record its movement against a base rerun next to the DeepONet noise floor of 1.2. Done. A base rerun at `6b577e9` (`benchmark_table_base_rerun_6b577e9.csv`) reproduces the recorded table bitwise, all 50 rows. The table is regenerated at `6ab5fff`, clean tree, and no dataset is unmoved:
+  - SpectralSVR rows move by at most 2.8e-6 in any metric.
+  - DeepONet rows move by up to 0.069 rrse per seed on Burgers MMS and 0.067 on the project antiderivative, and by at most 0.004 on the other three datasets.
+  - Mean rrse: Burgers MMS 0.597 to 0.606 (seed std 0.006); project antiderivative 0.655 to 0.673 (seed std 0.106); the GRF antiderivative, Burgers numerical and forced move by no more than 0.001.
+
+  The inputs moved only at 1e-7, so the DeepONet shift measures DeepONet's sensitivity to rounding-level input, consistent with the 0.057 floor of 1.2, not any content of the repair. Amended: "rows of every unmoved dataset are bit-identical" has no unmoved dataset to apply to, since every off-grid read changes at rounding level
 
 ## 5. Verification
 
