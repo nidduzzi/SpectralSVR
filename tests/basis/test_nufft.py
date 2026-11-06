@@ -5,7 +5,6 @@ the ground truth here (not a manufactured PDE solution).
 Kaiser-Bessel gridding is approximate, hence the loose tolerance.
 """
 
-import importlib
 from unittest.mock import patch
 
 import pytest
@@ -23,9 +22,6 @@ _EXACT = EvaluationStrategy(allow_approximate=False)
 _FORCE_NUFFT = EvaluationStrategy(memory_budget_mb=0.0, allow_approximate=True)
 
 CPU = torch.device("cpu")
-BASIS_MODULE = importlib.import_module("SpectralSVR.basis.FourierBasis")
-BUDGETS_MB = (0.0, 2**-10, 2**-8, 2**-6, 2**-4)
-COMPLEX128_BYTES = 16
 SETTINGS = settings(
     deadline=None, max_examples=20, suppress_health_check=[HealthCheck.too_slow]
 )
@@ -147,58 +143,6 @@ def test_only_axes_below_the_kernel_width_get_a_wider_grid(modes, seed):
     assert operator.call_args.kwargs["grid_size"] == tuple(
         2 * m if 2 * m >= kernel_width else kernel_width for m in modes
     )
-
-
-READS_THAT_MAY_APPROXIMATE = {
-    "off-grid evaluation": lambda coeff, count, generator, strategy: FourierBasis(
-        coeff, domain=(0.0, 1.3), strategy=strategy
-    )(torch.rand(count, dtype=torch.float64, generator=generator) * 1.3, device=CPU),
-    "inverse transform on a partial window": lambda coeff, count, generator, strategy: (
-        FourierBasis.inv_transform(
-            coeff, res=slice(0.1, 1.3, count), domain=(0.0, 1.3), strategy=strategy
-        )
-    ),
-}
-
-
-@pytest.mark.oracle_independent
-@SETTINGS
-@pytest.mark.parametrize(
-    "read", READS_THAT_MAY_APPROXIMATE.values(), ids=READS_THAT_MAY_APPROXIMATE
-)
-@given(
-    modes=st.integers(1, 48),
-    budget_mb=st.sampled_from(BUDGETS_MB),
-    around_threshold=st.integers(-20, 20),
-    seed=st.integers(0, 10_000),
-)
-@example(modes=32, budget_mb=0.0, around_threshold=2000, seed=0)
-@example(modes=2, budget_mb=0.0, around_threshold=2000, seed=0)
-@example(modes=8, budget_mb=2**-10, around_threshold=0, seed=0)
-def test_a_read_switches_to_nufft_above_threshold_counting_stored_modes(
-    read, modes, budget_mb, around_threshold, seed
-):
-    threshold_points = int(budget_mb * 2**20) // (modes * COMPLEX128_BYTES)
-    count = max(1, threshold_points + around_threshold)
-    coeff = FourierBasis.generate_coeff(
-        1, modes, generator=torch.Generator().manual_seed(seed)
-    ).to(torch.complex128)
-
-    exact = read(coeff, count, torch.Generator().manual_seed(seed), _EXACT)
-    with patch.object(
-        BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
-    ) as nufft:
-        evaluated = read(
-            coeff,
-            count,
-            torch.Generator().manual_seed(seed),
-            EvaluationStrategy(memory_budget_mb=budget_mb),
-        )
-
-    assert (nufft.call_count > 0) == (
-        count * modes * COMPLEX128_BYTES > budget_mb * 2**20
-    )
-    assert (evaluated - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
 @pytest.mark.oracle_consistency

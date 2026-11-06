@@ -11,7 +11,9 @@ Testing strategy (enforced by ``conftest.py``):
 Correctness is additionally cross-checked against PyTorch's own FFT.
 """
 
+import importlib
 import math
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +37,7 @@ from SpectralSVR import (
     to_real_coeff,
 )
 from SpectralSVR.basis import Basis
+from SpectralSVR.basis._nufft import nufft_available
 from SpectralSVR.basis.sampling import PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
 from tests._anchors import fourier_series_at, fourier_series_bound
@@ -170,13 +173,13 @@ INTEGRAL_ROUNDING = 1.5e-6
 IMAGINARY_ROUNDING = 6e-7
 APPROXIMATION_BOUND = 5e-2
 EXACT_EVALUATION = EvaluationStrategy(allow_approximate=False)
-APPROXIMATE_EVALUATION = EvaluationStrategy(memory_budget_mb=1e-9)
+BUDGETS_MB = (0.0, 2**-10, 2**-8, 2**-6, 2**-4)
+BASIS_MODULE = importlib.import_module("SpectralSVR.basis.FourierBasis")
 STATED_MODES = st.lists(st.integers(2, 12), min_size=1, max_size=2).map(tuple)
 STATED_INTERVALS = st.lists(
     st.tuples(st.floats(-2.0, 2.0), st.floats(0.5, 3.0)), min_size=2, max_size=2
 )
 UNIT_INTERVALS = [(0.0, 1.0), (0.0, 1.0)]
-BOUNDARY_CASES = ((2,), (4,), (8,), (9,), (8, 8), (8, 9), (2, 4))
 
 
 def stated_field(modes, complex_funcs, intervals, seed, functions):
@@ -200,82 +203,6 @@ def nodes_of(domain, counts):
     return torch.stack(torch.meshgrid(*axes, indexing="ij"), dim=-1).reshape(
         -1, len(axes)
     )
-
-
-@pytest.mark.oracle_analytic
-@pytest.mark.scenario("A real field reads real everywhere at every mode count")
-@pytest.mark.scenario("A complex field keeps its single boundary wave")
-@pytest.mark.scenario("On its own grid a real field reads as before")
-@SETTINGS
-@given(
-    modes=STATED_MODES,
-    complex_funcs=st.booleans(),
-    intervals=STATED_INTERVALS,
-    seed=st.integers(0, 10_000),
-    functions=st.integers(1, 3),
-)
-@example(modes=(2,), complex_funcs=False, intervals=UNIT_INTERVALS, seed=0, functions=1)
-@example(modes=(4,), complex_funcs=False, intervals=UNIT_INTERVALS, seed=0, functions=2)
-@example(modes=(8,), complex_funcs=True, intervals=UNIT_INTERVALS, seed=0, functions=2)
-@example(modes=(9,), complex_funcs=False, intervals=UNIT_INTERVALS, seed=0, functions=2)
-@example(
-    modes=(8, 8),
-    complex_funcs=False,
-    intervals=[(0.5, 1.5), (-1.0, 2.5)],
-    seed=0,
-    functions=2,
-)
-@example(
-    modes=(8, 9), complex_funcs=True, intervals=UNIT_INTERVALS, seed=0, functions=1
-)
-@example(
-    modes=(2, 4), complex_funcs=False, intervals=UNIT_INTERVALS, seed=0, functions=1
-)
-def test_a_field_reads_as_its_closed_form_off_and_on_its_grid(
-    modes, complex_funcs, intervals, seed, functions
-):
-    field = stated_field(modes, complex_funcs, intervals, seed, functions)
-    real = not complex_funcs
-    bound = fourier_series_bound(field.coeff, field.domain)
-    generator = torch.Generator().manual_seed(seed + 1)
-    points = torch.stack(
-        [
-            start
-            + (stop - start) * torch.rand(16, generator=generator, dtype=torch.float64)
-            for start, stop in field.domain
-        ],
-        dim=1,
-    )
-
-    off_grid = field(points)
-    expected = fourier_series_at(field.coeff, points, field.domain, real=real)
-    assert np.abs(off_grid.numpy() - expected).max() <= READING_ROUNDING * bound
-
-    finer = tuple(2 * m + 1 for m in modes)
-    on_finer = field.get_values(
-        res=tuple(
-            slice(start, stop, n)
-            for n, (start, stop) in zip(finer, field.domain, strict=True)
-        )
-    )
-    expected_finer = fourier_series_at(
-        field.coeff, nodes_of(field.domain, finer), field.domain, real=real
-    )
-    assert (
-        np.abs(on_finer.flatten(1).numpy() - expected_finer).max()
-        <= READING_ROUNDING * bound
-    )
-
-    axes = tuple(range(1, field.coeff.ndim))
-    on_its_grid = torch.fft.ifftn(field.coeff, dim=axes)
-    assert (field.get_values() - on_its_grid).abs().max() <= READING_ROUNDING * bound
-
-    if real:
-        assert off_grid.imag.abs().max() <= IMAGINARY_ROUNDING * bound
-        approximate = FourierBasis(
-            field.coeff, domain=field.domain, strategy=APPROXIMATE_EVALUATION
-        )(points)
-        assert approximate.imag.abs().max() <= APPROXIMATION_BOUND * bound
 
 
 @pytest.mark.oracle_analytic
@@ -1254,6 +1181,7 @@ def test_how_a_device_is_stated_does_not_change_the_draw(rows, modes, seed):
 
 RESIZE_THROUGH_TIME_ROUNDING = 2e-6
 LIFECYCLE_MODES = st.integers(2, 8)
+OFF_GRID_FRACTIONS = torch.tensor([0.0, 0.137, 0.5, 0.913, 0.999], dtype=torch.float64)
 LIFECYCLE_FUNCTIONS = st.integers(1, 4)
 NOT_AN_INTEGER = "not an integer"
 ACCEPTED_INTEGER_TYPES = (int, np.int64, np.array, torch.tensor)
@@ -1380,6 +1308,27 @@ class BasisLifecycle(RuleBasedStateMachine):
         for length in (1, 3):
             self.restate_the_sampling(length=length)
             self.convert_to_time_dependent(slices=(None, None))
+        for functions, modes, complex_funcs in (
+            (1, (2,), False),
+            (2, (4,), False),
+            (2, (8,), True),
+            (2, (9,), False),
+            (1, (8, 9), True),
+            (1, (2, 4), False),
+            (2, (8, 8), False),
+        ):
+            self.generate(
+                functions=functions, modes=modes, complex_funcs=complex_funcs, seed=0
+            )
+            self.a_field_reads_its_closed_form()
+        self.set_domain(intervals=((0.5, 1.5), (-1.0, 2.5)))
+        self.a_field_reads_its_closed_form()
+        self.generate(functions=1, modes=(8,), complex_funcs=False, seed=0)
+        for points in (16, 24):
+            for through in ("evaluation", "resolution"):
+                self.read_under_a_memory_budget(
+                    budget_mb=2**-10, points=points, through=through
+                )
         self.basis = FourierBasis()
         self.stated_domain = None
 
@@ -1667,6 +1616,59 @@ class BasisLifecycle(RuleBasedStateMachine):
             resized.coeff - expected
         ).abs().max() <= RESIZE_THROUGH_TIME_ROUNDING * scale
 
+    @precondition(lambda self: self.placeable() and not self.basis.time_dependent)
+    @rule(
+        budget_mb=st.sampled_from(BUDGETS_MB),
+        points=st.integers(2, 64),
+        through=st.sampled_from(("evaluation", "resolution")),
+    )
+    def read_under_a_memory_budget(self, budget_mb, points, through):
+        budgeted, exact = (
+            FourierBasis(
+                self.basis.coeff,
+                domain=self.basis.domain,
+                complex_funcs=self.basis.complex_funcs,
+                strategy=strategy,
+            )
+            for strategy in (
+                EvaluationStrategy(memory_budget_mb=budget_mb),
+                EXACT_EVALUATION,
+            )
+        )
+        match through:
+            case "evaluation":
+                fractions = torch.linspace(0.01, 0.99, points, dtype=torch.float64)
+                rows = torch.stack(
+                    [
+                        start + (stop - start) * fractions
+                        for start, stop in self.basis.domain
+                    ],
+                    dim=1,
+                )
+                with patch.object(
+                    BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
+                ) as nufft:
+                    values = budgeted(rows)
+                expected = exact(rows)
+                dense_elements = (points * math.prod(self.basis.modes),)
+            case "resolution":
+                res = tuple(
+                    slice(start, stop, points) for start, stop in self.basis.domain
+                )
+                with patch.object(
+                    BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
+                ) as nufft:
+                    values = budgeted.get_values(res=res, device=CPU)
+                expected = exact.get_values(res=res, device=CPU)
+                dense_elements = tuple(
+                    points * m for m in self.basis.modes if m != points
+                )
+        itemsize = self.basis.coeff.element_size()
+        over = any(count * itemsize > budget_mb * 2**20 for count in dense_elements)
+        assert (nufft.call_count > 0) == (over and nufft_available())
+        bound = fourier_series_bound(self.basis.coeff, self.basis.domain)
+        assert (values - expected).abs().max() <= APPROXIMATION_BOUND * bound
+
     @invariant()
     def the_shape_properties_follow_the_coefficients(self):
         coeff = self.basis.coeff
@@ -1686,25 +1688,67 @@ class BasisLifecycle(RuleBasedStateMachine):
         )
 
     @invariant()
-    def a_real_field_reads_real_off_its_grid(self):
+    def a_field_reads_its_closed_form(self):
         basis = self.basis
-        if basis.complex_funcs or not self.placeable():
+        if basis.time_dependent or not self.placeable():
             return
-        spatial_domain = basis.domain[1:] if basis.time_dependent else basis.domain
-        fractions = torch.tensor([0.137, 0.5, 0.913], dtype=torch.float64)
+        real = not basis.complex_funcs
+        bound = fourier_series_bound(basis.coeff, basis.domain)
         points = torch.stack(
-            [start + (stop - start) * fractions for start, stop in spatial_domain],
+            [
+                start + (stop - start) * OFF_GRID_FRACTIONS
+                for start, stop in basis.domain
+            ],
+            dim=1,
+        )
+        off_grid = basis(points)
+        expected = fourier_series_at(basis.coeff, points, basis.domain, real=real)
+        assert np.abs(off_grid.numpy() - expected).max() <= READING_ROUNDING * bound
+
+        finer = tuple(2 * m + 1 for m in basis.modes)
+        on_finer = basis.get_values(
+            res=tuple(
+                slice(start, stop, n)
+                for n, (start, stop) in zip(finer, basis.domain, strict=True)
+            ),
+            device=CPU,
+        )
+        expected_finer = fourier_series_at(
+            basis.coeff, nodes_of(basis.domain, finer), basis.domain, real=real
+        )
+        assert (
+            np.abs(on_finer.flatten(1).numpy() - expected_finer).max()
+            <= READING_ROUNDING * bound
+        )
+
+        on_its_grid = torch.fft.ifftn(
+            basis.coeff, dim=tuple(range(1, basis.coeff.ndim))
+        )
+        assert (
+            basis.get_values(device=CPU) - on_its_grid
+        ).abs().max() <= READING_ROUNDING * bound
+
+        if real:
+            assert off_grid.imag.abs().max() <= IMAGINARY_ROUNDING * bound
+
+    @invariant()
+    def a_real_field_reads_real_through_time(self):
+        basis = self.basis
+        if basis.complex_funcs or not basis.time_dependent or not self.placeable():
+            return
+        spatial_domain = basis.domain[1:]
+        points = torch.stack(
+            [
+                start + (stop - start) * OFF_GRID_FRACTIONS
+                for start, stop in spatial_domain
+            ],
             dim=1,
         )
         time_start, time_stop = basis.domain[0]
         values = basis(
-            points,
-            t=torch.tensor([time_start + 0.3 * (time_stop - time_start)])
-            if basis.time_dependent
-            else None,
+            points, t=torch.tensor([time_start + 0.3 * (time_stop - time_start)])
         )
-        slices = basis.coeff.flatten(0, 1) if basis.time_dependent else basis.coeff
-        bound = fourier_series_bound(slices, spatial_domain)
+        bound = fourier_series_bound(basis.coeff.flatten(0, 1), spatial_domain)
         assert values.imag.abs().max() <= IMAGINARY_ROUNDING * bound
 
     @invariant()
@@ -1735,5 +1779,7 @@ for mark in (
     ),
     pytest.mark.scenario("A time-dependent field converts only to its own slice count"),
     pytest.mark.scenario("A real field reads real everywhere at every mode count"),
+    pytest.mark.scenario("A complex field keeps its single boundary wave"),
+    pytest.mark.scenario("On its own grid a real field reads as before"),
 ):
     TestBasisLifecycle = mark(TestBasisLifecycle)
