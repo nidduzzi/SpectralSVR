@@ -31,9 +31,10 @@ SETTINGS = settings(
 )
 
 
-def _exact_evaluate(coeff, x, domain):
-    # exact dense path: disable the NUFFT for this call only
-    return FourierBasis.evaluate(coeff, x, domain=domain, strategy=_EXACT)
+def _exact_evaluate(coeff, x, domain, complex_funcs=False):
+    return FourierBasis.evaluate(
+        coeff, x, domain=domain, strategy=_EXACT, complex_funcs=complex_funcs
+    )
 
 
 @pytest.mark.oracle_independent
@@ -55,8 +56,8 @@ def test_nufft_matches_dense_1d(modes, rows, npts, length, start, seed):
     coeff = FourierBasis.generate_coeff(rows, modes, generator=g).to(torch.complex128)
     x = start + (torch.rand(npts, 1, generator=g, dtype=torch.float64) * length)
     domain = ((start, start + length),)
-    approx = nufft_evaluate(coeff, x, domain)
-    exact = _exact_evaluate(coeff, x, domain)
+    approx = nufft_evaluate(coeff, x, domain) / coeff[0].numel()
+    exact = _exact_evaluate(coeff, x, domain, complex_funcs=True)
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
@@ -74,8 +75,8 @@ def test_nufft_matches_dense_2d(m, npts, seed):
     coeff = FourierBasis.generate_coeff(1, (m, m), generator=g).to(torch.complex128)
     x = torch.rand(npts, 2, generator=g, dtype=torch.float64) * torch.tensor([1.3, 0.7])
     domain = ((0.0, 1.3), (0.0, 0.7))
-    approx = nufft_evaluate(coeff, x, domain)
-    exact = _exact_evaluate(coeff, x, domain)
+    approx = nufft_evaluate(coeff, x, domain) / coeff[0].numel()
+    exact = _exact_evaluate(coeff, x, domain, complex_funcs=True)
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 

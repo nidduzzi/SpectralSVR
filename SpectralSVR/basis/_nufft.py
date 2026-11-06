@@ -32,18 +32,6 @@ def nufft_available() -> bool:
 def nufft_evaluate(
     coeff: torch.Tensor, x: torch.Tensor, domain: tuple[tuple[float, float], ...]
 ) -> torch.Tensor:
-    """Evaluate a (batched) Fourier series at non-uniform points via NUFFT.
-
-    Arguments:
-        coeff {torch.Tensor} -- (batch, *modes) complex spectrum in fft order.
-        x {torch.Tensor} -- (npts, ndim) evaluation points.
-        domain {tuple[tuple[float, float], ...]} -- per-dimension (start, stop)
-            interval; points are normalised as ``(x - start) / (stop - start)``.
-
-    Returns:
-        torch.Tensor -- (batch, npts) complex values, matching
-        FourierBasis.evaluate.
-    """
     import torchkbnufft as tkbn
 
     modes = tuple(coeff.shape[1:])
@@ -69,4 +57,4 @@ def nufft_evaluate(
         im_size=modes, grid_size=grid_size, numpoints=INTERPOLATION_NEIGHBOURS
     ).to(device=device, dtype=image.dtype)
     values = nufft(image, ktraj).squeeze(1)  # (batch, npts)
-    return values / math.prod(modes)
+    return values

@@ -297,6 +297,7 @@ class Basis(abc.ABC):
                 sampling=sampling,
                 strategy=self.strategy,
                 domain=self.domain[1:],
+                complex_funcs=self.complex_funcs,
             ).unflatten(0, coeff.shape[0:2])
             res_t = res[0]
             read_times = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop)
@@ -312,6 +313,7 @@ class Basis(abc.ABC):
                 sampling=sampling,
                 strategy=self.strategy,
                 domain=self.domain,
+                complex_funcs=self.complex_funcs,
             )
             grid_schemes = sampling
 
@@ -560,6 +562,7 @@ class Basis(abc.ABC):
         coeff: torch.Tensor,
         points: torch.Tensor,
         domain: DomainInputType = None,
+        complex_funcs: bool = False,
     ) -> torch.Tensor:
         """``u(t_q, x_q)`` at each row ``(t_q, x_q)`` of ``points``, time first: ``(n, Q)``."""
 
@@ -720,7 +723,7 @@ class Basis(abc.ABC):
 
     @staticmethod
     def derivative_eigenvalues(
-        modes: int, length: float, ord: int = 1
+        modes: int, length: float, ord: int = 1, complex_funcs: bool = False
     ) -> torch.Tensor | None:
         """Diagonal differentiation multiplier along one axis, or ``None``.
 
@@ -933,7 +936,7 @@ class Basis(abc.ABC):
         Returns:
             Basis -- a perturbed copy of this basis
         """
-        values = self.inv_transform(self.coeff)
+        values = self.inv_transform(self.coeff, complex_funcs=self.complex_funcs)
         perturbed_values = (
             values
             + rand_func(
@@ -1033,6 +1036,7 @@ class Basis(abc.ABC):
             sampling=(ClosedUniform(), *spatial_sampling),
             strategy=self.strategy,
             domain=self.domain,
+            complex_funcs=self.complex_funcs,
         )
         slice_coeff = self.transform(
             values_at_slice_times.flatten(0, 1),
@@ -1083,6 +1087,7 @@ class Basis(abc.ABC):
             sampling=spatial_sampling,
             strategy=self.strategy,
             domain=self.domain[1:],
+            complex_funcs=self.complex_funcs,
         ).unflatten(0, self.coeff.shape[:2])
         time_sampling = PeriodicUniform()
         node_times = time_sampling.nodes(self.time_size, *time_interval)
