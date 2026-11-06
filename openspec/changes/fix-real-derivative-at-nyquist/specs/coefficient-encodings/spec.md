@@ -5,7 +5,7 @@ A field stated as real, on an axis with an even number of modes, SHALL read the 
 
 #### Scenario: A real field reads real everywhere at every mode count
 - **WHEN** a field stated as real is read at any points of its domain, by any evaluation, at an even or odd mode count on each axis
-- **THEN** its values are real to rounding
+- **THEN** its values are real to rounding under exact evaluation, and real within the approximation's own error under approximate evaluation
 
 #### Scenario: An odd-order derivative of a real field is real
 - **WHEN** a field stated as real is differentiated to an odd order along an axis with an even number of modes

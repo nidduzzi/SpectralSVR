@@ -14,7 +14,7 @@ An investigation on 2026-10-26 prototyped the derivative repair alone. It moved 
 
 - **Cosine reading of the boundary mode.** A real field (`complex_funcs=False`) on an even mode count reads its boundary mode as the cosine everywhere: in off-grid evaluation (dense, approximate and time-dependent), in the inverse transform at a resolution other than the mode count, and in differentiation and integration. Odd-order derivatives and integrals drop the mode; even-order derivatives keep it.
 - **Complex fields keep the single wave.** A field with `complex_funcs=True` keeps the single `-N/2` wave, bit-for-bit as now.
-- **Static entry points.** `evaluate`, `inv_transform`, `fn`, `evaluate_time_dependent_at` and `derivative_eigenvalues` take `complex_funcs`, defaulting to `False` like the field.
+- **Static entry points.** `evaluate`, `inv_transform`, `evaluate_time_dependent_at` and `derivative_eigenvalues` take `complex_funcs`, defaulting to `False` like the field.
 - **Native grid unchanged.** Values on the field's own grid are unchanged bit-for-bit, because there the two readings agree.
 - **Tests.** The two tests that feed arbitrary complex spectra to `grad` and `integral` state `complex_funcs=True`, and the real case gets its own assertions.
 - **Benchmark.** Moved rows are regenerated deliberately. DeepONet's sensitivity to rounding-level input is recorded as a noise floor.
