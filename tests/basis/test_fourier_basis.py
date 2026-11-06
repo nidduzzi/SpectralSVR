@@ -356,6 +356,15 @@ def test_derivatives_and_integrals_follow_the_closed_form(
 
     boundary = modes[0] // 2
     boundary_is_a_cosine = real and modes[0] % 2 == 0
+    wave_numbers = torch.fft.fftfreq(modes[0], 1 / modes[0], dtype=torch.float64)
+    first_order_of_a_real_field = 2j * math.pi * wave_numbers / field.lengths[0]
+    if modes[0] % 2 == 0:
+        first_order_of_a_real_field[boundary] = 0
+    assert (
+        FourierBasis.derivative_eigenvalues(modes[0], field.lengths[0])
+        - first_order_of_a_real_field
+    ).abs().max() <= DERIVATIVE_ROUNDING * first_order_of_a_real_field.abs().max()
+
     if boundary_is_a_cosine and orders[0] % 2 == 1:
         assert torch.count_nonzero(differentiated.coeff.select(1, boundary)) == 0
 

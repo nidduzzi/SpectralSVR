@@ -527,7 +527,7 @@ class FourierBasis(Basis):
             read_modes = read.shape[1]
             if (
                 func == "inverse"
-                and strategy.use_approximate(res.step * read_modes, f.element_size())
+                and strategy.use_approximate(res.step * mode, f.element_size())
                 and nufft_available()
             ):
                 return nufft_evaluate(read, n.view(-1, 1), (domain,))
