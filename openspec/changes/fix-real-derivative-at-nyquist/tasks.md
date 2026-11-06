@@ -40,5 +40,5 @@
 
 ## 5. Verification
 
-- [ ] 5.1 Run cosmic-ray over the changed lines against the tests that cover each, rerun each survivor against the whole suite, and record a verdict for each. Verify every mutant of the changed lines is killed or recorded as equivalent or dead.
-- [ ] 5.2 Run `just check` through the resource wrapper. Verify lint is clean and the suite passes, and record the test count and wall time.
+- [x] 5.1 Run cosmic-ray over the changed lines against the tests that cover each, rerun each survivor against the whole suite, and record a verdict for each. Verify every mutant of the changed lines is killed or recorded as equivalent or dead. Done on 11f5d06: 383 mutants. The covering tests killed 340, and the whole suite killed 1 more of the 43 survivors. The rerun found a defect: d5106a5 made the off-grid inverse transform count split modes when it chooses the approximate path, against this design. ba094bf restores the stored count, and ba094bf and a094dfc add tests that kill 12 more mutants. 24 mutants are equivalent. 6 sit in unchanged lines (`cdim - 1` in `inv_transform`, `dim - 1` in `_diff_multiplier`) and are deferred. Verdicts: `measurements/cosmic-ray/survivors.md`.
+- [x] 5.2 Run `just check` through the resource wrapper. Verify lint is clean and the suite passes, and record the test count and wall time. Done on a094dfc: ruff, mypy and ty clean, 469 passed in 39.75 s, 42 s wall for the whole gate.
