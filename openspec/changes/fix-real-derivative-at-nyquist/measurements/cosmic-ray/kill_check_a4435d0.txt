@@ -1,0 +1,12 @@
+KILLED | modes: int, length: float, ord: int = 2, complex_funcs: bool = False | 1 failed, 73 passed in 5.48s
+KILLED | modes: int, length: float, ord: int = 0, complex_funcs: bool = False | 1 failed, 77 passed in 5.47s
+KILLED | modes: int, length: float, ord: int = 1, complex_funcs: bool = True | 1 failed, 73 passed in 5.41s
+KILLED | res.step + mode, | 1 failed, 145 passed in 5.56s
+KILLED | res.step - mode, | 1 failed, 145 passed in 5.50s
+KILLED | res.step // mode, | 1 failed, 145 passed in 5.47s
+KILLED | res.step << mode, | 1 failed, 145 passed in 5.56s
+KILLED | res.step % mode, | 2 failed, 141 passed in 82.89s (0:01:22)
+KILLED | res.step | mode, | 1 failed, 145 passed in 5.51s
+KILLED | res.step / mode, | 1 failed, 145 passed in 5.36s
+KILLED | res.step ^ mode, | 1 failed, 145 passed in 5.42s
+KILLED | res.step * (mode + 1 - mode % 2), | 1 failed, 145 passed in 5.42s

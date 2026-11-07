@@ -30,7 +30,7 @@ Line numbers are those of 11f5d06.
 
 `check_kills.py` applies each of these mutants to commit ba094bf. `kill_check_ba094bf.txt` records the result.
 
-- **530, eight operator mutants of `res.step * read_modes`.** This was a defect, not only a gap. d5106a5 made the off-grid inverse transform count the split modes when it chooses the approximate path. The design says the switch counts the stored modes. ba094bf restores the stored count. The switch test in `test_nufft.py` now reads both off-grid evaluation and the inverse transform on a partial window. It kills all eight mutants of the corrected expression, and the split count as well.
+- **530, eight operator mutants of `res.step * read_modes`.** This was a defect, not only a gap. d5106a5 made the off-grid inverse transform count the split modes when it chooses the approximate path. The design says the switch counts the stored modes. ba094bf restores the stored count. At ba094bf a switch test in `test_nufft.py` read both off-grid evaluation and the inverse transform on a partial window. It killed all eight mutants of the corrected expression, and the split count as well. a4435d0 moved that test into the `BasisLifecycle` rule `read_under_a_memory_budget`.
 - **360, `ord: int = 1` replaced by 0 or 2, and `complex_funcs: bool = False` replaced by True.** These are the defaults of the static `derivative_eigenvalues`. Every library call passes both arguments. The Burgers solver relies on the `complex_funcs` default, but its de-aliasing mask removes the boundary eigenvalue. `test_derivatives_and_integrals_follow_the_closed_form` now compares the default call with `2 pi i k / L`, the boundary entry zeroed on an even count. That test kills all three mutants.
 - **529, `func == "inverse"` replaced by `func <= "inverse"`.** "forward" sorts before "inverse", so the forward transform would send sample values through the NUFFT. Every forward transform in the suite ran under the default 256 MB budget. a094dfc runs the closed-form test of the explicit forward leg with `memory_budget_mb=0.0`, which kills the mutant.
 
@@ -57,6 +57,16 @@ These lines sit inside a function the change touched, but d5106a5 left them unch
 
 - **673, 674, 675, `cdim - 1` replaced by `cdim >> 1`** in `inv_transform`. The two agree for `cdim` 1 and 2, and differ only for a field with three spatial axes. No test reads one through `inv_transform`.
 - **686, `dim - 1` replaced by `dim >> 1`, `dim ^ 1` or `dim % 1`** in `_diff_multiplier`. `^ 1` and `% 1` change `dim` 2. That case is the second spatial axis of a time-dependent field, so differentiating a time-dependent field along a second spatial axis is untested. `>> 1` differs only from `dim` 3.
+
+## Rerun after moving the tests into the lifecycle machine
+
+a4435d0 deleted the switch test from `test_nufft.py` and the single-call test `test_a_field_reads_as_its_closed_form_off_and_on_its_grid`. Their checks became the rule `read_under_a_memory_budget` and the invariant `a_field_reads_its_closed_form` of `BasisLifecycle`, with the single-call cases pinned in its initialize step. Cosmic-ray ran again on a4435d0 over the same FourierBasis line ranges, with the same covering-test map. `fourier-report-a4435d0.txt` holds its output.
+
+- 379 mutants: 353 killed, 26 survived.
+- The 26 survivors are exactly the 20 FourierBasis mutants recorded above as equivalent and the 6 deferred ones.
+- Every mutant killed at 11f5d06, or by the tests added in ba094bf and a094dfc, is killed at a4435d0 by the covering tests alone. This includes 531 `or`, which at 11f5d06 only the whole suite killed.
+
+The split count is not a cosmic-ray mutant, so `check_kills.py` ran again on a4435d0 against `test_nufft.py` and `test_fourier_basis.py`. `kill_check_a4435d0.txt` records the result: all twelve mutants are killed, the split count included.
 
 ## Outcome
 
