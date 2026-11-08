@@ -48,22 +48,19 @@ mypy:
 ty:
     uv run --extra lint ty check SpectralSVR scripts
 
-# mutation-test the operator harness (slow; regenerates mutation.sqlite)
-mutate:
-    uv run --extra mutation cosmic-ray baseline cosmic-ray.toml
-    rm -f mutation.sqlite
-    uv run --extra mutation cosmic-ray init cosmic-ray.toml mutation.sqlite
-    uv run --extra mutation cosmic-ray exec cosmic-ray.toml mutation.sqlite
-    uv run --extra mutation cr-report mutation.sqlite
+mutation_home := env("XDG_CACHE_HOME", home_directory() / ".cache") / "spectralsvr-mutation"
 
-# mutation-test the lines of config's module changed since base (slow)
-mutate-changed config base:
-    uv run --extra mutation cosmic-ray baseline {{config}}
-    rm -f mutation-{{file_stem(config)}}.sqlite
-    uv run --extra mutation cosmic-ray init {{config}} mutation-{{file_stem(config)}}.sqlite
-    printf '[cosmic-ray.filters.git-filter]\nbranch = "{{base}}"\n' | uv run --extra mutation cr-filter-git --config - mutation-{{file_stem(config)}}.sqlite
-    uv run --extra mutation cosmic-ray exec {{config}} mutation-{{file_stem(config)}}.sqlite
-    uv run --extra mutation cr-report mutation-{{file_stem(config)}}.sqlite
+# mutation-test a target in mutation/, skipping declared equivalents; with base, only lines changed since base (slow)
+mutate target base="":
+    mkdir -p {{mutation_home}}
+    rm -f {{mutation_home}}/{{target}}.sqlite
+    {{threads_per_worker}} {{host_memory_cap}} uv run --extra test --extra baselines cosmic-ray baseline mutation/{{target}}.toml
+    uv run --extra test cosmic-ray init mutation/{{target}}.toml {{mutation_home}}/{{target}}.sqlite
+    {{ if base == "" { "" } else { "printf '[cosmic-ray.filters.git-filter]\\nbranch = \"" + base + "\"\\n' | uv run --extra test cr-filter-git --config - " + mutation_home / target + ".sqlite" } }}
+    uv run --extra test python scripts/equivalent_mutants.py {{mutation_home}}/{{target}}.sqlite
+    {{threads_per_worker}} {{host_memory_cap}} uv run --extra test --extra baselines cosmic-ray exec mutation/{{target}}.toml {{mutation_home}}/{{target}}.sqlite
+    uv run --extra test cr-report {{mutation_home}}/{{target}}.sqlite > {{mutation_home}}/{{target}}.report.txt
+    tail -n 4 {{mutation_home}}/{{target}}.report.txt
 
 # everything CI should gate on
 check: lint test
