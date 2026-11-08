@@ -48,9 +48,7 @@ test = [
     "hypothesis>=6.156.6,<7",
     "coverage>=7.15.0,<8",
     "ruff>=0.15.21,<0.16",
-]
-mutation = [
-    "cosmic-ray>=8.7.0",
+    "cosmic-ray>=8.7.0,<9",
 ]
 
 [tool.uv.sources]
@@ -106,7 +104,7 @@ exclude_also = [
 python_version = "3.13"
 
 [[tool.mypy.overrides]]
-module = ["torchdiffeq.*", "torchkbnufft.*", "deepxde.*", "pandas.*"]
+module = ["torchdiffeq.*", "torchkbnufft.*", "deepxde.*", "pandas.*", "cosmic_ray.*"]
 ignore_missing_imports = true
 
 [tool.ruff]

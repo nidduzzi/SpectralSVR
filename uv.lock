@@ -2274,9 +2274,6 @@ lint = [
     { name = "ruff" },
     { name = "ty" },
 ]
-mutation = [
-    { name = "cosmic-ray" },
-]
 notebook = [
     { name = "gcsfs" },
     { name = "hyperopt" },
@@ -2288,6 +2285,7 @@ notebook = [
     { name = "zarr" },
 ]
 test = [
+    { name = "cosmic-ray" },
     { name = "coverage" },
     { name = "hypothesis" },
     { name = "memory-profiler" },
@@ -2298,7 +2296,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cosmic-ray", marker = "extra == 'mutation'", specifier = ">=8.7.0" },
+    { name = "cosmic-ray", marker = "extra == 'test'", specifier = ">=8.7.0,<9" },
     { name = "coverage", marker = "extra == 'test'", specifier = ">=7.15.0,<8" },
     { name = "deepxde", marker = "extra == 'baselines'", specifier = ">=1.14.0,<2" },
     { name = "gcsfs", marker = "extra == 'notebook'", specifier = ">=2026.7.0,<2027" },
@@ -2327,7 +2325,7 @@ requires-dist = [
     { name = "xarray", marker = "extra == 'notebook'", specifier = ">=2026.7.0,<2027" },
     { name = "zarr", marker = "extra == 'notebook'", specifier = ">=3.1.6,<4" },
 ]
-provides-extras = ["notebook", "lint", "baselines", "test", "mutation"]
+provides-extras = ["notebook", "lint", "baselines", "test"]
 
 [[package]]
 name = "sqlalchemy"

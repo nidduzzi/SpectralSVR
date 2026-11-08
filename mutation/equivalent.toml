@@ -1,0 +1,167 @@
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "derivative_eigenvalues"
+line = "boundary_mode_is_a_cosine = not complex_funcs and modes % 2 == 0"
+mutant = "boundary_mode_is_a_cosine = not complex_funcs and modes % 2 <= 0"
+reason = "modes % 2 is 0 or 1, so == 0 and <= 0 agree"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "derivative_eigenvalues"
+line = "if boundary_mode_is_a_cosine and ord % 2 == 1:"
+mutant = "if boundary_mode_is_a_cosine and ord % 2 >= 1:"
+reason = "ord % 2 is 0 or 1, so == 1 and >= 1 agree"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "FourierBasis"
+line = "@staticmethod"
+mutant = "samples = coeff.shape[:sample_axes]"
+reason = "every call goes through the class and passes the coefficients explicitly"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 % m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 ** m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 + m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 - m % 1 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 << m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 ^ m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 1 | m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m + 2 - m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m << 1 - m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m ^ 1 - m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])"
+mutant = "odd_modes = tuple(m | 1 - m % 2 for m in coeff.shape[sample_axes:])"
+reason = "every grown size splits the boundary coefficient or zero-pads, and scaling and the approximate switch use the stored count"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "split_boundary_modes"
+line = "coeff.flatten(0, sample_axes - 1), odd_modes, rescale=False"
+mutant = "coeff.flatten(0, sample_axes >> 1), odd_modes, rescale=False"
+reason = "sample_axes is 1 or 2, where sample_axes - 1 equals sample_axes >> 1"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "_raw_transform"
+line = "complex_funcs: bool = False,"
+mutant = "complex_funcs: bool = True,"
+reason = "every inverse call passes complex_funcs, and the forward path ignores it"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "_raw_transform"
+line = "if func == \"inverse\" and not complex_funcs"
+mutant = "if func <= \"inverse\" and not complex_funcs"
+reason = "the forward transform covers its whole native grid in every caller, where the split halves meet at every node"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "_raw_transform"
+line = "if func == \"inverse\" and not complex_funcs"
+mutant = "if func >= \"inverse\" and not complex_funcs"
+reason = "\"forward\" >= \"inverse\" is False, so no branch changes"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "_raw_transform"
+line = "func == \"inverse\""
+mutant = "func >= \"inverse\""
+reason = "\"forward\" >= \"inverse\" is False, so no branch changes"
+
+[[equivalent]]
+module = "SpectralSVR/basis/FourierBasis.py"
+definition = "_ndim_transform"
+line = "complex_funcs: bool = False,"
+mutant = "complex_funcs: bool = True,"
+reason = "every inverse call passes complex_funcs, and the forward path ignores it"
+
+[[equivalent]]
+module = "SpectralSVR/basis/__base.py"
+definition = "evaluate_time_dependent_at"
+line = "complex_funcs: bool = False,"
+mutant = "complex_funcs: bool = True,"
+reason = "Python binds the defaults of the override that runs, never those of the abstract declaration"
+
+[[equivalent]]
+module = "SpectralSVR/basis/__base.py"
+definition = "derivative_eigenvalues"
+line = "modes: int, length: float, ord: int = 1, complex_funcs: bool = False"
+mutant = "modes: int, length: float, ord: int = 0, complex_funcs: bool = False"
+reason = "Python binds the defaults of the override that runs, never those of the abstract declaration"
+
+[[equivalent]]
+module = "SpectralSVR/basis/__base.py"
+definition = "derivative_eigenvalues"
+line = "modes: int, length: float, ord: int = 1, complex_funcs: bool = False"
+mutant = "modes: int, length: float, ord: int = 1, complex_funcs: bool = True"
+reason = "Python binds the defaults of the override that runs, never those of the abstract declaration"
+
+[[equivalent]]
+module = "SpectralSVR/basis/__base.py"
+definition = "derivative_eigenvalues"
+line = "modes: int, length: float, ord: int = 1, complex_funcs: bool = False"
+mutant = "modes: int, length: float, ord: int = 2, complex_funcs: bool = False"
+reason = "Python binds the defaults of the override that runs, never those of the abstract declaration"
