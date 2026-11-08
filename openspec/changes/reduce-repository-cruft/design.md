@@ -44,7 +44,7 @@ See proposal.md for the motivation. The facts that shape the approach:
 
 **The prose ratchet stays.** No ruff rule counts comment lines per file or refuses an increase. `ERA001` finds commented-out code only, and the `D` rules are already joined. Replacing the ratchet with ruff would drop the part of the rule that ruff cannot express. Recorded as considered and declined.
 
-**Citation.** `CITATION.cff` at the root, version 1.2.0 of the format, with the paper as `preferred-citation`. The paper commit gets an annotated tag `paper/<venue>-<year>`, pointing at the commit that wrote the benchmark record the paper reports. The tag is created locally. Pushing it is a separate decision for the user.
+**Citation.** `CITATION.cff` at the root, version 1.2.0 of the format. Amended during implementation: the paper is still a draft, so the file cites the software alone, and the paper becomes its `preferred-citation` once published. The paper commit gets an annotated tag `paper/<venue>-<year>`, pointing at the commit that wrote the benchmark record the paper reports. The tag is created locally. Pushing it is a separate decision for the user.
 
 ## Risks / Trade-offs
 
@@ -56,4 +56,4 @@ See proposal.md for the motivation. The facts that shape the approach:
 
 ## Open Questions
 
-- The paper's title, authors, venue and DOI for `CITATION.cff`, and which commit's record the paper reports. The user supplies these at that task.
+- The paper's title, authors, venue and DOI, and which commit's record it reports. They are added to `CITATION.cff`, and the tag is created, once the paper is published.
