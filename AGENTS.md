@@ -38,6 +38,13 @@ output rather than a summary of it. Every pytest run ends with its fifteen
 slowest phases above one second, so a slow suite names its own cost; read that
 report before guessing where the time goes.
 
+CI (`.github/workflows/check.yml`) runs the same gate on every push and pull
+request, from the same lock, as `just host_memory_cap= "test_workers=-n 4"
+check`: the runner's VM replaces the systemd scope, and four workers match its
+four cores. CI has no GPU, so accelerator tests skip there. A failure that only
+CI shows is a measurement to investigate, since thread counts and CPU models
+move rounding; it is never fixed by loosening a bound.
+
 Every test and measurement run is hard-capped, so a runaway process is killed
 rather than taking the machine down. Host memory: `just test` and `just cov`
 run inside `host_memory_cap` (a systemd scope, 16 GiB, no swap), and the
