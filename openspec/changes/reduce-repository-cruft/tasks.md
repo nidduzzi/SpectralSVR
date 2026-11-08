@@ -1,0 +1,40 @@
+## 1. CI runs the gate
+
+- [ ] 1.1 Make `host_memory_cap` and `test_workers` overridable in `Justfile`, with unchanged defaults. Verify `just --dry-run check` prints the same commands as before, and `just --dry-run --set host_memory_cap "" --set test_workers "-n 4" check` prints them without the scope and with four workers.
+- [ ] 1.2 Add `.github/workflows/check.yml`: on push and pull request, `ubuntu-latest`, `astral-sh/setup-uv` with its cache, `just` installed, `timeout-minutes: 30`, concurrency per branch with cancel-in-progress, running `just --set host_memory_cap "" --set test_workers "-n 4" check`. Verify on a pushed branch that the run passes, and record its wall time, cold and with a warm cache. Pushing needs the user's say-so.
+- [ ] 1.3 Add CI to AGENTS.md under "Setup and commands": CI runs the same gate, and a CI-only failure is investigated as a measurement, never fixed by loosening a bound. Verify the section reads correctly against `check.yml`.
+
+## 2. One mutation-testing setup
+
+- [ ] 2.1 Move the four root configs to `mutation/operators.toml`, `basis.toml`, `model.toml` and `scripts.toml`, with test-commands that carry no memory-cap prefix. Replace `mutate` and `mutate-changed` with `just mutate <target> [base]`, which wraps the session in the cap and writes the database and report under `${XDG_CACHE_HOME:-~/.cache}/spectralsvr-mutation/`. Verify `just mutate basis <parent commit>` runs to a report, and that `git status` shows nothing new afterwards.
+- [ ] 2.2 Remove the six `mutation*.sqlite` files from the root after checking that none holds an unfinished session the user wants, and add `mutation*.sqlite` to `.gitignore`. Verify `git status --ignored` lists none at the root.
+- [ ] 2.3 Add `cosmic-ray` to the `test` extra, and add `mutation/equivalent.toml` and the registry filter. Make the filter skip jobs whose module, operator and stripped source line match an entry, and make `just mutate` apply it after `init`. Verify on `basis` that the run's report counts the skipped jobs, and that a second operator on a declared line still runs (scenarios "A declared mutant is skipped", "Other mutants on the same line still run").
+- [ ] 2.4 Add the registry test: for each entry, enumerate its module's mutations in-process with cosmic-ray's operators. Fail on an empty reason, on a line that is absent or occurs more than once in its module, and on an operator that yields no mutant on the line. Mark it `oracle_invariant`, name its three scenarios, and fuzz the refusals over generated entries. Verify each refusal by editing a copy of a registry entry, and verify the test passes on the seeded registry.
+- [ ] 2.5 Seed the registry with the 20 FourierBasis mutants that `fix-real-derivative-at-nyquist/measurements/cosmic-ray/survivors.md` judges equivalent. Each reason is one line. The four `__base.py` abstract defaults are included if cosmic-ray's enumeration reaches them. Verify the registry test passes, and that `just mutate basis` on the nyquist line ranges reports those mutants as skipped and the 6 deferred ones as surviving.
+- [ ] 2.6 Add `.github/workflows/mutate.yml`: `workflow_dispatch` with a `target` input and an optional `base`, running `just mutate`, and uploading the report as an artifact. Verify one dispatched run uploads a report. Dispatching needs the pushed branch.
+- [ ] 2.7 Rewrite the AGENTS.md section "A test that cannot fail is worth nothing" for `just mutate <target>`, the registry, and the rule that equivalence is recorded in the registry and not in prose logs. Verify every command it names runs as written.
+
+## 3. Examples, not notebooks
+
+- [ ] 3.1 Delete `notebooks/test.ipynb`, `notebooks/solver1.ipynb`, `notebooks/memory_test.ipynb`, `notebooks/cases/burgers_new/`, `notebooks/cases/weatherbench2/test.ipynb` and `notebooks/spectralsvr_2d ls_coeff.ipynb`. Verify `git ls-files notebooks` no longer lists them.
+- [ ] 3.2 Execute every remaining notebook once, bounded, offline on CPU, with `jupyter nbconvert --execute` and a two-minute timeout, and record per notebook: passes or the first error, wall time, and whether it reads remote data or needs a GPU. Present the table to the user with a keep, rewrite or delete recommendation for each, and ask which produced figures in the paper. Verify the table covers every tracked notebook.
+- [ ] 3.3 Apply the user's decisions: move kept notebooks to `examples/`, rewrite the ones marked for it to run offline on CPU, delete the rest, and fold `notebooks/utils.py` into the examples that use it or delete it. Verify each kept example executes under the cap with `CUDA_VISIBLE_DEVICES=""`.
+- [ ] 3.4 Add the examples test module: execute each example with `nbclient` in a kernel with `CUDA_VISIBLE_DEVICES=""`, naming the failing cell; fail on a tracked `.ipynb` outside `examples/`; fail on an example with a cell output or execution count. Mark each test, name the four `runnable-examples` scenarios, and fuzz the output check over generated notebook cells. Add `nbclient` and `ipykernel` to the `test` extra, and `just strip`. Verify each failure on a scratch copy (a raising cell, a CUDA call, an output, a notebook outside `examples/`), and verify the scenario guard passes.
+- [ ] 3.5 Trim the `notebook` extra to what the examples import. Verify `just check` passes, and record its wall time against the 45 s before.
+- [ ] 3.6 Update README.md (examples under `examples/`, `just examples`) and AGENTS.md (the `notebook` extra, `just strip`). Verify every command they name runs as written.
+
+## 4. Records and provenance
+
+- [ ] 4.1 Correct AGENTS.md: the recorded comparison is `benchmarks/operator_comparison.csv`, and `results/` is gitignored scratch. Verify against `scripts/run_benchmark.py` and `.gitignore`.
+- [ ] 4.2 Add the evidence convention to AGENTS.md under "Numerical discipline": a measurement that sets a tolerance is a maintained script under `scripts/measure/`, which the test module holding the tolerance imports and runs at a small size. Frozen one-off probes inside a change directory are not added. Verify the text agrees with `design.md`.
+- [ ] 4.3 Ask the user for the paper's title, authors, venue, year and DOI, and for the commit whose benchmark record the paper reports. Write `CITATION.cff` with the paper as `preferred-citation`, and create the annotated tag `paper/<venue>-<year>` on that commit locally. Verify with `cffconvert --validate` and `git tag -n paper/*`.
+- [ ] 4.4 List the `backup/pre-replay*` tags with whether each exists on `origin` (`git ls-remote --tags origin`). Delete only those the user approves. Verify `git tag` afterwards.
+
+## 5. Integration
+
+- [ ] 5.1 Run `just check` through the resource wrapper. Verify lint is clean and the suite passes, examples included, and record the test count and wall time. Verify `openspec validate reduce-repository-cruft --strict` passes.
+
+## Workflow follow-up
+
+- Push the branch and open a PR stacked on `feat/fix-real-derivative-at-nyquist`, on the user's say-so.
+- Archive the change after review.
