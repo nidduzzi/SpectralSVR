@@ -321,7 +321,7 @@ def test_one_recipe_regenerates_the_record_with_every_default_stated():
     assert SCRIPT.SEED_SET == (0, 1, 2, 3, 4)
 
 
-NOTEBOOK = REPOSITORY / "notebooks" / "comparisons" / "deeponet_vs_spectralsvr.ipynb"
+NOTEBOOK = REPOSITORY / "examples" / "deeponet_vs_spectralsvr.ipynb"
 FITTING_NAMES = {"DeepONetOperator", "SpectralSVROperator", "benchmark", "LSSVR"}
 
 
