@@ -32,6 +32,7 @@ just test -k name  # a subset; extra args pass through to pytest
 just cov           # suite with a missing-lines report
 just fmt           # ruff format + ruff check --fix
 just mutate basis  # cosmic-ray over a target in mutation/ (slow)
+just strip         # clear outputs from the example notebooks
 ```
 
 `just check` is the gate. Run it before claiming work is done, and report its
@@ -56,7 +57,12 @@ while parallel runs with unlimited torch threads held it saturated. Accelerator 
 `tests/conftest.py` limits the CUDA allocator to a quarter of the device, split
 evenly across the xdist workers; a script outside pytest calls
 `torch.cuda.set_per_process_memory_fraction` itself. Optional extras: `test`, `lint`, `baselines`
-(DeepONet via deepxde), `notebook`.
+(DeepONet via deepxde).
+
+Example notebooks live in `examples/` and nowhere else. `tests/test_examples.py`
+executes each on CPU and refuses a committed output, so run `just strip` before
+committing one. The notebooks behind the draft paper's figures, with their
+outputs, are kept at the tag `paper/figure-notebooks`, not in the tree.
 
 ## Tests carry an oracle class
 

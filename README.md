@@ -17,7 +17,7 @@ pip install "git+https://github.com/nidduzzi/SpectralSVR.git"
 For development (creates + installs the pinned environment):
 
 ```bash
-uv sync --extra test --extra lint --extra notebook
+just sync
 ```
 
 ## Usage
@@ -38,8 +38,10 @@ from SpectralSVR import (
 ```
 
 Generate data with a problem, then train a `SpectralSVR` over the spectral
-coefficients. Examples live under `notebooks/cases/` — run them block by block
-as some tail sections are unfinished.
+coefficients. `examples/` holds notebooks for the antiderivative, a manufactured
+Burgers pair, and the committed comparison against DeepONet. The test suite
+executes each of them on CPU, and `just strip` clears their outputs before a
+commit.
 
 Burgers data can be produced two ways:
 
@@ -51,20 +53,14 @@ Burgers data can be produced two ways:
 ## Testing
 
 ```bash
-uv run --extra test pytest
+just check         # lint (ruff, mypy, ty), then the full suite, examples included
+just test -k name  # a subset
 ```
 
-Every test is either fuzzed with [Hypothesis](https://hypothesis.readthedocs.io/)
-or explicitly marked `@pytest.mark.no_fuzz`, and declares `@pytest.mark.mms` /
-`@pytest.mark.no_mms` (enforced by `tests/conftest.py`).
-
-Linting / type-checking:
-
-```bash
-uv run --extra lint ruff check SpectralSVR tests
-uv run --extra lint mypy SpectralSVR
-uv run --extra lint ty check SpectralSVR
-```
+Every test declares where its expected values come from with one `oracle_*`
+marker, and is either fuzzed with [Hypothesis](https://hypothesis.readthedocs.io/)
+or marked `no_fuzz`; `tests/conftest.py` enforces both. `AGENTS.md` states the
+project's conventions in full.
 
 ## License
 

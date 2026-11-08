@@ -11,7 +11,7 @@ threads_per_worker := "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2"
 
 # create/refresh the full dev environment
 sync:
-    uv sync --extra test --extra lint --extra notebook --extra baselines
+    uv sync --extra test --extra lint --extra baselines
 
 # run the test suite (pass extra pytest args, e.g. `just test -k fourier`)
 test *args:
@@ -61,6 +61,19 @@ mutate target base="":
     {{threads_per_worker}} {{host_memory_cap}} uv run --extra test --extra baselines cosmic-ray exec mutation/{{target}}.toml {{mutation_home}}/{{target}}.sqlite
     uv run --extra test cr-report {{mutation_home}}/{{target}}.sqlite > {{mutation_home}}/{{target}}.report.txt
     tail -n 4 {{mutation_home}}/{{target}}.report.txt
+
+# clear outputs and execution counts from the example notebooks
+strip:
+    #!/usr/bin/env -S uv run --extra test python
+    import pathlib
+    import nbformat
+    for path in pathlib.Path("examples").glob("*.ipynb"):
+        notebook = nbformat.read(path, as_version=4)
+        for cell in notebook.cells:
+            if cell.cell_type == "code":
+                cell.outputs = []
+                cell.execution_count = None
+        nbformat.write(notebook, path)
 
 # everything CI should gate on
 check: lint test
