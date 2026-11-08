@@ -16,9 +16,10 @@ spectral (Fourier) coefficient representations, compared against neural-operator
 baselines. It is research software, and **its code and reported numbers appear in
 a peer-reviewed paper**.
 
-That single fact drives most of what follows. A number in `results/` is a claim
-someone will cite. A test that passes for the wrong reason is worse than no test,
-because it licenses a claim nobody checked.
+That single fact drives most of what follows. A number in
+`benchmarks/operator_comparison.csv` is a claim someone will cite. A test that
+passes for the wrong reason is worse than no test, because it licenses a claim
+nobody checked.
 
 ## Setup and commands
 
@@ -30,7 +31,7 @@ just check         # THE GATE: lint (ruff + mypy + ty) then the full test suite
 just test -k name  # a subset; extra args pass through to pytest
 just cov           # suite with a missing-lines report
 just fmt           # ruff format + ruff check --fix
-just mutate        # cosmic-ray over SpectralSVR/operators (slow)
+just mutate basis  # cosmic-ray over a target in mutation/ (slow)
 ```
 
 `just check` is the gate. Run it before claiming work is done, and report its
@@ -100,15 +101,22 @@ cannot reach the states a sequence produces.
 
 ### A test that cannot fail is worth nothing
 
-`just mutate` runs cosmic-ray over the operator harness and reports which mutants
-survive. Hand-picked mutations test what the author expected to matter; this
+`just mutate <target> [base]` runs cosmic-ray over one target in `mutation/`
+(`operators`, `basis`, `model`, `scripts`) and reports which mutants survive;
+with a base ref it mutates only the lines changed since that ref. The session
+and report go to `~/.cache/spectralsvr-mutation/`, never into the tree. The
+`mutate` workflow runs the same recipe on demand and keeps the report as an
+artifact. Hand-picked mutations test what the author expected to matter; this
 enumerates them instead.
 
 Read the survivors rather than counting them. Some are equivalent mutants no test
-can kill, and identifying one is a result to record in the change's artifacts.
-The rest are real gaps, and they are often asymmetric: a suite that only ever
-moves a quantity in one direction leaves the opposite comparison alive until both
-directions are covered.
+can kill. Declare each in `mutation/equivalent.toml` by its module, enclosing
+definition, source line and the line as the mutant rewrites it, with a one-line
+reason; the run skips it, and the suite refuses the entry once it no longer
+matches exactly one mutant of the source. That registry is the record of an
+equivalence, not a prose log in the change. The rest are real gaps, and they are
+often asymmetric: a suite that only ever moves a quantity in one direction leaves
+the opposite comparison alive until both directions are covered.
 
 ## Numerical discipline
 
@@ -117,6 +125,12 @@ threshold — measure it first, record the measurement in the change's artifacts
 then set the assertion beneath what was measured. A bound loosened until the test
 passes asserts nothing; a bound predicted from theory and never checked asserts
 less than it appears to.
+
+A measurement that sets a bound is a maintained script under `scripts/measure/`,
+not a one-off probe frozen in a change directory. The test module that holds the
+bound imports the script and runs it at a small size, so the script keeps
+running against the code it measured; the change records the full-size result
+and the commit it ran on.
 
 **Say what a number cannot establish.** The benchmark harness is not run-to-run
 deterministic; multi-threaded reductions in the solve move metrics between runs of
@@ -198,7 +212,9 @@ the guarantee, `isinstance` only spells it.
 
 - Loosen an assertion, tolerance or oracle marker to make a test pass. That is a
   scientific decision, not a fix.
-- Hand-edit anything under `results/` or any recorded measurement. Regenerate it.
+- Hand-edit `benchmarks/operator_comparison.csv` or any recorded measurement.
+  Regenerate it with `just bench`. `results/` is gitignored scratch for any
+  other run.
 - Edit anything under `openspec/changes/archive/`. Archived changes are the
   immutable record of what was decided and why.
 - Rewrite published history.

@@ -16,7 +16,7 @@
 
 ## 3. Examples, not notebooks
 
-- [ ] 3.1 Delete `notebooks/test.ipynb`, `notebooks/solver1.ipynb`, `notebooks/memory_test.ipynb`, `notebooks/cases/burgers_new/`, `notebooks/cases/weatherbench2/test.ipynb` and `notebooks/spectralsvr_2d ls_coeff.ipynb`. Verify `git ls-files notebooks` no longer lists them.
+- [x] 3.1 Delete `notebooks/test.ipynb`, `notebooks/solver1.ipynb`, `notebooks/memory_test.ipynb`, `notebooks/cases/burgers_new/`, `notebooks/cases/weatherbench2/test.ipynb` and `notebooks/spectralsvr_2d ls_coeff.ipynb`. Verify `git ls-files notebooks` no longer lists them. Done: 18 notebooks and `notebooks/utils.py` remain.
 - [ ] 3.2 Execute every remaining notebook once, bounded, offline on CPU, with `jupyter nbconvert --execute` and a two-minute timeout, and record per notebook: passes or the first error, wall time, and whether it reads remote data or needs a GPU. Present the table to the user with a keep, rewrite or delete recommendation for each, and ask which produced figures in the paper. Verify the table covers every tracked notebook.
 - [ ] 3.3 Apply the user's decisions: move kept notebooks to `examples/`, rewrite the ones marked for it to run offline on CPU, delete the rest, and fold `notebooks/utils.py` into the examples that use it or delete it. Verify each kept example executes under the cap with `CUDA_VISIBLE_DEVICES=""`.
 - [ ] 3.4 Add the examples test module: execute each example with `nbclient` in a kernel with `CUDA_VISIBLE_DEVICES=""`, naming the failing cell; fail on a tracked `.ipynb` outside `examples/`; fail on an example with a cell output or execution count. Mark each test, name the four `runnable-examples` scenarios, and fuzz the output check over generated notebook cells. Add `nbclient` and `ipykernel` to the `test` extra, and `just strip`. Verify each failure on a scratch copy (a raising cell, a CUDA call, an output, a notebook outside `examples/`), and verify the scenario guard passes.
@@ -25,8 +25,8 @@
 
 ## 4. Records and provenance
 
-- [ ] 4.1 Correct AGENTS.md: the recorded comparison is `benchmarks/operator_comparison.csv`, and `results/` is gitignored scratch. Verify against `scripts/run_benchmark.py` and `.gitignore`.
-- [ ] 4.2 Add the evidence convention to AGENTS.md under "Numerical discipline": a measurement that sets a tolerance is a maintained script under `scripts/measure/`, which the test module holding the tolerance imports and runs at a small size. Frozen one-off probes inside a change directory are not added. Verify the text agrees with `design.md`.
+- [x] 4.1 Correct AGENTS.md: the recorded comparison is `benchmarks/operator_comparison.csv`, and `results/` is gitignored scratch. Verify against `scripts/run_benchmark.py` and `.gitignore`. Done: the opening and the "Do not" list name `benchmarks/operator_comparison.csv`, which `just bench` writes, and call `results/` scratch, which `.gitignore` line 147 ignores.
+- [x] 4.2 Add the evidence convention to AGENTS.md under "Numerical discipline": a measurement that sets a tolerance is a maintained script under `scripts/measure/`, which the test module holding the tolerance imports and runs at a small size. Frozen one-off probes inside a change directory are not added. Verify the text agrees with `design.md`. Done: a paragraph after "Measure before you bound".
 - [ ] 4.3 Ask the user for the paper's title, authors, venue, year and DOI, and for the commit whose benchmark record the paper reports. Write `CITATION.cff` with the paper as `preferred-citation`, and create the annotated tag `paper/<venue>-<year>` on that commit locally. Verify with `cffconvert --validate` and `git tag -n paper/*`.
 - [ ] 4.4 List the `backup/pre-replay*` tags with whether each exists on `origin` (`git ls-remote --tags origin`). Delete only those the user approves. Verify `git tag` afterwards.
 
