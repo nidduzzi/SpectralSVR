@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+type: software
+title: SpectralSVR
+abstract: Operator learning with support-vector regression over spectral coefficient representations, compared against neural-operator baselines.
+authors:
+  - alias: nidduzzi
+version: 0.9.3
+license: GPL-3.0-or-later
+repository-code: https://github.com/nidduzzi/SpectralSVR

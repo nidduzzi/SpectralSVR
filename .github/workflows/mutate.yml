@@ -1,0 +1,39 @@
+name: mutate
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: config under mutation/, without .toml
+        required: true
+        type: choice
+        options: [operators, basis, model, scripts]
+      base:
+        description: mutate only lines changed since this ref; empty mutates the whole target
+        required: false
+        default: ""
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      XDG_CACHE_HOME: ${{ github.workspace }}/.mutation-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - run: uv sync --locked --extra test --extra baselines
+      - run: just host_memory_cap= mutate "${{ inputs.target }}" "${{ inputs.base }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-${{ inputs.target }}
+          path: ${{ env.XDG_CACHE_HOME }}/spectralsvr-mutation/${{ inputs.target }}.*
