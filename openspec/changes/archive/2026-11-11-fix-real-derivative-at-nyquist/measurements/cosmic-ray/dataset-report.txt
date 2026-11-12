@@ -1,0 +1,27 @@
+........................................................................ [ 15%]
+........................................................................ [ 30%]
+........................................................................ [ 46%]
+........................................................................ [ 61%]
+........................................................................ [ 76%]
+........................................................................ [ 92%]
+....................................                                     [100%]
+============================= slowest 15 durations =============================
+18.55s call     tests/operators/test_burgers_forced_case.py::TestBenchmarkCasesStayPut::runTest
+14.08s call     tests/operators/test_deeponet.py::TestDeepONetFits::runTest
+13.06s call     tests/problems/test_problems.py::test_numerical_burgers_agrees_with_an_independent_integrator
+8.43s call     tests/model/test_fnn.py::test_fnn_overfits_constant_target
+5.78s call     tests/operators/test_benchmark_record.py::TestBenchmarkRecord::runTest
+4.11s call     tests/problems/test_problems.py::test_burgers_numerical_matches_cole_hopf_exact
+2.90s call     tests/operators/test_burgers_forced_case.py::test_a_seed_fixes_the_case_and_another_seed_changes_it
+2.86s call     tests/model/test_fitted_placement.py::TestDirectingAndFitting::runTest
+2.84s call     tests/utils/test_solvers.py::test_etdrk4_reproduces_forced_manufactured_solution
+2.18s call     tests/model/test_spectralsvr_anchors.py::test_inverse_recovers_known_input
+1.98s call     tests/problems/test_problems.py::test_a_forcing_the_grid_cannot_represent_is_refused
+1.89s call     tests/operators/test_burgers_forced_case.py::test_the_forced_case_has_the_shape_the_harness_expects
+1.68s call     tests/problems/test_problems.py::test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
+1.68s call     tests/utils/test_utils.py::test_euler_solver_linear_decay
+1.67s call     tests/operators/test_burgers_forced_case.py::test_rest_under_no_forcing_stays_at_rest
+468 passed in 128.75s (0:02:08)
+mutants kept: 0
+total jobs: 0
+no jobs completed

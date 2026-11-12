@@ -128,7 +128,10 @@ class OperatorDataset:
         """Ground-truth ``u`` at each query row, time first where ``u`` varies in time: ``(N, Q)``."""
         if self.u.time_dependent:
             values = type(self.u).evaluate_time_dependent_at(
-                self.u.coeff.to(x.device), x, domain=self.u.domain
+                self.u.coeff.to(x.device),
+                x,
+                domain=self.u.domain,
+                complex_funcs=self.u.complex_funcs,
             )
         else:
             values = self.u(x)
