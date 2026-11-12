@@ -5,8 +5,8 @@
 ## 2. Repair
 
 - [x] 2.1 Pass `check_available=True` to both `torch.accelerator.current_accelerator()` calls in `SpectralSVR/utils/__init__.py`. Verify the new test passes. Verify the full suite passes both as is and with `CUDA_VISIBLE_DEVICES=""` set inside the resource wrapper, where it gave 1 failed, 461 passed, 15 skipped. Done: the new test passes in 5.9 s. With `CUDA_VISIBLE_DEVICES=""`: 452 passed, 15 skipped. That is fewer than CI's 477 because this branch sits below `reduce-repository-cruft` and lacks its tests.
-- [ ] 2.2 Run `just check` through the resource wrapper, and record the test count and wall time. Gate done: ruff, mypy and ty clean, 467 passed in 48.87 s, 51 s wall. Push on the user's say-so, and record the CI result and the warm-cache wall time that task 1.2 of `reduce-repository-cruft` asks for.
+- [x] 2.2 Run `just check` through the resource wrapper, and record the test count and wall time. Gate done: ruff, mypy and ty clean, 467 passed in 48.87 s, 51 s wall. CI on a CPU-only runner, through `feat/reduce-repository-cruft` which carries this fix: run 42556766375 (cold cache) 463 passed, 15 skipped, install 35 s, gate 2 min 9 s, 2 min 54 s total; run 42802039682 (warm cache, hit) 463 passed, 15 skipped, install 19 s, gate 3 min 7 s, 3 min 28 s total. The warm run's pytest took 160 s against 108 s cold, which is runner variance rather than the cache. The fifteen skips are the GPU-only tests; `TestDeviceStatements`, which failed in run 42507523693 before this fix, passes.
 
 ## Workflow follow-up
 
-- Open a PR stacked on `feat/fix-real-derivative-at-nyquist`, rebase `feat/reduce-repository-cruft` onto this branch, and archive after review.
+- Archived before review at the user's choice, then a PR stacked on `feat/fix-real-derivative-at-nyquist`, with `feat/reduce-repository-cruft` rebased onto this branch.
