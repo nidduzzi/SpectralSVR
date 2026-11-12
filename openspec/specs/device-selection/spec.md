@@ -73,6 +73,10 @@ The library SHALL expose one way to name the platform's accelerator, resolving t
 - **WHEN** a caller wants the accelerator without knowing which kind the platform has
 - **THEN** naming it yields whichever accelerator is present, and the host where none is, without the caller testing for a particular vendor
 
+#### Scenario: A build that supports an accelerator the machine lacks names the host
+- **WHEN** the installed torch supports an accelerator but the process sees no such device
+- **THEN** naming the accelerator yields the process default device, never the unavailable accelerator
+
 ### Requirement: A random source that disagrees is refused clearly
 Where a caller supplies a random source, it SHALL be placed on the device the work is placed on. A disagreement SHALL be refused, and the refusal SHALL name both devices and which of the two the caller is expected to move.
 
