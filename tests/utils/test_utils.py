@@ -15,12 +15,15 @@ from SpectralSVR.utils import (
     resolve_device,
     scale_to_standard,
     to_complex_coeff,
+    from_mag_angle,
     to_mag_angle,
     to_real_coeff,
     zero_coeff,
 )
 
-SETTINGS = settings(deadline=None, max_examples=40, suppress_health_check=[HealthCheck.too_slow])
+SETTINGS = settings(
+    deadline=None, max_examples=40, suppress_health_check=[HealthCheck.too_slow]
+)
 _elements = st.floats(-8.0, 8.0, allow_nan=False, allow_infinity=False)
 
 
@@ -72,7 +75,9 @@ def test_coeff_interleave_semantics(rows, half, seed):
     seed=st.integers(0, 10_000),
 )
 def test_complex_invertible(rows, cols, seed):
-    c = torch.randn(rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed))
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     assert torch.equal(to_complex_coeff(to_real_coeff(c)), c)
 
 
@@ -113,7 +118,9 @@ def test_get_metrics_single_sample_r2_is_nan():
 @pytest.mark.oracle_smoke
 def test_get_metrics_injected_metric_set():
     m = get_metrics(
-        torch.zeros(4, 2), torch.zeros(4, 2), metrics={"custom": lambda p, t: (p - t).abs().sum()}
+        torch.zeros(4, 2),
+        torch.zeros(4, 2),
+        metrics={"custom": lambda p, t: (p - t).abs().sum()},
     )
     assert m["custom"] == 0.0
     assert "mse" not in m
@@ -148,8 +155,9 @@ def test_standard_scaler_standardizes(rows, cols, seed):
 @given(rows=st.integers(2, 30), cols=st.integers(1, 6), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_standard_scaler_roundtrip_complex(rows, cols, seed):
-    c = torch.randn(rows, cols, dtype=torch.complex64,
-                    generator=torch.Generator().manual_seed(seed))
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     scaler = StandardScaler().fit(c)
     assert torch.allclose(scaler.inverse(scaler.transform(c)), c, atol=1e-3)
 
@@ -203,8 +211,9 @@ def test_scale_to_standard(rows, cols, seed):
 @given(rows=st.integers(1, 20), cols=st.integers(1, 10), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_to_mag_angle_reconstructs(rows, cols, seed):
-    c = torch.randn(rows, cols, dtype=torch.complex64,
-                    generator=torch.Generator().manual_seed(seed))
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     ma = to_mag_angle(c)
     assert ma.shape == (rows, 2 * cols)
     mag, angle = ma[:, ::2], ma[:, 1::2]
@@ -216,6 +225,58 @@ def test_to_mag_angle_reconstructs(rows, cols, seed):
 def test_to_mag_angle_idempotent_on_real():
     r = torch.randn(3, 4)
     assert torch.equal(to_mag_angle(r), r)
+
+
+POLAR_SHAPES = ((5, 9), (2, 8, 8), (2, 4, 4, 4))
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+def test_to_mag_angle_handles_any_number_of_mode_axes():
+    generator = torch.Generator().manual_seed(11)
+    for shape in POLAR_SHAPES:
+        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
+        ma = to_mag_angle(c)
+        assert ma.shape == (*shape[:-1], shape[-1] * 2)
+        mag, angle = ma[..., ::2], ma[..., 1::2]
+        assert torch.allclose(mag * torch.exp(1j * angle), c, atol=1e-4)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+def test_from_mag_angle_inverts_to_mag_angle():
+    generator = torch.Generator().manual_seed(12)
+    for shape in POLAR_SHAPES:
+        c = torch.randn(*shape, dtype=torch.complex64, generator=generator)
+        assert torch.allclose(from_mag_angle(to_mag_angle(c)), c, atol=1e-4)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_polar_encoding_precision_corresponds():
+    for complex_dtype, real_dtype in (
+        (torch.complex64, torch.float32),
+        (torch.complex128, torch.float64),
+    ):
+        c = torch.randn(3, 4, dtype=complex_dtype)
+        assert to_mag_angle(c).dtype == real_dtype
+        assert from_mag_angle(to_mag_angle(c)).dtype == complex_dtype
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="no accelerator available")
+def test_polar_encoding_preserves_device():
+    c = torch.randn(3, 4, dtype=torch.complex64).cuda()
+    assert to_mag_angle(c).device.type == "cuda"
+    assert from_mag_angle(to_mag_angle(c)).device.type == "cuda"
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_from_mag_angle_idempotent_on_complex():
+    c = torch.randn(3, 4, dtype=torch.complex64)
+    assert torch.equal(from_mag_angle(c), c)
 
 
 # --------------------------------------------------------------------------- #
@@ -250,8 +311,9 @@ def test_euler_solver_requires_multiple_points():
 @SETTINGS
 @given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
 def test_to_complex_coeff_idempotent_on_complex(rows, cols, seed):
-    c = torch.randn(rows, cols, dtype=torch.complex64,
-                    generator=torch.Generator().manual_seed(seed))
+    c = torch.randn(
+        rows, cols, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     assert to_complex_coeff(c) is c
 
 
@@ -267,8 +329,9 @@ def test_to_real_coeff_idempotent_on_real(rows, cols, seed):
 @SETTINGS
 @given(cur=st.integers(2, 16), target=st.integers(2, 16), seed=st.integers(0, 10_000))
 def test_resize_modes_int_target(cur, target, seed):
-    x = torch.randn(2, cur, dtype=torch.complex64,
-                    generator=torch.Generator().manual_seed(seed))
+    x = torch.randn(
+        2, cur, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     out = resize_modes(x, target)  # int target -> per-dim tuple
     assert out.shape == (2, target)
 
@@ -277,8 +340,9 @@ def test_resize_modes_int_target(cur, target, seed):
 @SETTINGS
 @given(n=st.integers(4, 16), keep=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_zero_coeff_zeros_high_modes(n, keep, seed):
-    x = torch.randn(2, n, dtype=torch.complex64,
-                    generator=torch.Generator().manual_seed(seed))
+    x = torch.randn(
+        2, n, dtype=torch.complex64, generator=torch.Generator().manual_seed(seed)
+    )
     out = zero_coeff(x, keep)
     assert out.shape == x.shape
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
