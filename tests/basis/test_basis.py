@@ -4,8 +4,8 @@ import torch
 import pytest
 
 # Legacy end-to-end smoke test; superseded by test_fourier_basis.py which
-# carries the fuzzing/MMS coverage. Opt out of the suite policy here.
-pytestmark = [pytest.mark.no_fuzz, pytest.mark.no_mms]
+# carries the fuzzing coverage. Opt out of the suite policy here.
+pytestmark = [pytest.mark.no_fuzz, pytest.mark.oracle_consistency]
 
 
 def test_basis():

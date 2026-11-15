@@ -34,7 +34,7 @@ def real_arrays(draw):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(a=real_arrays())
 def test_real_complex_real_roundtrip(a):
@@ -42,7 +42,7 @@ def test_real_complex_real_roundtrip(a):
     assert torch.allclose(to_real_coeff(to_complex_coeff(a)), a)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_independent
 @SETTINGS
 @given(
     rows=st.integers(1, 8),
@@ -64,7 +64,7 @@ def test_coeff_interleave_semantics(rows, half, seed):
     assert torch.allclose(to_real_coeff(c), interleaved)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     rows=st.integers(1, 12),
@@ -77,20 +77,20 @@ def test_complex_invertible(rows, cols, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_resolve_device_explicit():
     assert resolve_device("cpu") == torch.device("cpu")
     assert resolve_device(torch.device("cpu")) == torch.device("cpu")
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_resolve_device_default_matches_availability():
     expected = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     assert resolve_device(None) == expected
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(rows=st.integers(2, 20), cols=st.integers(1, 5), seed=st.integers(0, 10_000))
 def test_get_metrics_default_keys(rows, cols, seed):
@@ -103,14 +103,14 @@ def test_get_metrics_default_keys(rows, cols, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_metrics_single_sample_r2_is_nan():
     m = get_metrics(torch.randn(1, 3), torch.randn(1, 3))
     assert m["r2"] != m["r2"]  # NaN
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_get_metrics_injected_metric_set():
     m = get_metrics(
         torch.zeros(4, 2), torch.zeros(4, 2), metrics={"custom": lambda p, t: (p - t).abs().sum()}
@@ -120,10 +120,10 @@ def test_get_metrics_injected_metric_set():
     assert "pred_nan_sum" in m
 
 
-@pytest.mark.no_mms
 # --------------------------------------------------------------------------- #
 # StandardScaler
 # --------------------------------------------------------------------------- #
+@pytest.mark.oracle_consistency
 @given(rows=st.integers(2, 40), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_standard_scaler_roundtrip_real(rows, cols, seed):
@@ -133,7 +133,7 @@ def test_standard_scaler_roundtrip_real(rows, cols, seed):
     assert torch.allclose(scaler.inverse(scaler.transform(x)), x, atol=1e-4)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @given(rows=st.integers(2, 40), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_standard_scaler_standardizes(rows, cols, seed):
@@ -144,7 +144,7 @@ def test_standard_scaler_standardizes(rows, cols, seed):
     assert torch.allclose(xt.std(0, unbiased=False), torch.ones(cols), atol=1e-3)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @given(rows=st.integers(2, 30), cols=st.integers(1, 6), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_standard_scaler_roundtrip_complex(rows, cols, seed):
@@ -155,7 +155,7 @@ def test_standard_scaler_roundtrip_complex(rows, cols, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 def test_standard_scaler_tuple_and_subset():
     a = torch.randn(10, 3)
     b = torch.randn(10, 2, dtype=torch.complex64)
@@ -167,7 +167,7 @@ def test_standard_scaler_tuple_and_subset():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_standard_scaler_consistency_checks():
     scaler = StandardScaler().fit(torch.randn(8, 3))
     with pytest.raises(AssertionError):
@@ -177,7 +177,7 @@ def test_standard_scaler_consistency_checks():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 def test_standard_scaler_save_load(tmp_path):
     x = torch.randn(12, 4)
     scaler = StandardScaler().fit(x)
@@ -187,7 +187,7 @@ def test_standard_scaler_save_load(tmp_path):
     assert torch.allclose(loaded.transform(x), scaler.transform(x), atol=1e-6)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @given(rows=st.integers(2, 30), cols=st.integers(1, 6), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_scale_to_standard(rows, cols, seed):
@@ -196,10 +196,10 @@ def test_scale_to_standard(rows, cols, seed):
     assert torch.allclose(xt.mean(0), torch.zeros(cols), atol=1e-4)
 
 
-@pytest.mark.no_mms
 # --------------------------------------------------------------------------- #
 # to_mag_angle
 # --------------------------------------------------------------------------- #
+@pytest.mark.oracle_analytic
 @given(rows=st.integers(1, 20), cols=st.integers(1, 10), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_to_mag_angle_reconstructs(rows, cols, seed):
@@ -212,16 +212,16 @@ def test_to_mag_angle_reconstructs(rows, cols, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_to_mag_angle_idempotent_on_real():
     r = torch.randn(3, 4)
     assert torch.equal(to_mag_angle(r), r)
 
 
-@pytest.mark.mms
 # --------------------------------------------------------------------------- #
 # euler_solver (MMS: dy/dt = -a y -> y0 exp(-a t))
 # --------------------------------------------------------------------------- #
+@pytest.mark.oracle_analytic
 @given(a=st.floats(0.2, 3.0), seed=st.integers(0, 10_000))
 @SETTINGS
 def test_euler_solver_linear_decay(a, seed):
@@ -237,7 +237,7 @@ def test_euler_solver_linear_decay(a, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_euler_solver_requires_multiple_points():
     with pytest.raises(AssertionError):
         euler_solver(lambda ti, y: y, torch.zeros(2), torch.tensor([0.0]))
@@ -246,7 +246,7 @@ def test_euler_solver_requires_multiple_points():
 # --------------------------------------------------------------------------- #
 # coeff conversion idempotence + resize/zero/interpolate (fuzzed)
 # --------------------------------------------------------------------------- #
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
 def test_to_complex_coeff_idempotent_on_complex(rows, cols, seed):
@@ -255,7 +255,7 @@ def test_to_complex_coeff_idempotent_on_complex(rows, cols, seed):
     assert to_complex_coeff(c) is c
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(rows=st.integers(1, 8), cols=st.integers(1, 8), seed=st.integers(0, 10_000))
 def test_to_real_coeff_idempotent_on_real(rows, cols, seed):
@@ -263,7 +263,7 @@ def test_to_real_coeff_idempotent_on_real(rows, cols, seed):
     assert to_real_coeff(r) is r
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(cur=st.integers(2, 16), target=st.integers(2, 16), seed=st.integers(0, 10_000))
 def test_resize_modes_int_target(cur, target, seed):
@@ -273,7 +273,7 @@ def test_resize_modes_int_target(cur, target, seed):
     assert out.shape == (2, target)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(4, 16), keep=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_zero_coeff_zeros_high_modes(n, keep, seed):
@@ -284,7 +284,7 @@ def test_zero_coeff_zeros_high_modes(n, keep, seed):
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     slope=st.floats(-5.0, 5.0),
@@ -303,7 +303,7 @@ def test_interpolate_tensor_is_exact_on_linear_ramp(slope, intercept, n, seed):
     assert torch.allclose(got, exact, atol=1e-10)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     slope=st.floats(-5.0, 5.0),

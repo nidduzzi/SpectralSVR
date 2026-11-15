@@ -1,7 +1,7 @@
 """Coverage for SpectralSVR.test / inverse / inverse_coeff and error paths.
 
 Behavioral tests are fuzzed over sizes/seed; error paths are structural and
-opt out of fuzzing. None manufacture a PDE solution, so all are no_mms.
+opt out of fuzzing. None manufacture a PDE solution.
 """
 
 import pytest
@@ -34,7 +34,7 @@ def _trained_model(n=80, modes=8, seed=42, kernel="rbf"):
 # --------------------------------------------------------------------------- #
 # behavioral (fuzzed)
 # --------------------------------------------------------------------------- #
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_test_returns_metric_groups(n, modes, seed):
@@ -45,7 +45,7 @@ def test_test_returns_metric_groups(n, modes, seed):
         assert "mse" in group and group["mse"] >= 0.0
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_inverse_coeff_shape(n, modes, seed):
@@ -55,7 +55,7 @@ def test_inverse_coeff_shape(n, modes, seed):
     assert out.is_complex()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_inverse_returns_field_values(n, modes, seed):
@@ -66,7 +66,7 @@ def test_inverse_returns_field_values(n, modes, seed):
     assert not torch.isnan(f_pred).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_forward_1d_x_and_complex_input(n, modes, seed):
@@ -78,7 +78,7 @@ def test_forward_1d_x_and_complex_input(n, modes, seed):
     assert model.forward(cf, x).shape[0] == n
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_test_with_complex_input(n, modes, seed):
@@ -87,7 +87,7 @@ def test_test_with_complex_input(n, modes, seed):
     assert "spectral" in model.test(cf, u.coeff)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(20, 60),
@@ -112,7 +112,7 @@ def test_test_time_dependent_and_complex_funcs(n, nt, modes, seed):
 # error paths (structural, not fuzzed)
 # --------------------------------------------------------------------------- #
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_train_rejects_dtype_mismatch():
     model = SpectralSVR(FourierBasis(domain=(0.0, 1.0)), LSSVR())
     with pytest.raises(ValueError, match="must match the basis coeff_dtype"):
@@ -120,7 +120,7 @@ def test_train_rejects_dtype_mismatch():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_test_rejects_dtype_mismatch():
     model, f, u = _trained_model()
     with pytest.raises(ValueError, match="must match the basis coeff_dtype"):
@@ -128,7 +128,7 @@ def test_test_rejects_dtype_mismatch():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_forward_rejects_wrong_x_dims():
     model, f, _ = _trained_model()
     with pytest.raises(ValueError, match="num_points"):
@@ -136,7 +136,7 @@ def test_forward_rejects_wrong_x_dims():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_inverse_before_train_raises():
     model = SpectralSVR(FourierBasis(domain=(0.0, 1.0)), LSSVR())
     with pytest.raises(RuntimeError, match="has not been trained"):
@@ -144,7 +144,7 @@ def test_inverse_before_train_raises():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_inverse_features_none_when_regressor_prefitted():
     # regressor fitted directly (no SpectralSVR.train) -> features stays None
     reg = LSSVR(kernel="linear", C=10.0)
@@ -154,7 +154,7 @@ def test_inverse_features_none_when_regressor_prefitted():
         model.inverse_coeff(torch.randn(4, 8, dtype=torch.complex64), epochs=1)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(30, 90), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_train_with_complex_input_features(n, modes, seed):

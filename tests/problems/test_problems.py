@@ -16,6 +16,11 @@ from hypothesis import strategies as st
 
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.problems import Burgers
+from SpectralSVR.utils import (
+    as_semilinear_solver,
+    etdrk4_solver,
+    implicit_adams_solver,
+)
 
 from _exact import (
     SETTINGS,
@@ -49,7 +54,7 @@ def _residual_interior(problem, u, f, nu, res, ns, b):
 # Problem.axis_diff -- the finite-difference primitive, validated on its own
 # against analytic derivatives (independent of any transform/residual).
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     k=st.integers(1, 4),
@@ -67,7 +72,7 @@ def test_axis_diff_matches_analytic(k, order, periodic):
         spacing = length / (N - 1)
     u = torch.sin(kx * x).view(1, -1)
     got = Burgers.axis_diff(u, spacing, dim=1, order=order, periodic=periodic)
-    analytic = (kx * torch.cos(kx * x) if order == 1 else -(kx**2) * torch.sin(kx * x))
+    analytic = kx * torch.cos(kx * x) if order == 1 else -(kx**2) * torch.sin(kx * x)
     tol = 0.02 * float(analytic.abs().max().clamp(min=1.0))
     if periodic:  # wrap-around stencil -> exact at the ends too
         assert torch.allclose(got.view(-1), analytic, atol=tol)
@@ -76,7 +81,7 @@ def test_axis_diff_matches_analytic(k, order, periodic):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_axis_diff_rejects_bad_order():
     with pytest.raises(ValueError, match="order 1 or 2"):
         Burgers.axis_diff(torch.zeros(1, 4), 1.0, dim=1, order=3, periodic=True)
@@ -85,7 +90,7 @@ def test_axis_diff_rejects_bad_order():
 # =========================================================================== #
 # Antiderivative
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 4),
@@ -108,7 +113,7 @@ def test_antiderivative_exact_derivative_of_known_field(n, m, modes, seed):
     assert torch.allclose(du_val, analytic, atol=1e-3)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(n=st.integers(1, 5), modes=st.integers(3, 16), seed=st.integers(0, 10_000))
 def test_antiderivative_spectral_residual_is_zero(n, modes, seed):
@@ -130,7 +135,7 @@ def test_antiderivative_spectral_residual_is_zero(n, modes, seed):
 # signs -- and also assert the non-trivial output (residual of a non-solution
 # equals the known analytic residual, so an always-zero operator would fail).
 # --------------------------------------------------------------------------- #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(m=st.integers(1, 5), seed=st.integers(0, 10_000))
 def test_antiderivative_spectral_residual_matches_analytic(m, seed):
@@ -154,7 +159,7 @@ def test_antiderivative_spectral_residual_matches_analytic(m, seed):
     assert torch.allclose(r.inv_transform(r.coeff).real, ut_val, atol=1e-4)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(m=st.integers(1, 3), seed=st.integers(0, 10_000))
 def test_antiderivative_finite_diff_residual_matches_analytic(m, seed):
@@ -181,7 +186,7 @@ def test_antiderivative_finite_diff_residual_matches_analytic(m, seed):
     assert torch.allclose(rn.inv_transform(rn.coeff).real, ut_val, atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_spectral_residual_matches_analytic(nu, seed):
@@ -205,7 +210,7 @@ def test_burgers_spectral_residual_matches_analytic(nu, seed):
     assert torch.allclose(r.inv_transform(r.coeff).real, f_val, atol=1e-4)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
 def test_burgers_finite_diff_residual_matches_analytic(nu, seed):
@@ -232,7 +237,7 @@ def test_burgers_finite_diff_residual_matches_analytic(nu, seed):
     assert torch.allclose(rn.inv_transform(rn.coeff).real, f_on_grid, atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -256,7 +261,7 @@ def test_burgers_finite_diff_residual_cole_hopf(n, n_modes, nu, seed):
     assert torch.allclose(r_int, torch.zeros_like(r_int), atol=tol)
 
 
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -283,7 +288,7 @@ def test_burgers_finite_diff_residual_heat_mode(n, n_modes, nu, seed):
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 def test_antiderivative_rejects_bad_sizes():
     problem = Antiderivative()
     with pytest.raises(AssertionError):
@@ -295,7 +300,7 @@ def test_antiderivative_rejects_bad_sizes():
 # =========================================================================== #
 # Burgers -- MMS path (forcing chosen so u solves the equation exactly)
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -317,7 +322,11 @@ def test_burgers_mms_solution_satisfies_equation(
     modes = (space_modes, space_modes)
     domain = ((t_start, t_start + t_len), (x_start, x_start + x_len))
     u, f = problem.mms_solution(
-        FourierBasis, n, modes, nu=nu, domain=domain,
+        FourierBasis,
+        n,
+        modes,
+        nu=nu,
+        domain=domain,
         generator=torch.Generator().manual_seed(seed),
     )
     residual = problem.spectral_residual(u, f, nu)
@@ -326,7 +335,7 @@ def test_burgers_mms_solution_satisfies_equation(
     assert u.domain == domain
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     x_start=st.floats(-3.0, 3.0),
@@ -340,7 +349,9 @@ def test_burgers_generate_honors_domain_start(x_start, x_len, t_start, t_len, se
     # output field's domain, not just the lengths.
     problem = Burgers()
     u_gen, _ = problem.generate(
-        FourierBasis, 2, (8, 8),
+        FourierBasis,
+        2,
+        (8, 8),
         space_domain=slice(x_start, x_start + x_len, 64),
         time_domain=slice(t_start, t_start + t_len, 16),
         generator=torch.Generator().manual_seed(seed),
@@ -352,7 +363,7 @@ def test_burgers_generate_honors_domain_start(x_start, x_len, t_start, t_len, se
 # =========================================================================== #
 # Burgers -- numerical path (ETDRK4) reproduces an exact Cole-Hopf solution
 # =========================================================================== #
-@pytest.mark.mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(
     n_modes=st.integers(1, 3),
@@ -374,23 +385,36 @@ def test_burgers_numerical_matches_cole_hopf_exact(n_modes, seed):
 
     problem = Burgers()
     u_gen, _ = problem.generate(
-        FourierBasis, n, (ns, ns), nu=nu, u0=u0, f=0,
-        space_domain=slice(0, length, ns), time_domain=slice(0, T, nt),
+        FourierBasis,
+        n,
+        (ns, ns),
+        nu=nu,
+        u0=u0,
+        f=0,
+        space_domain=slice(0, length, ns),
+        time_domain=slice(0, T, nt),
     )
     final = u_gen.inv_transform(u_gen.coeff[:, -1]).real.cpu()
-    exact = cole_hopf_u(x, torch.full((1,), T, dtype=torch.float64), m, a, b, nu, length)[:, 0]
+    exact = cole_hopf_u(
+        x, torch.full((1,), T, dtype=torch.float64), m, a, b, nu, length
+    )[:, 0]
     rel = (final - exact).abs().max() / exact.abs().max()
     assert rel < 5e-2
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_invariant
 @pytest.mark.no_fuzz
 def test_burgers_numerical_solution_dissipates_energy():
     # Viscous Burgers with zero forcing must not gain energy over time.
     problem = Burgers()
     u, _ = problem.generate(
-        FourierBasis, 2, (64, 64), generator=torch.Generator().manual_seed(0),
-        nu=0.05, space_domain=slice(0, 1, 64), time_domain=slice(0, 1, 100),
+        FourierBasis,
+        2,
+        (64, 64),
+        generator=torch.Generator().manual_seed(0),
+        nu=0.05,
+        space_domain=slice(0, 1, 64),
+        time_domain=slice(0, 1, 100),
     )
     vals = u.get_values(res=64).real
     energy = (vals**2).mean(dim=(0, 2))
@@ -400,7 +424,7 @@ def test_burgers_numerical_solution_dissipates_energy():
 # --------------------------------------------------------------------------- #
 # Additional coverage
 # --------------------------------------------------------------------------- #
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -410,15 +434,63 @@ def test_burgers_numerical_solution_dissipates_energy():
 def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
     # u0="random", f="random" -> spectral manufactured-solution branch
     u, f = Burgers().generate(
-        FourierBasis, n, (space_modes, space_modes),
-        u0="random", f="random", nu=0.05,
+        FourierBasis,
+        n,
+        (space_modes, space_modes),
+        u0="random",
+        f="random",
+        nu=0.05,
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent and f.time_dependent
     assert u.coeff.shape[0] == n and not torch.isnan(u.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_manufactured_branch_rejects_a_solver():
+    with pytest.raises(ValueError, match="integrates nothing"):
+        Burgers().generate(
+            FourierBasis,
+            1,
+            (8, 8),
+            u0="random",
+            f="random",
+            nu=0.05,
+            generator=torch.Generator().manual_seed(0),
+            solver=etdrk4_solver,
+        )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+def test_numerical_branch_uses_the_supplied_solver():
+    def build(**kwargs):
+        u, _ = Burgers().generate(
+            FourierBasis,
+            2,
+            (16, 16),
+            u0="random",
+            f=0,
+            nu=0.01,
+            time_domain=slice(0, 1, 40),
+            generator=torch.Generator().manual_seed(0),
+            **kwargs,
+        )
+        return u.coeff
+
+    assert torch.equal(build(), build(solver=etdrk4_solver))
+
+    boom = RuntimeError("solver was called")
+
+    def failing_solver(linear, nonlinear, y0, t):
+        raise boom
+
+    with pytest.raises(RuntimeError, match="solver was called"):
+        build(solver=failing_solver)
+
+
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     u0=st.floats(-1.0, 1.0),
@@ -429,8 +501,14 @@ def test_burgers_manufactured_branch_shapes(n, space_modes, seed):
 def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
     # constant initial condition + constant forcing exercise the Number branches
     u, f = Burgers().generate(
-        FourierBasis, 2, (space_modes, space_modes), u0=u0, f=fval, nu=0.05,
-        space_domain=slice(0, 1, space_modes), time_domain=slice(0, 1, 40),
+        FourierBasis,
+        2,
+        (space_modes, space_modes),
+        u0=u0,
+        f=fval,
+        nu=0.05,
+        space_domain=slice(0, 1, space_modes),
+        time_domain=slice(0, 1, 40),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.time_dependent
@@ -438,7 +516,7 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
     assert not torch.isnan(u.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(
     n=st.integers(1, 3),
@@ -449,7 +527,12 @@ def test_burgers_numerical_constant_ic_and_forcing(u0, fval, space_modes, seed):
 def test_burgers_numeric_residual_runs(n, space_modes, nu, seed):
     problem = Burgers()
     u, f = problem.generate(
-        FourierBasis, n, (space_modes, space_modes), nu=nu, u0="random", f="random",
+        FourierBasis,
+        n,
+        (space_modes, space_modes),
+        nu=nu,
+        u0="random",
+        f="random",
         generator=torch.Generator().manual_seed(seed),
     )
     res = problem.residual(u, f, nu, res=64)
@@ -457,9 +540,14 @@ def test_burgers_numeric_residual_runs(n, space_modes, nu, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(1, 4), modes=st.integers(4, 24), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
+@given(
+    n=st.integers(1, 4),
+    modes=st.integers(4, 24),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
 def test_burgers_rhs_smoke(n, modes, nu, seed):
     # rhs is the spectral RK4 right-hand side kept for future numerical solvers
     g = torch.Generator().manual_seed(seed)
@@ -470,20 +558,23 @@ def test_burgers_rhs_smoke(n, modes, nu, seed):
     assert not torch.isnan(out).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(n=st.integers(1, 3), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
 def test_antiderivative_complex_integration_constant(n, modes, seed):
     # complex u0 exercises the complex integration-constant branch
     u, ut = Antiderivative().generate(
-        FourierBasis, n, modes, generator=torch.Generator().manual_seed(seed),
+        FourierBasis,
+        n,
+        modes,
+        generator=torch.Generator().manual_seed(seed),
         u0=1 + 2j,
     )
     assert u.coeff.shape[0] == n
     assert torch.allclose(u.coeff[:, 0], torch.tensor(1 + 2j, dtype=u.coeff.dtype))
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(n=st.integers(1, 4), modes=st.integers(4, 16), seed=st.integers(0, 10_000))
 def test_antiderivative_numeric_residual_runs(n, modes, seed):
@@ -495,9 +586,14 @@ def test_antiderivative_numeric_residual_runs(n, modes, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
-@given(u0=st.floats(-3.0, 3.0), n=st.integers(1, 3), modes=st.integers(4, 12), seed=st.integers(0, 10_000))
+@given(
+    u0=st.floats(-3.0, 3.0),
+    n=st.integers(1, 3),
+    modes=st.integers(4, 12),
+    seed=st.integers(0, 10_000),
+)
 def test_antiderivative_float_integration_constant(u0, n, modes, seed):
     u, ut = Antiderivative().generate(
         FourierBasis, n, modes, generator=torch.Generator().manual_seed(seed), u0=u0
@@ -507,23 +603,34 @@ def test_antiderivative_float_integration_constant(u0, n, modes, seed):
     )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(m=st.integers(8, 16), seed=st.integers(0, 10_000))
 def test_burgers_int_modes_and_1d_ic(m, seed):
     # int modes -> (m, m); a 1D u0 tensor is broadcast across samples
     ic = torch.rand(m, dtype=torch.float64)
     u, _ = Burgers().generate(
-        FourierBasis, 2, m, u0=ic, f=0, nu=0.05,
-        space_domain=slice(0, 1, m), time_domain=slice(0, 1, 40),
+        FourierBasis,
+        2,
+        m,
+        u0=ic,
+        f=0,
+        nu=0.05,
+        space_domain=slice(0, 1, m),
+        time_domain=slice(0, 1, 40),
         generator=torch.Generator().manual_seed(seed),
     )
     assert u.coeff.shape[0] == 2 and u.coeff.shape[2] == m
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
-@given(n=st.integers(1, 3), m=st.integers(6, 12), nu=st.floats(0.01, 0.2), seed=st.integers(0, 10_000))
+@given(
+    n=st.integers(1, 3),
+    m=st.integers(6, 12),
+    nu=st.floats(0.01, 0.2),
+    seed=st.integers(0, 10_000),
+)
 def test_burgers_residual_non_time_dependent(n, m, nu, seed):
     # residual() on a non-time-dependent 2D field exercises the else branch
     g = torch.Generator().manual_seed(seed)
@@ -535,7 +642,7 @@ def test_burgers_residual_non_time_dependent(n, m, nu, seed):
     assert not torch.isnan(res.coeff).any()
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_analytic
 @SETTINGS
 @given(n=st.integers(1, 3), modes=st.integers(4, 10), seed=st.integers(0, 10_000))
 def test_antiderivative_tensor_integration_constant(n, modes, seed):
@@ -544,3 +651,45 @@ def test_antiderivative_tensor_integration_constant(n, modes, seed):
     u0 = torch.randn(n, dtype=torch.complex64, generator=g)
     u, _ = Antiderivative().generate(FourierBasis, n, modes, generator=g, u0=u0)
     assert torch.allclose(u.coeff[:, 0], u0.to(u.coeff.dtype), atol=1e-5)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_independent
+def test_numerical_burgers_agrees_with_an_independent_integrator():
+    """ETDRK4 against torchdiffeq's implicit Adams, in a regime both resolve.
+
+    The two schemes share no code: ETDRK4 is implemented in this repo, implicit
+    Adams comes from torchdiffeq. Agreement is only expected while the step size
+    resolves the stiff eigenvalue, i.e. while ``h * nu * k_max**2`` is of order
+    one or below. At the literal parameters below that quantity is
+    ``(1 / 400) * 0.01 * (2 * pi * 4) ** 2``, about 0.016. Both schemes are
+    fourth order in time, so their difference is O(h^4); the bound is set from
+    that, not from the observed value, and no stiffer regime is claimed.
+    """
+    nu = 0.01
+    space_modes = 8
+    n_steps = 401
+
+    def run(solver):
+        u, _ = Burgers().generate(
+            FourierBasis,
+            2,
+            (space_modes, space_modes),
+            u0="random",
+            f=0,
+            nu=nu,
+            time_domain=slice(0, 1, n_steps),
+            generator=torch.Generator().manual_seed(7),
+            solver=solver,
+        )
+        return u.coeff.cpu()
+
+    exponential = run(etdrk4_solver)
+    adams = run(as_semilinear_solver(implicit_adams_solver))
+
+    assert not torch.equal(exponential, adams), (
+        "identical output means the solver argument was ignored, not that the "
+        "two integrators agree"
+    )
+    relative = (exponential - adams).abs().max() / exponential.abs().max()
+    assert relative < 1e-4

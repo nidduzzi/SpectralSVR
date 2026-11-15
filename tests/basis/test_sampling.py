@@ -24,7 +24,7 @@ _schemes = st.lists(st.booleans(), min_size=1, max_size=4).map(
 )
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(ndim=st.integers(1, 4), fft=st.booleans())
 def test_samplings_to_tuple_broadcast_and_default(ndim, fft):
@@ -36,7 +36,7 @@ def test_samplings_to_tuple_broadcast_and_default(ndim, fft):
     assert samplings_to_tuple(one, ndim, default) == tuple(one for _ in range(ndim))
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(schemes=_schemes, as_tuple=st.booleans())
 def test_samplings_to_tuple_per_axis_sequence(schemes, as_tuple):
@@ -44,7 +44,7 @@ def test_samplings_to_tuple_per_axis_sequence(schemes, as_tuple):
     assert samplings_to_tuple(seq, len(schemes), PeriodicUniform()) == tuple(schemes)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_smoke
 @SETTINGS
 @given(schemes=_schemes)
 def test_config_resolve_sampling(schemes):
@@ -52,7 +52,7 @@ def test_config_resolve_sampling(schemes):
     assert cfg.resolve_sampling(len(schemes), PeriodicUniform()) == tuple(schemes)
 
 
-@pytest.mark.no_mms
+@pytest.mark.oracle_consistency
 @SETTINGS
 @given(
     n=st.integers(2, 10),
@@ -77,3 +77,29 @@ def test_per_axis_sampling_transform_matches_uniform(n, fft0, fft1, seed):
     uniform = FourierBasis.inv_transform(coeff, sampling=PeriodicUniform())
     # the explicit matmul path accumulates more float error than the FFT
     assert torch.allclose(mixed, uniform, atol=1e-6, rtol=1e-6)
+
+
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(
+    m=st.integers(1, 6),
+    amp=st.floats(0.5, 2.0),
+    phase=st.floats(0, 6.283),
+)
+def test_matmul_transform_leg_matches_closed_form(m, amp, phase):
+    # Anchor the non-FFT (explicit matmul) transform leg DIRECTLY against the
+    # hand-computed DFT of a single-mode sinusoid -- previously this leg was
+    # only ever compared to the FFT leg, so a shared convention error was
+    # invisible.
+    import math
+
+    from tests._anchors import single_mode_spectrum
+
+    n = 16
+    x = torch.linspace(0, 1, n + 1, dtype=torch.float64)[:-1]
+    values = amp * torch.cos(2 * math.pi * m * x + phase)
+    got = FourierBasis.transform(
+        (values + 0j).unsqueeze(0), sampling=PeriodicUniform(supports_fft=False)
+    )[0]
+    expected = single_mode_spectrum(n, m, amp, phase).to(got.dtype)
+    assert torch.allclose(got, expected, atol=2e-3 * n * amp)
