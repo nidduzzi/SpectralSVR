@@ -366,3 +366,30 @@ fafc1930b3e46bd50a15a0f31e63bc7be5770e53 93fa2522e6c44bead733024c41b88b1a7521dff
 fd8f5fadfa44b5b4b2c90abf95ebd0a85d69bae2 7a55d9e92cb736fea0b4345c716f818d1e75c66b refactor(basis): place the inclusive-slice index map on Basis
 feb5eea11a2b5175835b340ee09ee3b7c4552558 dae7f90836743dda1796d155f388f9cad842a28d docs(openspec): make the deltas self-contained before they become contract
 ff166f45c8d56cc80e3a0685d2ba3834ecffe8b6 5eb89f21d51077c71e088ec10c94ec73c8fd644a docs(openspec): add the scaler to phase 2's cosmic-ray scope
+
+# Commit hashes before and after the rebase of 2026-11-09
+#
+# feat/reduce-repository-cruft was rebased onto feat/fix-accelerator-without-device, so that its CI runs against the repaired accelerator().
+# Each new commit adds that change's files to the old tree and nothing else. Commit messages keep the old hashes; this section resolves them. Columns: old new subject.
+14da3ab05cf596c7eb4bb26c629cefd221417441 615eba3826236ec41cd7badfc2fb5051ba6019de docs(agents): point at the recorded comparison, the mutation registry and maintained measurement scripts
+1b2e0a9f759fc28e27a9b9f9c9b9b0dafe92c090 2782139fee14b83822989ad87ad5183906e596c3 docs(openspec): propose reduce-repository-cruft
+9f5c900aad5555ac97970a7c68fcf7d3aaa591b9 9c8dd78c15e5ee55377e5bb608981f228080b265 feat(examples): keep three executed examples, move the paper notebooks to a tag
+b1bf4f1ee7a5c3fe8533f44998bbe176a9f672c6 05cc6a916b469dbac7f2cab249852c87b61ac5d5 feat(mutation): declare equivalent mutants in a registry and run targets through `just mutate`
+b8bd0b69a56382676620b0cac6cda16acef3cc8c fcd689bad195cf379ef173d46896a05b00dd387d docs: cite the software, and record the mutation run and the tag cleanup
+fc2455c2f7655f9aa8d8eb61de81f60c30a132fb 4936f12ec2e97f4fc5a62c3bd85d3c49c6cbe2b2 ci: run the gate on every push and pull request
+
+# Commit hashes before and after the rebase of 2026-11-12
+#
+# feat/fix-real-derivative-at-nyquist gained its archive commit, 23be6b6. feat/fix-accelerator-without-device was rebased onto it and then archived; feat/reduce-repository-cruft was rebased onto that archive commit, a09da2d.
+# Each new commit adds the archive commits' files to the old tree and nothing else. Commit messages keep the old hashes; this section resolves them. Columns: old new subject.
+05cc6a916b469dbac7f2cab249852c87b61ac5d5 dc1d23323d0130afaaf739618e02513ffef7dbdf feat(mutation): declare equivalent mutants in a registry and run targets through `just mutate`
+0e629a1f84db2785a9b4c741b6fa10b7c1db0104 ca27ab15a2f4353fb2aca5ecb903516bd92ee7cf docs(openspec): propose fix-accelerator-without-device
+2782139fee14b83822989ad87ad5183906e596c3 1c3fdb2d98a6accb217af04e44131ad835bae836 docs(openspec): propose reduce-repository-cruft
+4936f12ec2e97f4fc5a62c3bd85d3c49c6cbe2b2 f4b2cb57825a2ae63e846fc67ed9b2f85efe5125 ci: run the gate on every push and pull request
+5f7b7d1a6b20b32331a3d3f41b81a123e46f6fde ec505678384a80a02dee92424170ca7963780e12 fix(utils): name the host when the torch build supports an accelerator the machine lacks
+615eba3826236ec41cd7badfc2fb5051ba6019de b4ab021e25b6ffaaf2f04aba735947f58c5bf49e docs(agents): point at the recorded comparison, the mutation registry and maintained measurement scripts
+9115cf6cf06186907cb830a1c276abc10c23e626 6c38457c830c593b02181fba1c28f75dd6c5df3c docs(openspec): record the warm-cache CI run
+9c8dd78c15e5ee55377e5bb608981f228080b265 f66dc43ce19d62c25f18880eee937d350ad9c67d feat(examples): keep three executed examples, move the paper notebooks to a tag
+a1319125a9feef555a48da2faedd620344322506 79f945bd57a8d5a0366ed410e0305daa227f791c docs(openspec): record the first two CI runs of the gate
+e9d415fbe2d015bbfb57d6fb784bada573125c5a d726ce3f652a5aee257458cb87b7262bb5c98080 docs(openspec): map the cleanup branch's commits across its rebase onto the accelerator repair
+fcd689bad195cf379ef173d46896a05b00dd387d a6d4e4212ef81771f57a430d2fa67dc64c47ac7a docs: cite the software, and record the mutation run and the tag cleanup
