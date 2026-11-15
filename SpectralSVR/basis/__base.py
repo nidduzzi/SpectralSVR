@@ -283,7 +283,9 @@ class Basis(abc.ABC):
             ).unflatten(0, coeff.shape[0:2])
             res_t = res[0]
             # time is an evolution axis (not a Fourier axis): closed/linspace
-            t = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop).to(device)
+            t = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop).to(
+                device=device, dtype=self.coeff.real.dtype
+            )
             t_start, t_stop = self.domain[0]
             index_float = (
                 (t.flatten() - t_start) / (t_stop - t_start) * (values.shape[1] - 1)
@@ -329,7 +331,7 @@ class Basis(abc.ABC):
         else:
             # time is an evolution axis (not a Fourier axis): closed/linspace
             grid_t = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop)
-            grid_t_device = grid_t.to(device=device)
+            grid_t_device = grid_t.to(device=device, dtype=self.coeff.real.dtype)
             grid_shape = tuple(r.step for r in (res_t, *res))
 
         values = self.__call__(
