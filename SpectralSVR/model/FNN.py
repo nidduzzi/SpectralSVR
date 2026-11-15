@@ -2,6 +2,8 @@ import logging
 from typing_extensions import Self, override
 
 import torch
+
+from ..utils import DEFAULT_REAL_DTYPE
 from torch import nn
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
@@ -32,7 +34,7 @@ class FNN(MultiRegression):
         activation: type[nn.Module] = nn.Softplus,
         n_hidden: int = 3,  # number of hidden layers
         w_hidden: int = 100,  # width of hidden layers
-        dtype: torch.dtype = torch.float32,
+        dtype: torch.dtype = DEFAULT_REAL_DTYPE,
         device: torch.device | None = None,
         logger: logging.Logger | None = None,
     ):

@@ -4,6 +4,8 @@ Behavioral tests are fuzzed over sizes/seed; error paths are structural and
 opt out of fuzzing. None manufacture a PDE solution.
 """
 
+import logging
+
 import pytest
 import torch
 from hypothesis import HealthCheck, given, settings
@@ -14,6 +16,7 @@ from SpectralSVR import (
     FourierBasis,
     LSSVR,
     SpectralSVR,
+    to_complex_coeff,
     to_real_coeff,
 )
 
@@ -101,7 +104,8 @@ def test_test_time_dependent_and_complex_funcs(n, nt, modes, seed):
     u_coeff = torch.randn(n, nt, modes, dtype=torch.complex64, generator=g)
     f = torch.randn(n, 12, generator=g)
     model = SpectralSVR(
-        FourierBasis(domain=((0.0, 1.0), (0.0, 1.0)), complex_funcs=True), LSSVR(kernel="rbf")
+        FourierBasis(domain=((0.0, 1.0), (0.0, 1.0)), complex_funcs=True),
+        LSSVR(kernel="rbf"),
     )
     model.train(f, u_coeff, u_time_dependent=True)
     metrics = model.test(f, u_coeff)
@@ -164,3 +168,98 @@ def test_train_with_complex_input_features(n, modes, seed):
     model = SpectralSVR(FourierBasis(domain=(0.0, 1.0)), LSSVR(kernel="rbf", C=10.0))
     model.train(ut.coeff, u.coeff)  # complex f
     assert model.features == 2 * modes
+
+
+# --------------------------------------------------------------------------- #
+# The model boundary: the two precision mismatches are different errors.
+# --------------------------------------------------------------------------- #
+def _precision_pair(basis_dtype, regressor_dtype, seed=0):
+    generator = torch.Generator().manual_seed(seed)
+    model = SpectralSVR(
+        FourierBasis(coeff_dtype=basis_dtype),
+        LSSVR(kernel="linear", C=1.0, dtype=regressor_dtype),
+    )
+    f = FourierBasis.generate_coeff(6, 4, generator=generator, coeff_dtype=basis_dtype)
+    u = FourierBasis.generate_coeff(6, 4, generator=generator, coeff_dtype=basis_dtype)
+    return model, f, u
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_boundary_refuses_a_regressor_that_would_narrow_coefficients():
+    model, f, u = _precision_pair(torch.complex128, torch.float32)
+    with pytest.raises(ValueError, match="discard precision"):
+        model.train(f, u)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_boundary_allows_a_wider_regressor_but_reports_it(caplog):
+    """Widening discards nothing, so it proceeds -- but is not silent."""
+    model, f, u = _precision_pair(torch.complex64, torch.float64)
+    with caplog.at_level(logging.WARNING):
+        model.train(f, u)
+    assert any("Nothing is discarded" in record.message for record in caplog.records)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_boundary_refuses_on_every_path_that_reaches_the_regressor():
+    """train, test and forward each hand values over; all three must check."""
+    model, f, u = _precision_pair(torch.complex128, torch.float32)
+    with pytest.raises(ValueError, match="discard precision"):
+        model.train(f, u)
+
+    ok, f_ok, u_ok = _precision_pair(torch.complex64, torch.float32)
+    ok.train(f_ok, u_ok)
+    ok.regressor.dtype = torch.float32
+    wide = FourierBasis.generate_coeff(
+        6, 4, generator=torch.Generator().manual_seed(9), coeff_dtype=torch.complex128
+    )
+    with pytest.raises(ValueError, match="discard precision"):
+        ok.test(wide, u_ok)
+    with pytest.raises(ValueError, match="discard precision"):
+        ok.forward(wide, torch.linspace(0, 1, 5).unsqueeze(-1))
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_boundary_is_silent_when_the_precisions_match(caplog):
+    model, f, u = _precision_pair(torch.complex64, torch.float32)
+    with caplog.at_level(logging.WARNING):
+        model.train(f, u)
+    assert not [r for r in caplog.records if "reaches the regressor" in r.message]
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_consistency
+def test_double_precision_survives_the_model_boundary():
+    """A double-precision basis reaches the regressor undiminished."""
+    generator = torch.Generator().manual_seed(5)
+    coeff = FourierBasis.generate_coeff(
+        6, 4, generator=generator, coeff_dtype=torch.complex128
+    )
+    assert coeff.dtype == torch.complex128
+
+    interleaved = to_real_coeff(coeff)
+    assert interleaved.dtype == torch.float64
+    assert torch.equal(to_complex_coeff(interleaved), coeff)
+
+    model = SpectralSVR(
+        FourierBasis(coeff_dtype=torch.complex128),
+        LSSVR(kernel="linear", C=1.0, dtype=torch.float64),
+    )
+    model.train(coeff, coeff)
+    assert model.regressor.dtype == torch.float64
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_invariant
+def test_bridge_round_trips_exactly_at_both_precisions():
+    generator = torch.Generator().manual_seed(6)
+    for complex_dtype in (torch.complex64, torch.complex128):
+        for shape in ((5, 9), (2, 8, 8)):
+            c = torch.randn(*shape, dtype=complex_dtype, generator=generator)
+            assert torch.equal(to_complex_coeff(to_real_coeff(c)), c), (
+                f"{complex_dtype} {shape}"
+            )

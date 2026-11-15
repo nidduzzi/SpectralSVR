@@ -3,6 +3,8 @@ import functools
 import logging
 
 import torch
+
+from ..utils import DEFAULT_REAL_DTYPE
 import numpy as np
 from . import (
     MultiRegression,
@@ -137,7 +139,7 @@ class LSSVR(MultiRegression):
         C=1.0,
         kernel: Kernel_Type = "rbf",
         batch_size_func=default_batch_size,
-        dtype=torch.float32,
+        dtype=DEFAULT_REAL_DTYPE,
         device: torch.device | None = None,
         logger: logging.Logger | None = None,
         **kernel_params,
@@ -224,9 +226,7 @@ class LSSVR(MultiRegression):
         self.logger.debug(A[1:, 1:])
         A[1:, 1:].diagonal().copy_(
             A[1:, 1:].diagonal()
-            + torch.ones(
-                (A[1:, 1:].shape[0],), device=self.device, dtype=self.dtype
-            )
+            + torch.ones((A[1:, 1:].shape[0],), device=self.device, dtype=self.dtype)
             / self.C
         )
         self.logger.debug("H:")
@@ -244,9 +244,7 @@ class LSSVR(MultiRegression):
         self.logger.debug("B:")
         self.logger.debug(B)
 
-        solution: torch.Tensor = torch.linalg.lstsq(A, B).solution.to(
-            dtype=self.dtype
-        )
+        solution: torch.Tensor = torch.linalg.lstsq(A, B).solution.to(dtype=self.dtype)
         self.logger.debug("S:")
         self.logger.debug(solution)
 

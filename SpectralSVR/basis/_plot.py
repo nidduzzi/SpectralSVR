@@ -145,8 +145,12 @@ def plot_basis(  # noqa: C901
                 # each side to align the image with the sample coordinates.
                 x0, x1 = grid[0, 0, 1].item(), grid[0, -1, 1].item()
                 y0, y1 = grid[0, 0, 0].item(), grid[-1, 0, 0].item()
-                half_dx = (x1 - x0) / (2 * (grid.shape[1] - 1)) if grid.shape[1] > 1 else 0.0
-                half_dy = (y1 - y0) / (2 * (grid.shape[0] - 1)) if grid.shape[0] > 1 else 0.0
+                half_dx = (
+                    (x1 - x0) / (2 * (grid.shape[1] - 1)) if grid.shape[1] > 1 else 0.0
+                )
+                half_dy = (
+                    (y1 - y0) / (2 * (grid.shape[0] - 1)) if grid.shape[0] > 1 else 0.0
+                )
                 extent = (x0 - half_dx, x1 + half_dx, y0 - half_dy, y1 + half_dy)
                 xlim = (x0, x1)
                 ylim = (y0, y1)
@@ -221,7 +225,5 @@ def plot_fourier_coefficients(
         kwargs["aspect"] = kwargs.get("aspect", "auto")
         plot = plt.imshow(_component(shifted, component), **kwargs)
     else:
-        raise NotImplementedError(
-            "plot_coefficients supports 1D and 2D Fourier bases"
-        )
+        raise NotImplementedError("plot_coefficients supports 1D and 2D Fourier bases")
     return plot

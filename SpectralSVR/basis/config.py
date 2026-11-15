@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+import torch
+
 from .domain import (
     DomainAxis,
     DomainInputType,
@@ -24,6 +26,7 @@ from .domain import (
 )
 from .sampling import SamplingInputType, SamplingScheme, samplings_to_tuple
 from .strategy import DEFAULT_EVALUATION_STRATEGY, EvaluationStrategy
+from ..utils import DEFAULT_COEFF_DTYPE
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,11 +37,26 @@ class SpectralConfig:
     every axis, or one per axis -- and resolved to a concrete per-axis tuple only
     on demand, against an explicit mode count. (A domain may be periodic on one
     axis and not another, so node placement is per-axis too.)
+
+    ``coeff_dtype`` is the complex precision coefficients are stored in, with the
+    real precision the model boundary consumes derived from it; its cost is
+    stated on :meth:`with_precision`.
     """
 
     sampling: SamplingInputType
     domain: DomainInputType = None
     strategy: EvaluationStrategy = DEFAULT_EVALUATION_STRATEGY
+    coeff_dtype: torch.dtype = torch.complex64
+
+    @property
+    def real_dtype(self) -> torch.dtype:
+        """The real precision matching ``coeff_dtype``.
+
+        Coefficients are stored complex; the real form is what the interleaved
+        bridge produces on the way to a model, so complex is the primary value
+        and this is derived from it.
+        """
+        return torch.empty(0, dtype=self.coeff_dtype).real.dtype
 
     def resolve_domain(self, modes: tuple[int, ...]) -> tuple[DomainAxis, ...]:
         """Broadcast the raw domain to one ``(start, stop)`` pair per axis."""
@@ -57,3 +75,31 @@ class SpectralConfig:
     def with_domain(self, domain: DomainInputType) -> "SpectralConfig":
         """A copy with a different domain (this object is immutable)."""
         return replace(self, domain=domain)
+
+    def with_precision(self, coeff_dtype: torch.dtype) -> "SpectralConfig":
+        """A copy storing coefficients at a different complex precision.
+
+        Double precision is substantially slower for matrix-bound work on
+        consumer hardware -- measured 16.9x on a 2048-square matmul, against
+        2.8x for a transform -- and doubles the memory each coefficient
+        occupies. Choose it for work whose accuracy demands it, such as an
+        anchor whose oracle saturates at single precision, rather than by
+        default.
+        """
+        return replace(self, coeff_dtype=coeff_dtype)
+
+
+class ResolvedCoeffDtype:
+    """Reads the coefficient precision from a basis's configuration.
+
+    Accessed on the class it answers the default, so consumers holding a basis
+    type rather than an instance keep working. Accessed on an instance it reads
+    through to that instance's configuration, so the value cannot go stale when
+    the configuration is replaced.
+    """
+
+    def __get__(
+        self, instance: object | None, owner: type | None = None
+    ) -> torch.dtype:
+        config = getattr(instance, "_config", None) if instance is not None else None
+        return DEFAULT_COEFF_DTYPE if config is None else config.coeff_dtype
