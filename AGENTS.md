@@ -111,8 +111,9 @@ cannot reach the states a sequence produces.
 (`operators`, `basis`, `model`, `scripts`) and reports which mutants survive;
 with a base ref it mutates only the lines changed since that ref. The session
 and report go to `~/.cache/spectralsvr-mutation/`, never into the tree. The
-`mutate` workflow runs the same recipe on demand and keeps the report as an
-artifact. Hand-picked mutations test what the author expected to matter; this
+`mutate` workflow runs the same recipe on demand, and over every target's
+changed lines on a pull request that touches the mutation setup, and keeps each
+report as an artifact. Hand-picked mutations test what the author expected to matter; this
 enumerates them instead.
 
 Read the survivors rather than counting them. Some are equivalent mutants no test
@@ -172,7 +173,8 @@ whose accuracy demands it, not by default.
   verification). Archived to `changes/archive/` once its specs are synced.
 
 Implementation should trace to a task. Tick a task only when its stated
-verification has actually been run. When a task turns out to be wrong, amend the
+verification has actually been run. Every task is verifiable on the change's own
+branch: none waits on a merge, so a change archives with every task ticked. When a task turns out to be wrong, amend the
 task and say so — an artifact that quietly disagrees with the code is worse than
 one that records the correction.
 
