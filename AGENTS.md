@@ -129,6 +129,20 @@ type rather than a runtime check, prefer the type: structural `Protocol`s over
 inheritance, frozen value types over mutable ones, and a constructor that refuses
 an invalid argument over a check that notices it later.
 
+Where a set of alternatives is genuinely closed, model it as a closed union of
+frozen dataclasses rather than an abstract base. `Band = RealBand |
+ExactModeCount` in `utils` is the worked form: enumerating the union is
+exhaustive rather than a sample, so no further member can be written that claims
+a guarantee it does not deliver. An operation that needs the guarantee annotates
+the narrower alias, and the type checker refuses the rest at the call site.
+
+Two limits apply before reaching for a `Protocol`. A member written as
+`name: str` demands a *settable* attribute, which a frozen dataclass cannot
+satisfy — declare it as a read-only property instead. And `@runtime_checkable`
+checks member presence only, never signatures, so a one-method protocol is a weak
+runtime discriminator where that method name is common; the static checkers carry
+the guarantee, `isinstance` only spells it.
+
 ## Do not
 
 - Loosen an assertion, tolerance or oracle marker to make a test pass. That is a
