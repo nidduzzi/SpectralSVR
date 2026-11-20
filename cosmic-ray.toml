@@ -1,0 +1,19 @@
+# Mutation testing for the operator comparison harness.
+#
+# The harness's guarantees are now carried by types and by tests that name the
+# scenarios they cover; mutation testing is how we find out whether those tests
+# would actually notice the guarantee breaking.
+#
+#   uv run --extra mutation cosmic-ray init cosmic-ray.toml mutation.sqlite
+#   uv run --extra mutation cosmic-ray baseline cosmic-ray.toml
+#   uv run --extra mutation cosmic-ray exec cosmic-ray.toml mutation.sqlite
+#   uv run --extra mutation cr-report mutation.sqlite
+
+[cosmic-ray]
+module-path = "SpectralSVR/operators"
+timeout = 60.0
+excluded-modules = []
+test-command = "uv run --extra test --extra baselines pytest -x -q tests/operators tests/test_scenario_coverage.py tests/test_oracle_coverage.py"
+
+[cosmic-ray.distributor]
+name = "local"

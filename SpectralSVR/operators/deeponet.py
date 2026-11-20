@@ -11,7 +11,6 @@ import os
 
 import torch
 
-from .__base import Operator
 from .dataset import OperatorDataset
 
 
@@ -29,7 +28,23 @@ def _import_deepxde():
     return dde, DeepONetCartesianProd
 
 
-class DeepONetOperator(Operator):
+class FittedDeepONet:
+    """A trained DeepONet, queried through deepxde's predict."""
+
+    def __init__(self, name: str, model) -> None:
+        self.name = name
+        self._model = model
+
+    def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        import numpy as np
+
+        branch = f.detach().cpu().numpy().astype(np.float32)
+        trunk = x.to(torch.float64).detach().cpu().numpy().astype(np.float32)
+        pred = self._model.predict((branch, trunk))
+        return torch.as_tensor(pred, dtype=torch.float64)
+
+
+class DeepONetOperator:
     """DeepONet (unstacked, Cartesian-product) operator baseline.
 
     The training targets are the output functions sampled on ``trunk`` points;
@@ -56,9 +71,8 @@ class DeepONetOperator(Operator):
         self.lr = lr
         self.iterations = iterations
         self.seed = seed
-        self._model = None
 
-    def fit(self, dataset: OperatorDataset) -> "DeepONetOperator":
+    def fit(self, dataset: OperatorDataset) -> FittedDeepONet:
         dde, DeepONetCartesianProd = _import_deepxde()
         import numpy as np
 
@@ -84,14 +98,4 @@ class DeepONetOperator(Operator):
         model = dde.Model(data, net)
         model.compile("adam", lr=self.lr)
         model.train(iterations=self.iterations, display_every=self.iterations)
-        self._model = model
-        return self
-
-    def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        assert self._model is not None, "call fit before predict"
-        import numpy as np
-
-        branch = f.detach().cpu().numpy().astype(np.float32)
-        trunk = x.to(torch.float64).detach().cpu().numpy().astype(np.float32)
-        pred = self._model.predict((branch, trunk))
-        return torch.as_tensor(pred, dtype=torch.float64)
+        return FittedDeepONet(name=self.name, model=model)

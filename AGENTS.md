@@ -30,6 +30,7 @@ just check         # THE GATE: lint (ruff + mypy + ty) then the full test suite
 just test -k name  # a subset; extra args pass through to pytest
 just cov           # suite with a missing-lines report
 just fmt           # ruff format + ruff check --fix
+just mutate        # cosmic-ray over SpectralSVR/operators (slow)
 ```
 
 `just check` is the gate. Run it before claiming work is done, and report its
@@ -58,6 +59,36 @@ each entry states why.
 Marking honestly matters more than marking favourably. A test comparing a value
 against the library's own output is `oracle_consistency` even when the arithmetic
 around it was hand-derived.
+
+### Every stated scenario is checkable
+
+A scenario in a spec is a claim, so `tests/test_scenario_coverage.py` requires one
+of two things for each: a test naming it with `@pytest.mark.scenario("...")`, or an
+entry in `EXEMPT` giving the reason no test can. It reads the main specs *and* the
+deltas of changes still in flight, so a contract is watched from the moment it is
+written, not from the moment it is archived.
+
+`EXEMPT` is debt, not furniture. Entries are keyed per scenario rather than per
+capability, so a scenario added later to an exempt area is still caught, and a
+second test refuses any entry that has quietly gained a test. Shrink the list; do
+not grow it.
+
+Fuzz a scenario that ranges over inputs rather than pinning it to one literal.
+Where a requirement constrains what stays true *across* a sequence rather than
+within one call, model it with a `RuleBasedStateMachine` — single-shot cases
+cannot reach the states a sequence produces.
+
+### A test that cannot fail is worth nothing
+
+`just mutate` runs cosmic-ray over the operator harness and reports which mutants
+survive. Hand-picked mutations test what the author expected to matter; this
+enumerates them instead.
+
+Read the survivors rather than counting them. Some are equivalent mutants no test
+can kill, and identifying one is a result to record in the change's artifacts.
+The rest are real gaps, and they are often asymmetric: a suite that only ever
+moves a quantity in one direction leaves the opposite comparison alive until both
+directions are covered.
 
 ## Numerical discipline
 

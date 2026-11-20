@@ -40,5 +40,13 @@ mypy:
 ty:
     uv run --extra lint ty check SpectralSVR scripts
 
+# mutation-test the operator harness (slow; regenerates mutation.sqlite)
+mutate:
+    uv run --extra mutation cosmic-ray baseline cosmic-ray.toml
+    rm -f mutation.sqlite
+    uv run --extra mutation cosmic-ray init cosmic-ray.toml mutation.sqlite
+    uv run --extra mutation cosmic-ray exec cosmic-ray.toml mutation.sqlite
+    uv run --extra mutation cr-report mutation.sqlite
+
 # everything CI should gate on
 check: lint test
