@@ -1,5 +1,6 @@
 import torch
 import logging
+import math
 import typing
 from dataclasses import dataclass
 from typing import Callable, TypedDict, cast, overload
@@ -24,14 +25,56 @@ DeviceInput = torch.device | str | None
 
 
 def resolve_device(device: DeviceInput = None) -> torch.device:
-    """Resolve a device, defaulting to CUDA when available else CPU.
+    """The stated device, or the process default where none is stated.
 
-    Centralizes device selection so it can be injected/overridden in one place
-    instead of duplicating ``cuda if available`` checks across the codebase.
+    The library holds no preference of its own: naming nothing asks the
+    surrounding process to decide, and its answer is used as given.
     """
     if device is None:
-        return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        return torch.get_default_device()
     return torch.device(device)
+
+
+def accelerator() -> torch.device:
+    """The platform's accelerator, or the process default where none exists.
+
+    Names whichever accelerator is present rather than testing for a vendor, so
+    a caller states "the fast one here" without knowing which it is.
+    """
+    present = torch.accelerator.current_accelerator()
+    return torch.get_default_device() if present is None else present
+
+
+def refuse_a_generator_placed_elsewhere(
+    generator: torch.Generator | None, device: DeviceInput = None
+) -> None:
+    """Raise where a caller's random source and the work disagree on device.
+
+    Both generators are the same type and the device is a runtime attribute, so
+    no checker can see the disagreement. The message carries what the type
+    cannot: both devices, and that the source is what moves. Moving it instead
+    would draw different numbers from the same seed, which is the caller's
+    decision to make.
+
+    An unstated index means "whichever one this process is using", so a source on
+    ``cuda:0`` agrees with work placed on ``cuda``. Two stated indices that
+    differ are a disagreement like any other: ``cuda:0`` and ``cuda:1`` are
+    separate memories, and a tensor drawn on one cannot be read from the other.
+    """
+    if generator is None:
+        return
+    placement = resolve_device(device)
+    source = generator.device
+    same_kind = source.type == placement.type
+    an_index_is_unstated = source.index is None or placement.index is None
+    if same_kind and (an_index_is_unstated or source.index == placement.index):
+        return
+    raise RuntimeError(
+        f"the random source is on {generator.device} and the work is placed on "
+        f"{placement}; move the source with "
+        f"torch.Generator(device='{placement}'), or place the work on "
+        f"{generator.device}"
+    )
 
 
 def to_complex_coeff(
@@ -451,9 +494,7 @@ def resize_modes(x: torch.Tensor, target_modes: int | tuple[int, ...], rescale=T
 
     if rescale:
         modes = list(x.shape[1:])
-        x_resized = (
-            x_resized * torch.tensor(target_modes).prod() / torch.tensor(modes).prod()
-        )
+        x_resized = x_resized * math.prod(target_modes) / math.prod(modes)
 
     return x_resized
 
@@ -553,9 +594,14 @@ def zero_coeff(x: torch.Tensor, band: Band | list[Band]) -> torch.Tensor:
         dim_len = x.shape[dim]
         max_mode = axis_band.mode_count(dim_len)
         zero_range = torch.arange(
-            (max_mode - 1) // 2 + 1, dim_len - max_mode // 2, dtype=torch.long
+            (max_mode - 1) // 2 + 1,
+            dim_len - max_mode // 2,
+            dtype=torch.long,
+            device=x.device,
         )
-        x_zeroed.index_fill_(dim, zero_range, torch.zeros((1,), dtype=x.dtype)[0])
+        x_zeroed.index_fill_(
+            dim, zero_range, torch.zeros((1,), dtype=x.dtype, device=x.device)[0]
+        )
 
     return x_zeroed
 

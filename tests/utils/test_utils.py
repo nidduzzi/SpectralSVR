@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import warnings
 import torch
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
@@ -7,12 +8,14 @@ from hypothesis.extra import numpy as hnp
 
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
+    accelerator,
     ExactModeCount,
     StandardScaler,
     WavenumberCutoff,
     euler_solver,
     get_metrics,
     interpolate_tensor,
+    refuse_a_generator_placed_elsewhere,
     resize_modes,
     resolve_device,
     scale_to_standard,
@@ -83,18 +86,117 @@ def test_complex_invertible(rows, cols, seed):
     assert torch.equal(to_complex_coeff(to_real_coeff(c)), c)
 
 
-@pytest.mark.no_fuzz
+STATABLE_DEVICES = ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
+
+
 @pytest.mark.oracle_smoke
-def test_resolve_device_explicit():
-    assert resolve_device("cpu") == torch.device("cpu")
-    assert resolve_device(torch.device("cpu")) == torch.device("cpu")
+@pytest.mark.scenario("A stated device is used")
+@SETTINGS
+@given(name=st.sampled_from(STATABLE_DEVICES))
+def test_resolve_device_uses_the_stated_device(name):
+    assert resolve_device(name) == torch.device(name)
+    assert resolve_device(torch.device(name)) == torch.device(name)
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("A process-wide setting is followed")
+@SETTINGS
+@given(name=st.sampled_from(STATABLE_DEVICES))
+def test_resolve_device_follows_the_process_default(name):
+    torch.set_default_device(name)
+    assert resolve_device(None) == torch.zeros(1).device
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_resolve_device_default_matches_availability():
-    expected = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    assert resolve_device(None) == expected
+@pytest.mark.scenario("Naming the accelerator is a statement, not a search")
+def test_accelerator_names_whichever_one_is_present():
+    named = accelerator()
+    if torch.accelerator.is_available():
+        assert named == torch.accelerator.current_accelerator()
+        assert torch.zeros(1, device=named).device.type == named.type
+    else:
+        assert named == torch.get_default_device()
+    assert resolve_device(named) == named
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("The host is not overridden")
+def test_a_stated_host_survives_an_available_accelerator():
+    if not torch.accelerator.is_available():
+        pytest.skip(
+            "an accelerator must be present for the host to be overridable at all"
+        )
+    torch.set_default_device("cpu")
+    assert resolve_device(None) == torch.device("cpu")
+
+
+DISAGREEING_PAIRS = (
+    [(a, b) for a in STATABLE_DEVICES for b in STATABLE_DEVICES if a != b]
+    or None
+)
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A stated index is part of the statement")
+def test_two_stated_indices_that_differ_are_a_disagreement():
+    if not torch.cuda.is_available():
+        pytest.skip("an indexed accelerator is needed to state two of them")
+    with pytest.raises(RuntimeError, match="move the source"):
+        refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda:1")
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A stated index is part of the statement")
+def test_an_unstated_index_agrees_with_a_stated_one():
+    if not torch.cuda.is_available():
+        pytest.skip("an indexed accelerator is needed for an index to be unstated")
+    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda:0"), "cuda")
+    refuse_a_generator_placed_elsewhere(torch.Generator(device="cuda"), "cuda:0")
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A mismatched random source names both devices")
+@SETTINGS
+@given(pair=st.sampled_from(DISAGREEING_PAIRS or [("cpu", "cpu")]))
+def test_a_misplaced_random_source_names_both_devices(pair):
+    if DISAGREEING_PAIRS is None:
+        pytest.skip("two device types must be present for them to disagree")
+    source_name, work_name = pair
+    source = torch.Generator(device=source_name)
+    with pytest.raises(RuntimeError) as refusal:
+        refuse_a_generator_placed_elsewhere(source, work_name)
+    message = str(refusal.value)
+    assert str(source.device) in message
+    assert str(resolve_device(work_name)) in message
+    assert "move the source" in message
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A mismatched random source names both devices")
+def test_a_random_source_device_is_invisible_to_a_type_checker():
+    host = torch.Generator()
+    assert type(host) is type(torch.Generator(device=accelerator()))
+    if torch.accelerator.is_available():
+        assert host.device != accelerator()
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("An agreeing random source is unremarkable")
+@SETTINGS
+@given(name=st.sampled_from(STATABLE_DEVICES))
+def test_an_agreeing_random_source_is_unremarkable(name):
+    torch.set_default_device(name)
+    with warnings.catch_warnings(record=True) as raised:
+        warnings.simplefilter("always")
+        refuse_a_generator_placed_elsewhere(torch.Generator(device=name), name)
+        refuse_a_generator_placed_elsewhere(torch.Generator(device=name), None)
+        refuse_a_generator_placed_elsewhere(None, name)
+    assert [str(w.message) for w in raised] == []
 
 
 @pytest.mark.oracle_smoke

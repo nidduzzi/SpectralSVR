@@ -2,7 +2,7 @@ import torch
 import abc
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
-from ..utils import resize_modes, interpolate_tensor, resolve_device
+from ..utils import resize_modes, interpolate_tensor, resolve_device, DeviceInput
 from .config import DEFAULT_COEFF_DTYPE, SpectralConfig
 from .domain import (
     DomainAxis,
@@ -383,7 +383,7 @@ class Basis(abc.ABC):
             n {int} -- n functions after function i to evaluate (default: {-1}). The default evaluates all functions
             res {int | slice | tuple[slice,...] | None} -- function discretization resolution and domain (default: {start:stop:dimension modes} using the basis domain on every dimension with the same number of points as the dimension's modes each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
             evaluation_mode {"auto" | "inverse transform" | "basis"} -- coefficient evaluation mode (default: {"auto"}). Auto will use the inverse transform if the number of evaluations is high or res is not provided
-            device {torch.device | None} -- device the evaluations are done on (default: {None}). By default, the function will try to use the GPU and fallback on the CPU.
+            device {torch.device | str | None} -- device the evaluations are done on (default: {None}, i.e. the process default)
 
         Returns:
             tuple[torch.Tensor, torch.Tensor] -- tuple of value and grid respectively of the evaluated functions
@@ -425,7 +425,7 @@ class Basis(abc.ABC):
             n {int} -- n functions after function i to evaluate (default: {-1}). The default evaluates all functions
             res {int | slice | tuple[slice,...] | None} -- function discretization resolution and domain (default: {start:stop:dimension modes} using the basis domain on every dimension with the same number of points as the dimension's modes each). By default if only an int or a single slice is given, every dimension will share the same range and the resolution is based on the number of dimensions.
             evaluation_mode {"auto" | "inverse transform" | "basis"} -- coefficient evaluation mode (default: {"auto"}). Auto will use the inverse transform if the number of evaluations is high or res is not provided
-            device {torch.device | None} -- device the evaluations are done on (default: {None}). By default, the function will try to use the GPU and fallback on the CPU.
+            device {torch.device | str | None} -- device the evaluations are done on (default: {None}, i.e. the process default)
 
         Returns:
             torch.Tensor -- value of the evaluated functions
@@ -606,6 +606,8 @@ class Basis(abc.ABC):
         random_func=torch.randn,
         complex_funcs: bool = False,
         domain: DomainInputType = None,
+        *,
+        device: DeviceInput = None,
         **kwargs,
     ) -> Self:
         """
@@ -622,6 +624,7 @@ class Basis(abc.ABC):
             random_func {callable} -- random function that generates the coefficients (default: {torch.randn})
             complex_funcs {bool} -- whether the functions generated should be complex or not (default: {False})
             domain {tuple[float,float] | sequence[tuple[float,float]] | None} -- the per-axis (start, stop) interval the coefficients apply to (default: {None}, i.e. the unit interval (0, 1) on every axis)
+            device {torch.device | str | None} -- where the coefficients are placed (default: {None}, i.e. the process default)
 
         Returns:
             Basis -- n sets of functions with coefficients with the shape (n, modes)
@@ -932,8 +935,7 @@ class Basis(abc.ABC):
 
     def __getitem__(self, indices):
         copy = self.copy()
-        idx = torch.arange(len(copy))[indices].reshape(-1)
-        # ensure the indexing results in list of coefficients (0th dimension is the list index)
+        idx = torch.arange(len(copy), device=copy.coeff.device)[indices].reshape(-1)
         copy.coeff = copy.coeff[idx, ...]
         return copy
 

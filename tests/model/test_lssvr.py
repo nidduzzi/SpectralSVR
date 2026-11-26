@@ -6,7 +6,7 @@ import torch
 from hypothesis import given
 from hypothesis import strategies as st
 
-from SpectralSVR import LSSVR
+from SpectralSVR import LSSVR, accelerator
 
 from _model_data import SETTINGS, linear_dataset, smooth_dataset
 
@@ -188,6 +188,27 @@ def test_lssvr_fit_accepts_numpy_and_1d_targets(n, d, seed):
     model.fit(X, y)
     out = model.predict(X)
     assert out.shape[0] == n
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("A process-wide setting is followed")
+@SETTINGS
+@given(
+    name=st.sampled_from(
+        ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
+    )
+)
+def test_lssvr_follows_the_process_default(name):
+    torch.set_default_device(name)
+    assert LSSVR().device == torch.zeros(1).device
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("The host is not overridden")
+def test_lssvr_keeps_a_stated_host_under_an_accelerator():
+    torch.set_default_device(accelerator())
+    assert LSSVR(device="cpu").device == torch.device("cpu")
 
 
 @pytest.mark.no_fuzz

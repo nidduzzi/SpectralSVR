@@ -4,7 +4,7 @@ import logging
 
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE
+from ..utils import DEFAULT_REAL_DTYPE, DeviceInput
 import numpy as np
 from . import (
     MultiRegression,
@@ -140,11 +140,11 @@ class LSSVR(MultiRegression):
         kernel: Kernel_Type = "rbf",
         batch_size_func=default_batch_size,
         dtype=DEFAULT_REAL_DTYPE,
-        device: torch.device | None = None,
+        device: DeviceInput = None,
         logger: logging.Logger | None = None,
         **kernel_params,
     ):
-        super().__init__(dtype, device, logger)  # base resolves device=None -> cpu
+        super().__init__(dtype, device, logger)
 
         # Hyperparameters
         self.C = C

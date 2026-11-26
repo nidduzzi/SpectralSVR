@@ -16,7 +16,7 @@ import torch
 from hypothesis import given
 from hypothesis import strategies as st
 
-from SpectralSVR import Antiderivative, FourierBasis
+from SpectralSVR import Antiderivative, FourierBasis, accelerator
 from SpectralSVR.problems import BandLimited, Burgers, SampledForcing, SpectralForcing
 from SpectralSVR.basis import __base as base_module
 from SpectralSVR.utils import (
@@ -1507,3 +1507,74 @@ def test_numerical_burgers_forcing_frozen_at_step_start_loses_the_order():
         max(orders) < FROZEN_FORCING_ORDER_CEILING < min(MANUFACTURED_ROUND_TRIP_ORDERS)
     )
     assert frozen[-1] > MANUFACTURED_ROUND_TRIP_TOLERANCE
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("Generating a problem can be directed")
+@pytest.mark.scenario("Parts of a workload are directed separately")
+@SETTINGS
+@given(
+    space_modes=st.integers(8, 16),
+    nt=st.integers(12, 20),
+    seed=st.integers(0, 10_000),
+)
+def test_generating_a_problem_is_placed_where_it_is_told(space_modes, nt, seed):
+    if not torch.accelerator.is_available():
+        pytest.skip("directing placement elsewhere needs a second device to direct to")
+    elsewhere = accelerator()
+
+    manufactured, forcing = Burgers().generate(
+        FourierBasis,
+        2,
+        (space_modes, space_modes),
+        u0="random",
+        f="random",
+        nu=0.05,
+        generator=torch.Generator(device=elsewhere).manual_seed(seed),
+        device=elsewhere,
+    )
+    assert manufactured.coeff.device.type == elsewhere.type
+    assert forcing.coeff.device.type == elsewhere.type
+
+    integrated, _ = Burgers().generate(
+        FourierBasis,
+        2,
+        (nt, space_modes),
+        u0=0.0,
+        f=0.0,
+        nu=0.01,
+        time_domain=slice(0, 1, nt),
+        generator=torch.Generator(device=elsewhere).manual_seed(seed),
+        device=elsewhere,
+    )
+    assert integrated.coeff.device.type == elsewhere.type
+
+    stayed, _ = Burgers().generate(
+        FourierBasis,
+        2,
+        (nt, space_modes),
+        u0=0.0,
+        f=0.0,
+        nu=0.01,
+        time_domain=slice(0, 1, nt),
+        generator=torch.Generator().manual_seed(seed),
+    )
+    assert stayed.coeff.device == torch.get_default_device()
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A workload placed against the process default still runs")
+def test_generation_survives_a_process_default_pointing_elsewhere():
+    if not torch.accelerator.is_available():
+        pytest.skip("two device types must be present for them to disagree")
+    torch.set_default_device(accelerator())
+    generator = torch.Generator(device="cpu").manual_seed(0)
+    u, ut = Antiderivative().generate(
+        FourierBasis, 8, 8, generator=generator, u0=0, device="cpu"
+    )
+    assert u.coeff.device.type == "cpu"
+    assert ut.coeff.device.type == "cpu"
+    assert u[:4].coeff.shape[0] == 4
+    values = u.get_values(res=8, device=torch.device("cpu"))[0]
+    assert values.device.type == "cpu"

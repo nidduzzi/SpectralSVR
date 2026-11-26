@@ -6,7 +6,7 @@ from typing import Callable, overload, Any
 import numpy as np
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE
+from ..utils import DEFAULT_REAL_DTYPE, DeviceInput, resolve_device
 from typing_extensions import Self
 
 NumpyArrayorTensor = np.ndarray | torch.Tensor
@@ -43,12 +43,10 @@ class MultiRegression(abc.ABC):
     def __init__(
         self,
         dtype: torch.dtype = DEFAULT_REAL_DTYPE,
-        device: torch.device | None = None,
+        device: DeviceInput = None,
         logger: logging.Logger | None = None,
     ):
-        if device is None:
-            device = torch.device("cpu")
-        self._device: torch.device = device
+        self._device: torch.device = resolve_device(device)
         self.dtype: torch.dtype = dtype
         self.logger: logging.Logger = logger or logging.getLogger(
             f"{__name__}.{type(self).__name__}"
@@ -85,7 +83,6 @@ class MultiRegression(abc.ABC):
             If the label is represented by an array of n_outputs elements, the y
             parameter must have n_outputs columns.
         """
-        # converting to tensors and passing to GPU
         x: torch.Tensor
         if isinstance(X_arr, torch.Tensor):
             x = X_arr.to(self.device, dtype=self.dtype)
