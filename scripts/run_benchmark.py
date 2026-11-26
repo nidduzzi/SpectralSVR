@@ -13,8 +13,23 @@ Usage
     ... --operators spectralsvr                 # skip the neural baseline
     ... --quick                                 # small sizes, few iterations
 
-DeepONet needs the optional ``baselines`` extra (deepxde); it is skipped with a
-warning when unavailable.
+DeepONet needs the optional ``baselines`` extra (deepxde). Requesting it without
+that extra fails rather than producing a table short of a row; pass
+``--allow-missing-operators`` to benchmark without it deliberately.
+
+What the table establishes
+--------------------------
+The harness holds the data and the metrics fixed: every operator is fitted on
+the same sensor-sampled inputs and scored against the same targets at the same
+query points through one metric suite. It does not hold the tuning fixed: the
+hyperparameters on both sides are fixed defaults, chosen once and not tuned per
+dataset, and each figure comes from a single seed (``--seed``, default 0). The table therefore demonstrates that the harness
+works; it is not a controlled comparison of the methods.
+
+``fit_seconds`` is not like-for-like either. ``DeepONetOperator.fit`` calls
+``_import_deepxde()`` -- a lazy import paid on its first call -- and converts the
+dataset to numpy; ``SpectralSVROperator.fit`` does neither. Read the column as
+the cost of each adapter as written, not of each method.
 """
 
 from __future__ import annotations
@@ -34,7 +49,7 @@ from SpectralSVR.basis import Basis
 from SpectralSVR.operators import (
     DeepONetOperator,
     Operator,
-    OperatorDataset,
+    Split,
     SpectralSVROperator,
     benchmark,
 )
@@ -46,8 +61,7 @@ DEFAULT_OUT = Path("results") / "bench_results.csv"
 class BenchmarkCase(NamedTuple):
     """The split both operators see, and the points every prediction is scored at."""
 
-    train: OperatorDataset
-    test: OperatorDataset
+    split: Split
     query: torch.Tensor
 
 
@@ -120,18 +134,6 @@ def grf_coeff(
 # --------------------------------------------------------------------------- #
 # datasets
 # --------------------------------------------------------------------------- #
-def disjoint_split(
-    input_field: Basis, output_field: Basis, n_train: int, n_sensors: int
-) -> tuple[OperatorDataset, OperatorDataset]:
-    train = OperatorDataset.from_fields(
-        input_field[:n_train], output_field[:n_train], n_sensors=n_sensors
-    )
-    test = OperatorDataset.from_fields(
-        input_field[n_train:], output_field[n_train:], n_sensors=n_sensors
-    )
-    return train, test
-
-
 def spatial_field_at(field: Basis, time_index: int) -> FourierBasis:
     """One time slice of a time-dependent field, as a field over space alone."""
     assert field.coeff is not None
@@ -154,8 +156,8 @@ def antiderivative_case(
         u0=0,
         random_func=random_func,
     )
-    train, test = disjoint_split(ut, u, n_train, n_sensors=modes)
-    return BenchmarkCase(train, test, line_query(40))
+    split = Split.partition(ut, u, n_train, n_sensors=modes)
+    return BenchmarkCase(split, line_query(40))
 
 
 def antiderivative_grf_case(seed: int, quick: bool) -> BenchmarkCase:
@@ -178,10 +180,10 @@ def burgers_mms_case(seed: int, quick: bool) -> BenchmarkCase:
         nu=0.01,
         time_dependent_coeff=False,
     )
-    train, test = disjoint_split(f, u, n_train, n_sensors=modes)
+    split = Split.partition(f, u, n_train, n_sensors=modes)
     time_axis = torch.linspace(0, 1, 12, dtype=torch.float64)
     space_axis = torch.linspace(0, 1, 12, dtype=torch.float64)
-    return BenchmarkCase(train, test, tensor_product_query(time_axis, space_axis))
+    return BenchmarkCase(split, tensor_product_query(time_axis, space_axis))
 
 
 def burgers_numerical_case(seed: int, quick: bool) -> BenchmarkCase:
@@ -203,8 +205,8 @@ def burgers_numerical_case(seed: int, quick: bool) -> BenchmarkCase:
     )
     initial = spatial_field_at(u, 0)
     final = spatial_field_at(u, -1)
-    train, test = disjoint_split(initial, final, n_train, n_sensors=modes)
-    return BenchmarkCase(train, test, line_query(40))
+    split = Split.partition(initial, final, n_train, n_sensors=modes)
+    return BenchmarkCase(split, line_query(40))
 
 
 DATASETS: dict[str, DatasetSpec] = {
@@ -224,9 +226,22 @@ DATASETS: dict[str, DatasetSpec] = {
 # --------------------------------------------------------------------------- #
 # operators
 # --------------------------------------------------------------------------- #
+class MissingOperatorDependency(RuntimeError):
+    """A requested operator could not be built because an extra is not installed."""
+
+
 def build_operators(
-    names: list[str], query: torch.Tensor, iterations: int, seed: int
+    names: list[str],
+    query: torch.Tensor,
+    iterations: int,
+    seed: int,
+    allow_missing: bool = False,
 ) -> list[Operator]:
+    """Build every requested operator, or say which could not be built.
+
+    A table with fewer rows than were asked for is reachable only through
+    ``allow_missing``, so the default path cannot quietly drop a method.
+    """
     operators: list[Operator] = []
     if "spectralsvr" in names:
         operators.append(
@@ -234,7 +249,13 @@ def build_operators(
         )
     if "deeponet" in names:
         if importlib.util.find_spec("deepxde") is None:
-            print("  ! deepxde missing (uv sync --extra baselines); skipping DeepONet")
+            if not allow_missing:
+                raise MissingOperatorDependency(
+                    "DeepONet was requested but deepxde is not installed "
+                    "(uv sync --extra baselines). Pass --allow-missing-operators "
+                    "to benchmark without it, accepting a table that omits it."
+                )
+            print("  ! deepxde missing; omitting DeepONet (--allow-missing-operators)")
         else:
             operators.append(
                 DeepONetOperator(trunk=query, iterations=iterations, seed=seed)
@@ -256,6 +277,11 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
+        "--allow-missing-operators",
+        action="store_true",
+        help="benchmark without a requested operator whose extra is not installed",
+    )
+    parser.add_argument(
         "--iterations", type=int, default=10_000, help="DeepONet training iterations"
     )
     parser.add_argument(
@@ -271,15 +297,21 @@ def main() -> None:
         spec = DATASETS[key]
         print(f"[{key}] building...")
         case = spec.build(args.seed, args.quick)
-        operators = build_operators(args.operators, case.query, iterations, args.seed)
+        operators = build_operators(
+            args.operators,
+            case.query,
+            iterations,
+            args.seed,
+            allow_missing=args.allow_missing_operators,
+        )
         if not operators:
             print(f"[{key}] no operators available; skipped")
             continue
         print(
             f"[{key}] fitting {len(operators)} operator(s)"
-            f" on {case.train.n_functions} functions"
+            f" on {case.split.train.n_functions} functions"
         )
-        table = benchmark(operators, case.train, case.test, case.query).reset_index()
+        table = benchmark(operators, case.split, case.query).reset_index()
         table.insert(0, "dataset", spec.label)
         frames.append(table)
 

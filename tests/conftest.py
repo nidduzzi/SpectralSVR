@@ -46,6 +46,11 @@ def pytest_configure(config: pytest.Config):
     config.addinivalue_line(
         "markers", "no_fuzz: test is intentionally not fuzzed with Hypothesis"
     )
+    config.addinivalue_line(
+        "markers",
+        'scenario(name): test covers the spec scenario of that name '
+        "(see tests/test_scenario_coverage.py)",
+    )
     for name, description in ORACLE_MARKERS.items():
         config.addinivalue_line("markers", f"{name}: {description}")
 
