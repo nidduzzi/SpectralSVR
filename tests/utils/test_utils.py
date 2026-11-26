@@ -1,8 +1,10 @@
+import math
+
 import numpy as np
 import pytest
 import warnings
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
@@ -229,6 +231,73 @@ def test_get_metrics_injected_metric_set():
     assert m["custom"] == 0.0
     assert "mse" not in m
     assert "pred_nan_sum" in m
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("Both relative-error conventions appear")
+@SETTINGS
+@given(
+    shape=st.lists(st.integers(1, 5), min_size=1, max_size=3),
+    seed=st.integers(0, 10_000),
+)
+@example(shape=[1], seed=0)
+@example(shape=[5], seed=0)
+@example(shape=[1, 1, 1], seed=0)
+@example(shape=[5, 5, 5], seed=0)
+def test_per_sample_relative_l2_matches_a_loop_over_samples(shape, seed):
+    g = torch.Generator().manual_seed(seed)
+    preds = torch.randn(*shape, generator=g, dtype=torch.float64)
+    targets = torch.randn(*shape, generator=g, dtype=torch.float64)
+    ratios = [
+        math.sqrt(
+            sum(
+                (a - b) ** 2
+                for a, b in zip(p.flatten().tolist(), t.flatten().tolist(), strict=True)
+            )
+        )
+        / math.sqrt(sum(b**2 for b in t.flatten().tolist()))
+        for p, t in zip(preds, targets, strict=True)
+    ]
+    expected = sum(ratios) / len(ratios)
+
+    assert math.isclose(
+        DEFAULT_METRICS["mean_per_sample_relative_l2"](preds, targets).item(),
+        expected,
+        rel_tol=1e-12,
+    )
+
+
+@pytest.mark.oracle_invariant
+@pytest.mark.scenario("Both relative-error conventions appear")
+@SETTINGS
+@given(
+    rows=st.integers(2, 12),
+    cols=st.integers(1, 6),
+    seed=st.integers(0, 10_000),
+    scaled_row=st.integers(0, 11),
+    factor=st.floats(2.0, 1e3),
+)
+@example(rows=2, cols=1, seed=0, scaled_row=0, factor=2.0)
+@example(rows=2, cols=1, seed=0, scaled_row=1, factor=1e3)
+@example(rows=12, cols=6, seed=0, scaled_row=11, factor=1e3)
+def test_one_sample_of_larger_magnitude_moves_rrse_but_not_the_per_sample_statistic(
+    rows, cols, seed, scaled_row, factor
+):
+    g = torch.Generator().manual_seed(seed)
+    preds = torch.randn(rows, cols, generator=g, dtype=torch.float64)
+    targets = torch.randn(rows, cols, generator=g, dtype=torch.float64)
+    scale = torch.ones(rows, 1, dtype=torch.float64)
+    scale[scaled_row % rows] = factor
+
+    before = get_metrics(preds, targets)
+    after = get_metrics(preds * scale, targets * scale)
+
+    assert math.isclose(
+        after["mean_per_sample_relative_l2"],
+        before["mean_per_sample_relative_l2"],
+        rel_tol=1e-12,
+    )
+    assert not math.isclose(after["rrse"], before["rrse"], rel_tol=1e-6)
 
 
 # --------------------------------------------------------------------------- #

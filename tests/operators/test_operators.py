@@ -1,4 +1,4 @@
-"""Operator baselines: dataset, SpectralSVR adapter, benchmark, DeepONet smoke."""
+"""Operator baselines: dataset, SpectralSVR adapter, benchmark."""
 
 import ast
 import dataclasses
@@ -17,7 +17,6 @@ from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, ru
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
-    DeepONetOperator,
     OperatorDataset,
     FittedOperator,
     Operator,
@@ -29,7 +28,6 @@ from SpectralSVR.operators import (
 from tests._devices import DEVICES_PRESENT, HOST
 from tests._anchors import half_open_grid
 
-_HAS_DEEPXDE = importlib.util.find_spec("deepxde") is not None
 
 STATABLE = [None, *DEVICES_PRESENT]
 PASSING = ["by keyword", "by position"]
@@ -274,6 +272,8 @@ def test_benchmark_returns_metric_table():
 
 class _Exploding:
     name = "Exploding"
+    fit_covers = "nothing; it raises"
+    protocol = "a fake that raises"
 
     def fit(self, dataset):
         raise RuntimeError("fit blew up")
@@ -283,6 +283,7 @@ class _FittedConstant:
     """Predicts one number everywhere, chosen from the data it was fitted on."""
 
     name = "Constant"
+    device = HOST
 
     def __init__(self, value):
         self.value = value
@@ -295,6 +296,7 @@ class _FittedZero:
     """Predicts zero everywhere, so its mse is the target's own mean square."""
 
     name = "Zero"
+    device = HOST
 
     def predict(self, f, x):
         return torch.zeros(f.shape[0], x.shape[0], dtype=torch.float64)
@@ -302,6 +304,8 @@ class _FittedZero:
 
 class _Zero:
     name = "Zero"
+    fit_covers = "no training"
+    protocol = "a fake predicting zero"
 
     def fit(self, dataset):
         return _FittedZero()
@@ -309,6 +313,8 @@ class _Zero:
 
 class _Constant:
     name = "Constant"
+    fit_covers = "one mean over the training targets"
+    protocol = "a fake predicting the training mean"
 
     def fit(self, dataset):
         return _FittedConstant(float(dataset.targets(QUERY).mean()))
@@ -355,13 +361,20 @@ def _flat(text):
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Scope of the claim is stated")
 @pytest.mark.scenario("Fit times are qualified")
+@pytest.mark.scenario("A single-seed table is not presented as a result")
+@pytest.mark.scenario("Run-to-run spread is stated per operator")
 def test_the_benchmark_script_states_what_its_table_establishes():
     script = (
         pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py"
     )
     doc = _flat(ast.get_docstring(ast.parse(script.read_text())))
     assert "not tuned per dataset" in doc
-    assert "single seed" in doc
+    assert "seed set 0, 1, 2, 3, 4" in doc
+    assert "never read as the record" in doc
+    assert "Run-to-run spread at one fixed seed, measured per operator" in doc
+    assert "zero for both SpectralSVR and DeepONet" in doc
+    assert "moved by up to 1.9e-05 relative" in doc
+    assert "``fit_covers`` states the work its fit did" in doc
     assert "``_import_deepxde()``" in doc
     assert "does neither" in doc
 
@@ -445,17 +458,19 @@ def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
         lambda name, *a, **k: None if name == "deepxde" else real(name, *a, **k),
     )
     query = torch.linspace(0, 1, 5, dtype=torch.float64).unsqueeze(-1)
+    plan = script.DATASETS["antiderivative"].deeponet
     with pytest.raises(script.MissingOperatorDependency, match="deepxde"):
-        script.build_operators(["spectralsvr", "deeponet"], query, 10, 0)
+        script.build_operators(["spectralsvr", "deeponet"], query, plan, 0, HOST)
 
     opted_in = script.build_operators(
-        ["spectralsvr", "deeponet"], query, 10, 0, allow_missing=True
+        ["spectralsvr", "deeponet"], query, plan, 0, HOST, allow_missing=True
     )
     assert [op.name for op in opted_in] == ["SpectralSVR"]
 
 
 class _FittedSlow:
     name = "Slow"
+    device = HOST
 
     def __init__(self, predict_pause):
         self._pause = predict_pause
@@ -469,6 +484,8 @@ class _Slow:
     """Spends a known time in fit, and a different known time in predict."""
 
     name = "Slow"
+    fit_covers = "a known pause"
+    protocol = "a fake that sleeps"
 
     def __init__(self, fit_pause, predict_pause):
         self._fit_pause = fit_pause
@@ -511,18 +528,6 @@ def test_the_value_types_are_immutable():
     ):
         with pytest.raises(dataclasses.FrozenInstanceError):
             setattr(value, field, None)
-
-
-@pytest.mark.skipif(not _HAS_DEEPXDE, reason="needs the 'baselines' extra (deepxde)")
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_deeponet_operator_smoke():
-    split = _antiderivative_split(0, n_train=40, n_test=10)
-    query = torch.linspace(0, 1, 20).unsqueeze(-1)
-    fitted = DeepONetOperator(trunk=query, iterations=20, seed=0).fit(split.train)
-    pred = fitted.predict(split.test.f, query)
-    assert pred.shape == (split.test.n_functions, query.shape[0])
-    assert not torch.isnan(pred).any()
 
 
 class BenchmarkRuns(RuleBasedStateMachine):

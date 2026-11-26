@@ -26,6 +26,7 @@ module's only line of defense.
 
 import matplotlib
 import pytest
+import torch
 
 # Use a non-interactive backend so plotting tests run headless.
 matplotlib.use("Agg")
@@ -41,8 +42,12 @@ ORACLE_MARKERS = {
 # Strong anchors: at least one per module (see tests/test_oracle_coverage.py).
 ANCHOR_MARKERS = ("oracle_independent", "oracle_analytic", "oracle_invariant")
 
+ACCELERATOR_MEMORY_FRACTION = 0.25
+
 
 def pytest_configure(config: pytest.Config):
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(ACCELERATOR_MEMORY_FRACTION)
     config.addinivalue_line(
         "markers", "no_fuzz: test is intentionally not fuzzed with Hypothesis"
     )

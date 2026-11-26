@@ -1,0 +1,100 @@
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 0, "iterations": 10000, "r2": 0.6155245994907904, "rel_l2": 0.6069124736536736, "rrse": 0.6281664405416687, "seconds": 15.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 1, "iterations": 10000, "r2": 0.5160377255305001, "rel_l2": 0.6490898500967127, "rrse": 0.6791314519011525, "seconds": 15.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 2, "iterations": 10000, "r2": 0.6118293952263875, "rel_l2": 0.6009399930706331, "rrse": 0.6104718269389021, "seconds": 15.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 3, "iterations": 10000, "r2": 0.2673320902695765, "rel_l2": 0.831861257010808, "rrse": 0.8248378084196673, "seconds": 15.7}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 4, "iterations": 10000, "r2": 0.4074710630281042, "rel_l2": 0.743882985321625, "rrse": 0.7527721696731576, "seconds": 15.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 0, "iterations": 10000, "r2": -6.120186632245427, "rel_l2": 2.223525332804114, "rrse": 2.4959092040214053, "seconds": 15.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 1, "iterations": 10000, "r2": -6.231086711657608, "rel_l2": 2.3346120571580484, "rrse": 2.4760794527733685, "seconds": 15.2}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 2, "iterations": 10000, "r2": -5.101350620477054, "rel_l2": 2.0849571527305324, "rrse": 2.197421565441437, "seconds": 15.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 3, "iterations": 10000, "r2": -6.172197684279169, "rel_l2": 2.1395246452791765, "rrse": 2.3354043799168362, "seconds": 15.8}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 4, "iterations": 10000, "r2": -11.735126800432583, "rel_l2": 3.07140563137792, "rrse": 3.3535993370392134, "seconds": 15.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 0, "iterations": 10000, "r2": -1.6665288542620609, "rel_l2": 1.8173480428979674, "rrse": 1.2454497276016978, "seconds": 15.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 1, "iterations": 10000, "r2": -1.858353950484274, "rel_l2": 1.8710690579050535, "rrse": 1.6106017701953337, "seconds": 15.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 2, "iterations": 10000, "r2": -0.8520817014885391, "rel_l2": 1.4358516992431567, "rrse": 1.2358470239373351, "seconds": 15.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 3, "iterations": 10000, "r2": -0.9051366868332245, "rel_l2": 1.2247486947061952, "rrse": 1.218009603285521, "seconds": 15.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 4, "iterations": 10000, "r2": -0.7057336384006885, "rel_l2": 1.0737118265578456, "rrse": 1.1127163424114035, "seconds": 15.7}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 0, "iterations": 10000, "r2": 0.9990850966481059, "rel_l2": 0.033822683558454664, "rrse": 0.029367598745540357, "seconds": 15.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 1, "iterations": 10000, "r2": 0.9990550026483784, "rel_l2": 0.0308315777995284, "rrse": 0.02891866434677632, "seconds": 14.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 2, "iterations": 10000, "r2": 0.9995448776031328, "rel_l2": 0.028260573849830363, "rrse": 0.02131765389806072, "seconds": 14.0}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 3, "iterations": 10000, "r2": 0.9995607393965613, "rel_l2": 0.025154501955368582, "rrse": 0.020050621685004003, "seconds": 15.2}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 4, "iterations": 10000, "r2": 0.9995279781112391, "rel_l2": 0.02329333563437724, "rrse": 0.021132329517787887, "seconds": 15.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 0, "iterations": 10000, "r2": 0.8014250510592329, "rel_l2": 0.45480921082949094, "rrse": 0.4704418249016773, "seconds": 13.1}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 1, "iterations": 10000, "r2": 0.8682240087983789, "rel_l2": 0.30801524308235156, "rrse": 0.28093781938678597, "seconds": 15.2}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 2, "iterations": 10000, "r2": 0.6658822875443275, "rel_l2": 0.4243471895983934, "rrse": 0.42166563521141254, "seconds": 15.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 3, "iterations": 10000, "r2": 0.8041139180886488, "rel_l2": 0.37059002353538856, "rrse": 0.36563471967491584, "seconds": 15.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 4, "iterations": 10000, "r2": 0.6779884460264115, "rel_l2": 0.42970164860054394, "rrse": 0.38602949013559723, "seconds": 15.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 0, "iterations": 10000, "r2": 0.4813336558916501, "rel_l2": 0.684932286379831, "rrse": 0.6904460371827806, "seconds": 22.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 1, "iterations": 10000, "r2": 0.49446499798857657, "rel_l2": 0.6883280773916906, "rrse": 0.6825545649323745, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 2, "iterations": 10000, "r2": 0.44691496801829783, "rel_l2": 0.7273204542686824, "rrse": 0.7201691607106225, "seconds": 22.5}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 3, "iterations": 10000, "r2": 0.36068622208874596, "rel_l2": 0.7609282346020222, "rrse": 0.7647563752978652, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 4, "iterations": 10000, "r2": 0.5113699931526184, "rel_l2": 0.6703815392590253, "rrse": 0.6706847494065405, "seconds": 22.2}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 0, "iterations": 10000, "r2": 0.0226915614634328, "rel_l2": 0.8997942436931495, "rrse": 0.8965101240924951, "seconds": 22.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 1, "iterations": 10000, "r2": -0.09949368682459253, "rel_l2": 0.9594564035897747, "rrse": 0.9680224522762675, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 2, "iterations": 10000, "r2": 0.09935714606845211, "rel_l2": 0.8545807547903185, "rrse": 0.8711429261402707, "seconds": 22.5}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 3, "iterations": 10000, "r2": -0.35128587974336234, "rel_l2": 0.9871371879797569, "rrse": 1.0337729731822352, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 4, "iterations": 10000, "r2": 0.13343114670379763, "rel_l2": 0.8592777674745862, "rrse": 0.8726673397252481, "seconds": 23.0}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 0, "iterations": 10000, "r2": 0.35545093220029583, "rel_l2": 0.9916731396268272, "rrse": 0.7146343947277308, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 1, "iterations": 10000, "r2": 0.5980830228507565, "rel_l2": 0.7223245711189745, "rrse": 0.6250295110266364, "seconds": 22.5}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 2, "iterations": 10000, "r2": 0.2628887343984775, "rel_l2": 0.7757263496143598, "rrse": 0.8083835494213556, "seconds": 22.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 3, "iterations": 10000, "r2": -0.05882262909885112, "rel_l2": 0.7888734907750506, "rrse": 0.9388815987805644, "seconds": 22.1}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 4, "iterations": 10000, "r2": 0.040580402410941296, "rel_l2": 0.72876472069683, "rrse": 0.7566473105080708, "seconds": 22.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 0, "iterations": 10000, "r2": 1.0, "rel_l2": 0.009345869433864822, "rrse": 0.010450143496442738, "seconds": 22.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 1, "iterations": 10000, "r2": 0.9995216981077147, "rel_l2": 0.014086153779154658, "rrse": 0.021115452742264732, "seconds": 22.4}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 2, "iterations": 10000, "r2": 0.999395231340759, "rel_l2": 0.014827915644635066, "rrse": 0.024179408229714622, "seconds": 22.7}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 3, "iterations": 10000, "r2": 0.9996761283795091, "rel_l2": 0.013515950493567441, "rrse": 0.01847973819384997, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 4, "iterations": 10000, "r2": 0.9997916785628217, "rel_l2": 0.012009069738196486, "rrse": 0.014281056743176758, "seconds": 22.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 0, "iterations": 10000, "r2": 1.0, "rel_l2": 0.05617412805559468, "rrse": 0.04925875365314358, "seconds": 22.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 1, "iterations": 10000, "r2": 0.9997010008368967, "rel_l2": 0.05859225961646725, "rrse": 0.055792242964228, "seconds": 22.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 2, "iterations": 10000, "r2": 1.0, "rel_l2": 0.06235523648918514, "rrse": 0.06234752003943451, "seconds": 22.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 3, "iterations": 10000, "r2": 1.0, "rel_l2": 0.06818507628255704, "rrse": 0.06485597817952823, "seconds": 22.7}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 4, "iterations": 10000, "r2": 1.0, "rel_l2": 0.06284313493039148, "rrse": 0.055319624260093694, "seconds": 23.1}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 0, "iterations": 50000, "r2": 0.698844522316203, "rel_l2": 0.5269435007935039, "rrse": 0.5546027918948977, "seconds": 75.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 1, "iterations": 50000, "r2": 0.7725341546601043, "rel_l2": 0.44997842323801146, "rrse": 0.46671961356631914, "seconds": 75.7}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 2, "iterations": 50000, "r2": 0.7327547790129152, "rel_l2": 0.494610204814343, "rrse": 0.5077062581625024, "seconds": 75.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 3, "iterations": 50000, "r2": 0.4873112043452002, "rel_l2": 0.658460559424455, "rrse": 0.6838593120005507, "seconds": 65.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative", "seed": 4, "iterations": 50000, "r2": 0.2919743478689976, "rel_l2": 0.754468907310945, "rrse": 0.8026750597546143, "seconds": 62.9}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 0, "iterations": 50000, "r2": -1.919778100020415, "rel_l2": 1.4768438687602716, "rrse": 1.5219158907797439, "seconds": 62.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 1, "iterations": 50000, "r2": -6.296897315507242, "rel_l2": 2.400281610052922, "rrse": 2.5042951563752647, "seconds": 63.2}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 2, "iterations": 50000, "r2": -4.502141974287317, "rel_l2": 1.9690274975928723, "rrse": 2.0795056339440547, "seconds": 67.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 3, "iterations": 50000, "r2": -6.130236222748717, "rel_l2": 2.2013717553232586, "rrse": 2.3046653093902347, "seconds": 75.1}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-mms", "seed": 4, "iterations": 50000, "r2": -9.981931206230946, "rel_l2": 2.715336605223294, "rrse": 3.1019201074069027, "seconds": 74.8}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 0, "iterations": 50000, "r2": -1.716665736295234, "rel_l2": 1.7347930101269113, "rrse": 1.3298669991969354, "seconds": 77.8}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 1, "iterations": 50000, "r2": -2.2136963399579708, "rel_l2": 2.2254488807177806, "rrse": 1.6643068830181866, "seconds": 75.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 2, "iterations": 50000, "r2": -0.6151516667050435, "rel_l2": 1.335665753099833, "rrse": 1.159772857644102, "seconds": 75.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 3, "iterations": 50000, "r2": -0.8740645284580454, "rel_l2": 1.1852316484054586, "rrse": 1.2239637097664569, "seconds": 76.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-numerical", "seed": 4, "iterations": 50000, "r2": -0.7488701304452808, "rel_l2": 1.0786634587664605, "rrse": 1.1240420042828514, "seconds": 75.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 0, "iterations": 50000, "r2": 0.999905939347515, "rel_l2": 0.014109310281062654, "rrse": 0.011989140064321235, "seconds": 75.7}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 1, "iterations": 50000, "r2": 0.9998228495146779, "rel_l2": 0.013198985741943258, "rrse": 0.0135291583340986, "seconds": 75.6}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 2, "iterations": 50000, "r2": 0.9999855185516683, "rel_l2": 0.008525448536744385, "rrse": 0.007577532636188764, "seconds": 75.4}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 3, "iterations": 50000, "r2": 0.9999820668679072, "rel_l2": 0.010880343082270327, "rrse": 0.008710242012711665, "seconds": 75.0}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "antiderivative-grf", "seed": 4, "iterations": 50000, "r2": 0.9998247834137862, "rel_l2": 0.01338037962158279, "rrse": 0.014829207039782685, "seconds": 75.1}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 0, "iterations": 50000, "r2": 0.904542540613888, "rel_l2": 0.3527012405835039, "rrse": 0.319861549602561, "seconds": 76.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 1, "iterations": 50000, "r2": 0.9274433793620062, "rel_l2": 0.29852441740804997, "rrse": 0.2650130424888623, "seconds": 75.5}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 2, "iterations": 50000, "r2": 0.5945852308188891, "rel_l2": 0.45606918105284394, "rrse": 0.4388320652013274, "seconds": 76.1}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 3, "iterations": 50000, "r2": 0.9106105979160335, "rel_l2": 0.2835261490106963, "rrse": 0.2620512791656896, "seconds": 76.3}
+{"recipe": "Lu 2021 / deepxde example", "dataset": "burgers-forced", "seed": 4, "iterations": 50000, "r2": 0.792320616761018, "rel_l2": 0.435631914376373, "rrse": 0.39735510672255386, "seconds": 75.7}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 0, "iterations": 50000, "r2": 0.5291716855621931, "rel_l2": 0.6699060455490202, "rrse": 0.6606354745273952, "seconds": 111.5}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 1, "iterations": 50000, "r2": 0.5894818512388319, "rel_l2": 0.6207843075136904, "rrse": 0.61536309289915, "seconds": 111.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 2, "iterations": 50000, "r2": 0.5185850659315389, "rel_l2": 0.6791280651257217, "rrse": 0.6713781696407125, "seconds": 111.2}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 3, "iterations": 50000, "r2": 0.4193917702131105, "rel_l2": 0.7304045408964722, "rrse": 0.7264508078708257, "seconds": 110.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative", "seed": 4, "iterations": 50000, "r2": 0.561073959422874, "rel_l2": 0.6339034754881345, "rrse": 0.6359844396054803, "seconds": 110.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 0, "iterations": 50000, "r2": 0.5315374858174615, "rel_l2": 0.6101578641744283, "rrse": 0.6297183512764849, "seconds": 110.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 1, "iterations": 50000, "r2": 0.5460740357201979, "rel_l2": 0.630630460800574, "rrse": 0.6372321845639095, "seconds": 111.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 2, "iterations": 50000, "r2": 0.5842467064718907, "rel_l2": 0.5721535320691974, "rrse": 0.5858300374205608, "seconds": 112.2}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 3, "iterations": 50000, "r2": 0.47866784003529755, "rel_l2": 0.6150192945559013, "rrse": 0.6353197357490865, "seconds": 113.2}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-mms", "seed": 4, "iterations": 50000, "r2": 0.5889214012430085, "rel_l2": 0.5954781342488744, "rrse": 0.602098118020554, "seconds": 113.5}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 0, "iterations": 50000, "r2": 0.48238575168788583, "rel_l2": 0.9098855873228555, "rrse": 0.6719274077547258, "seconds": 112.1}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 1, "iterations": 50000, "r2": 0.5716879254206843, "rel_l2": 0.7351555661193595, "rrse": 0.6335159080378245, "seconds": 111.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 2, "iterations": 50000, "r2": 0.4120845761737259, "rel_l2": 0.6930380694660414, "rrse": 0.7117134471040792, "seconds": 111.7}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 3, "iterations": 50000, "r2": 0.06991508441709651, "rel_l2": 0.729607061207964, "rrse": 0.8909534142054254, "seconds": 112.6}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-numerical", "seed": 4, "iterations": 50000, "r2": 0.3606702798902307, "rel_l2": 0.6148832502316497, "rrse": 0.6535886279218038, "seconds": 111.8}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 0, "iterations": 50000, "r2": 1.0, "rel_l2": 0.009235695544748434, "rrse": 0.010655531940580332, "seconds": 111.1}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 1, "iterations": 50000, "r2": 0.9994113758212583, "rel_l2": 0.012327960084511208, "rrse": 0.022758318814974893, "seconds": 111.4}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 2, "iterations": 50000, "r2": 0.9992570193747987, "rel_l2": 0.01138983232014682, "rrse": 0.027371561496236183, "seconds": 111.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 3, "iterations": 50000, "r2": 0.9997686553999415, "rel_l2": 0.009927982270079867, "rrse": 0.016946859577373012, "seconds": 111.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "antiderivative-grf", "seed": 4, "iterations": 50000, "r2": 0.9998499498243634, "rel_l2": 0.008971400995407667, "rrse": 0.014049479434427546, "seconds": 111.3}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 0, "iterations": 50000, "r2": 0.9999459913899914, "rel_l2": 0.05135099204279043, "rrse": 0.048076215119101436, "seconds": 113.1}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 1, "iterations": 50000, "r2": 0.999670873010497, "rel_l2": 0.05487192566599982, "rrse": 0.056522020427234865, "seconds": 113.0}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 2, "iterations": 50000, "r2": 1.0, "rel_l2": 0.056754991573570925, "rrse": 0.05699459517452661, "seconds": 111.9}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 3, "iterations": 50000, "r2": 1.0, "rel_l2": 0.05846232530909794, "rrse": 0.05725621930637968, "seconds": 111.2}
+{"recipe": "Lu 2022 Burgers", "dataset": "burgers-forced", "seed": 4, "iterations": 50000, "r2": 1.0, "rel_l2": 0.05449706328482314, "rrse": 0.049163131609752025, "seconds": 113.3}

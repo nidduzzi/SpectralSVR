@@ -45,19 +45,17 @@ def accelerator() -> torch.device:
     return torch.get_default_device() if present is None else present
 
 
-def name_the_same_memory(first: torch.device, second: torch.device) -> bool:
-    """Whether two devices place values in the same memory.
-
-    An unstated accelerator index names the one in use.
-    """
+def placed(device: torch.device) -> torch.device:
+    """The memory a device names: an unstated accelerator index resolves to the one in use."""
     present = torch.accelerator.current_accelerator()
-    first_placed, second_placed = (
-        torch.device(device.type, torch.accelerator.current_device_index())
-        if present is not None and device.type == present.type and device.index is None
-        else device
-        for device in (first, second)
-    )
-    return first_placed == second_placed
+    if present is not None and device.type == present.type and device.index is None:
+        return torch.device(device.type, torch.accelerator.current_device_index())
+    return device
+
+
+def name_the_same_memory(first: torch.device, second: torch.device) -> bool:
+    """Whether two devices place values in the same memory."""
+    return placed(first) == placed(second)
 
 
 def refuse_a_generator_placed_elsewhere(
@@ -375,6 +373,16 @@ def _relative_squared_error(
     return rse.sqrt() if not squared else rse
 
 
+def _mean_per_sample_relative_l2(
+    preds: torch.Tensor, targets: torch.Tensor
+) -> torch.Tensor:
+    """Mean over samples of ``||p_i - t_i||_2 / ||t_i||_2``, a sample being one leading-axis row."""
+    samples = preds.shape[0]
+    error = torch.linalg.vector_norm((preds - targets).reshape(samples, -1), dim=1)
+    scale = torch.linalg.vector_norm(targets.reshape(samples, -1), dim=1)
+    return (error / scale).mean()
+
+
 # Default metric set; inject a different mapping into get_metrics to override.
 # NOTE: rse/rrse are normalized by the (global) target variance, so they blow
 # up when the targets have near-zero variance overall; prefer mse/rmse there.
@@ -386,6 +394,7 @@ DEFAULT_METRICS: dict[str, MetricFn] = {
     "smape": symmetric_mean_absolute_percentage_error,
     "rse": _relative_squared_error,
     "rrse": partial(_relative_squared_error, squared=False),
+    "mean_per_sample_relative_l2": _mean_per_sample_relative_l2,
 }
 
 
@@ -399,6 +408,7 @@ class Metrics(TypedDict):
     smape: float
     rse: float
     rrse: float
+    mean_per_sample_relative_l2: float
     pred_nan_sum: int
 
 

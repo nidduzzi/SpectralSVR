@@ -5,19 +5,25 @@
 default:
     @just --list
 
+host_memory_cap := "systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 --quiet"
+
 # create/refresh the full dev environment
 sync:
     uv sync --extra test --extra lint --extra notebook --extra baselines
 
 # run the test suite (pass extra pytest args, e.g. `just test -k fourier`)
 test *args:
-    uv run --extra test --extra baselines pytest {{args}}
+    {{host_memory_cap}} uv run --extra test --extra baselines pytest {{args}}
 
 # run tests with coverage and print a missing-lines report
 cov *args:
     # COVERAGE_CORE=sysmon avoids a torch+coverage C-tracer clash
-    COVERAGE_CORE=sysmon uv run --extra test --extra baselines coverage run -m pytest {{args}}
+    COVERAGE_CORE=sysmon {{host_memory_cap}} uv run --extra test --extra baselines coverage run -m pytest {{args}}
     uv run --extra test --extra baselines coverage report -m
+
+# regenerate the committed comparison record over the default seed set (slow; resume with --append)
+bench *args:
+    {{host_memory_cap}} uv run --extra baselines python scripts/run_benchmark.py --device cuda --out benchmarks/operator_comparison.csv {{args}}
 
 # lint + type-check (ruff, mypy, ty)
 lint:

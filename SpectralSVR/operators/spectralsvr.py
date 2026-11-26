@@ -20,6 +20,10 @@ class FittedSpectralSVR:
     model: SpectralSVR
     output_domain: DomainInputType
 
+    @property
+    def device(self) -> torch.device:
+        return self.model.regressor.device
+
     def predict(self, f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         return self.model.forward(f, x, domain=self.output_domain).real.to(
             torch.float64
@@ -38,6 +42,17 @@ class SpectralSVROperator:
     def __init__(self, basis: Basis, regressor: MultiRegression) -> None:
         self._basis = basis
         self._regressor = regressor
+
+    @property
+    def fit_covers(self) -> str:
+        return f"one {type(self._regressor).__name__} fit to the output coefficients"
+
+    @property
+    def protocol(self) -> str:
+        return (
+            f"{type(self._regressor).__name__} on {type(self._basis).__name__} "
+            "coefficients with fixed defaults, untuned"
+        )
 
     def fit(self, dataset: OperatorDataset) -> FittedSpectralSVR:
         model = SpectralSVR(self._basis, self._regressor)
