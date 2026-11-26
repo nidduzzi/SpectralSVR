@@ -46,6 +46,7 @@ test = [
     "pytest>=9.1.1,<10",
     "hypothesis>=6.156.6,<7",
     "coverage>=7.15.0,<8",
+    "ruff>=0.15.21,<0.16",
 ]
 mutation = [
     "cosmic-ray>=8.7.0",
@@ -111,6 +112,9 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "B", "W", "C9", "PERF"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"
