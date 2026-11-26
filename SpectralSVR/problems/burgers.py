@@ -11,9 +11,43 @@ from ..utils import (
     resolve_device,
 )
 from . import Problem
-from typing import Literal, Type
+from dataclasses import dataclass
+from typing import Callable, Literal, Type
 
 ParamInput = Literal["random"] | Number | torch.Tensor
+ForcingCallable = Callable[[torch.Tensor], torch.Tensor]
+
+
+@dataclass(frozen=True)
+class SpectralForcing:
+    """A callable returning ``(n, ns)`` spectral coefficients at a time."""
+
+    at_time: ForcingCallable
+
+    def spectrum(self, basis: Type[BasisSubType], t: torch.Tensor) -> torch.Tensor:
+        return self.at_time(t)
+
+
+@dataclass(frozen=True)
+class SampledForcing:
+    """A callable returning ``(n, ns)`` sampled values at a time."""
+
+    at_time: ForcingCallable
+
+    def spectrum(self, basis: Type[BasisSubType], t: torch.Tensor) -> torch.Tensor:
+        return basis.transform(self.at_time(t) + 0j)
+
+
+@dataclass(frozen=True)
+class BandLimited:
+    """A forcing field the generator may truncate to the integration grid."""
+
+    field: Basis
+
+
+DeclaredForcing = SpectralForcing | SampledForcing
+NumericalForcing = Number | DeclaredForcing | BandLimited
+ForcingInput = Literal["random"] | NumericalForcing
 
 
 # References:
@@ -42,7 +76,7 @@ class Burgers(Problem):
         modes: int | tuple[int, ...],
         generator: torch.Generator | None = None,
         u0: ParamInput | BasisSubType = "random",
-        f: ParamInput | BasisSubType = 0,
+        f: ForcingInput | BasisSubType = 0,
         nu: float = 0.01,
         space_domain: slice | None = None,
         time_domain: slice | None = None,
@@ -51,6 +85,31 @@ class Burgers(Problem):
         time_dependent_coeff: bool = True,
         **kwargs,
     ) -> tuple[BasisSubType, BasisSubType]:
+        """Generate a Burgers ``(u, f)`` pair, manufactured or integrated.
+
+        ``u0="random"`` with ``f="random"`` manufactures a pair analytically and
+        integrates nothing; any other combination integrates ``u0`` forward
+        under ``f``. ``band`` belongs to the first, ``solver`` to the second,
+        and each is refused on the other.
+
+        The integrated branch evaluates its forcing at the integrator's stage
+        times and accepts:
+
+        - a :data:`Number`, constant in time and space;
+        - :class:`SpectralForcing` or :class:`SampledForcing` wrapping a callable
+          of the stage time, which say whether it returns ``(n, modes[1])``
+          coefficients or values;
+        - a basis field over ``(time, space)`` spectral in time
+          (``time_dependent=False``), spanning the integration intervals on both
+          axes and within the grid's spatial resolution;
+        - :class:`BandLimited` wrapping such a field, truncating it to the grid
+          on the caller's instruction.
+
+        Refused: a field sampled per time slice, which the integrator cannot
+        read between grid points; a bare tensor, which states values without
+        saying when they hold; a bare callable, which does not say whether its
+        result is coefficients or values.
+        """
         if space_domain is None:
             space_domain = slice(0, 1, 200)
         if time_domain is None:
@@ -63,12 +122,13 @@ class Burgers(Problem):
 
         device = resolve_device()
 
-        # per-axis (start, stop) intervals -- generation now honours a nonzero
-        # (or negative) start on either axis, not just the lengths.
         space = (float(space_domain.start), float(space_domain.stop))
         time = (float(time_domain.start), float(time_domain.stop))
         T: float = time[1] - time[0]
         nt = int(time_domain.step)
+        assert nt > 1, (
+            f"time_domain needs at least two grid points to have a step, got {nt}"
+        )
         dt = T / (nt - 1)
         t = basis.grid(time_domain).flatten().to(device=device)
         assert t[1].sub(t[0]).isclose(torch.tensor(dt)), (
@@ -83,13 +143,10 @@ class Burgers(Problem):
         )
         self._reject_inapplicable(manufactured, solver, band)
         if manufactured:
-            # method of manufactured solutions: pick a band-limited solution u and
-            # let the forcing be its exact Burgers residual (u0 just follows from u)
             u_gen, f_gen = self.mms_solution(
                 basis, n, modes, nu, domain, generator=generator, band=band
             )
 
-            # convert the (time, space) fields to time-dependent coefficients
             if time_dependent_coeff:
                 spatial_modes = modes[1:]
                 res_modes = tuple(
@@ -117,10 +174,9 @@ class Burgers(Problem):
                 modes,
                 nu,
                 u0,
-                f,
+                self._numerical_forcing(f),
                 domain,
                 t,
-                nt,
                 device,
                 generator,
                 etdrk4_solver if solver is None else solver,
@@ -163,10 +219,9 @@ class Burgers(Problem):
         modes: tuple[int, ...],
         nu: float,
         u0: "ParamInput | BasisSubType",
-        f: "ParamInput | BasisSubType",
+        f: "NumericalForcing | BasisSubType",
         domain: tuple[tuple[float, float], ...],
         t: torch.Tensor,
-        nt: int,
         device: torch.device,
         generator: torch.Generator | None,
         solver: SemilinearSolverSignatureType,
@@ -186,6 +241,13 @@ class Burgers(Problem):
         ``solver`` receives the linear operator and nonlinear term separately;
         wrap a monolithic ``rhs(t, y)`` solver in
         :func:`utils.as_semilinear_solver` to use one here.
+
+        The forcing is normalised to :meth:`_forcing_at`, a function of time
+        that every stage calls, so a forcing varying within a step is seen at
+        the stage times rather than frozen at the step's start.
+
+        A manufactured forcing at cutoff ``K`` is alias-free where
+        ``ns >= 6 K``, which ``ns = m`` already satisfies.
         """
         if len(modes) != 2:
             raise NotImplementedError("numerical Burgers is implemented for 1D space")
@@ -205,7 +267,6 @@ class Burgers(Problem):
         mask = basis.dealias_mask(ns)
         dealias = mask.to(device=device) if mask is not None else 1.0
 
-        # initial condition: random smooth field, a constant, or explicit values
         if isinstance(u0, str) and u0 == "random":
             v0 = basis.generate_coeff(n, ns, generator=generator).to(device=device)
         elif isinstance(u0, Number):
@@ -224,23 +285,174 @@ class Burgers(Problem):
                 "numerical Burgers supports u0='random', a constant, or a value tensor"
             )
 
-        # constant forcing spectrum (0 by default)
-        if isinstance(f, Number):
-            f_field = torch.full((n, ns), float(f), device=device) + 0j
-            f_hat = basis.transform(f_field)
-        else:
-            raise NotImplementedError("numerical Burgers supports a constant forcing f")
+        forcing_at = Burgers._forcing_at(basis, f, n, ns, domain, device)
 
-        def nonlinear(ti: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-            return Burgers.advection_spectrum(basis, v, d1, dealias) + f_hat
+        def nonlinear(t: torch.Tensor, u_coeff: torch.Tensor) -> torch.Tensor:
+            return Burgers.advection_spectrum(basis, u_coeff, d1, dealias) + forcing_at(
+                t
+            )
 
         sol = solver(linear, nonlinear, v0, t.to(device=device))  # (nt, n, ns)
         u_coeff = sol.movedim(0, 1).to(basis.coeff_dtype)  # (n, nt, ns)
         u_gen = basis(coeff=u_coeff, time_dependent=True, domain=domain)
 
-        f_coeff = f_hat.unsqueeze(1).expand(n, nt, ns).to(basis.coeff_dtype).clone()
+        f_coeff = torch.stack([forcing_at(step) for step in t], dim=1).to(
+            basis.coeff_dtype
+        )
         f_gen = basis(coeff=f_coeff, time_dependent=True, domain=domain)
         return u_gen, f_gen
+
+    @staticmethod
+    def _forcing_at(
+        basis: Type[BasisSubType],
+        f: "NumericalForcing | BasisSubType",
+        n: int,
+        ns: int,
+        domain: tuple[tuple[float, float], ...],
+        device: torch.device,
+    ) -> Callable[[torch.Tensor], torch.Tensor]:
+        """Spectral forcing ``(n, ns)`` as a function of time.
+
+        Accepts a number, a :class:`SpectralForcing` or :class:`SampledForcing`
+        wrapping a callable of time, a field over ``(time, space)`` that is
+        spectral in time, or that field wrapped in :class:`BandLimited`.
+        """
+        if isinstance(f, bool):
+            raise ValueError(
+                "a bool is not a forcing: True and False satisfy Number because "
+                "bool subclasses int, so they would force with 1.0 and 0.0 "
+                "without saying so; pass the number meant"
+            )
+
+        if isinstance(f, Number):
+            constant_spectrum = basis.transform(
+                torch.full((n, ns), float(f), device=device) + 0j
+            )
+            return lambda t: constant_spectrum
+
+        if isinstance(f, BandLimited):
+            return Burgers._field_forcing_at(
+                basis, f.field, ns, domain, device, truncate=True
+            )
+
+        if isinstance(f, Basis):
+            return Burgers._field_forcing_at(
+                basis, f, ns, domain, device, truncate=False
+            )
+
+        if isinstance(f, DeclaredForcing):
+            declared = f
+
+            def declared_forcing_at(t: torch.Tensor) -> torch.Tensor:
+                spectrum = declared.spectrum(basis, t)
+                if spectrum.shape != (n, ns):
+                    raise ValueError(
+                        f"forcing callable must return ({n}, {ns}), got "
+                        f"{tuple(spectrum.shape)}"
+                    )
+                return spectrum.to(device=device)
+
+            return declared_forcing_at
+
+        if isinstance(f, torch.Tensor):
+            raise NotImplementedError(
+                "numerical Burgers forcing as a bare tensor is not supported: pass "
+                "a number, a declared callable, or a field spectral in time"
+            )
+
+        if callable(f):
+            raise ValueError(
+                "a bare callable does not say whether it returns spectral "
+                "coefficients or sampled values; both have shape (n, ns) and mean "
+                "different forcings, so wrap it in SpectralForcing or "
+                "SampledForcing"
+            )
+
+        raise NotImplementedError(
+            "numerical Burgers forcing must be a number, a declared callable, or "
+            "a field spectral in time"
+        )
+
+    @staticmethod
+    def _field_forcing_at(
+        basis: Type[BasisSubType],
+        field: Basis,
+        ns: int,
+        domain: tuple[tuple[float, float], ...],
+        device: torch.device,
+        truncate: bool,
+    ) -> Callable[[torch.Tensor], torch.Tensor]:
+        """Sample a ``(time, space)`` forcing field on the integration grid.
+
+        Both axes must span the integration intervals, and the grid must be able
+        to represent the field's spatial content: sampling content above
+        ``ns // 2`` folds it onto lower wavenumbers. ``truncate`` band-limits the
+        field first, and is reached only through :class:`BandLimited`.
+        """
+        time_interval, space_interval = domain[0], domain[1]
+        if field.coeff.ndim != 3:
+            raise ValueError(
+                f"forcing field must span (time, space), so its coefficients are "
+                f"(samples, time, space); got {field.coeff.ndim - 1} axes"
+            )
+        if field.time_dependent:
+            raise ValueError(
+                "numerical Burgers forcing must be evaluable at any time: pass "
+                "a declared callable of time or a field spectral in time "
+                "(time_dependent=False), not a per-time-slice field"
+            )
+        if field.domain[0] != time_interval:
+            raise ValueError(
+                f"forcing time domain {field.domain[0]} must equal the integration "
+                f"interval {time_interval}"
+            )
+        if field.domain[1] != space_interval:
+            raise ValueError(
+                f"forcing space domain {field.domain[1]} must equal the integration "
+                f"interval {space_interval}; the field is sampled on the "
+                "integration grid, so another interval reads its values at "
+                "points that mean something else on its own period"
+            )
+        time_modes, field_modes = field.coeff.shape[-2], field.coeff.shape[-1]
+        if field_modes > ns:
+            if not truncate:
+                raise ValueError(
+                    f"forcing field has {field_modes} spatial modes and the "
+                    f"integration grid has {ns}, so sampling it there would fold "
+                    "its highest wavenumbers onto lower ones; band-limit it "
+                    "deliberately -- resize the field yourself, or pass "
+                    "BandLimited(field) to have the generator truncate it"
+                )
+            representable = field.resize_modes((time_modes, ns))
+        else:
+            representable = field
+        nodes = basis.default_sampling().nodes(ns, *space_interval).to(device=device)
+
+        def forcing_field_at(t: torch.Tensor) -> torch.Tensor:
+            query = torch.stack([torch.full_like(nodes, float(t)), nodes], dim=-1)
+            return basis.transform(representable(query).to(device=device))
+
+        return forcing_field_at
+
+    @staticmethod
+    def _numerical_forcing(
+        f: "ForcingInput | BasisSubType",
+    ) -> "NumericalForcing | BasisSubType":
+        """Narrow ``generate``'s forcing to the forms the numerical branch takes.
+
+        ``f="random"`` names the manufactured branch's forcing, which is derived
+        from the field rather than supplied; reaching the integrator with it
+        means the caller asked for a manufactured pair without a manufactured
+        initial condition.
+        """
+        if isinstance(f, str):
+            raise ValueError(
+                "f='random' manufactures a forcing from the field and is only "
+                "meaningful with u0='random'; the numerical branch integrates a "
+                "forcing it is given, so pass a number, a callable of time, or a "
+                "field spectral in time"
+            )
+        return f
 
     def mms_solution(
         self,
@@ -261,11 +473,7 @@ class Burgers(Problem):
         of the returned pair is zero to machine precision.
 
         ``band`` states how wide the manufactured field is, defaulting to
-        :meth:`widest_manufactured_band` and refused when it exceeds it. Any
-        wider and the mask discards content the product genuinely has, and the
-        pair then solves the de-aliased equation but not the continuous one --
-        self-consistently, since forcing and solver de-alias alike, which is why
-        it is refused here rather than detected later.
+        :meth:`widest_manufactured_band` and refused when it exceeds it.
 
         A :data:`RealBand` keeps a magnitude and its negative together, so the
         manufactured field is conjugate-symmetric as generated.
@@ -294,10 +502,8 @@ class Burgers(Problem):
     def widest_manufactured_band(modes: int) -> WavenumberCutoff:
         """Widest cutoff a manufactured field may use at ``modes`` modes.
 
-        Multiplication doubles the highest frequency, so a cutoff ``K`` produces
-        a product reaching ``2 K`` while the Orszag 2/3 mask keeps ``modes / 3``.
-        The widest admissible cutoff is therefore the largest ``K`` satisfying
-        ``2 K <= modes / 3``.
+        The largest ``K`` satisfying ``2 K <= modes / 3``, so the product stays
+        inside the de-aliasing mask.
         """
         return WavenumberCutoff(modes // 6)
 
