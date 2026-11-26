@@ -1,0 +1,16 @@
+{
+  "commit": "6d304f2",
+  "fields": {
+    "predictions test": 5242,
+    "state machine": 2520
+  },
+  "worst": {
+    "predictions test": 1.7216910628164724e-06,
+    "state machine": 1.4624771327989564e-06
+  },
+  "worst_over_reruns": {
+    "predictions test": 1.7216910628164724e-06,
+    "state machine": 1.5008476404203519e-06
+  },
+  "seed_253_floor": 1.3709762166871908e-06
+}
