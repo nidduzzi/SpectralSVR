@@ -393,3 +393,21 @@ fc2455c2f7655f9aa8d8eb61de81f60c30a132fb 4936f12ec2e97f4fc5a62c3bd85d3c49c6cbe2b
 a1319125a9feef555a48da2faedd620344322506 79f945bd57a8d5a0366ed410e0305daa227f791c docs(openspec): record the first two CI runs of the gate
 e9d415fbe2d015bbfb57d6fb784bada573125c5a d726ce3f652a5aee257458cb87b7262bb5c98080 docs(openspec): map the cleanup branch's commits across its rebase onto the accelerator repair
 fcd689bad195cf379ef173d46896a05b00dd387d a6d4e4212ef81771f57a430d2fa67dc64c47ac7a docs: cite the software, and record the mutation run and the tag cleanup
+
+# Commit hashes before and after the rebase of 2026-11-27
+#
+# PRs #28 to #30 merged into main, which also carried the Dependabot bump of PR #4 (dda5941: aiohttp, cryptography, oauthlib, tornado, urllib3). feat/reduce-repository-cruft was rebased onto origin/main 7c21e4a. uv.lock conflicted at f66dc43; it was resolved by taking main's lock and running `uv lock`, which reproduces that commit's package set with the bumped aiohttp 3.14.3 and tornado 6.5.9, the only bumped packages it still locks.
+# Every other new commit adds main's Dependabot bump to the old tree and nothing else. Columns: old new subject.
+0b74cf11de09e8c925c97849df1cdc8eb45b680a f53caec88d0b9878e5dc81dc391c36e9b1a773c0 docs(openspec): map the stack's commits across the archive rebase
+1a3d259819f1b8bde5f496f53c93f8b6d783429d 90c90cb485cbacf3c5349d3da1ea5346bc03a65a docs(openspec): archive reduce-repository-cruft and add its two capabilities
+1c3fdb2d98a6accb217af04e44131ad835bae836 8f5e112d17c1454a5838da2ad460c2802c6a37e9 docs(openspec): propose reduce-repository-cruft
+3ed970997f7c76a99f3479ee2b105523d05e9a66 3e03cea09e89734cbf8dc264df01f1f5a75182eb ci(mutation): run the mutate workflow on pull requests that touch the mutation setup
+6c38457c830c593b02181fba1c28f75dd6c5df3c ffe25093cf4207b621d33ace3acc00370e16a0f3 docs(openspec): record the warm-cache CI run
+79f945bd57a8d5a0366ed410e0305daa227f791c a49fc4aecaa395e562a3522353203072066ae1d3 docs(openspec): record the first two CI runs of the gate
+a6d4e4212ef81771f57a430d2fa67dc64c47ac7a d226fd7541cee8f89f2248a40574cbecda91895c docs: cite the software, and record the mutation run and the tag cleanup
+b4ab021e25b6ffaaf2f04aba735947f58c5bf49e 10b5b44693f5a132708dccfaafaae2c7e18d492a docs(agents): point at the recorded comparison, the mutation registry and maintained measurement scripts
+d726ce3f652a5aee257458cb87b7262bb5c98080 a76f86e49f98c1bb82368c127bcb6ed1a180919a docs(openspec): map the cleanup branch's commits across its rebase onto the accelerator repair
+dc1d23323d0130afaaf739618e02513ffef7dbdf 8f6fea114828b36186e04dced7c14dca1a4362da feat(mutation): declare equivalent mutants in a registry and run targets through `just mutate`
+ee6cfae92ba17a099ab230e04d540ea966112145 b2a2e80e4514664d0199caee05ea6b79327398ad docs(openspec): record the pull-request mutate run that verifies task 2.6
+f4b2cb57825a2ae63e846fc67ed9b2f85efe5125 82033c5d4b5ae7a706ef4767e3ebce7e695e1722 ci: run the gate on every push and pull request
+f66dc43ce19d62c25f18880eee937d350ad9c67d 3b1dd6b123c03f5be4b219586fc5950fa0fac3c0 feat(examples): keep three executed examples, move the paper notebooks to a tag
