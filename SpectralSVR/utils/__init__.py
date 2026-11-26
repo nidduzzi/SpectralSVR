@@ -45,6 +45,21 @@ def accelerator() -> torch.device:
     return torch.get_default_device() if present is None else present
 
 
+def name_the_same_memory(first: torch.device, second: torch.device) -> bool:
+    """Whether two devices place values in the same memory.
+
+    An unstated accelerator index names the one in use.
+    """
+    present = torch.accelerator.current_accelerator()
+    first_placed, second_placed = (
+        torch.device(device.type, torch.accelerator.current_device_index())
+        if present is not None and device.type == present.type and device.index is None
+        else device
+        for device in (first, second)
+    )
+    return first_placed == second_placed
+
+
 def refuse_a_generator_placed_elsewhere(
     generator: torch.Generator | None, device: DeviceInput = None
 ) -> None:

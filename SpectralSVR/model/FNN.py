@@ -3,7 +3,7 @@ from typing_extensions import Self, override
 
 import torch
 
-from ..utils import DEFAULT_REAL_DTYPE, DeviceInput
+from ..utils import DEFAULT_REAL_DTYPE, DeviceInput, resolve_device
 from torch import nn
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
@@ -60,55 +60,49 @@ class FNN(MultiRegression):
     def trained(self) -> bool:
         return self.params is not None
 
-    def _build_network(self, in_features: int, out_features: int) -> nn.Module:
-        """Build (and store) the network for the given input/output widths.
+    def _build_network(self, in_features: int, out_features: int) -> nn.Sequential:
+        return nn.Sequential(
+            nn.Sequential(nn.Linear(in_features, self.w_hidden), self.activation()),
+            nn.Sequential(
+                *sum(
+                    [
+                        [nn.Linear(self.w_hidden, self.w_hidden), self.activation()]
+                        for _ in range(self.n_hidden)
+                    ],
+                    [],
+                )
+            ),
+            nn.Linear(self.w_hidden, out_features),
+        ).to(device=self.device, dtype=self.dtype)
 
-        Shared by training and loading so the architecture is defined once.
-        """
+    def _hold_fitted_network(
+        self, network: nn.Sequential, in_features: int, out_features: int
+    ) -> None:
+        self.input, self.hidden, self.output = network
         self._in_features = in_features
         self._out_features = out_features
-        self.input = nn.Sequential(
-            nn.Linear(in_features, self.w_hidden), self.activation()
-        )
-        self.hidden = nn.Sequential(
-            *sum(
-                [
-                    [nn.Linear(self.w_hidden, self.w_hidden), self.activation()]
-                    for _ in range(self.n_hidden)
-                ],
-                [],
-            )
-        )
-        self.output = nn.Linear(self.w_hidden, out_features)
-        self.params = nn.Sequential(self.input, self.hidden, self.output).to(
-            device=self.device,
-            dtype=self.dtype,
-        )
-        return self.params
+        self.params = network
 
     @override
     def _optimize_parameters_and_set(self, X: torch.Tensor, y: torch.Tensor):
-        self._build_network(X.shape[1], y.shape[1])
-        assert self.params is not None
-
-        optimizer = torch.optim.Adam(self.params.parameters(), self.lr)
-        self.params.train()
+        network = self._build_network(X.shape[1], y.shape[1])
+        optimizer = torch.optim.Adam(network.parameters(), self.lr)
+        network.train()
         ds = TensorDataset(X, y)
         dl = DataLoader(ds, self.batch_size)
         for _ in range(self.MAX_EPOCH):
             for X_batch, y_batch in dl:
                 optimizer.zero_grad()
-                preds = self.params.forward(X_batch)
+                preds = network.forward(X_batch)
                 loss = mean_squared_error(preds, y_batch)
-
-                # backprop
                 loss.backward()
                 optimizer.step()
         optimizer.zero_grad()
 
-        self.params.eval()
-        self.params.requires_grad_(False)
-        return (self.params,)
+        network.eval()
+        network.requires_grad_(False)
+        self._hold_fitted_network(network, X.shape[1], y.shape[1])
+        return (network,)
 
     def _predict(self, X_: torch.Tensor):
         assert self.params is not None, (
@@ -154,7 +148,9 @@ class FNN(MultiRegression):
         torch.save(payload, self._resolve_path(filepath))
 
     @classmethod
-    def load(cls, filepath: str, only_hyperparams: bool = False) -> Self:
+    def load(
+        cls, filepath: str, only_hyperparams: bool = False, device: DeviceInput = None
+    ) -> Self:
         """Load a model saved by :meth:`dump`.
         - filepath: string
             The model's ``.pt`` file path.
@@ -163,18 +159,26 @@ class FNN(MultiRegression):
             only has effects when the dump of the model was done with the
             model's parameters.
         """
-        payload = torch.load(cls._resolve_path(filepath), weights_only=False)
+        placement = resolve_device(device)
+        payload = torch.load(
+            cls._resolve_path(filepath), map_location=placement, weights_only=False
+        )
         if payload["type"] != "FNN":
             raise Exception(f"Model type '{payload['type']}' doesn't match 'FNN'")
 
-        model = cls(**payload["hyperparameters"])
+        model = cls(**payload["hyperparameters"], device=placement)
 
         params = payload.get("parameters")
         if (params is not None) and (not only_hyperparams):
-            net = model._build_network(params["in_features"], params["out_features"])
-            net.load_state_dict(params["state_dict"])
-            net.eval()
-            net.requires_grad_(False)
+            network = model._build_network(
+                params["in_features"], params["out_features"]
+            )
+            network.load_state_dict(params["state_dict"])
+            network.eval()
+            network.requires_grad_(False)
+            model._hold_fitted_network(
+                network, params["in_features"], params["out_features"]
+            )
         return model
 
 

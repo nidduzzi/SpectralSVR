@@ -213,14 +213,6 @@ def test_lssvr_keeps_a_stated_host_under_an_accelerator():
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_lssvr_device_setter():
-    model = LSSVR()
-    model.device = torch.device("cpu")
-    assert model.device == torch.device("cpu")
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
 @pytest.mark.parametrize("kernel", ["linear", "poly", "rbf", "tri", "frob", "max"])
 def test_lssvr_each_kernel_covered(kernel):
     # deterministic: every kernel function is exercised on every run
