@@ -23,6 +23,7 @@ SCENARIO = re.compile(r"^#### Scenario:\s*(.+?)\s*$", re.M)
 PREDATES = "predates scenario-level coverage; capability is anchored at module level"
 DECISION = "records a decision taken while writing the change; no run-time behaviour to test"
 POLICY = "a rule about how tests are written; the guard cannot check it of itself"
+IN_FLIGHT = "stated by a change still being implemented; covered as its tasks complete"
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
@@ -59,7 +60,6 @@ EXEMPT: dict[str, str] = {
 
     # manufactured-solutions
     "Residual vanishes off the sample grid": PREDATES,
-    "Bandwidth that overruns the grid is rejected or resolved": PREDATES,
     "Real part taken before multiplying": PREDATES,
     "Same de-aliasing on both sides": PREDATES,
     "A wrong pair is caught": PREDATES,
