@@ -227,6 +227,87 @@ def burgers_numerical_case(
     return BenchmarkCase(split, line_query(40, device))
 
 
+FORCING_LENGTH_SCALE = 0.2
+FORCING_SAMPLER = grf_coeff(FORCING_LENGTH_SCALE)
+
+
+def periodic_in_time(u: FourierBasis) -> FourierBasis:
+    """``u`` over ``(time, space)``, periodic in time and exact at its slices.
+
+    ``u``'s slices span its time interval inclusively, so every slice but the
+    last lies on the periodic grid of that interval. The last, at the
+    interval's end, is not represented.
+    """
+    periodic_slices = u.time_size - 1
+    slice_values = FourierBasis.inv_transform(
+        u.coeff[:, :periodic_slices].flatten(0, 1)
+    ).reshape(len(u), periodic_slices, *u.coeff.shape[2:])
+    return FourierBasis(
+        coeff=FourierBasis.transform(slice_values),
+        domain=u.domain,
+        time_dependent=False,
+    )
+
+
+def burgers_forced_case(
+    seed: int,
+    quick: bool,
+    device: torch.device,
+    *,
+    n_train: int | None = None,
+    n_test: int | None = None,
+    modes: int | None = None,
+    random_func: Callable[..., torch.Tensor] = FORCING_SAMPLER,
+) -> BenchmarkCase:
+    """f -> u from rest, the forcing drawn first from a time-space GRF.
+
+    Pilot: ``u`` is scored through :func:`periodic_in_time`, only at grid
+    times, so ``u(T)`` is not scored.
+    """
+    quick_or_full = (24, 6, 8, 45) if quick else (60, 15, 12, 89)
+    default_train, default_test, default_modes, time_steps = quick_or_full
+    n_train = default_train if n_train is None else n_train
+    n_test = default_test if n_test is None else n_test
+    modes = default_modes if modes is None else modes
+    generator = torch.Generator(device=device).manual_seed(seed)
+    drawn_forcing = FourierBasis.generate(
+        n_train + n_test,
+        (modes, modes),
+        generator=generator,
+        random_func=random_func,
+        domain=((0.0, 1.0), (0.0, 1.0)),
+        device=device,
+    )
+    u, _ = Burgers().generate(
+        FourierBasis,
+        n_train + n_test,
+        modes,
+        u0=0,
+        f=drawn_forcing,
+        nu=0.01,
+        time_domain=slice(0, 1, time_steps),
+        solver=etdrk4_solver,
+        device=device,
+    )
+    split = Split.partition(
+        drawn_forcing, periodic_in_time(u), n_train, n_sensors=modes
+    )
+    periodic_slices = time_steps - 1
+    query_times = 11
+    time_axis = (
+        torch.arange(
+            0,
+            periodic_slices,
+            periodic_slices // query_times,
+            dtype=torch.float64,
+            device=device,
+        )
+        / periodic_slices
+    )
+    space_axis = torch.linspace(0, 1, 12, dtype=torch.float64, device=device)
+    return BenchmarkCase(split, tensor_product_query(time_axis, space_axis))
+
+
 DATASETS: dict[str, DatasetSpec] = {
     "antiderivative": DatasetSpec(
         "project antiderivative (ut->u)", antiderivative_case
@@ -237,6 +318,10 @@ DATASETS: dict[str, DatasetSpec] = {
     ),
     "antiderivative-grf": DatasetSpec(
         "DeepONet paper antiderivative (GRF)", antiderivative_grf_case
+    ),
+    "burgers-forced": DatasetSpec(
+        "project Burgers forced (f->u, GRF forcing, from rest, pilot: t periodic)",
+        burgers_forced_case,
     ),
 }
 
