@@ -41,7 +41,6 @@ class Problem(abc.ABC):
         generator: torch.Generator | None = None,
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> tuple[BasisSubType, ...]:
         pass
 

@@ -1,3 +1,4 @@
+import dataclasses
 import math
 import tempfile
 
@@ -17,6 +18,7 @@ from hypothesis.stateful import (
 from SpectralSVR.utils import (
     DEFAULT_METRICS,
     accelerator,
+    SlicePositions,
     StandardScaler,
     WavenumberCutoff,
     euler_solver,
@@ -391,42 +393,107 @@ def test_zero_coeff_zeros_high_modes(n, cutoff, seed):
     assert torch.count_nonzero(out) <= torch.count_nonzero(x)
 
 
-@pytest.mark.oracle_analytic
-@SETTINGS
-@given(
-    slope=st.floats(-5.0, 5.0),
-    intercept=st.floats(-5.0, 5.0),
-    n=st.integers(3, 20),
-    seed=st.integers(0, 10_000),
-)
-def test_interpolate_tensor_is_exact_on_linear_ramp(slope, intercept, n, seed):
-    # MMS: a linear ramp y = slope*i + intercept is reproduced exactly by linear
-    # interpolation at both integer and fractional indices.
-    y = (slope * torch.arange(n, dtype=torch.float64) + intercept).reshape(1, n)
-    g = torch.Generator().manual_seed(seed)
-    idx = torch.rand(6, generator=g, dtype=torch.float64) * (n - 1)
-    got = interpolate_tensor(y, idx, dim=1)
-    exact = (slope * idx + intercept).reshape(1, -1)
-    assert torch.allclose(got, exact, atol=1e-10)
+SLICE_POSITION_RAMP_TOLERANCE = 1e-10
 
 
 @pytest.mark.oracle_analytic
+@pytest.mark.scenario("A slice position cannot address a missing slice")
 @SETTINGS
 @given(
+    start=st.floats(-10.0, 10.0),
+    length=st.floats(0.01, 10.0),
+    slices=st.integers(1, 40),
+    fractions=st.lists(st.floats(-0.5, 1.5), min_size=1, max_size=8),
     slope=st.floats(-5.0, 5.0),
     intercept=st.floats(-5.0, 5.0),
-    n=st.integers(3, 20),
-    seed=st.integers(0, 10_000),
 )
-def test_interpolate_tensor_integer_indices(slope, intercept, n, seed):
-    # all-integer indices take the exact index_select branch; on a linear ramp
-    # the selected values equal the closed form.
-    y = (slope * torch.arange(n, dtype=torch.float64) + intercept).reshape(1, n)
-    g = torch.Generator().manual_seed(seed)
-    idx = torch.randint(0, n, (5,), generator=g).to(torch.float64)
-    got = interpolate_tensor(y, idx, dim=1)
-    exact = (slope * idx + intercept).reshape(1, -1)
-    assert torch.allclose(got, exact, atol=1e-10)
+@example(
+    start=0.0, length=1.0, slices=1, fractions=[0.0, 1.0], slope=1.0, intercept=0.0
+)
+@example(
+    start=-1.8088874256383793,
+    length=2.875690786657682,
+    slices=2,
+    fractions=[0.0, 1.0],
+    slope=1.0,
+    intercept=0.0,
+)
+@example(
+    start=0.25, length=1.5, slices=7, fractions=[-0.5, 1.5], slope=-3.0, intercept=2.0
+)
+def test_slice_positions_stay_among_the_slices_and_read_a_ramp_exactly(
+    start, length, slices, fractions, slope, intercept
+):
+    fraction = torch.tensor(fractions, dtype=torch.float64)
+    interval = (start, start + length)
+    positions = SlicePositions(start + length * fraction, interval, slices)
+
+    assert positions.lower.min() >= 0
+    assert positions.upper.max() <= slices - 1
+    assert (positions.upper - positions.lower).max() <= 1
+    assert positions.weight.min() >= 0 and positions.weight.max() <= 1
+
+    ramp = slope * torch.arange(slices, dtype=torch.float64) + intercept
+    read = interpolate_tensor(ramp.reshape(1, -1), positions, dim=1).flatten()
+    expected = slope * fraction.clamp(0, 1) * (slices - 1) + intercept
+    assert (read - expected).abs().max() <= SLICE_POSITION_RAMP_TOLERANCE
+    assert torch.equal(read[fraction <= 0], ramp[0].expand_as(read[fraction <= 0]))
+    assert torch.equal(read[fraction >= 1], ramp[-1].expand_as(read[fraction >= 1]))
+
+
+@pytest.mark.oracle_smoke
+@pytest.mark.scenario("A slice position cannot address a missing slice")
+@pytest.mark.parametrize(
+    "refused",
+    [
+        "a time that is not a number",
+        "an infinite time",
+        "an empty interval",
+        "a backward interval",
+        "an infinite interval",
+        "no slices",
+        "a position moved past the last slice",
+    ],
+)
+@SETTINGS
+@given(slices=st.integers(1, 8))
+@example(slices=1)
+def test_slice_positions_refuse_what_addresses_no_slice(refused, slices):
+    inside = torch.tensor([0.5], dtype=torch.float64)
+
+    def move_past_the_last_slice():
+        positions = SlicePositions(inside, (0.0, 1.0), slices)
+        positions.upper = positions.upper + slices
+
+    attempt, refusal = {
+        "a time that is not a number": (
+            lambda: SlicePositions(torch.tensor([math.nan]), (0.0, 1.0), slices),
+            ValueError,
+        ),
+        "an infinite time": (
+            lambda: SlicePositions(torch.tensor([math.inf]), (0.0, 1.0), slices),
+            ValueError,
+        ),
+        "an empty interval": (
+            lambda: SlicePositions(inside, (1.0, 1.0), slices),
+            ValueError,
+        ),
+        "a backward interval": (
+            lambda: SlicePositions(inside, (1.0, 0.0), slices),
+            ValueError,
+        ),
+        "an infinite interval": (
+            lambda: SlicePositions(inside, (0.0, math.inf), slices),
+            ValueError,
+        ),
+        "no slices": (lambda: SlicePositions(inside, (0.0, 1.0), 0), ValueError),
+        "a position moved past the last slice": (
+            move_past_the_last_slice,
+            dataclasses.FrozenInstanceError,
+        ),
+    }[refused]
+    with pytest.raises(refusal):
+        attempt()
 
 
 # --------------------------------------------------------------------------- #

@@ -3,7 +3,13 @@ import abc
 import operator
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
-from ..utils import resize_modes, interpolate_tensor, resolve_device, DeviceInput
+from ..utils import (
+    resize_modes,
+    interpolate_tensor,
+    SlicePositions,
+    resolve_device,
+    DeviceInput,
+)
 from .config import DEFAULT_COEFF_DTYPE, SpectralConfig
 from .domain import (
     DomainAxis,
@@ -293,17 +299,10 @@ class Basis(abc.ABC):
                 domain=self.domain[1:],
             ).unflatten(0, coeff.shape[0:2])
             res_t = res[0]
-            # time is an evolution axis (not a Fourier axis): closed/linspace
-            t = (
-                ClosedUniform()
-                .nodes(res_t.step, res_t.start, res_t.stop)
-                .to(device=device, dtype=self.coeff.real.dtype)
+            read_times = ClosedUniform().nodes(res_t.step, res_t.start, res_t.stop)
+            values = interpolate_tensor(
+                values, SlicePositions(read_times, self.domain[0], values.shape[1])
             )
-            t_start, t_stop = self.domain[0]
-            index_float = (
-                (t.flatten() - t_start) / (t_stop - t_start) * (values.shape[1] - 1)
-            )
-            values = self.interpolate_time_tensor(values, index_float)
             grid_schemes: tuple[SamplingScheme, ...] = (ClosedUniform(), *sampling)
         else:
             res_spatial = res
@@ -626,7 +625,6 @@ class Basis(abc.ABC):
         domain: DomainInputType = None,
         *,
         device: DeviceInput = None,
-        **kwargs,
     ) -> Self:
         """
         generate
@@ -905,11 +903,12 @@ class Basis(abc.ABC):
             coeff = resize_modes(coeff, target_modes, rescale=rescale)
             coeff = coeff.unflatten(0, (len(self), self.time_size))
             if target_basis is not None:
-                # interpolate time dependent coefficients
-                index_float = torch.linspace(0, 1, target_basis.time_size) * (
-                    self.time_size - 1
+                target_times = ClosedUniform().nodes(
+                    target_basis.time_size, *self.domain[0]
                 )
-                coeff = self.interpolate_time_tensor(coeff, index_float)
+                coeff = interpolate_tensor(
+                    coeff, SlicePositions(target_times, self.domain[0], self.time_size)
+                )
         else:
             coeff = resize_modes(coeff, target_modes, rescale=rescale)
         copy.coeff = coeff
@@ -1086,12 +1085,9 @@ class Basis(abc.ABC):
             domain=self.domain[1:],
         ).unflatten(0, self.coeff.shape[:2])
         time_sampling = PeriodicUniform()
-        node_times = time_sampling.nodes(self.time_size, *time_interval).to(
-            device=self.coeff.device, dtype=self.coeff.real.dtype
-        )
-        values_at_node_times = self.interpolate_time_tensor(
-            slice_values,
-            self.fractional_slice_index(node_times, time_interval, self.time_size),
+        node_times = time_sampling.nodes(self.time_size, *time_interval)
+        values_at_node_times = interpolate_tensor(
+            slice_values, SlicePositions(node_times, time_interval, self.time_size)
         )
         node_sampling = (time_sampling, *spatial_sampling)
         node_coeff = self.transform(
@@ -1105,22 +1101,6 @@ class Basis(abc.ABC):
             self.config.with_sampling(node_sampling),
             complex_funcs=self.complex_funcs,
         )
-
-    @staticmethod
-    def fractional_slice_index(
-        times: torch.Tensor, time_interval: tuple[float, float], slices: int
-    ) -> torch.Tensor:
-        """Position of each time among ``slices`` spanning ``time_interval`` inclusively."""
-        t_start, t_stop = time_interval
-        return ((times - t_start) / (t_stop - t_start) * (slices - 1)).clamp(
-            0, slices - 1
-        )
-
-    @staticmethod
-    def interpolate_time_tensor(x: torch.Tensor, index_float: torch.Tensor):
-        x_interp = interpolate_tensor(x, index_float, dim=1)
-
-        return x_interp
 
 
 BasisSubType = TypeVar("BasisSubType", bound="Basis")

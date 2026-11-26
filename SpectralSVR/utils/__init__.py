@@ -2,7 +2,7 @@ import torch
 import logging
 import math
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, TypedDict, cast, overload
 from torchdiffeq import odeint
 from functools import partial
@@ -631,27 +631,48 @@ def zero_coeff(x: torch.Tensor, band: Band | list[Band]) -> torch.Tensor:
     return x_zeroed
 
 
-def interpolate_tensor(x: torch.Tensor, index_float: torch.Tensor, dim: int = 1):
-    index_floor = index_float.floor().to(torch.int)
-    index_ceil = index_float.ceil().to(torch.int)
-    if index_float.remainder(1).eq(0).all():
-        x_interp = x.index_select(dim, index_floor)
-    else:
-        x_ceil = x.index_select(dim, index_ceil)
-        x_floor = x.index_select(dim, index_floor)
-        # interpolate coefficients
-        index_shape = [1 for _ in range(x_floor.ndim)]
-        index_shape[1] = -1
-        index_scaler = (
-            ((index_float - index_floor) / (index_ceil - index_floor))
-            .reshape(index_shape)
-            .nan_to_num()
-        )
-        # ynt + scaler * (ynt1 - ynt)
-        # (1 - scaler) * ynt + scaler * ynt1
-        x_interp = torch.lerp(x_floor, x_ceil, index_scaler.to(x))
+@dataclass(frozen=True)
+class SlicePositions:
+    times: torch.Tensor
+    interval: tuple[float, float]
+    slices: int
+    lower: torch.Tensor = field(init=False)
+    upper: torch.Tensor = field(init=False)
+    weight: torch.Tensor = field(init=False)
 
-    return x_interp
+    def __post_init__(self) -> None:
+        start, stop = self.interval
+        if not (math.isfinite(start) and math.isfinite(stop) and stop > start):
+            raise ValueError(
+                f"slice positions need a finite interval of positive length; "
+                f"got [{start}, {stop}]"
+            )
+        if self.slices < 1:
+            raise ValueError(
+                f"slice positions need at least one slice; got {self.slices}"
+            )
+        if not torch.isfinite(self.times).all():
+            raise ValueError("slice positions are taken at finite times only")
+        last = self.slices - 1
+        position = (
+            (self.times.to(torch.float64) - start) / (stop - start) * last
+        ).clamp(0, last)
+        lower = position.floor().to(torch.long)
+        object.__setattr__(self, "lower", lower)
+        object.__setattr__(self, "upper", (lower + 1).clamp(max=last))
+        object.__setattr__(self, "weight", position - lower)
+
+
+def interpolate_tensor(
+    x: torch.Tensor, positions: SlicePositions, dim: int = 1
+) -> torch.Tensor:
+    weight_shape = [1] * x.ndim
+    weight_shape[dim] = -1
+    return torch.lerp(
+        x.index_select(dim, positions.lower.to(x.device)),
+        x.index_select(dim, positions.upper.to(x.device)),
+        positions.weight.reshape(weight_shape).to(x),
+    )
 
 
 # SOLVERS
