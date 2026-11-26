@@ -1,0 +1,8 @@
+{"commit": "d5106a5", "coeff_dtype": "torch.complex128", "comparison": "derivative on the grid", "draws": 3000, "worst": 4.98227862375486e-07, "draw": 2647, "modes": [5, 5], "complex_funcs": false, "orders": [3, 3]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex128", "comparison": "imaginary part off the grid", "draws": 3000, "worst": 1.0310805567559287e-16, "draw": 2071, "modes": [8, 3], "complex_funcs": false, "orders": [2, 3]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex128", "comparison": "integral of the derivative", "draws": 3000, "worst": 2.066954350421509e-16, "draw": 1438, "modes": [10], "complex_funcs": false, "orders": [3]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex128", "comparison": "reading off the grid", "draws": 3000, "worst": 3.387819207049696e-15, "draw": 518, "modes": [12], "complex_funcs": false, "orders": [1]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex64", "comparison": "derivative on the grid", "draws": 3000, "worst": 5.331644745084378e-07, "draw": 2647, "modes": [5, 5], "complex_funcs": false, "orders": [3, 3]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex64", "comparison": "imaginary part off the grid", "draws": 3000, "worst": 5.4563059894997186e-08, "draw": 841, "modes": [3, 7], "complex_funcs": false, "orders": [1, 3]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex64", "comparison": "integral of the derivative", "draws": 3000, "worst": 1.1492675611179948e-07, "draw": 1223, "modes": [6, 9], "complex_funcs": false, "orders": [2, 2]}
+{"commit": "d5106a5", "coeff_dtype": "torch.complex64", "comparison": "reading off the grid", "draws": 3000, "worst": 3.561924479922419e-06, "draw": 2896, "modes": [11], "complex_funcs": false, "orders": [1]}

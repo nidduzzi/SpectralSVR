@@ -1,0 +1,47 @@
+{"commit": "d5106a5", "modes": [8], "reading": "native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8], "reading": "off grid, exact", "imaginary_over_real": 2.12348449935007e-08}
+{"commit": "d5106a5", "modes": [8], "reading": "off grid, approximate", "imaginary_over_real": 0.0006179854972288013}
+{"commit": "d5106a5", "modes": [8], "reading": "finer grid", "imaginary_over_real": 3.040927154529527e-08}
+{"commit": "d5106a5", "modes": [8], "reading": "first derivative, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8], "reading": "second derivative, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8], "reading": "integral, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [9], "reading": "native grid", "imaginary_over_real": 3.729800468477151e-08}
+{"commit": "d5106a5", "modes": [9], "reading": "off grid, exact", "imaginary_over_real": 2.562609324741061e-08}
+{"commit": "d5106a5", "modes": [9], "reading": "off grid, approximate", "imaginary_over_real": 0.0005013983463868499}
+{"commit": "d5106a5", "modes": [9], "reading": "finer grid", "imaginary_over_real": 2.133140242221998e-08}
+{"commit": "d5106a5", "modes": [9], "reading": "first derivative, native grid", "imaginary_over_real": 2.9957075042830184e-08}
+{"commit": "d5106a5", "modes": [9], "reading": "second derivative, native grid", "imaginary_over_real": 4.179244328383902e-08}
+{"commit": "d5106a5", "modes": [9], "reading": "integral, native grid", "imaginary_over_real": 1.8953848268665752e-08}
+{"commit": "d5106a5", "modes": [16], "reading": "native grid", "imaginary_over_real": 2.0651402365956528e-08}
+{"commit": "d5106a5", "modes": [16], "reading": "off grid, exact", "imaginary_over_real": 3.612642629491347e-08}
+{"commit": "d5106a5", "modes": [16], "reading": "off grid, approximate", "imaginary_over_real": 0.0005461372202262282}
+{"commit": "d5106a5", "modes": [16], "reading": "finer grid", "imaginary_over_real": 2.3690478911930768e-08}
+{"commit": "d5106a5", "modes": [16], "reading": "first derivative, native grid", "imaginary_over_real": 1.4533897640944815e-08}
+{"commit": "d5106a5", "modes": [16], "reading": "second derivative, native grid", "imaginary_over_real": 5.053715224079269e-09}
+{"commit": "d5106a5", "modes": [16], "reading": "integral, native grid", "imaginary_over_real": 1.7348579461895497e-08}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "off grid, exact", "imaginary_over_real": 6.442100897174896e-08}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "off grid, approximate", "imaginary_over_real": 0.0009520984604023397}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "finer grid", "imaginary_over_real": 4.8133031782526814e-08}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "first derivative, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "second derivative, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "integral, native grid", "imaginary_over_real": 0.0}
+{"commit": "d5106a5", "modes": [8, 8], "reading": "off grid, through time", "imaginary_over_real": 5.237556166548529e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "native grid", "imaginary_over_real": 4.85577444919727e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "off grid, exact", "imaginary_over_real": 5.5937274368034196e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "off grid, approximate", "imaginary_over_real": 0.0009585054940544069}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "finer grid", "imaginary_over_real": 4.1867394884320674e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "first derivative, native grid", "imaginary_over_real": 5.09944939608431e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "second derivative, native grid", "imaginary_over_real": 4.133742592671297e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "integral, native grid", "imaginary_over_real": 4.755033344849835e-08}
+{"commit": "d5106a5", "modes": [9, 9], "reading": "off grid, through time", "imaginary_over_real": 4.495587901942599e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "native grid", "imaginary_over_real": 3.150016425479407e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "off grid, exact", "imaginary_over_real": 7.677135727135465e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "off grid, approximate", "imaginary_over_real": 0.001223607687279582}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "finer grid", "imaginary_over_real": 5.338081976447029e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "first derivative, native grid", "imaginary_over_real": 3.5060690350974255e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "second derivative, native grid", "imaginary_over_real": 2.8168591015287348e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "integral, native grid", "imaginary_over_real": 3.215111732401965e-08}
+{"commit": "d5106a5", "modes": [8, 9], "reading": "off grid, through time", "imaginary_over_real": 8.629032066664877e-08}
+{"commit": "d5106a5", "reading": "antiderivative ut, native grid, worst of 2000 draws, even modes", "imaginary_over_real": 4.743375825455587e-08}
+{"commit": "d5106a5", "reading": "antiderivative ut, native grid, worst of 2000 draws, odd modes", "imaginary_over_real": 8.139848972632535e-08}

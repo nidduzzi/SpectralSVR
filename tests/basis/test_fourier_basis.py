@@ -11,7 +11,9 @@ Testing strategy (enforced by ``conftest.py``):
 Correctness is additionally cross-checked against PyTorch's own FFT.
 """
 
+import importlib
 import math
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,9 +37,11 @@ from SpectralSVR import (
     to_real_coeff,
 )
 from SpectralSVR.basis import Basis
+from SpectralSVR.basis._nufft import nufft_available
 from SpectralSVR.basis.sampling import PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
-from tests._anchors import fourier_series_at
+from tests._anchors import fourier_series_at, fourier_series_bound
+from tests._time_varying import grid_points
 
 CPU = torch.device("cpu")
 
@@ -122,7 +126,7 @@ def test_mms_grad_is_spectral_derivative(coeff):
     # Known spectrum => known derivative spectrum: c_k * 2*pi*i*k (period 1),
     # with the DC (k=0) mode dropped.
     n = coeff.shape[1]
-    basis = FourierBasis(coeff)
+    basis = FourierBasis(coeff, complex_funcs=True)
     k = FourierBasis.wave_number(n).T.to(coeff)
     expected = coeff * 2j * torch.pi * k
     expected[:, 0] = 0
@@ -145,7 +149,7 @@ def test_mms_integral_inverts_grad(coeff):
     # grad then integral recovers the manufactured spectrum, minus its DC mode.
     coeff = coeff.clone()
     coeff[:, 0] = 0  # zero-mean manufactured solution
-    basis = FourierBasis(coeff)
+    basis = FourierBasis(coeff, complex_funcs=True)
     recovered = basis.grad().integral().coeff
     assert torch.allclose(recovered, coeff, atol=1e-6)
 
@@ -157,10 +161,162 @@ def test_mms_evaluate_closed_form(coeff):
     # Point evaluation must equal the closed form (1/N) sum_k c_k exp(2pi i k x).
     n = coeff.shape[1]
     x = torch.tensor([[0.1], [0.37], [0.83]], dtype=torch.float64)
-    out = FourierBasis.evaluate(coeff, x)
+    out = FourierBasis.evaluate(coeff, x, complex_funcs=True)
     k = FourierBasis.wave_number(n).flatten().to(coeff)
     closed = (coeff.unsqueeze(1) * torch.exp(2j * torch.pi * x * k)).sum(-1) / n
     assert torch.allclose(out, closed, atol=1e-6)
+
+
+READING_ROUNDING = 4e-5
+DERIVATIVE_ROUNDING = 6e-6
+INTEGRAL_ROUNDING = 1.5e-6
+IMAGINARY_ROUNDING = 6e-7
+APPROXIMATION_BOUND = 5e-2
+EXACT_EVALUATION = EvaluationStrategy(allow_approximate=False)
+BUDGETS_MB = (0.0, 2**-10, 2**-8, 2**-6, 2**-4)
+BASIS_MODULE = importlib.import_module("SpectralSVR.basis.FourierBasis")
+STATED_MODES = st.lists(st.integers(2, 12), min_size=1, max_size=2).map(tuple)
+STATED_INTERVALS = st.lists(
+    st.tuples(st.floats(-2.0, 2.0), st.floats(0.5, 3.0)), min_size=2, max_size=2
+)
+UNIT_INTERVALS = [(0.0, 1.0), (0.0, 1.0)]
+
+
+def stated_field(modes, complex_funcs, intervals, seed, functions):
+    coeff = FourierBasis.generate(
+        functions,
+        modes,
+        complex_funcs=complex_funcs,
+        generator=torch.Generator().manual_seed(seed),
+    ).coeff
+    domain = tuple((start, start + length) for start, length in intervals[: len(modes)])
+    return FourierBasis(
+        coeff, domain=domain, complex_funcs=complex_funcs, strategy=EXACT_EVALUATION
+    )
+
+
+def nodes_of(domain, counts):
+    axes = [
+        grid_points(n, CPU, interval)
+        for n, interval in zip(counts, domain, strict=True)
+    ]
+    return torch.stack(torch.meshgrid(*axes, indexing="ij"), dim=-1).reshape(
+        -1, len(axes)
+    )
+
+
+@pytest.mark.oracle_analytic
+@pytest.mark.scenario("An odd-order derivative of a real field is real")
+@pytest.mark.scenario("Integration drops the boundary mode as it drops the mean")
+@SETTINGS
+@given(
+    modes=STATED_MODES,
+    complex_funcs=st.booleans(),
+    intervals=STATED_INTERVALS,
+    seed=st.integers(0, 10_000),
+    functions=st.integers(1, 3),
+    orders=st.lists(st.integers(0, 3), min_size=2, max_size=2).map(tuple),
+)
+@example(
+    modes=(2,),
+    complex_funcs=False,
+    intervals=UNIT_INTERVALS,
+    seed=0,
+    functions=1,
+    orders=(1, 0),
+)
+@example(
+    modes=(8,),
+    complex_funcs=False,
+    intervals=UNIT_INTERVALS,
+    seed=0,
+    functions=2,
+    orders=(2, 0),
+)
+@example(
+    modes=(8, 8),
+    complex_funcs=False,
+    intervals=[(0.5, 1.5), (-1.0, 2.5)],
+    seed=0,
+    functions=2,
+    orders=(3, 1),
+)
+@example(
+    modes=(8,),
+    complex_funcs=True,
+    intervals=UNIT_INTERVALS,
+    seed=0,
+    functions=2,
+    orders=(1, 0),
+)
+@example(
+    modes=(9, 4),
+    complex_funcs=False,
+    intervals=UNIT_INTERVALS,
+    seed=0,
+    functions=1,
+    orders=(1, 1),
+)
+def test_derivatives_and_integrals_follow_the_closed_form(
+    modes, complex_funcs, intervals, seed, functions, orders
+):
+    field = stated_field(modes, complex_funcs, intervals, seed, functions)
+    real = not complex_funcs
+    orders = orders[: field.ndim]
+    differentiated = field
+    for axis, order in enumerate(orders):
+        if order:
+            differentiated = differentiated.grad(dim=axis, ord=order)
+
+    expected = fourier_series_at(
+        field.coeff,
+        nodes_of(field.domain, modes),
+        field.domain,
+        real=real,
+        derivative_orders=orders,
+    )
+    bound = fourier_series_bound(field.coeff, field.domain, orders)
+    assert (
+        np.abs(differentiated.get_values().flatten(1).numpy() - expected).max()
+        <= DERIVATIVE_ROUNDING * bound
+    )
+
+    boundary = modes[0] // 2
+    boundary_is_a_cosine = real and modes[0] % 2 == 0
+    wave_numbers = torch.fft.fftfreq(modes[0], 1 / modes[0], dtype=torch.float64)
+    first_order_of_a_real_field = 2j * math.pi * wave_numbers / field.lengths[0]
+    if modes[0] % 2 == 0:
+        first_order_of_a_real_field[boundary] = 0
+    assert (
+        FourierBasis.derivative_eigenvalues(modes[0], field.lengths[0])
+        - first_order_of_a_real_field
+    ).abs().max() <= DERIVATIVE_ROUNDING * first_order_of_a_real_field.abs().max()
+
+    if boundary_is_a_cosine and orders[0] % 2 == 1:
+        assert torch.count_nonzero(differentiated.coeff.select(1, boundary)) == 0
+
+    integrated = field.integral(dim=0)
+    assert torch.count_nonzero(integrated.coeff.select(1, 0)) == 0
+    if boundary_is_a_cosine:
+        assert torch.count_nonzero(integrated.coeff.select(1, boundary)) == 0
+
+    if modes[0] > 2:
+        without_mean_or_boundary = field.coeff.clone()
+        without_mean_or_boundary.select(1, 0).zero_()
+        if boundary_is_a_cosine:
+            without_mean_or_boundary.select(1, boundary).zero_()
+        returned = (
+            FourierBasis(
+                without_mean_or_boundary,
+                domain=field.domain,
+                complex_funcs=complex_funcs,
+            )
+            .grad(dim=0)
+            .integral(dim=0)
+        )
+        assert (returned.coeff - without_mean_or_boundary).abs().max() <= (
+            INTEGRAL_ROUNDING * without_mean_or_boundary.abs().max()
+        )
 
 
 @pytest.mark.oracle_independent
@@ -744,7 +900,7 @@ def test_to_time_dependent_preserves_values(m, seed, starts, spans):
     td = u.to_time_dependent()
     tdv, td_grid = td.get_values_and_grid(res=m, device=CPU)
     source_at_slices = fourier_series_at(
-        u.coeff, td_grid.flatten(0, -2), u.domain
+        u.coeff, td_grid.flatten(0, -2), u.domain, real=True
     ).reshape(tdv.shape)
     assert np.abs(tdv.numpy() - source_at_slices).max() <= DOUBLE_PRECISION_ROUNDING
 
@@ -761,7 +917,7 @@ def test_to_time_dependent_preserves_values(m, seed, starts, spans):
     )
     interpolation_bound = (spans[0] / (m - 1)) ** 2 / 8 * largest_second_time_derivative
     source_at_nodes = fourier_series_at(
-        u.coeff, ti_grid.flatten(0, -2), u.domain
+        u.coeff, ti_grid.flatten(0, -2), u.domain, real=True
     ).reshape(tiv.shape)
     assert np.abs(tiv.numpy() - source_at_nodes).max() <= (
         interpolation_bound + DOUBLE_PRECISION_ROUNDING
@@ -1025,6 +1181,7 @@ def test_how_a_device_is_stated_does_not_change_the_draw(rows, modes, seed):
 
 RESIZE_THROUGH_TIME_ROUNDING = 2e-6
 LIFECYCLE_MODES = st.integers(2, 8)
+OFF_GRID_FRACTIONS = torch.tensor([0.0, 0.137, 0.5, 0.913, 0.999], dtype=torch.float64)
 LIFECYCLE_FUNCTIONS = st.integers(1, 4)
 NOT_AN_INTEGER = "not an integer"
 ACCEPTED_INTEGER_TYPES = (int, np.int64, np.array, torch.tensor)
@@ -1151,6 +1308,27 @@ class BasisLifecycle(RuleBasedStateMachine):
         for length in (1, 3):
             self.restate_the_sampling(length=length)
             self.convert_to_time_dependent(slices=(None, None))
+        for functions, modes, complex_funcs in (
+            (1, (2,), False),
+            (2, (4,), False),
+            (2, (8,), True),
+            (2, (9,), False),
+            (1, (8, 9), True),
+            (1, (2, 4), False),
+            (2, (8, 8), False),
+        ):
+            self.generate(
+                functions=functions, modes=modes, complex_funcs=complex_funcs, seed=0
+            )
+            self.a_field_reads_its_closed_form()
+        self.set_domain(intervals=((0.5, 1.5), (-1.0, 2.5)))
+        self.a_field_reads_its_closed_form()
+        self.generate(functions=1, modes=(8,), complex_funcs=False, seed=0)
+        for points in (16, 24):
+            for through in ("evaluation", "resolution"):
+                self.read_under_a_memory_budget(
+                    budget_mb=2**-10, points=points, through=through
+                )
         self.basis = FourierBasis()
         self.stated_domain = None
 
@@ -1212,7 +1390,10 @@ class BasisLifecycle(RuleBasedStateMachine):
             dtype=torch.complex128,
         )
         self.basis = FourierBasis(
-            coeff, time_dependent=True, coeff_dtype=torch.complex128
+            coeff,
+            time_dependent=True,
+            coeff_dtype=torch.complex128,
+            complex_funcs=True,
         )
         self.stated_domain = None
 
@@ -1224,6 +1405,7 @@ class BasisLifecycle(RuleBasedStateMachine):
             time_dependent=self.basis.time_dependent,
             domain=self.basis.config.domain,
             sampling=(PeriodicUniform(),) * length,
+            complex_funcs=self.basis.complex_funcs,
         )
 
     @precondition(lambda self: self.basis.coeff.numel() > 0)
@@ -1434,6 +1616,59 @@ class BasisLifecycle(RuleBasedStateMachine):
             resized.coeff - expected
         ).abs().max() <= RESIZE_THROUGH_TIME_ROUNDING * scale
 
+    @precondition(lambda self: self.placeable() and not self.basis.time_dependent)
+    @rule(
+        budget_mb=st.sampled_from(BUDGETS_MB),
+        points=st.integers(2, 64),
+        through=st.sampled_from(("evaluation", "resolution")),
+    )
+    def read_under_a_memory_budget(self, budget_mb, points, through):
+        budgeted, exact = (
+            FourierBasis(
+                self.basis.coeff,
+                domain=self.basis.domain,
+                complex_funcs=self.basis.complex_funcs,
+                strategy=strategy,
+            )
+            for strategy in (
+                EvaluationStrategy(memory_budget_mb=budget_mb),
+                EXACT_EVALUATION,
+            )
+        )
+        match through:
+            case "evaluation":
+                fractions = torch.linspace(0.01, 0.99, points, dtype=torch.float64)
+                rows = torch.stack(
+                    [
+                        start + (stop - start) * fractions
+                        for start, stop in self.basis.domain
+                    ],
+                    dim=1,
+                )
+                with patch.object(
+                    BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
+                ) as nufft:
+                    values = budgeted(rows)
+                expected = exact(rows)
+                dense_elements = (points * math.prod(self.basis.modes),)
+            case "resolution":
+                res = tuple(
+                    slice(start, stop, points) for start, stop in self.basis.domain
+                )
+                with patch.object(
+                    BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
+                ) as nufft:
+                    values = budgeted.get_values(res=res, device=CPU)
+                expected = exact.get_values(res=res, device=CPU)
+                dense_elements = tuple(
+                    points * m for m in self.basis.modes if m != points
+                )
+        itemsize = self.basis.coeff.element_size()
+        over = any(count * itemsize > budget_mb * 2**20 for count in dense_elements)
+        assert (nufft.call_count > 0) == (over and nufft_available())
+        bound = fourier_series_bound(self.basis.coeff, self.basis.domain)
+        assert (values - expected).abs().max() <= APPROXIMATION_BOUND * bound
+
     @invariant()
     def the_shape_properties_follow_the_coefficients(self):
         coeff = self.basis.coeff
@@ -1451,6 +1686,70 @@ class BasisLifecycle(RuleBasedStateMachine):
         assert self.basis.time_size == (
             coeff.shape[1] if self.basis.time_dependent else 0
         )
+
+    @invariant()
+    def a_field_reads_its_closed_form(self):
+        basis = self.basis
+        if basis.time_dependent or not self.placeable():
+            return
+        real = not basis.complex_funcs
+        bound = fourier_series_bound(basis.coeff, basis.domain)
+        points = torch.stack(
+            [
+                start + (stop - start) * OFF_GRID_FRACTIONS
+                for start, stop in basis.domain
+            ],
+            dim=1,
+        )
+        off_grid = basis(points)
+        expected = fourier_series_at(basis.coeff, points, basis.domain, real=real)
+        assert np.abs(off_grid.numpy() - expected).max() <= READING_ROUNDING * bound
+
+        finer = tuple(2 * m + 1 for m in basis.modes)
+        on_finer = basis.get_values(
+            res=tuple(
+                slice(start, stop, n)
+                for n, (start, stop) in zip(finer, basis.domain, strict=True)
+            ),
+            device=CPU,
+        )
+        expected_finer = fourier_series_at(
+            basis.coeff, nodes_of(basis.domain, finer), basis.domain, real=real
+        )
+        assert (
+            np.abs(on_finer.flatten(1).numpy() - expected_finer).max()
+            <= READING_ROUNDING * bound
+        )
+
+        on_its_grid = torch.fft.ifftn(
+            basis.coeff, dim=tuple(range(1, basis.coeff.ndim))
+        )
+        assert (
+            basis.get_values(device=CPU) - on_its_grid
+        ).abs().max() <= READING_ROUNDING * bound
+
+        if real:
+            assert off_grid.imag.abs().max() <= IMAGINARY_ROUNDING * bound
+
+    @invariant()
+    def a_real_field_reads_real_through_time(self):
+        basis = self.basis
+        if basis.complex_funcs or not basis.time_dependent or not self.placeable():
+            return
+        spatial_domain = basis.domain[1:]
+        points = torch.stack(
+            [
+                start + (stop - start) * OFF_GRID_FRACTIONS
+                for start, stop in spatial_domain
+            ],
+            dim=1,
+        )
+        time_start, time_stop = basis.domain[0]
+        values = basis(
+            points, t=torch.tensor([time_start + 0.3 * (time_stop - time_start)])
+        )
+        bound = fourier_series_bound(basis.coeff.flatten(0, 1), spatial_domain)
+        assert values.imag.abs().max() <= IMAGINARY_ROUNDING * bound
 
     @invariant()
     def a_stated_domain_is_kept(self):
@@ -1479,5 +1778,8 @@ for mark in (
         "A time-independent conversion that cannot be placed is refused"
     ),
     pytest.mark.scenario("A time-dependent field converts only to its own slice count"),
+    pytest.mark.scenario("A real field reads real everywhere at every mode count"),
+    pytest.mark.scenario("A complex field keeps its single boundary wave"),
+    pytest.mark.scenario("On its own grid a real field reads as before"),
 ):
     TestBasisLifecycle = mark(TestBasisLifecycle)

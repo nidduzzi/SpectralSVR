@@ -1,0 +1,40 @@
+........................................................................ [ 15%]
+........................................................................ [ 30%]
+........................................................................ [ 46%]
+........................................................................ [ 61%]
+........................................................................ [ 76%]
+........................................................................ [ 92%]
+....................................                                     [100%]
+============================= slowest 15 durations =============================
+19.00s call     tests/operators/test_burgers_forced_case.py::TestBenchmarkCasesStayPut::runTest
+13.60s call     tests/operators/test_deeponet.py::TestDeepONetFits::runTest
+13.23s call     tests/problems/test_problems.py::test_numerical_burgers_agrees_with_an_independent_integrator
+8.40s call     tests/model/test_fnn.py::test_fnn_overfits_constant_target
+6.10s call     tests/operators/test_benchmark_record.py::TestBenchmarkRecord::runTest
+3.79s call     tests/problems/test_problems.py::test_burgers_numerical_matches_cole_hopf_exact
+2.89s call     tests/model/test_fitted_placement.py::TestDirectingAndFitting::runTest
+2.84s call     tests/operators/test_burgers_forced_case.py::test_a_seed_fixes_the_case_and_another_seed_changes_it
+2.74s call     tests/utils/test_solvers.py::test_etdrk4_reproduces_forced_manufactured_solution
+2.23s call     tests/model/test_spectralsvr_anchors.py::test_inverse_recovers_known_input
+2.06s call     tests/problems/test_problems.py::test_a_forcing_the_grid_cannot_represent_is_refused
+2.04s call     tests/operators/test_burgers_forced_case.py::test_the_forced_case_has_the_shape_the_harness_expects
+1.75s call     tests/operators/test_burgers_forced_case.py::test_rest_under_no_forcing_stays_at_rest
+1.73s call     tests/operators/test_burgers_forced_case.py::test_the_query_lies_on_the_output_time_grid_inside_the_domain
+1.72s call     tests/problems/test_problems.py::test_a_band_past_the_threshold_is_refused_though_the_pair_is_self_consistent
+468 passed in 129.78s (0:02:09)
+mutants kept: 4
+[job-id] 720088de118048c89da7c5cd47bd80cb
+SpectralSVR/basis/__base.py core/ReplaceFalseWithTrue 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 015534d65bd543ef8dbf875c4a77ffc4
+SpectralSVR/basis/__base.py core/ReplaceFalseWithTrue 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1bb4af0dbe4c4a10a9c0736393ce5933
+SpectralSVR/basis/__base.py core/NumberReplacer 98
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0bb07ade860149a6a4b05092b8fa3411
+SpectralSVR/basis/__base.py core/NumberReplacer 99
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 4
+complete: 4 (100.00%)
+surviving mutants: 4 (100.00%)

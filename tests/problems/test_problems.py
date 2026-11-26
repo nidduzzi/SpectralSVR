@@ -29,7 +29,8 @@ from SpectralSVR.utils import (
 )
 
 from tests._devices import HOST
-from tests._time_varying import grid_points, slice_times
+from tests._anchors import fourier_series_at
+from tests._time_varying import grid_points, rows, slice_times
 
 from _exact import (
     SETTINGS,
@@ -849,30 +850,6 @@ UNIT_START_AND_LENGTH = dict(
 )
 
 
-def fourier_series_at(coeff, domain, times, space):
-    (time_start, time_stop), (space_start, space_stop) = domain
-    time_modes, space_modes = coeff.shape[-2:]
-    time_wavenumbers = torch.fft.fftfreq(
-        time_modes, 1 / time_modes, dtype=torch.float64
-    )
-    space_wavenumbers = torch.fft.fftfreq(
-        space_modes, 1 / space_modes, dtype=torch.float64
-    )
-    time_phase = torch.outer(times - time_start, time_wavenumbers) / (
-        time_stop - time_start
-    )
-    space_phase = torch.outer(space - space_start, space_wavenumbers) / (
-        space_stop - space_start
-    )
-    series = torch.einsum(
-        "nkl,tk,xl->ntx",
-        coeff.to(torch.complex128),
-        torch.exp(2j * torch.pi * time_phase),
-        torch.exp(2j * torch.pi * space_phase),
-    )
-    return series / (time_modes * space_modes)
-
-
 @pytest.mark.oracle_analytic
 @pytest.mark.scenario("Each slice reads as the manufactured field at its time")
 @SETTINGS
@@ -941,9 +918,11 @@ def test_each_manufactured_slice_holds_the_field_at_its_time(
         assert stored.time_dependent
         assert stored.domain == domain
         assert stored.coeff.shape == (n, slices, space_modes)
-        expected = fourier_series_at(
-            manufactured.coeff, manufactured.domain, times, space
-        )
+        expected = torch.from_numpy(
+            fourier_series_at(
+                manufactured.coeff, rows(times, space), manufactured.domain, real=True
+            )
+        ).reshape(n, slices, space_modes)
         displacement = (stored.get_values() - expected).abs().max()
         relative = float(displacement / expected.abs().max())
         assert relative < SLICE_TIME_TOLERANCE, (

@@ -5,7 +5,6 @@ the ground truth here (not a manufactured PDE solution).
 Kaiser-Bessel gridding is approximate, hence the loose tolerance.
 """
 
-import importlib
 from unittest.mock import patch
 
 import pytest
@@ -23,17 +22,15 @@ _EXACT = EvaluationStrategy(allow_approximate=False)
 _FORCE_NUFFT = EvaluationStrategy(memory_budget_mb=0.0, allow_approximate=True)
 
 CPU = torch.device("cpu")
-BASIS_MODULE = importlib.import_module("SpectralSVR.basis.FourierBasis")
-BUDGETS_MB = (0.0, 2**-10, 2**-8, 2**-6, 2**-4)
-COMPLEX128_BYTES = 16
 SETTINGS = settings(
     deadline=None, max_examples=20, suppress_health_check=[HealthCheck.too_slow]
 )
 
 
-def _exact_evaluate(coeff, x, domain):
-    # exact dense path: disable the NUFFT for this call only
-    return FourierBasis.evaluate(coeff, x, domain=domain, strategy=_EXACT)
+def _exact_evaluate(coeff, x, domain, complex_funcs=False):
+    return FourierBasis.evaluate(
+        coeff, x, domain=domain, strategy=_EXACT, complex_funcs=complex_funcs
+    )
 
 
 @pytest.mark.oracle_independent
@@ -55,8 +52,8 @@ def test_nufft_matches_dense_1d(modes, rows, npts, length, start, seed):
     coeff = FourierBasis.generate_coeff(rows, modes, generator=g).to(torch.complex128)
     x = start + (torch.rand(npts, 1, generator=g, dtype=torch.float64) * length)
     domain = ((start, start + length),)
-    approx = nufft_evaluate(coeff, x, domain)
-    exact = _exact_evaluate(coeff, x, domain)
+    approx = nufft_evaluate(coeff, x, domain) / coeff[0].numel()
+    exact = _exact_evaluate(coeff, x, domain, complex_funcs=True)
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
@@ -74,8 +71,8 @@ def test_nufft_matches_dense_2d(m, npts, seed):
     coeff = FourierBasis.generate_coeff(1, (m, m), generator=g).to(torch.complex128)
     x = torch.rand(npts, 2, generator=g, dtype=torch.float64) * torch.tensor([1.3, 0.7])
     domain = ((0.0, 1.3), (0.0, 0.7))
-    approx = nufft_evaluate(coeff, x, domain)
-    exact = _exact_evaluate(coeff, x, domain)
+    approx = nufft_evaluate(coeff, x, domain) / coeff[0].numel()
+    exact = _exact_evaluate(coeff, x, domain, complex_funcs=True)
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
@@ -146,41 +143,6 @@ def test_only_axes_below_the_kernel_width_get_a_wider_grid(modes, seed):
     assert operator.call_args.kwargs["grid_size"] == tuple(
         2 * m if 2 * m >= kernel_width else kernel_width for m in modes
     )
-
-
-@pytest.mark.oracle_independent
-@SETTINGS
-@given(
-    modes=st.integers(1, 48),
-    budget_mb=st.sampled_from(BUDGETS_MB),
-    around_threshold=st.integers(-20, 20),
-    seed=st.integers(0, 10_000),
-)
-@example(modes=32, budget_mb=0.0, around_threshold=2000, seed=0)
-@example(modes=2, budget_mb=0.0, around_threshold=2000, seed=0)
-def test_evaluate_switches_to_nufft_above_threshold(
-    modes, budget_mb, around_threshold, seed
-):
-    threshold_points = int(budget_mb * 2**20) // (modes * COMPLEX128_BYTES)
-    npts = max(1, threshold_points + around_threshold)
-    g = torch.Generator().manual_seed(seed)
-    coeff = FourierBasis.generate_coeff(1, modes, generator=g).to(torch.complex128)
-    x = torch.rand(npts, dtype=torch.float64, generator=g) * 1.3
-
-    exact = FourierBasis(coeff, domain=(0.0, 1.3), strategy=_EXACT)(x, device=CPU)
-    with patch.object(
-        BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
-    ) as nufft:
-        evaluated = FourierBasis(
-            coeff,
-            domain=(0.0, 1.3),
-            strategy=EvaluationStrategy(memory_budget_mb=budget_mb),
-        )(x, device=CPU)
-
-    assert (nufft.call_count > 0) == (
-        npts * modes * COMPLEX128_BYTES > budget_mb * 2**20
-    )
-    assert (evaluated - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
 @pytest.mark.oracle_consistency

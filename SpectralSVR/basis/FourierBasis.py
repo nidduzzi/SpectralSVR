@@ -25,6 +25,7 @@ from ..utils import (
     SlicePositions,
     interpolate_tensor,
     refuse_a_generator_placed_elsewhere,
+    resize_modes,
     to_complex_coeff,
 )
 import torch
@@ -101,6 +102,7 @@ class FourierBasis(Basis):
             n=n,
             time_dependent=self.time_dependent,
             strategy=self.strategy,
+            complex_funcs=self.complex_funcs,
         )
 
     @classmethod
@@ -114,6 +116,7 @@ class FourierBasis(Basis):
         time_dependent: bool = False,
         domain: DomainInputType = None,
         strategy: EvaluationStrategy | None = None,
+        complex_funcs: bool = False,
         **kwargs,
     ) -> torch.Tensor:
         strategy = strategy if strategy is not None else DEFAULT_EVALUATION_STRATEGY
@@ -128,35 +131,38 @@ class FourierBasis(Basis):
             )
         if not coeff.is_complex():
             coeff = to_complex_coeff(coeff)
-
-        modes = cls.get_modes(coeff, time_dependent=time_dependent)
+        stored_modes = cls.get_modes(coeff, time_dependent=time_dependent)
+        read = (
+            coeff
+            if complex_funcs
+            else cls.split_boundary_modes(coeff, sample_axes=2 if time_dependent else 1)
+        )
+        read_modes = cls.get_modes(read, time_dependent=time_dependent)
         if time_dependent:
             assert t is not None, "t must not be none for time dependent evaluations"
             domain_t = domainInputType_to_tuple(domain, (coeff.shape[1:]))
             assert len(domain_t) > 1, (
                 f"domain given for time dependent evaluation must at least be of dimension 2, got {len(domain_t)}"
             )
-            basis = cls.fn(x, modes, domain=domain_t[1:])
-            sum_coeff_x_basis = cls.sum_mul(coeff.flatten(2), basis)
+            basis = cls.fn(x, read_modes, domain=domain_t[1:])
             sum_coeff_x_basis = interpolate_tensor(
-                sum_coeff_x_basis,
+                cls.sum_mul(read.flatten(2), basis),
                 SlicePositions(t.flatten().real, domain_t[0], coeff.shape[1]),
             )
-
         else:
-            npoints = x.shape[0]
-            dense_elems = npoints * math.prod(modes)
-            itemsize = coeff.element_size()
-            domain_tuple = domainInputType_to_tuple(domain, modes)
-            if strategy.use_approximate(dense_elems, itemsize) and nufft_available():
-                # NUFFT already includes the 1/prod(modes) scaling
-                return nufft_evaluate(coeff, x, domain_tuple)
-            sum_coeff_x_basis = cls._dense_evaluate(
-                coeff, x, modes, domain_tuple, strategy
-            )
+            dense_elems = x.shape[0] * math.prod(stored_modes)
+            domain_tuple = domainInputType_to_tuple(domain, stored_modes)
+            if (
+                strategy.use_approximate(dense_elems, coeff.element_size())
+                and nufft_available()
+            ):
+                sum_coeff_x_basis = nufft_evaluate(read, x, domain_tuple)
+            else:
+                sum_coeff_x_basis = cls._dense_evaluate(
+                    read, x, read_modes, domain_tuple, strategy
+                )
 
-        scaling = 1.0 / math.prod(modes)
-        return scaling * sum_coeff_x_basis
+        return sum_coeff_x_basis / math.prod(stored_modes)
 
     @classmethod
     def evaluate_time_dependent_at(
@@ -164,6 +170,7 @@ class FourierBasis(Basis):
         coeff: torch.Tensor,
         points: torch.Tensor,
         domain: DomainInputType = None,
+        complex_funcs: bool = False,
     ) -> torch.Tensor:
         if not coeff.is_complex():
             coeff = to_complex_coeff(coeff)
@@ -192,8 +199,16 @@ class FourierBasis(Basis):
                 f"[{t_start}, {t_stop}]; got {times.min().item()} to "
                 f"{times.max().item()}"
             )
+        read = (
+            coeff if complex_funcs else cls.split_boundary_modes(coeff, sample_axes=2)
+        )
         per_slice = cls.sum_mul(
-            coeff.flatten(2), cls.fn(points[:, 1:], modes, domain=domain_t[1:])
+            read.flatten(2),
+            cls.fn(
+                points[:, 1:],
+                cls.get_modes(read, time_dependent=True),
+                domain=domain_t[1:],
+            ),
         )
         positions = SlicePositions(times, domain_t[0], coeff.shape[1])
         rows = torch.arange(len(points), device=per_slice.device)
@@ -341,10 +356,24 @@ class FourierBasis(Basis):
         return k
 
     @staticmethod
-    def derivative_eigenvalues(modes: int, length: float, ord: int = 1) -> torch.Tensor:
-        # differentiation is diagonal in Fourier space: multiply by (2*pi*i*k/L)
+    def derivative_eigenvalues(
+        modes: int, length: float, ord: int = 1, complex_funcs: bool = False
+    ) -> torch.Tensor:
         k = FourierBasis.wave_number(modes).flatten()
-        return (2 * torch.pi * 1j * k / length) ** ord
+        eigenvalues = (2 * torch.pi * 1j * k / length) ** ord
+        boundary_mode_is_a_cosine = not complex_funcs and modes % 2 == 0
+        if boundary_mode_is_a_cosine and ord % 2 == 1:
+            eigenvalues[modes // 2] = 0
+        return eigenvalues
+
+    @staticmethod
+    def split_boundary_modes(coeff: torch.Tensor, sample_axes: int = 1) -> torch.Tensor:
+        samples = coeff.shape[:sample_axes]
+        odd_modes = tuple(m + 1 - m % 2 for m in coeff.shape[sample_axes:])
+        split = resize_modes(
+            coeff.flatten(0, sample_axes - 1), odd_modes, rescale=False
+        )
+        return split.unflatten(0, samples)
 
     @staticmethod
     def dealias_mask(modes: int, fraction: float = 2.0 / 3.0) -> torch.Tensor:
@@ -459,6 +488,7 @@ class FourierBasis(Basis):
         sampling: SamplingScheme,
         domain: DomainAxis,
         strategy: EvaluationStrategy,
+        complex_funcs: bool = False,
     ) -> torch.Tensor:
         assert torch.is_complex(f), (
             "f is not complex, cast it to complex first eg. f + 0j"
@@ -488,28 +518,26 @@ class FourierBasis(Basis):
             elif func == "inverse":
                 F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
         else:
-            # the sampling scheme owns node placement over the domain (real
-            # coordinates -- do not cast to the complex coeff dtype)
             n = sampling.nodes(res.step, res.start, res.stop).to(device=f.device)
-            # inverse (coeff -> values at nodes) is a type-2 NUFFT, so route the
-            # large non-uniform case through it instead of the dense (npts*mode)
-            # basis matrix. (The forward/type-1 adjoint would need its own
-            # calibration; it stays on the exact matmul for now.)
+            read = (
+                FourierBasis.split_boundary_modes(f)
+                if func == "inverse" and not complex_funcs
+                else f
+            )
+            read_modes = read.shape[1]
             if (
                 func == "inverse"
                 and strategy.use_approximate(res.step * mode, f.element_size())
                 and nufft_available()
             ):
-                # nufft_evaluate divides by prod(modes)=mode; _raw_transform
-                # returns the unscaled sum (inv_transform applies 1/N later)
-                return nufft_evaluate(f, n.view(-1, 1), (domain,)) * mode
+                return nufft_evaluate(read, n.view(-1, 1), (domain,))
             e = FourierBasis.fn(
-                n.to(f).view(-1, 1),  # match coeff dtype for the matmul
-                mode,
+                n.to(read).view(-1, 1),
+                read_modes,
                 domain=domain,
                 constant=sign * 2j * torch.pi,
             )
-            F = torch.mm(f, e.T)
+            F = torch.mm(read, e.T)
 
         assert isinstance(F, torch.Tensor), (
             f"Something went wrong during the raw transform, expected result of {torch.Tensor}, but got {type(F)}"
@@ -526,11 +554,9 @@ class FourierBasis(Basis):
         sampling: SamplingScheme,
         domain: DomainAxis,
         strategy: EvaluationStrategy,
+        complex_funcs: bool = False,
     ) -> torch.Tensor:
-        # flatten so that each extra dimension is treated as a separate "sample"
-        # move dimension to transform to the end so that it can stay intact after f is flatened
         f_transposed = f.moveaxis(dim, -1)
-        # flatten so that the last dimension is intact
         f_flatened = f_transposed.flatten(0, -2)
 
         F_flattened = FourierBasis._raw_transform(
@@ -540,8 +566,8 @@ class FourierBasis(Basis):
             sampling=sampling,
             domain=domain,
             strategy=strategy,
+            complex_funcs=complex_funcs,
         )
-        # unflatten so that the correct shape is returned
         F_transposed = F_flattened.reshape((*f_transposed.shape[:-1], res.step))
         F = F_transposed.moveaxis(-1, dim)
 
@@ -607,6 +633,7 @@ class FourierBasis(Basis):
         strategy: EvaluationStrategy | None = None,
         scale: bool = True,
         domain: DomainInputType = None,
+        complex_funcs: bool = False,
         **kwargs,
     ):
         """
@@ -634,17 +661,10 @@ class FourierBasis(Basis):
         )
         if not torch.is_complex(f):
             f = f * (1 + 0j)
-        # inverse-DFT normalisation is 1/N over the MODE count; capture it before
-        # the loop rewrites the shape to the (possibly larger) evaluation
-        # resolution. Dividing by the resolution instead would scale values by
-        # (modes/res)^ndim whenever res != modes (e.g. plotting, residual grids).
-        modes = tuple(f.shape[1:])
-        domain = domainInputType_to_tuple(domain, f.shape[1:])
+        stored_modes = tuple(f.shape[1:])
+        domain = domainInputType_to_tuple(domain, stored_modes)
         sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
-        # Res should by default span the domain, not the unit interval
-        res = transformResType_to_tuple(res, modes, domain)
-
-        # perform 1d transform over every dimension
+        res = transformResType_to_tuple(res, stored_modes, domain)
         for cdim in range(1, ndims):
             f = FourierBasis._ndim_transform(
                 f,
@@ -654,22 +674,19 @@ class FourierBasis(Basis):
                 sampling=sampling_axes[cdim - 1],
                 domain=domain[cdim - 1],
                 strategy=strategy,
+                complex_funcs=complex_funcs,
             )
 
         if scale:
-            f = f.div(math.prod(modes))
+            f = f.div(math.prod(stored_modes))
         return f
 
     def _diff_multiplier(self, dim: int, ord: int) -> torch.Tensor:
-        """Per-mode Fourier differentiation multiplier ``(2*pi*i*k / length)^ord``.
-
-        Broadcasts over the coefficient tensor along ``dim``. ``grad`` multiplies
-        by it; ``integral`` divides by it.
-        """
         if self.time_dependent:
-            # disregard the (sample-like) time dimension for spatial derivatives
             dim = dim - 1
-        eig = self.derivative_eigenvalues(self.modes[dim], self.lengths[dim], ord)
+        eig = self.derivative_eigenvalues(
+            self.modes[dim], self.lengths[dim], ord, complex_funcs=self.complex_funcs
+        )
         multiplier_dims = tuple(
             1 if i != dim else self.modes[i] for i in range(self.ndim)
         )

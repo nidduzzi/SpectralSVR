@@ -18,18 +18,47 @@ def half_open_grid(n: int, start: float = 0.0, stop: float = 1.0) -> torch.Tenso
 
 
 def fourier_series_at(
-    coeff: torch.Tensor, points: torch.Tensor, domain: tuple[tuple[float, float], ...]
+    coeff: torch.Tensor,
+    points: torch.Tensor,
+    domain: tuple[tuple[float, float], ...],
+    real: bool,
+    derivative_orders: tuple[int, ...] | None = None,
 ) -> numpy.ndarray:
-    modes = coeff.shape[1:]
-    starts = numpy.array([start for start, _ in domain])
-    lengths = numpy.array([stop - start for start, stop in domain])
-    wavenumber_axes = numpy.meshgrid(
-        *(numpy.fft.fftfreq(m, 1 / m) for m in modes), indexing="ij"
-    )
-    wavenumbers = numpy.stack([axis.ravel() for axis in wavenumber_axes], axis=1)
-    cell_points = (points.numpy() - starts) / lengths
-    phases = numpy.exp(2j * numpy.pi * cell_points @ wavenumbers.T)
-    return coeff.reshape(len(coeff), -1).numpy() @ phases.T / len(wavenumbers)
+    orders = derivative_orders or (0,) * len(domain)
+    phases = numpy.ones((len(points), 1), dtype=numpy.complex128)
+    for axis, (m, (start, stop), order) in enumerate(
+        zip(coeff.shape[1:], domain, orders, strict=True)
+    ):
+        length = stop - start
+        cell = (points[:, axis].numpy() - start) / length
+        wavenumbers = numpy.fft.fftfreq(m, 1 / m)
+        axis_phases = (2j * numpy.pi * wavenumbers / length) ** order * numpy.exp(
+            2j * numpy.pi * numpy.outer(cell, wavenumbers)
+        )
+        if real and m % 2 == 0:
+            axis_phases[:, m // 2] = (numpy.pi * m / length) ** order * numpy.cos(
+                numpy.pi * m * cell + order * numpy.pi / 2
+            )
+        phases = (phases[:, :, None] * axis_phases[:, None, :]).reshape(len(points), -1)
+    return coeff.reshape(len(coeff), -1).numpy() @ phases.T / phases.shape[1]
+
+
+def fourier_series_bound(
+    coeff: torch.Tensor,
+    domain: tuple[tuple[float, float], ...],
+    derivative_orders: tuple[int, ...] | None = None,
+) -> float:
+    orders = derivative_orders or (0,) * len(domain)
+    bound = coeff.abs().to(torch.float64)
+    for axis, (m, (start, stop), order) in enumerate(
+        zip(coeff.shape[1:], domain, orders, strict=True)
+    ):
+        wavenumbers = numpy.abs(numpy.fft.fftfreq(m, 1 / m))
+        eigenvalues = (2 * numpy.pi * wavenumbers / (stop - start)) ** order
+        shape = [1] * bound.ndim
+        shape[axis + 1] = m
+        bound = bound * torch.from_numpy(eigenvalues).view(shape)
+    return float(bound.flatten(1).sum(1).max()) / coeff[0].numel()
 
 
 def single_mode_values(

@@ -1,7 +1,7 @@
 ["SpectralSVR/basis/FourierBasis.py"]
-comments = 46
-internal_docstrings = 24
-misshapen_docstrings = 6
+comments = 24
+internal_docstrings = 19
+misshapen_docstrings = 5
 
 ["SpectralSVR/basis/__base.py"]
 comments = 15
@@ -10,8 +10,8 @@ misshapen_docstrings = 27
 
 ["SpectralSVR/basis/_nufft.py"]
 comments = 3
-internal_docstrings = 24
-misshapen_docstrings = 2
+internal_docstrings = 12
+misshapen_docstrings = 1
 
 ["SpectralSVR/basis/_plot.py"]
 comments = 4
@@ -139,7 +139,7 @@ internal_docstrings = 0
 misshapen_docstrings = 2
 
 ["tests/basis/test_nufft.py"]
-comments = 18
+comments = 17
 internal_docstrings = 0
 misshapen_docstrings = 1
 

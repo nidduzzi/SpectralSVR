@@ -12,6 +12,7 @@ from SpectralSVR.basis.sampling import (
     PeriodicUniform,
     samplings_to_tuple,
 )
+from SpectralSVR.basis.strategy import EvaluationStrategy
 
 CPU = torch.device("cpu")
 SETTINGS = settings(
@@ -99,7 +100,9 @@ def test_matmul_transform_leg_matches_closed_form(m, amp, phase):
     x = torch.linspace(0, 1, n + 1, dtype=torch.float64)[:-1]
     values = amp * torch.cos(2 * math.pi * m * x + phase)
     got = FourierBasis.transform(
-        (values + 0j).unsqueeze(0), sampling=PeriodicUniform(supports_fft=False)
+        (values + 0j).unsqueeze(0),
+        sampling=PeriodicUniform(supports_fft=False),
+        strategy=EvaluationStrategy(memory_budget_mb=0.0),
     )[0]
     expected = single_mode_spectrum(n, m, amp, phase).to(got.dtype)
     assert torch.allclose(got, expected, atol=2e-3 * n * amp)
