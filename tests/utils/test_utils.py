@@ -1,5 +1,8 @@
 import dataclasses
 import math
+import os
+import subprocess
+import sys
 import tempfile
 
 import numpy as np
@@ -836,3 +839,29 @@ for mark in (
     pytest.mark.scenario("A mismatched random source names both devices"),
 ):
     TestDeviceStatements = mark(TestDeviceStatements)
+
+
+READ_THE_ACCELERATOR_WITH_NONE_VISIBLE = """
+import sys
+import torch
+from SpectralSVR.utils import accelerator, placed
+torch.set_default_device(sys.argv[1])
+print(accelerator(), placed(accelerator()), torch.get_default_device())
+"""
+
+
+@pytest.mark.oracle_independent
+@pytest.mark.scenario(
+    "A build that supports an accelerator the machine lacks names the host"
+)
+@settings(max_examples=4, deadline=None)
+@given(default=st.sampled_from(("cpu", "meta")))
+def test_a_machine_without_the_accelerator_names_its_default_device(default):
+    named, placed_named, default_device = subprocess.run(
+        [sys.executable, "-c", READ_THE_ACCELERATOR_WITH_NONE_VISIBLE, default],
+        env=dict(os.environ, CUDA_VISIBLE_DEVICES=""),
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert named == placed_named == default_device

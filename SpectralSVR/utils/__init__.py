@@ -41,13 +41,13 @@ def accelerator() -> torch.device:
     Names whichever accelerator is present rather than testing for a vendor, so
     a caller states "the fast one here" without knowing which it is.
     """
-    present = torch.accelerator.current_accelerator()
+    present = torch.accelerator.current_accelerator(check_available=True)
     return torch.get_default_device() if present is None else present
 
 
 def placed(device: torch.device) -> torch.device:
     """The memory a device names: an unstated accelerator index resolves to the one in use."""
-    present = torch.accelerator.current_accelerator()
+    present = torch.accelerator.current_accelerator(check_available=True)
     if present is not None and device.type == present.type and device.index is None:
         return torch.device(device.type, torch.accelerator.current_device_index())
     return device
