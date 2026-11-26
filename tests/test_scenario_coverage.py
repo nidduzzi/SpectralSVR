@@ -15,6 +15,9 @@ import re
 from pathlib import Path
 
 import pytest
+from hypothesis import settings
+from hypothesis import strategies as st
+from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
 REPO = Path(__file__).resolve().parents[1]
 TESTS_DIR = Path(__file__).parent
@@ -29,9 +32,6 @@ IN_FLIGHT = "stated by a change still being implemented; covered as its tasks co
 
 # Scenarios with no test naming them. Shrink this list; do not grow it.
 EXEMPT: dict[str, str] = {
-    "One command regenerates": IN_FLIGHT,
-    "The notebook reads the record": IN_FLIGHT,
-    "The reference protocol is followed and recorded": IN_FLIGHT,
     # coefficient-encodings
     "Two mode axes convert": PREDATES,
     "One mode axis is unchanged": PREDATES,
@@ -139,28 +139,32 @@ EXEMPT: dict[str, str] = {
 }
 
 
-def _spec_files() -> list[Path]:
-    main = sorted((REPO / "openspec" / "specs").rglob("spec.md"))
-    active = sorted(
+def _main_specs() -> list[Path]:
+    return sorted((REPO / "openspec" / "specs").rglob("spec.md"))
+
+
+def _deltas_in_flight() -> list[Path]:
+    return sorted(
         path
         for path in (REPO / "openspec" / "changes").rglob("spec.md")
         if "archive" not in path.parts
     )
-    return main + active
 
 
-def _stated() -> dict[str, list[str]]:
-    """Scenario name -> the capabilities stating it."""
+def _capabilities_stating_each_scenario(specs: list[Path]) -> dict[str, list[str]]:
     stated: dict[str, list[str]] = {}
-    for spec in _spec_files():
+    for spec in specs:
         for match in SCENARIO.finditer(spec.read_text()):
             stated.setdefault(match.group(1), []).append(spec.parent.name)
     return stated
 
 
-def _covered() -> set[str]:
-    """Scenario names named by a @pytest.mark.scenario(...) anywhere in tests/."""
-    covered: set[str] = set()
+def _stated() -> dict[str, list[str]]:
+    return _capabilities_stating_each_scenario(_main_specs() + _deltas_in_flight())
+
+
+def _scenarios_named_by_tests() -> set[str]:
+    named: set[str] = set()
     for module in TESTS_DIR.rglob("test_*.py"):
         if "__pycache__" in module.parts:
             continue
@@ -174,12 +178,36 @@ def _covered() -> set[str]:
                 and isinstance(func.value, ast.Attribute)
                 and func.value.attr == "mark"
             ):
-                covered.update(
+                named.update(
                     arg.value
                     for arg in node.args
                     if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
                 )
-    return covered
+    return named
+
+
+def uncovered_scenarios(
+    stated: set[str], named: set[str], exempt: dict[str, str]
+) -> list[str]:
+    return sorted(stated - named - set(exempt))
+
+
+def exemptions_no_spec_states(stated: set[str], exempt: dict[str, str]) -> list[str]:
+    return sorted(name for name in exempt if name not in stated)
+
+
+def exemptions_a_test_now_names(named: set[str], exempt: dict[str, str]) -> list[str]:
+    return sorted(name for name in exempt if name in named)
+
+
+def in_flight_exemptions_outliving_their_change(
+    in_flight: set[str], exempt: dict[str, str]
+) -> list[str]:
+    return sorted(
+        name
+        for name, reason in exempt.items()
+        if reason == IN_FLIGHT and name not in in_flight
+    )
 
 
 @pytest.mark.no_fuzz
@@ -193,11 +221,9 @@ def test_scenario_names_are_unique():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-@pytest.mark.scenario("A scenario without a check is caught")
-@pytest.mark.scenario("The guard survives archiving")
+@pytest.mark.oracle_consistency
 def test_every_stated_scenario_is_covered_or_exempt():
-    uncovered = sorted(set(_stated()) - _covered() - set(EXEMPT))
+    uncovered = uncovered_scenarios(set(_stated()), _scenarios_named_by_tests(), EXEMPT)
     assert not uncovered, (
         f"{len(uncovered)} scenario(s) stated by a spec with no test naming them: "
         f"{uncovered}. Cover each with @pytest.mark.scenario(<name>) on the test "
@@ -207,13 +233,10 @@ def test_every_stated_scenario_is_covered_or_exempt():
 
 
 @pytest.mark.no_fuzz
-@pytest.mark.oracle_invariant
-@pytest.mark.scenario("An exemption does not cover a later scenario")
-@pytest.mark.scenario("A scenario that cannot be code-tested is named")
+@pytest.mark.oracle_consistency
 def test_no_exemption_is_stale():
-    stated, covered = set(_stated()), _covered()
-    gone = sorted(name for name in EXEMPT if name not in stated)
-    now_tested = sorted(name for name in EXEMPT if name in covered)
+    gone = exemptions_no_spec_states(set(_stated()), EXEMPT)
+    now_tested = exemptions_a_test_now_names(_scenarios_named_by_tests(), EXEMPT)
     assert not gone, (
         f"EXEMPT names scenarios no spec states any more: {gone}. Remove them."
     )
@@ -222,3 +245,124 @@ def test_no_exemption_is_stale():
         "entry -- the list is debt to be worked down, and a stale entry hides "
         "coverage that already exists."
     )
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_consistency
+def test_every_in_flight_exemption_names_a_scenario_still_in_flight():
+    in_flight = set(_capabilities_stating_each_scenario(_deltas_in_flight()))
+    stranded = in_flight_exemptions_outliving_their_change(in_flight, EXEMPT)
+    assert not stranded, (
+        f"EXEMPT gives IN_FLIGHT for scenarios no change in flight states: "
+        f"{stranded}. Their change was archived without a test naming them; "
+        "cover each, or record the reason no test can exist."
+    )
+
+
+SCENARIOS = ["alpha", "beta", "gamma", "delta"]
+CHANGES = ["first-change", "second-change"]
+
+
+class ScenarioLedger(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.main: set[str] = set()
+        self.in_flight: dict[str, set[str]] = {}
+        self.named: set[str] = set()
+        self.exempt: dict[str, str] = {}
+
+    @property
+    def scenarios_in_flight(self) -> set[str]:
+        return set().union(*self.in_flight.values())
+
+    @property
+    def stated(self) -> set[str]:
+        return self.main | self.scenarios_in_flight
+
+    @initialize()
+    def archive_a_change_whose_scenario_has_no_test(self):
+        self.state_in_a_change("first-change", "alpha")
+        self.exempt_while_in_flight("alpha")
+        assert self.stranded() == []
+        self.archive("first-change")
+        assert self.stranded() == ["alpha"]
+        self.name_in_a_test("alpha")
+        assert exemptions_a_test_now_names(self.named, self.exempt) == ["alpha"]
+        self.drop_exemption("alpha")
+        assert uncovered_scenarios(self.stated, self.named, self.exempt) == []
+
+    def stranded(self) -> list[str]:
+        return in_flight_exemptions_outliving_their_change(
+            self.scenarios_in_flight, self.exempt
+        )
+
+    @rule(change=st.sampled_from(CHANGES), scenario=st.sampled_from(SCENARIOS))
+    def state_in_a_change(self, change, scenario):
+        self.in_flight.setdefault(change, set()).add(scenario)
+
+    @rule(change=st.sampled_from(CHANGES))
+    def archive(self, change):
+        self.main |= self.in_flight.pop(change, set())
+
+    @rule(scenario=st.sampled_from(SCENARIOS))
+    def name_in_a_test(self, scenario):
+        self.named.add(scenario)
+
+    @rule(scenario=st.sampled_from(SCENARIOS))
+    def remove_the_test(self, scenario):
+        self.named.discard(scenario)
+
+    @rule(scenario=st.sampled_from(SCENARIOS))
+    def exempt_while_in_flight(self, scenario):
+        self.exempt[scenario] = IN_FLIGHT
+
+    @rule(scenario=st.sampled_from(SCENARIOS))
+    def exempt_as_a_decision(self, scenario):
+        self.exempt[scenario] = DECISION
+
+    @rule(scenario=st.sampled_from(SCENARIOS))
+    def drop_exemption(self, scenario):
+        self.exempt.pop(scenario, None)
+
+    @invariant()
+    def a_stated_scenario_is_reported_only_when_neither_tested_nor_exempt(self):
+        reported = set(uncovered_scenarios(self.stated, self.named, self.exempt))
+        for scenario in SCENARIOS:
+            expected = (
+                scenario in self.stated
+                and scenario not in self.named
+                and scenario not in self.exempt
+            )
+            assert (scenario in reported) == expected
+
+    @invariant()
+    def a_stale_exemption_is_reported(self):
+        for scenario in self.exempt:
+            assert (
+                scenario in exemptions_no_spec_states(self.stated, self.exempt)
+            ) == (scenario not in self.stated)
+            assert (
+                scenario in exemptions_a_test_now_names(self.named, self.exempt)
+            ) == (scenario in self.named)
+
+    @invariant()
+    def an_in_flight_exemption_ends_with_its_change(self):
+        stranded = self.stranded()
+        for scenario, reason in self.exempt.items():
+            assert (scenario in stranded) == (
+                reason == IN_FLIGHT and scenario not in self.scenarios_in_flight
+            )
+
+
+ScenarioLedger.TestCase.settings = settings(max_examples=80, stateful_step_count=15)
+TestScenarioLedger = pytest.mark.scenario("A scenario without a check is caught")(
+    pytest.mark.scenario("The guard survives archiving")(
+        pytest.mark.scenario("An exemption does not cover a later scenario")(
+            pytest.mark.scenario("A scenario that cannot be code-tested is named")(
+                pytest.mark.scenario("An in-flight exemption ends with its change")(
+                    pytest.mark.oracle_invariant(ScenarioLedger.TestCase)
+                )
+            )
+        )
+    )
+)

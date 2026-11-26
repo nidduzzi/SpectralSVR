@@ -94,3 +94,7 @@ A scenario SHALL be checkable against the implementation, and a test covering on
 #### Scenario: A scenario that cannot be code-tested is named
 - **WHEN** a scenario describes something no test can reach, such as a decision recorded during the change itself
 - **THEN** it is listed with the reason, so the exemption is auditable rather than an unexplained gap in the guard
+
+#### Scenario: An in-flight exemption ends with its change
+- **WHEN** an exemption gives as its reason that the scenario's change is still being implemented, and no change still in flight states that scenario
+- **THEN** the guard reports the entry, so a change archived without a test for one of its scenarios is caught at the next run rather than left exempt under a reason that is no longer true
