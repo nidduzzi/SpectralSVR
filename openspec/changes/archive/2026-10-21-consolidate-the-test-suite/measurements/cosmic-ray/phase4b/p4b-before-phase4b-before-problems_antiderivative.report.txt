@@ -1,0 +1,492 @@
+[job-id] 43f6bcfe9fbe4b55ad0f1c349f1b7aef
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3b2245d42c694fcea2995623db09b44e
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0f003e2f14bc4f479a7a905242ac34ce
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2cad9dac4e5c44fb9a60095d3dcb47fc
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d5d41bf3c5aa4a9e9166f5aab54404eb
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f23615200f6644c885183f8483e60cb0
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 101a569bcc8d4f818a88f26e5d2fc4b3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 12bfbb302e204bb794843849aa9ed11b
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 39bc7d84f22049f2a7deaa4f047e5bc7
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5c04466ad1494b77902ceff4d0793613
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cb2c25726b284c49afc0657a8c7f95a5
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Add_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5861ff3501e043f69c272dce70146b80
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e1312206e9574d0eaa0fa75dc07b30b2
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 829c80cc935b44c68713ef37d1340579
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a249e92d994b4f63af7b0111475ab77c
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1f1336bda1ea442eb5bdc14684569f9b
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 523cf067387544a4872d4e8a3dca8c37
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mul 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7d7554bf649b4ca3aa85a522b6c9be2e
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 61eb43c1b9dc43bab0d0cb8b333f7e0e
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e45efca9ee3b4964b5b10ee690b753f5
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e302361add0448d1888be49b0fcb124b
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 73c6862aa4674a46bd81be9ea216193a
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e08bca6375414a80a50130de556de793
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 610936a4320246fd919887ac798c3437
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 29dd1c9422484280a827bbab11705a5e
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 593ba4a7b48048d0a73bf33a0cfa97b2
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3246fbbccf684433a3b72d02500d1a09
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 42320362b83a417a927ec11966be0dc7
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f3f02148d35642b2af02eafe3ae3aed6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2932d35228654e0c8af0a141d36b6a43
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4ef454bdf360450ca8a9eb53f97ec341
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 879362f57a264abd9e3b41d8ed6dcc9d
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2ca2690ffd14540bfeb6eebab8b42d5
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2db330e8616c49d984fdf66cf483ab53
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b8620c7138e94b29979ddfe49479e094
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9fc6311be3584d8cb6b9c1d7e966eead
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 76a1712dff704a66ad50a58f26169433
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2f0bad9f367f47e394aaf24ed6a5dd87
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 313becec776542a995809984c3fe9f05
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 444e7bf977fc44e2a333ee6579ebf3fa
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 10ef79ae17a54326825cf0d14fcf02a7
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fbc4667a533842e2bc3622034f74e70d
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9cda68245d8e47d09bf255d0ad8fb059
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 13ee5abc737d4cbaa44c77d4ad589a13
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Sub_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3436853e65dc4235ba73b1c69e1f8383
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c2a8cfeebc7d451ab025eeb065291e7e
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] db47fc4976e6497dbeb68696ffea52e7
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0c65641da1b7432b975d0c62e0c0ffa3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b5ab0a04e2a5436793c75526887963de
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 705dae2b566d4ac694204659e947e211
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8137c6a8a5064510b07b09ff2f0847b6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2039972cff074c0386ff8833d1bec6ff
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0b9189b8a5144599a3ebab5492bc379f
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 762d3d5f00fa400ca0003cc03c5329a3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 09deb1c74b624a5caeef8e8f84a62264
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_Mul_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 68c92c59541f462493b7ea35bcaabdd6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c689e419b555400a84f49c4b2eeea2de
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cc1558f2a990423fb3810daf7d58f057
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8c20840c4cfb4235ab0d04a7bfc7c676
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 683dce9db8ac4845b4d4be646b5f8018
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9dab57c54d094cf8b8e47122266811b3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 44fd4c4665794ed3b6c2f19aca9ecace
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b1d1ecb764294eb09144496798ce4747
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Sub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 69a1310006774b1898c58918d933afec
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] be00c06cc24c436abc69a61f9ef944d3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9045e0ddf0f045339c93265a05182b30
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mul 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b778033650444509a0fe46afc2c99cae
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mul 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 12da7e9fe2f04acf985bbae4e089c42a
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eb1aa9f1bd3640989b84c1c9d1481eac
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bf1551994d9842de8b5aad5b6bb1482a
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 85f7ba91358f4939982cdd27e3b1ddd0
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 81078f7c0449439bb53b4750cc341cd2
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f63472f788a348c592c26dd1fe2650ee
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 34c910bb2dda438c8b8c648c10d371a7
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9062b376c67947e88aaa0f5fd67f1624
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a98b8a849bce40f2a566564d42d3e496
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 40bd5e5c402c4bb49475c72ff4aad7b9
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d333099f64134733bee2524fc2408ec4
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e11f6ee07e754706be50535771733ac9
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d15d0bb7c3e4dc7a57024d336a0a0b6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9426a8ad29d949eba9d8a3de01854e0c
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3a16c82c3c614c76a120c834a49404f5
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bbe51979e7bf4259accf1496211939f3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6dc2334a9aa6429dbf42433634a382e6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a985ba39cc6a45dab861c209f1241e98
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4f8726023b724b43840369eb74f55c96
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 885a631b0337468d9ca2abb6fec41d38
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6ad248f4d0df4c4384faa0447d7fc6d2
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 73da6d8085b5462c88c260e84ea75b94
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 439a634cb79549118a7402493d8b6c8a
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d29ce481e1b4438c8811979a449f4db6
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9fb591935cc84396add0f3618dcc6055
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0578199f1a9242bd937d57d68272e31f
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 74e2fa7bca554786a2a518fab77f338c
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 21cd744199904649bdbd77116e3aaf73
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b69f56a553554c0eac0fdfe5929006c9
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a465961a98b44645a8533524e317f0a3
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 61bf8b4e6b4f4999948db475632e654d
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4a8673636aa24cc98d83978cb707f644
+SpectralSVR/problems/antiderivative.py core/ReplaceBinaryOperator_BitOr_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 619181fbf65245669a73572729142394
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1129bf29954f4712b5613e333e3271ef
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_Eq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c58c605617f4d6a9600fc69cb9b5d70
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5a81d1d1c5bc41cd9811027185d81796
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_NotEq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ee9889d9ab53426291508cb2e7f8e82a
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ce7b1cd0ed9f42ee93f19923aba88d36
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 88e6e4f6a91848128e175e513cf6c9e1
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f45ae7e010b4bd7aaa5c7932e3035d3
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 99a851aa6b62431ea519d6be50e4a86b
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 81e53c556fe3410aa1152269b717a9e5
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_Gt_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 446ed8a1495343a69c0a6aa45779661d
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_IsNot_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ea1f0c22b2154114881e75a7de0d952b
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_IsNot_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 760d08aa9f6f4004a14b4204c557b4ba
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_IsNot_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 203822ffe08e483098ea5ae441f100bc
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_IsNot_Is 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5d4d20728b8549d4898dea4ee428b06c
+SpectralSVR/problems/antiderivative.py core/ReplaceComparisonOperator_IsNot_Is 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e87b386af81048b58493bf4a50ebcabe
+SpectralSVR/problems/antiderivative.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ecb24f8680dd4285b222175774454f8a
+SpectralSVR/problems/antiderivative.py core/AddNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 60261220a4384823852c8fc2965fea49
+SpectralSVR/problems/antiderivative.py core/AddNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 84aa8dacc8f444459e7ec19e520edbb5
+SpectralSVR/problems/antiderivative.py core/AddNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 11b06bf80cd34a23aa3e0567f3a4b85a
+SpectralSVR/problems/antiderivative.py core/AddNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4ceaf944283640c8a03097ce61b4216b
+SpectralSVR/problems/antiderivative.py core/AddNot 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bbb44b5dafd649678713816ffab55989
+SpectralSVR/problems/antiderivative.py core/AddNot 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 94d22dd0f7c94c7bae3fbc83fa8153f5
+SpectralSVR/problems/antiderivative.py core/AddNot 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f352fb60b5494e14a01b504b92690794
+SpectralSVR/problems/antiderivative.py core/AddNot 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5fb414e57e9844d183a794185094aa1c
+SpectralSVR/problems/antiderivative.py core/AddNot 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 95e3dfdd6a4648249e8beaeab166bb62
+SpectralSVR/problems/antiderivative.py core/ReplaceAndWithOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 118cce450b2e4f64be73ed77311e585f
+SpectralSVR/problems/antiderivative.py core/ReplaceOrWithAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5bb54cd212b74a8095b41c7035c3da63
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1af1902c492543d2b86c20138121e669
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e97fc8cd509c43bd8c175cd378114b41
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d4a83a7381f74fceb7e9a1cf301a35dc
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 173922a72cac4f0f979bb4a8333acb11
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 211633d54afb4cf4a62619cbe55ca04c
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 08287797c67346e0a44912eda32c7fb6
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 722519f15e244c23a58c0da7fbd72b2b
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b35fc9a0ebd34fda98cd9a6a9bcea4ae
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4798a35549fc4e339d1208420421bd5f
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fc3fbcc7a4f14e858b10c0c2ce7bc66f
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e82dd783e8244edd92822bcfd2419852
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 30f0ef70fe5649d3868e9d2e90f17511
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4dfa23fc4421444a9e71f852f1e1631a
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6b699cba061e439ba2ac1acaca544521
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 60675f4697914390953f9b15f2ff0bd3
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e5e525bfa9b04b9085c2e6803873f6be
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 86f3a0ccda564a1483335183d6f6f47e
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ee917379d9e34fada01d49ef04a90314
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 57456d81bdca478ea8fdfcaa97d9020b
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 60368f2915be4620a34cdce8923a642f
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6892186c735e4009aef2a1603560dc67
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4c76d9873fa34e10a1e736fbefc4cb8f
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 90f6ee91ea9d48efb05625fb38566cbe
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f973c05603244293825785c351e663c6
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b2f92f2411ab4277bfa34794d216025b
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b920fc1bed18466cb6ca58b2f2f5256f
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1eb4711b03a44d8482a01aa088fef63c
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 27
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c840ec2ce65246b6ac4570cd902ca516
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 28
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 51bdc8806eee4aa1a085c89f9b1db116
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 29
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 633055cdec394f07b2e1fcf4e8eb334e
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 30
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2881d3dbb1f64cf29b20b283889c4727
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 31
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e61e248e20ef46179233f593e6bf68f1
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 32
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1f354bdbebc94225a33243c6949b891d
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 33
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7908c3233eb741ee9593054c68fadd95
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 56084a7030884ef99aa9e618c8ff4dd0
+SpectralSVR/problems/antiderivative.py core/NumberReplacer 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b3cf9ff167b748319b3543a5d926a890
+SpectralSVR/problems/antiderivative.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+total jobs: 163
+complete: 163 (100.00%)
+surviving mutants: 79 (48.47%)

@@ -5,9 +5,12 @@ the ground truth here (not a manufactured PDE solution).
 Kaiser-Bessel gridding is approximate, hence the loose tolerance.
 """
 
+import importlib
+from unittest.mock import patch
+
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 
 from SpectralSVR import FourierBasis
@@ -18,6 +21,9 @@ _EXACT = EvaluationStrategy(allow_approximate=False)
 _FORCE_NUFFT = EvaluationStrategy(memory_budget_mb=0.0, allow_approximate=True)
 
 CPU = torch.device("cpu")
+BASIS_MODULE = importlib.import_module("SpectralSVR.basis.FourierBasis")
+BUDGETS_MB = (0.0, 2**-10, 2**-8, 2**-6, 2**-4)
+COMPLEX128_BYTES = 16
 SETTINGS = settings(
     deadline=None, max_examples=20, suppress_health_check=[HealthCheck.too_slow]
 )
@@ -69,22 +75,38 @@ def test_nufft_matches_dense_2d(m, npts, seed):
     assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_independent
-def test_evaluate_switches_to_nufft_above_threshold():
-    torch.set_default_dtype(torch.float64)
-    try:
-        g = torch.Generator().manual_seed(0)
-        coeff = FourierBasis.generate_coeff(1, 32, generator=g).to(torch.complex128)
-        x = torch.rand(2000, dtype=torch.float64) * 1.3
+@SETTINGS
+@given(
+    modes=st.integers(8, 48),
+    budget_mb=st.sampled_from(BUDGETS_MB),
+    around_threshold=st.integers(-20, 20),
+    seed=st.integers(0, 10_000),
+)
+@example(modes=32, budget_mb=0.0, around_threshold=2000, seed=0)
+def test_evaluate_switches_to_nufft_above_threshold(
+    modes, budget_mb, around_threshold, seed
+):
+    threshold_points = int(budget_mb * 2**20) // (modes * COMPLEX128_BYTES)
+    npts = max(1, threshold_points + around_threshold)
+    g = torch.Generator().manual_seed(seed)
+    coeff = FourierBasis.generate_coeff(1, modes, generator=g).to(torch.complex128)
+    x = torch.rand(npts, dtype=torch.float64, generator=g) * 1.3
 
-        # per-instance overrides -- no global state change
-        exact = FourierBasis(coeff, domain=(0.0, 1.3), strategy=_EXACT)(x, device=CPU)
-        approx = FourierBasis(coeff, domain=(0.0, 1.3), strategy=_FORCE_NUFFT)(x, device=CPU)
+    exact = FourierBasis(coeff, domain=(0.0, 1.3), strategy=_EXACT)(x, device=CPU)
+    with patch.object(
+        BASIS_MODULE, "nufft_evaluate", wraps=BASIS_MODULE.nufft_evaluate
+    ) as nufft:
+        evaluated = FourierBasis(
+            coeff,
+            domain=(0.0, 1.3),
+            strategy=EvaluationStrategy(memory_budget_mb=budget_mb),
+        )(x, device=CPU)
 
-        assert (approx - exact).abs().max() < 5e-2 * exact.abs().max()
-    finally:
-        torch.set_default_dtype(torch.float32)
+    assert (nufft.call_count > 0) == (
+        npts * modes * COMPLEX128_BYTES > budget_mb * 2**20
+    )
+    assert (evaluated - exact).abs().max() < 5e-2 * exact.abs().max()
 
 
 @pytest.mark.oracle_consistency
@@ -198,13 +220,20 @@ def test_nufft_available():
     assert nufft_available() is True
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_nufft_evaluate_shape():
-    coeff = FourierBasis.generate_coeff(3, 16).to(torch.complex64)
-    x = torch.rand(50, 1)
+@SETTINGS
+@given(
+    rows=st.integers(1, 4),
+    modes=st.integers(4, 32),
+    npts=st.integers(1, 120),
+    dtype=st.sampled_from((torch.complex64, torch.complex128)),
+)
+@example(rows=3, modes=16, npts=50, dtype=torch.complex64)
+def test_nufft_evaluate_shape(rows, modes, npts, dtype):
+    coeff = FourierBasis.generate_coeff(rows, modes).to(dtype)
+    x = torch.rand(npts, 1, dtype=coeff.real.dtype)
     out = nufft_evaluate(coeff, x, ((0.0, 1.0),))
-    assert out.shape == (3, 50)
+    assert out.shape == (rows, npts)
     assert out.is_complex()
 
 

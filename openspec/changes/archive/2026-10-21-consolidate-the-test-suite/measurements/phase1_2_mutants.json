@@ -1,0 +1,102 @@
+{
+ "tests": [
+  "tests/basis/test_fourier_basis.py"
+ ],
+ "mutants": {
+  "transform accepts one dimension": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        ndims = len(f.shape)\n        assert ndims >= 2, (\n            f\"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples\"\n        )\n        if not torch.is_complex(f):\n            f = f * (1 + 0j)\n        domain = domainInputType_to_tuple(domain, f.shape[1:])\n        sampling_axes",
+   "        ndims = len(f.shape)\n        assert ndims >= 1, (\n            f\"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples\"\n        )\n        if not torch.is_complex(f):\n            f = f * (1 + 0j)\n        domain = domainInputType_to_tuple(domain, f.shape[1:])\n        sampling_axes"
+  ],
+  "inv_transform accepts one dimension": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        assert ndims >= 2, (\n            f\"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples\"\n        )\n        if not torch.is_complex(f):\n            f = f * (1 + 0j)\n        # inverse-DFT",
+   "        assert ndims >= 1, (\n            f\"f has shape {f.shape}, It needs to have at least two dimensions with the first being m samples\"\n        )\n        if not torch.is_complex(f):\n            f = f * (1 + 0j)\n        # inverse-DFT"
+  ],
+  "fn accepts missing modes": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            raise ValueError(\"modes should not be None. It is required.\")",
+   "            modes = x.shape[1]"
+  ],
+  "fn dimension check removed": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            f\"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples\"\n        )\n        assert x.shape[1] == len(modes), (",
+   "            f\"x has shape {x.shape}, make sure the first dimension isn't empty ie. has at least one row of samples\"\n        )\n        assert True, ("
+  ],
+  "fn integer cast removed": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        if not x.is_floating_point() and not x.is_complex():\n            x = x.float()\n",
+   "        pass\n"
+  ],
+  "coeff setter accepts real": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            assert coeff.is_complex(), \"the coefficients passed in need to be complex\"",
+   "            pass"
+  ],
+  "call accepts no coefficients": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        assert coeff is not None and coeff.numel() > 0, (",
+   "        assert True, ("
+  ],
+  "time-dependent evaluate accepts no t": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            assert t is not None, \"t must not be none for time dependent evaluations\"",
+   "            pass"
+  ],
+  "generate zero is random": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            case \"zero\":\n                coeff = cls.generate_empty(n, modes, device=device)",
+   "            case \"zero\":\n                coeff = cls.generate_coeff(n, modes, device=device)"
+  ],
+  "generate accepts unknown value type": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "            case _:\n                raise RuntimeError(\n                    f\"FourierBasis generate expects value_type random or zero but got {value_type}\"\n                )",
+   "            case _:\n                coeff = cls.generate_empty(n, modes, device=device)"
+  ],
+  "sub accepts a number": [
+   "SpectralSVR/basis/__base.py",
+   "            result.coeff = result.coeff - other.coeff\n            return result\n        else:\n            raise TypeError(",
+   "            result.coeff = result.coeff - other.coeff\n            return result\n        else:\n            return self\n            raise TypeError("
+  ],
+  "add accepts a number": [
+   "SpectralSVR/basis/__base.py",
+   "            result.coeff = result.coeff + other.coeff\n            return result\n        else:\n            raise TypeError(",
+   "            result.coeff = result.coeff + other.coeff\n            return result\n        else:\n            return self\n            raise TypeError("
+  ],
+  "grid int spans two": [
+   "SpectralSVR/basis/__base.py",
+   "            res = (slice(0, 1, res),)\n        elif isinstance(res, slice):",
+   "            res = (slice(0, 2, res),)\n        elif isinstance(res, slice):"
+  ],
+  "grid stack order reversed": [
+   "SpectralSVR/basis/__base.py",
+   "        axes = [torch.linspace(r.start, r.stop, r.step) for r in res]\n        meshgrid = torch.meshgrid(axes, indexing=\"ij\")",
+   "        axes = [torch.linspace(r.start, r.stop, r.step) for r in res]\n        meshgrid = torch.meshgrid(axes, indexing=\"xy\")"
+  ],
+  "plot bounds unchecked": [
+   "SpectralSVR/basis/_plot.py",
+   "    assert i + n <= len(basis), (",
+   "    assert True, ("
+  ],
+  "plot real-component warning dropped": [
+   "SpectralSVR/basis/_plot.py",
+   "                        logger.warning(\"plotting only real component\")",
+   "                        pass"
+  ],
+  "plot_coefficients accepts time-dependent": [
+   "SpectralSVR/basis/_plot.py",
+   "    if basis.time_dependent:\n        raise NotImplementedError(\n            \"plot_coefficients is not implemented for time-dependent bases\"\n        )",
+   "    if False:\n        raise NotImplementedError(\n            \"plot_coefficients is not implemented for time-dependent bases\"\n        )"
+  ],
+  "dealias keeps half": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        return k.abs() <= fraction * (modes / 2)",
+   "        return k.abs() <= 0.5 * (modes / 2)"
+  ],
+  "dealias drops the boundary": [
+   "SpectralSVR/basis/FourierBasis.py",
+   "        return k.abs() <= fraction * (modes / 2)",
+   "        return k.abs() < fraction * (modes / 2)"
+  ]
+ }
+}

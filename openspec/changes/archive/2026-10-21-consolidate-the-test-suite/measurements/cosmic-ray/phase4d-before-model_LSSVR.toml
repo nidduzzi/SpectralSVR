@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/model/LSSVR.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "/home/migi/Documents/projects/SpectralSVR/openspec/changes/consolidate-the-test-suite/measurements/cosmic-ray/timed_pytest.sh -x -q -p no:cacheprovider --hypothesis-seed=0 tests/model/test_fitted_placement.py::test_every_kind_of_model_refuses_alike tests/model/test_fitted_placement.py::TestDirectingAndFitting tests/model/test_spectralsvr_anchors.py::test_inverse_recovers_known_input tests/model/test_spectralsvr_methods.py::test_the_inverse_builds_its_own_source_where_the_work_is tests/model/test_spectralsvr_methods.py::test_the_inverse_refuses_a_source_placed_elsewhere tests/model/test_SpectralSVR.py::test_SpectralSVR"
+
+[cosmic-ray.distributor]
+name = "local"

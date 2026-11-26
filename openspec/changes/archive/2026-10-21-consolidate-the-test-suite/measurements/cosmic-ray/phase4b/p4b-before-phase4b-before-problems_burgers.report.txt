@@ -1,0 +1,3150 @@
+[job-id] 44ea3ba3f24444fa9a50ca590c3966dd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2c115f2ee1ac4d0a864fc17c21d0b679
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3ee599ff6795490fbe1b17983160b45b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c11d68fc04df4ddcbbe2c53aaa97166c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 45733efb59864adf9feaf1f69907349c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 121c4506e3544d2fad7f0f0f44b6274e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3d41e3ea2bfb455ba1545a60140a5210
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ad77ad69a58543ab94541f548782953d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c284a3e856a2495483980478a4fb8d27
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Sub 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e3dbe1dd31774ad2918a2c2ca8d587b2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 60c8e10e9a744d41975f7ae4429fc652
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e66679b70af64160b1dfd69df39cf4ab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a488daa21603449ea595769db24b79e0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b124a31d49224549a072237591ff2e11
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c43d968146ac49368553dd851ffbd25e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1a0a586aa085438880a492d85cc7ec0e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 91705365b23a466282b7243028a472ee
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d9e652371b5642738b27852f0cf362d0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mul 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e9e7ef9b340d46a981f511b3b5c74964
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 516911be8a554770b80888b1b70b59a2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d1b80b5666d5463a82112d79dd9c99e2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 76d5e1f497794924b76b8cc7863291f1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ce1b69af35a547819810d7797a732e6d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 92a8120c6863436fa8a13043d4746374
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2fabcff4bc34a2796e3f1eee1034f3d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 26365af572bb441e89700c4f9a0c51bb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b19849e723f14badafd5139fe03b1418
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Div 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 26b81efca60644049c8020dfe01602d6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0b822cc7677f4720bb4011e44eb9a573
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0fbb828f8f4242a986c2d99359e5490d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4118257be0d94d9999eebd7dd74584d8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 70fef0d6e6a84a8ab63ed847a2ac4788
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 86152b9b5b6843728e5b8443eecff95f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 89ef1061e20145d8b2008ebec68601e1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cb8e1e28a87b4759b61b7f72c51a9739
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f170ec796014b359de65e436784d964
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_FloorDiv 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 54ec2d5b27134602a8b8c48234991b5c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f06cf918dd7f4860b7926e4f6b8c330c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a84ce4b4af8d4fdc93022c3588cf6e9b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5023565f1fbc496e8bf414b2d072963d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 67b0219047dd4ba9af013d9dabbe47fb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b8f2caccfda8497dbdb119ca3807c195
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8f5c068c86764ea5a9dd755d3e53d1b7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f4b3c356ca0a4386abd22cfd1215ac68
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7faf1dd30a5f47bfa38a6c193dd9b794
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Mod 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 54f46ac63dfb45a093af66200ebf9e14
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a04c3d4cd28f4fec926397a4ad9b2429
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cc26d2a40e4c46a2ac888a45266efdc3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c83ef93adace4381a0504d636a5a9220
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 89f21f7098cd44228cd6613406548e71
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 79b2e6bb775542e184af707c457ab408
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f0553fc6abe4419786e964edb5476a5a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 50a296c8a8e6447cb83c220a8a732cc0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 587f85feeba14d7e9ac3e17d50c871c5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_Pow 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c81eae7c3afa46d5894cb4ebcb0ff4da
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6f6fa5fecb304ae38a75354c2bb8fd39
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9a0237fb9ae24297b9937e964b7978a1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8fb3631033ba433bba301f0659aaf9a0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8b71c448000044168cae48eb3f700d78
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6b0d8e79f7b447258d6308e3cf9c4acd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9caa7ab04ab04c029843103e2bcf080f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 965dcc891a4941f4be78a793448ac2ad
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 089352051230455bba5780532ddb88f1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_RShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a6ce9692c11b41cf9cb33ff9a20f82ce
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2a248d5eb60a425b83d59f98fdbbde3e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9f165da8d9a04fe5a022475a93d069a3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 96ba2925bfed44af804d8c5be5c0ec1f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c6f463649d75489d8cfcc95852e95ed0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 21bfd22079d74e91bd948ab46ca78899
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 11b1b2046e8f4731ad5e889426bfdbee
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cf873aeff8b4455582fe3f812c817b1b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fe32c870f4514181b993dab2fe7afca8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_LShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8d06a727e40148e5aa0b295af4fe3cc5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] db6273f930934595b0721addced09f85
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d21b63f226e3433c8448f9655e2e3f08
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d3a5da1f03ec45dcb7cfb9a9f50093ae
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7acb8ac0ff944ef384a3f209fbf9e2b0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 54e926509f794936b057aab5d6627853
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d95d7428c77143988d17371a71bb31b9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 50ba655948234a11ab8430b1eb3f7c54
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9f7d673f836b46408a1a9c450b4c1b16
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitOr 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6fb2f707179e4eca8337efbb7c8fc298
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 62b51551154441d886d31e55a7e4e6cb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 909c45d97341485da4f1dd1f5c769703
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 034ba5cd46274347886a74584110ad4e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 88fd4af3b8ac4200b48768ad1c36c025
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 10fa77acb2564fea902c5e9abc81447e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e395ab4903ad4bf9aa1dae7f319f2b4f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bcd80464bfde43e8b81c9955ab2fe860
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 448cc25a993a4d088155f8fdb81e55d7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitAnd 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d855e7c0c10e445882e28c09649677f9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 023a4cba2d534952ba0fe7d0caa5273f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d7d2beeaa15a430692572df5e91993e8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 33ef4b0a404f462bad7980d69900a933
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a402493f980a45108b265921186b1dc5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 60a2b732a9e7432496ecebe77d43e123
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4180c2bea16d4defb72f183a35f5df43
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5e149aadcf694f00b768f32c0875d7a6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 16e8a59a885541a6891fda29de524496
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Add_BitXor 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 30a73af2f0954e14b5f7af4619ae7089
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8436bd3b455a49d99b920ac6ac008382
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c25e6a9a097c427aa742642656231aeb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d5a3323877794de4b1b1e1d65825a614
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f3e43564ce6b465ea208c6b59b486f7a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0f54d61dacaa4672a1f7c90907aa5b4c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 764931bf24104e529a52044e2b8257f2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e7fb5bdd626043999f37195bec86c396
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 71b3873b918e45dabfe0c84fa59d092d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 206ba716f52843b5b42c36c569b00fc5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4d5cbc08147442f48382a584559c62e0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Add 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 77c680ce94a34866b5c2baecc99fee55
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 42fe02563f294c27a0d2cfa11ede2e43
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4a983f073f6b4612b3acf648a86d43e3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1303260508d34d14939d68ecd2d4d049
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 849f374098824341b29a021d672d198d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f7625d1d4d9c418eaf365a7fb4c94341
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e73100939a1d43d199630fab33a6eba6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 88cffd513d19496aae7a43e656ae4733
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 363f2b70a8674c66982123c27528422a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 569ce618e29642f7a60d8342a6083735
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1632de38aa4c4185b01fec9b1be4a1bc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mul 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ec708a08ab1d47e4a19eacf668c8970c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 48a4786e584b4ddaac6f011a40e73d3e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 42482cd1e5c848a2a588c5250d553886
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a400c78013ca47d68ac4a8747b23a9af
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e3f4102e20414440a2c6aa2a431a6d72
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a8eaeaba82754a95a5166c6afc2598d5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d7a95a485a24c1fbf06ae3c95d098b0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d65274e41a3c4548819e3d843fb8e1a3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9ceb7cd07aec4839b9560f2efd201a0b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 63c16393f96f4ea6a348b41757c47937
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b9b8d7f9e3304bfcbab9339293d12d10
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Div 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ba65ff944b154dfc8ca2ab9f56e17bf2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fc1ff5c234e34cbea5406167b82d7fb2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 17b95ac87af448fdaf0861b9114101ae
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c25ff125132d41159dc9d877ca111069
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a4a2844838d14f68bfc0170e5c5231bf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1a1a7cb7dbd345f8b485fe9cbc2b976d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8b1f1a55733348f89c37a92948a517f9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bc2232cf4f9540b4a435467c1761d3d7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b0809aab3b554874ac4550d49b38386d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b59aaabe48c74cf98b481ebd98fc1af8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 89fc4c38991c43a880f293f67b220871
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_FloorDiv 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 18d22f3f15c74d0a8e1b0d39d5a89cf3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7e484abf8124423e8e1a545353a5427d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e3ca848fddd44651ac739c1c399ff8db
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d605671db33b486695c86e31f1bc1f11
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0dbf8b664d534994a04df654f0217f08
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8078fc9f324149f8a654078182be8964
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0c55bbc00a004fb3a1c2486d30a3a130
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c86105311d54854909f3ff42839829e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 003c41247f9748b1b2301405b3c25a77
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 77d4fc1b894541d695e7922db518ca4d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 74512c0df77345998780e2c7b268fbb8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Mod 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f8c1d2aac1d946bcb5617d1a278b338a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fc02b17cd83b42bb9816245f62b11e2f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c4772fdcbe7b4c7f8312499e6257e308
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4e792a9b9dcf42deaf2befe704cd6110
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e21bdb131136452ba82663db695e1f5c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e6fd795b381b4c9bb8643a4bb119125c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 89591fa8b3d9408a892af81ade67ad5a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ba42105add414159a332ac45d07f54d7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9c5e470b5c8948809a573a83aa9f9ec3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d86aaebbbc6745a6b72ebec012346676
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 69c9185e6490400cb4a404ffe3a65720
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_Pow 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0d20d4fbf6504c2292f10b8bf7bcb790
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 61048d8c702f4e568cd02ec272d404bb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0d2ee80ce50c446b9103ee9c0ddf634d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1bcb9aa3b8ee4b2ea45e39e177be6ae5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e8d5a7d5c755486086268e453100355a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 619b881a5b564764a464d7c85ee88f7d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d09b6424935846a694fddc0b8c22d2c9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 771d5ab3b1f6439e8a2de060a6e80e25
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 78c4a937d53c4b0eae3dfcae7f4c332b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 912ca0f169c44f74b31035fb16245a78
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3e443a2508ab49fdb3c7aa63aa92d6fb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_RShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 83034faf404d4e3b9fef76fb838bed1c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cb21f80a4e054631bc523840dc6afcf4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8d5b8a5f7b4f4e89bb06c673bd70f15f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8a8a98c1011e42dcb1d79d6c72df31a6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 27b8903bff2b4485a14a732a6b42c980
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 90100b2d3d0d4bbb852d64ba797527a5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f03ef56585b8435ea2f1ea7b6ff99d9a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f73ddbc4bc1e48fc98d1eb8da15dd168
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 37b890fb56c9419c9dfb6e5e9cf36682
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e5c8fd4b62174b3f802a7f24452afbde
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 88d762e535b041838096fc5b4c28bb94
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_LShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 08209c3f50bb427baf1a15293aad8ed9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7cbe9db765f14daaaf5f9ca192fbf1b9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5a86111ac04849d397c6b7981b5dc0bd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] aafa7e4e945947368b453fd8e7331729
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5c5cfb5328dd40a7ab7e7cef6195691d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 006ade77769d421f9d1bbd68af8331f5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d36b139e30d24dfcbe5d2b249ea828e7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 37ae00db07284f6b8a9f7e99d4a3a3a6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 97dc3a082fc144caa9accb64b8034d25
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f804e245cc9849b6a206c609df404c4e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c19296821b27407789dd9a30957ca4ba
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitOr 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c6c9250f08c64baaaa4f0f895ab6e95a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fcf85e47e1334d4fb69ed148224f2988
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 973b76a616244aaf80ab1ece0fb779e4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 57a583d043eb4a6aa402248fb38f4378
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f472791a9f954a249b1dd5142a6686f6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0f6a795440ef4dd49b40bb2ac99efade
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 17196468a6d24c0281651c788b5204b2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 106ae65dc594479dac2c467e807d7b05
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 38589ec39bca4031a375cd6d31f8bf48
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 99d14386e7dd4587a25a9fb090b1aeda
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] baa0ecb277ca4a298d4c81f61420943e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitAnd 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cac58505926644c1b228730d4a98d2cc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d5ae3498151e4dbc87a771b30b006b40
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 00fd82718e7845f4869117849fe80ae4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3e7047badbf7471499bea6f11c98ee8d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3e914cdc6c6240ba9ad79ff5f4c59f41
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 83885cabaed74308bc7bae173cc8ec53
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0d3baf6114f94db58cef612a98b7926d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 375a566c07de496787d62593f5097cd2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 50f91d62056d49b89701287f31a5be70
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 31d203de9de948bb85c960335980cf6f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7f292c3b7b5c4ce0bc2f3b3f82b6f185
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Sub_BitXor 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] abde475ed7314dee9d795485a201ed86
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5383ad9a5db14d9b8be9d481c4d45d0f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 98c788c616e9418695b6394383df9433
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6069481f908846368a6a3ef29329c165
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 02d30aaf885d46d6915d4f7f957c1e89
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7b85312cd47b42fcaa2ad83536ad6191
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d71ac23c1d034739ba73276e1d371f9a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 586040d0e83a473ca3d1faf191dfb06d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bee8d5e7a76e4ea3a50c526975ec2eb9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0f092c184b0e438db12cb24f0c23ca0e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2ddc822b09724ea696f0bfef8b0b4ee8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 76ac839d674849088e49a2f66b833a91
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Add 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 551db8df50ab432a8acfd0fc98dafbce
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1edaa37f87f34984acaab449f35e1f34
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a13eef111f2348efbebfe3f9bcd263cb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 083f2d5bd0854013a0261564e3ec008c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c6751b751954a8293a685c945b3e1b0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0ce0620de52d472dba9a251ec21e8c0e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f6bf88ac95474ac49feb496c3bacc5e7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5cd23bbedd6d4a8ea687ab242d4e16a5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0458467b9a4f418ca213386af029e035
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a0697b282c7a40398fbfd12d6ed21262
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 154c8be580054b8999cc2c5b1fa8aec1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ddc646052c9e48508a33b9a7f3debd96
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Sub 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bd9471a382f74750bfbb2cec27e2acf0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fd638e8719e641368fb84f1baa03481b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 83ba72b64e6a4ea59d2015ac8bcbc56f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0c346c0e33364593b8cfbf30708abb5d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dc5987cae7da44edb7bca86ea783f464
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ab9cf1eca84945a58c17603585d0adce
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f336782c21db418f98a555b29fbdbbe2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c9b5322cd77949f8b47dce265e2321f5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 98ed7717ea6f48c4a0b9f548a7333824
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3de65e1cbde24248aaf19f3dab865c16
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c52f79a26abf491e8705334a69985430
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a80b22ba68dc421faf6390a258a9c87d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Div 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9519981c273540a6ac900e54060c9b46
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 398a632d5674422790e722302fee2648
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 399ba10ee9ac45f38085bce3c2cd3530
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4f9f0069f5b849938a9ee1784590bdbb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 676e5676e5e942ae8f431ab55ebebaef
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 67936a6f0afa4706935818832c725a4d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 96ab44c4a5da4c6fb9087361e7dacb1f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b8f9b72f5c0444968819b8aab54f4f95
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6a02aed6b53942ab8d3b805b2ce53785
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 241d1c320c19481981881e2928463fc8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fa95045133a44490ae096aaefc9fdc24
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5f18da57fa404e4f9cffd44da639c3b6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_FloorDiv 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8b0eddc18037481ebb1c95b17a90e126
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d3db8e662e0941aa9c088f8a866614f6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ded1b2a17f9c40caa51b90218e756f17
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 826a7c5c606e4a3ea53e2da6b46bb116
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0a16e622974246d5bbb142ad7c595c0a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 32d68ca5fd04475d80df134788a063f9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5d69680815724d1e86b43528eb4885ad
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b44aac298e8c449983184a797354df27
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ecdc2f8c63f5414d98c1a87a979e99db
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a5361f1b0a7242288ffd37ab11b9e235
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fe7b9e7cde9443b8a5f0b05478344434
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f2718f8758704c0d9f16574d16bf3ea5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Mod 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e628f8cfbf414929b718fc6dad7b95d0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 18e616f4dc534f3987e431edd6580b75
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7645bca69c184d449cc9c9d72babad18
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3533ac0f67664fbf9d83aceaf19768c1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5f71dfa22abd4780b90dff10410ff66c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6bd42690d21b4186b3b21e5820ca1ad7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5822f5ee6070426fb687e77a716ae770
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f66fbec96dd94c1ab2a51ca0bdfd27b0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 28c76c725eb64c7097a11f7f5979fdf1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 19ea47897a0044e68bf706af2bc30ec2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e59a6b2b8b7b48409bac533e1b80dbbb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1f50881bbe084cdebc078556f2946a9a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_Pow 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d6042fac67de455d92266a03ab19f904
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 869e10d1d768407abf28df2e47b0377a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 21177b732977429182a477c79e48bb6c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5cdb7b85e425476ca91e251488ed063d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c6a496eb3bf7430193613e3de45d4c2c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2925e0a5f5af45958c20118b3db63243
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 14722646ec2f445aabb2d4a630495e3b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9876ca1bb92e4a9bb67a449f355eeaf6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4fd88bdbf99e4455b1789d7c75224030
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7bd210aac4b84eccbabb7fc6c5c65698
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8fc59838a81a4520b7862d37a60bd3d2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 94a7e9ea09764374aeecee7469ae4f2e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_RShift 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9c6921168a6a4ff093eca3f46e7a783b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] db55bbad71b1419aa8567d23e42227fd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f3f7307b34b74210aa14dda3de4746e1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3907ba90065447219843140be252f1da
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c894b16697a449ce8a094008306238b2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5fb656c4b44249a3aa59e31820cb287b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ea7b35fff7864ffa80a5dca3949134dc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 342ebfdaf6934da781ea751d6b18ae09
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 23515f5e756b4bfbbc34afa5360c2503
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] da4f972af1f54f2fa641cbf4c4cea3da
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8c23afb957e14d9e8192b5a006120ac2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 36315da295a8408c83714ce67c4201a2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_LShift 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] efff657dc2174b04b918b52a14e77b21
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee113308a3d543a6815f7228f00a18ce
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 262b30c56959416095450db5df81d906
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c291fea04c2943b4b4c0ada3e090dfc1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d84b87dbd48e458f8bd52ba1165571c6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 460a75b460ab47b5ac717d59fdc19989
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7cd7bdb8e87543c49e8c1cb1b6716b68
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 315c936c86914042a3f7c63cfcffe723
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d6c58d68cdc74cfa81e0719c967ae2cf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 94eb6adbfa2f499b87ef059b30ea4083
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bff36fba803b47779df527a925121127
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a1f75ca5be1c4689906a747ac1987280
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitOr 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 52654e832948416a9635d91efae1ab65
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee4869287de64f578f21e0383bb87230
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f13953b23a24dd9a58c74651df4bf46
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d0077061b90843c5bdf6fc31b2b988a7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 67214d6cc79f41f2bf66bb5f7fbc10c3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 34cb50f7dcc0404f9789d71895f7c3e9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c36aacf8e95d45af85548e5f909687c1
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c04d1f20275649368da63304e34c75b6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2e2976906f0b490b90b0e107dd1325a6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 31284aba5d8749159375c146de075bdd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 35bb326ec7f248a1a667172406d33d7b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f2d4f9041634ae29e7853b7c52d47ac
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitAnd 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8d839db6bad544758ce9603053639230
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0e0a07df28964e0ca3e2f1d027b7d6c8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8d0bfbfea3eb4ec599408719a7739d73
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a33de6dc7a8b433eba7f904407e31330
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d001e597e734660be9c185dc1950c75
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fb0565d687ef475fbb62ecc20bef3111
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 784f94d829864e5cadfb87171f8b4c39
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] de3bd64555b04117b5d0f624a0a38e91
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 53f85f31fe4a419fa58b738c6eacd389
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ea436a36108342539b1775e972f7d04e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 037f118c28e3492c8026ce796dbcf83b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ced4b95670974ed08bc72b19c850e780
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Mul_BitXor 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 274331f0425d43b0bf4360c3e3810764
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ea9534ce080248f2b41979e09da9eca9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5c50ee7782de4d5a9b20f9b8ed411f30
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 77137b298149450eb002ad1d2f3dcf9d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] aeca14bc0d5749ddb6097668731c5413
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e69170e32ca04226a95fa8ca077a5301
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] deeedc31e4dd4c81aba0d4e9297168b5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8be1fc9857a041af898d513c2061fe6d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 07406c010e894ea18cbbcf470e01c432
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d2e2e43b5b0b4419acae005aaf90fcac
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5588b1d756464dd6abc950aab0a7e306
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8c8589bd502e4332a9f414b581bd6fce
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 88655cb49b29447290a40ccff63a4b08
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 09dc539806c14c06a0e30a84ed9c19a9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 314e1ed49aa04c39b1ee8257ec1588c2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6367b477652e47a29aaa75884831b2cf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5158979a53454b2884514d1af213f5f7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1e5b9784d8cc4eaa9dd52301df0a8cf5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4376dc3c6ba648f6afa42aebcb131d08
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8063f35ef2a34c10b0d1a41310de853e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 752dac1f1a1a45a89c3f82c1ed4e80a5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9ad31de16132442cb4d309b5a8b83e49
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_Div_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f88f48c38fc84d88af8fb04f1984b86d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a98f1ae1735f40f49f5fa49be5bea614
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 48dee3303e0447749a83a458d383e1e9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 74139e1d1c61437fb158eb16d0cd75a4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ab1d80b688ed4cc59438c222c6d9a946
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 146ed7879f434e1caceccfd1f1025bd6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9e01a1342fb84703897d9879977b690f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 04f2aa202f60486eae9cb75b58599f42
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cad0aa2c743941e0b1fea56cefe8fb07
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2a8fb79e65b54439bde97d2eab7c7553
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] df7b264ba3bf4ee48f27dfd85b669bb4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fa434a7894434ed1b946a2d3c477bb4a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 74e53309f5724f228d57e48098da7009
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 658d6ef1950e477ba7bcbfafbf1664ef
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e835ed125b14418b90b7a57fb7df1ebc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8b87fd2e2a724c20b976dd931ac05bd0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0437012b202249e38128e3bf1c0c1fa3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1586cbd290374aa6aeef9b34b749bb1a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fc87d90fa90743e9bd9d1faa1cf13892
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c171ee376a4941bd805a1ebdd564f506
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c9d2240f2a3e4d4db8f8e3e58f9a07e7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 53a975fcde144f689d8e29192423f2fd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_FloorDiv_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 781cc7a547c049bba5a310eb91924e22
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2978b0829ba744bab14d7c93781fc339
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3fb91d3c1c5d4ea5bc1fd75e4efdc3ed
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8048e510be0d41ec8127284219ac9412
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 620f3e274e7841a9b98ae1b70ae76281
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 276c1bea85f04ed4b125124f30a36550
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 35d6834ed5694ed9a4b2ace4589f1433
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e7bdf59c911542f487425bd6e483cae5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8e17f4bc29f4478bb63f91767a779992
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4159f56d766c4261ac2fa0079b1e3a33
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 195fee9aa5dd47dba12968c892421e22
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6edce2b29f8e4d8faf20e3b11697dc63
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 83e708aa758444e0b90024609580b66f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b1fe4066470d4a1c9577409044414eac
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff71b456621046c09c6cc3e40cf825f8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8a7db6255f1c45f2b088a76b412a22b8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9018cec8caf947c6b1b1ebc6b8f32773
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6cc64746c7684ea49540db3645b48cdf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c83d01199cc4d5b9fb88486a71125ae
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7494dca6d0234e1cbc4b3e9527ad04c7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 72daee013762461aae575c282c35d600
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Add 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bfef256a55c34939a40901c27d23b60b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b1dc6a03adf14161bf73a94531744c68
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a8e1dcaafff04a05be907fd3479963fc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3ac80e40556d4786bf4783b881ea4998
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a6989d57ba904b7e84d874a6b4757831
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 290a720071ea45a1976ed046a3e600b7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1cccfda4f3684203bf97aceaa14f6115
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2b8a36444ecc4d138a39c6ad9065c33c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d57fcf1bafeb4fd08d974b1e8a301c76
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d7b42e99fed94f908da922880ab533cf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1ce6fbc012ab46a0b4a4164a35ef697b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6ce447ee0b994099aeca81460edcbbaf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ed3134a88eb34fd085846321a502cf45
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 827c2c23d4af4ea18aa6a72f679e3c7e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 006d71606e9748468390f1ca30e11e06
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a7ea61411eb548568a38d90c1ec4f03b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e3816ff14a2345978b659fd8c32e0d87
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 710b8b6d9dee4ef0ad5ba1499d705eba
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e7d24b33f32d4986be2fece17f2c2e25
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0c44002e137b4459825040025ee41f7c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 645c82c8be5245a2ab51dedda7cd0e93
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Sub 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 26d5eddf7b53421c93b7ed3b66552f1e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f23f06b6dd024db9a7e521391326bee2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0fd32ffa7ce54c4f91648de5bd0e973d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4c78b931811d4593b94d5a130d307d4c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 300ba95f3e1b48e88ac243f77859bcde
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cf99332820cc43ca9ba6cbf2d4b74a50
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fbd21b3f03c445af947583bee3b5977b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b06c455384784659b707a8e6b61c5310
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cafc0192b4de438fb7f8f9cf4beef987
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7865829b20b940a597a1cce42772d2e4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 78c3ad6f15e4495ca53f3a3fcb4bad4f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ce595b2b9d674a1b948fa9c4a1dba0cd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f464bdc560343cf9a8bc9fdac5f45d7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ab7bc7005af04f1ba37e1e8e638aea1c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3bad4c5e2dcd4039b5bacbe386f1f731
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 171630e2d6774804a05f0c3ab0336ff4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d453867802644c31bfa97f785a5e92f4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 461afa8a279c4282bb5c1a26044b96a6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1be2011d047248739919591509c21733
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 274eac5d8f8841ea83ff2350b204b797
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a44af9833175462bbbbb1eaf8064118f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mul 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 997610c6c0e048b1b72df4498df47cab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cb8395ecbec949858c4636d013f8a082
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e63b089a480e403c81e71e4144ade99d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c4f45b69d7af4e41a681d8816fa7f116
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e65eaa3a9a944f48b6f27e2ce81d54ef
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6a3b6cce0da34458acb98c47b8f7f7ab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6369b9ea1e2747a4aa3ad896a6e2129c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 75f5449830964185aaa4f2b7b2b32de6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6a889d06ead8418092159f764f478c58
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6f3485a5b1fa4096994f09976907a7f6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 53fdaeb55f39444f9329853eeeefbf18
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 709b63024b774ee4a009569d211789fe
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c3c198c8b566473ab0123eafd56429eb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bda494dd971f4864a464169df8b22709
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 42427a14885f45389050f157f80dbe5d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5820684dd8dd406ebf7a346ebd54f982
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 09e48e8b2e5f4dd6bd8efaecad79aefa
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e0aa677876184da6bbdc0bee67199c66
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6e87f386e7b342029f63d483ff00ea7e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c75fa875e1f54833aeef23083022b743
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 24e71107b0a842c38ad45e3814a53f2d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Div 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] af3aea0b9699440c848b456e6d82da55
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d2e4724e49f94885b35bf6be8dd3a712
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5f87104492304401977413c3d4a20eb8
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 60ea76d1550745e99530de6ec5f08273
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f9b8e4edcd3d4f83b606f229a4f57870
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 030f22fc8074404a83f357bdbd9531d6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6efa84b5da304ec2bb3f39546a0b2615
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d26fa69e078b4c9289ea6b399630a690
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ac81f06c87404d57846e62e4f1783bd5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b6dd6b074528464ab45bb6076e205e34
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b25c1304f923455a8b449cfa78e9835c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b02e6074d8e942509625b8d584263a5e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7d0c7290caad487d9e6990a75ed67d16
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 09f8a6cf7bc44e0e9ae89856fbd71dc5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 059eb8f19be84db191a6288d9372f4e5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b9c0055b4d1d4d0fb963ef7435028ae7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b63dd51154814a3e8c8cc4a506f872ea
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 545d03e94a8d4dfa9e3e9a1bee2ec397
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4de22288b20a4ffb938247abd52188ef
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6ba6b8c2cf9e4ec5a065c78c23c2b153
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 059b6f48d3a941819849ef2f8695aad4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_FloorDiv 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4c2709942e84465b9dd02c041a22e3eb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 53b6d0091a2d4e5abeb4206d1484c3cd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 992a79ee480944b09292769a47bc9405
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8b4baabcb0824f8eb2325d2a3070b698
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2dde74c6186e49709d312db506583453
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 98bda8960ba84e0db3cc1da4703c02ab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 32f9eb806e3146659afcf5591b8667af
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 66a9385e549641a3a1706de8616561de
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a9d7b33d9ced4e50bc26531d7d480987
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b6fbda0b4be84091a114c77fa37a37db
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ede2dc08f0c6459aa40fc8327d6d1d56
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3aa891a626004f2c95ad5d273e6fa517
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 98fa1890316748a1b88c4d8dde62f81e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bfa90f818b63403caef4a6fd77fb26fd
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 708153679f5f405bbca2f0bce9bd02ad
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a91f28bb796241349f2ad97974c68a87
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c1c7d596f97b46e682392b939b73fa72
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d62a875357ea40c88c7bbbb959bc3b78
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7eba9b97d3554b4bb1dbc23a3602152b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b337a7e8db5543999c7a2a83e4e7c87c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c63390740a9f41a1bb48d2eae75f5249
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Mod 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f972e29f453f4083a1cb485cac0929e9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7c29da4b163b4d1f860282b7c2e55021
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4751b62f4a7b403e9df1d7c8c3e51bb4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 25626237f4ad4e3489898d46ea5c9663
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a59c6d7ed51a4d2c8688cef827312e67
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 85f14e2cd3624c66b4455da0ece795dc
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eb9e1612b68242d4b79ac64a6f078197
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c4120af5ad7347eab2e480dc73937d98
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e15fd6ade240497e8a61f78f7a7cfb19
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e97a242425ab41729344237fb127fe3b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ea65075a453c4ca9bc8ccf7f2ea560c6
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c07dcd97c10b44e59ad333401c9f4607
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b6f027cfdaca4757b42723c128735914
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4bb2fcc9de504f72b914681812905aea
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 30ea8698b8434bd38ede2b7334bfaa12
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 93d32de647b7419a8c53593f44e88b11
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d1be82b121c46d9b06457ac388045df
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 33e8345b891e4418902dd30c570032ee
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2e89f1d280b0480b80422a58a494a04e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a59c8cd1d4754a17a1eb120ab1b719c9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9fcbe01693fe4db08ccbf65c620c60ff
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_Pow 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 377ff974ff2b42e9be1ac75fb9e8cfbe
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2c9aa090d89d48c797a03091f430c61d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a7425e357d85431cb58626272561d111
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 57516e8f782a4306bc6c4f1c20293808
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fc3f29dae4494a8d9999dbf0785ab34a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e1a835f26f1a4587bb1950326cdb3e68
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 521366b53dd7405ea713d40bcc1e044c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 350d94d39b52470aa001efb190de08e9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1e036ca9e4e846a192687e525fa79058
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 83aa590ca6584735bd4d08c3b61f802d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6de7189a0fbb4c1997c0179ff8c89b6a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e814675e59d44d748951b013f386f0d5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1390211fbed2421ebcf4fef7c697ddeb
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 798395a875084ae1beced9cf82e2ff8c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c26f12f9954045e99e07e532503d8400
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 11add18915ec4560be05ba335550915d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cd57f6d8944c49579d85bea3a2332c18
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8ec103753a5343458b4909373484db93
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 931fde6489d2434b9ab9b2b8b504c3ab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] feeee6fc10544b3589361452782bc05f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 54c4b291673e42e5aca9d983bdf26f96
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_RShift 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1e23f8da8fe7474cbe87236f21dbfa35
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 73e5987cab624051960263cb29fb4ad9
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5ff5760c4d934990abbdc62ccb619486
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] aae37bc06b91451a98ebf1c7516c6e20
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 44baf7c4a5264aa9b45f35477a42e0d7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 831a2f63e3904bf7b1cb4ba94c7f3928
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2c6f04f83e9f4317acdca7f414e69148
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 61e3a4481ddb4b4d9342b277050e74b5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3c310ab11a1e470484f5b956ccf1e5aa
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 53843582ffb34fa1a28cfac624978333
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b86973a68c3f4e8cb4db35fdcee6aa9a
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fafbe708af7e4e3d8bd324bca31700e2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 216764242b524370b027e8c9489ad095
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b36c920c5e9a454185a3285719c5b1b5
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 05b8b93863af41c8894eb826e8095be4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ffd3f1e62fcc4f40acfe30699f14f578
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8ea68f82f91245bf87761d240b71f028
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 24450227212d4cfd8749ed5bab1eea99
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e458c2a3634848c1a0b4edf9061361ef
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f4b5fa9e5744d52877fda417c56ed81
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c8f618ca0484dbab52728e5ac35e3b7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_LShift 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1854177e8a774c67999e0a0f9aa9dd98
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 72b406c39caf458badcb26484d76614f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 63dad041ae4d49b59cedf8e0cd5e80c7
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 71d696cbdb574948b83e5feee1ac78ed
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7d72382836884a199d6809058bd99fd0
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e3593b1c9f844a0d96f6f21446be7f0b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f7dae76e44214708a0a6ee8c162b8b14
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b09326bb30bc45649276b544716367af
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ed4c6f86b3d3462e90269aca1e7bc1ae
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c0dda26a783f4e52953854a0abf08721
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ef1b39a8ecd44377a3abfb51b9cce540
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6fd723f7e60f4ae1b9f006ee458ad176
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e36276f54507446eac7180045837c559
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2139512dd1594d91bbcb617a7ccb5c3b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dae37d72a31642ec9f727cad8ef07e17
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 94882a383df14b28839c2f6c1c4160a3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 68bb917afb3440e7b2a50e1d8ee082ca
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff8ab9f509804d50a3ee5aab6e3aa677
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c7bc4028d85646eba5005d92510dd227
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 33e67706a1a24ff990a6a8d78c32a038
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ce0e9173baaa4aedb17d36f074a255bf
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitAnd 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 580898b6d63b4311b3e52f0a37c177c3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e35374159a4e4e44a762652dd247839d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 612470b02cbf43c0bebb3755731e749c
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e996bf3542f044a9895fdea2d3349951
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d114ba34c47a44bea566516feff7c2d4
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4c59a65fe9814c7bb4561074be626d4b
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 92a8953c4af6494aa7d8e39d281cddba
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d768fe2311564dd9bf61921d1c51be32
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 77796e4e45b248b0adaaf2daf4b92019
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5c1dd04319774bfb96d08e444921f747
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] eeea75f6f85c4a44bcd17eac2ff1ba76
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 13417fa3522d4ad0af79264d2ba6507d
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 45f762838784478580482bb8ac209257
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6e50e8b28ab544b2a2b3eba634d79f9e
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee6552fd660841c98314a898d6a5c095
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5c2a2ea09d2d446d8d59cce00f3222aa
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0d5fef3a961d4a968a61044df646fdf2
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 13c2c6bfa2dc40318756f9a829f5349f
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ccbbde7ba5164cf082ff5698c5d320d3
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 453f86d1b73a46a1ab4c00d8669f43da
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 25325e7b18b548958a8b506d3dba6fab
+SpectralSVR/problems/burgers.py core/ReplaceBinaryOperator_BitOr_BitXor 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e2bf4c77e1dd442095d1522e0e1546a3
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 094c17278f3e4d25a1619937cd9a8886
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f65e1dbab7a249d2a7de195597cc16a7
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a56ea3129d9440c98e5475dffc0e2201
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1e63ec8faccd4e0287f38f6a7a1b71a1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_NotEq 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8ddca18a5b0740468785c36b1250d9ae
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 79c97b0113e946beb67d9e4db972e8c9
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 505c50a8cd614a6b831bf1a344176600
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b06693081f4d418ba2be2789527a1b0d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e43bc03aff004aea8f4ece5c0fdaba9b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Lt 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 00312bec5f2b4a75b998c3e9c3da16c9
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5dbfe220c1bc484dbe38312f599a508b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9b6ba7df51d149a7aa73cc61e90a6bfe
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e9118740d0be423e8c8e2ee67d8b8605
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 08a9448cf4d24e8a9959a1d94533801b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_LtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 743333045d934926b4d0b302418dfa79
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ece761307f894f209f180d0af553348e
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 53b795ec909b4af09e2275695df7ec06
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f3b09d2ec5544a9b84918c93add24e82
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e1cb1ef67e35439aaac7a4f178a4c586
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Gt 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f8f133efc3fa4a2b8bbc9465883b800d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 77c6769425a2476b9a9bcf8ed25cff22
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b0a3b9a417db402ba0e890357878e95a
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b8b960b48ae847ed89256121ac7ee4f4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8a8c7f09fd544d23bd143fadc0a40139
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_GtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 705408b054a3479aa7b48f84fff7b477
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8c452e78765041219644410103d806ee
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b7728058e99948acbf5aeef761de4736
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f271353500ec438e828d5d6fe118055a
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_Is 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1ac23321e6f7483ca3d43ebeb335b886
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d268d31389a4a6690f65958b46edf1f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7826e54644f24549af8168ca1652d950
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7f8d3aaac1e6430f9c11dc7e9bca72df
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Eq_IsNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a27f72d3871f4e4285e80658f8fda9aa
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 560fd97728bf435fae03cca7add212f4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d337b4dc383641619006cb06073cf820
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 29da3f603bfa435b929f14ef09dcc21f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1cde760b90454ec3acf5fdb91f39e61c
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bfe4c800084b4396a93ce8aaa3649752
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Eq 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bba14db624254664b8dcbbaa845d1e15
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 37c5ea0f609e422b8adebd453c823461
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d46ff1cdf2a64d35865c55e6e923adfa
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fe913229917d44368b918083f497d3c3
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0ea02791d424470888ca780a92c369d1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 22de89d23fdd4895b51e8731dc4ae9c1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Lt 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8675ccae20174538973eb3b944ef6136
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 79b734d8ad374132993db2fca91f7552
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a02f19b615c34c3fb57853e0219fc213
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d6d59d4db359411cb2439366933cee71
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 95d1636979b04c2ea28b9295984de491
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1d1b5b5dce004e409ad3bd69a33a5c3b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_LtE 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3f122ea66ba74da7a12250ea9adc741d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 785fe0e0ba0148959a706e25b251842d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 49929ca1523846eca3b4337b635fa044
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 405c4666d3174ca2a606203eb6c6621f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e5ba5fcdea994413accc80eb60684ba4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bab6d892dab04322a857026472f2573d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Gt 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e0f1442136624cf5b9721d9e8945771f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2fb30c70c0744a93b2a61418af18b2c9
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 011f173115f049afb588b14f266eebe1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 878f4a0fb42e4dc3a65524062ad0a2f7
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0bbe620edc8f472885f4c18551673ed4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 576ac4c08f9643279f0a0a2d5abd015b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_GtE 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6bf11c5beab9414ab074b697bf21e3bb
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 56b7ed224b1d4e418b5d3e6e6557b867
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9bf07f66a7f74ad18e5755335736adda
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 50c0599aa2b24aa4b6e1b1ea829d542a
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d6aa72d6a8bb4955b372cce93a4a3a48
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a3901c5182954b59813f72eda256bd7b
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_NotEq_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 948d0756a0684c26be3256ea49914ad8
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7c133822f95f4f95aeaf781d8d70ab50
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 49c0cb4158ea42d792c83004be964bd0
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c4e98cad233042b18854731332a2d106
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a2070f7ff89d433c853ed85d71a4f90d
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2e3348124e3456689a5872b1e4b9244
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Eq 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 23b9932a97bb4fbc875fb0c448916f59
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 306d7c9c04764e3f9861a4da4cb05bd0
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1539deeadb084bcc9d6aef75e0258afa
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9ce1fa9a20c140ccb748e198d9ed0194
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ab8627b9005a4fcc8420280b86552163
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ece6d5b80ea54fb187b98f45e7f137bb
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_NotEq 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 128d7ae02ab542aa8d3a107bcdf5a366
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9e9486bbf43b4440ac9e0f88859407f7
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 11b91739f54e45a6944d11b168c672f4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c79bdbd8fe9d450889be47c3b2020307
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d445280a25a340ec892c9529621cf271
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9d3304f766b44f8dbefc79f0d0323db2
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Lt 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d5aec41325624d849987b78fd1db5300
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9ecb3c717a1d422885026813aa3ec13e
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 17c3aa08149046b4bf90dde58744c824
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 63ab3dbed6004f80bb906b38cd38142e
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3986ab47e6864eec9662bdee2edfcc70
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 88824e1184c544a8917822696894db12
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_LtE 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 89140541fe5e4637bd2acd1eeffa6026
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 42ab7d4f4d9042f099c2b29a4f1d8c17
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 662f6f85685941fb84206a1857418c31
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f689d7293a7544498378fc2d79fdfeef
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5ac72c2a9b594425835a53447130ced0
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 78e49d9bafc94c1e8c68f65e1dd607f4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_GtE 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 23620e4b74f64255a89ba9d46711236e
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0bc53a36035a4f42866922f30b99cfb1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cbce150bd30b42fb885574886f02c516
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee04b992e80145f4b60144075925db0c
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 073f409a608c440cba47aa26a68435c1
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8ab0345ecf6348d39beabeb5946be63f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Gt_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2748c3fe22f340b2be6d58319976d90f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c6a7d23ccae24560b67eb161ad84ba6f
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 077c1b9174d84dee89774e698d5311d0
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 72758df0ca3a45b88a07ab824ceb5a05
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2ab4ebadff34454284a535bf7ce82185
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 002820f2fdd34a6d8100f6181b06d361
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 626d95f672424d8bbdeae5fd81da1519
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_Is_IsNot 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a4237053894449b29c3146450e9e3fc9
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_IsNot_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8e48884e518b4ba4bf86fc7bd57d7425
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_IsNot_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6f8bba13bfcf4acfa3abaf6731bbc6e6
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_IsNot_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e8c323268f144d188b5a0746a9493ad4
+SpectralSVR/problems/burgers.py core/ReplaceComparisonOperator_IsNot_Is 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 75588b54133f4c09b6c01f1feb87d897
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 234fce6a444e41d7859a2d165d2fe4f7
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2856983991014189b918f644ea3e86c3
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 00bdb603a0fb48ab9d17ba6eb068b201
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cfd303bc92904f3cbe34957617c8a514
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7aa0f9cc92ae4e44a70370fe496476ee
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] dc763c9810394d4c84af4c588bf75309
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_UAdd 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d8ab4af4f6e645f4b33020e6b9787fdd
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 750399c340e24b3cbd52456e8a6d6f68
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ed64123276f34148b26a928fe7474e9d
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 457696d538ed41e3ac4379ed5358d2cd
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e4ac26ea9e60490eb866b11c629499b7
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 27f33c39381e4bc6818c13f01f11aa50
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c837c8766ea34ab2b6269f327621a79c
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Invert 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7f8d77d08f5a473bb7362672a01b667d
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e7dcb59c7a8747aab7a01a91ddf09cf0
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 70353ea799cb4ee390e110a367875285
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5655ce73cbcb45618a1b0e998b1a89a5
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6b72075b735e4d559315a37bf3c7de27
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e23fd631cc014d8aa70d9b8acbb9433e
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0123923a59234ad6bfa29548f1c98bbf
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_USub_Not 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d3cad42a93754ae6b2513015f897e3d4
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 76cccf40dc9a499192d4379fa694ff14
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6a2fac0587404b559151a1401e3ab7ff
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0581978571414f688454ff1d5cd90c54
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f505583219c7495199fc188fce4c8d0a
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b1e3b8232cbe4874ab607bb4d40b7719
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c78ad48203d34ab5a4e8712f01bdb3ed
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_USub 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 395c3af8e5774e19a2eba3832e1b05f6
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 271fcfc81f1541bfaf83cac14b8f2925
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7417de42bf4e49e9aca961f353453ca9
+SpectralSVR/problems/burgers.py core/ReplaceUnaryOperator_Delete_Not 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8af79d1b54164705ac5346ace6a35f3a
+SpectralSVR/problems/burgers.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dab333674dc147488c1cde08b58dcf9a
+SpectralSVR/problems/burgers.py core/AddNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 59ca33eb0b114c7e9ae405986721600c
+SpectralSVR/problems/burgers.py core/AddNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8f995a8fe84a483ca990da28b0988457
+SpectralSVR/problems/burgers.py core/AddNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 289e60fd94ac4841964a240e2e27c332
+SpectralSVR/problems/burgers.py core/AddNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff9070e0d96748e3bffc02b563141c6d
+SpectralSVR/problems/burgers.py core/AddNot 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 731bc96129f541f189f0fcc13cd818df
+SpectralSVR/problems/burgers.py core/AddNot 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0883cfd35e064c738e36752541269662
+SpectralSVR/problems/burgers.py core/AddNot 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 423c96a528e84878a13cb7c70a80b715
+SpectralSVR/problems/burgers.py core/AddNot 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3ad080a67694421cae61c68b613bcbd9
+SpectralSVR/problems/burgers.py core/AddNot 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c146e8be4a904306955afbfc5911967c
+SpectralSVR/problems/burgers.py core/AddNot 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 09ae0cfd0bdd4fae87689cfcfd681def
+SpectralSVR/problems/burgers.py core/AddNot 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 336aa547bb624e72b130b41318b342fb
+SpectralSVR/problems/burgers.py core/AddNot 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ce3ea9ff8d6e4e7388020ae2b1a0ea37
+SpectralSVR/problems/burgers.py core/AddNot 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e565ef48ec6e4915b0f43dadcf5bf9b2
+SpectralSVR/problems/burgers.py core/AddNot 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e26a3ca89f2f451ebc7d16eb05fcdf14
+SpectralSVR/problems/burgers.py core/AddNot 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 59ea5e43f7bb4e7ebe1ac1d4171733c6
+SpectralSVR/problems/burgers.py core/AddNot 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4d0cf4812bfa4038b34cb65932f473b6
+SpectralSVR/problems/burgers.py core/AddNot 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b9e85408b4004a0b88d4605131e04cf3
+SpectralSVR/problems/burgers.py core/AddNot 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ae42f072a3b840ad94202a8ef53eed24
+SpectralSVR/problems/burgers.py core/AddNot 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6f9bc89cd1e94f6baf493d0c1f0c7600
+SpectralSVR/problems/burgers.py core/AddNot 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e75a9769aa024d0faea95f0f4c1d88cd
+SpectralSVR/problems/burgers.py core/AddNot 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 298310f381cc45d6b581a8aebb93ef7a
+SpectralSVR/problems/burgers.py core/AddNot 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 040e4e813d8c45ff87f24fdb6f632034
+SpectralSVR/problems/burgers.py core/AddNot 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 24f491bcadac488e91b2e842baf4e8e0
+SpectralSVR/problems/burgers.py core/AddNot 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 745c1c3b45e346a997d79b1c081a0246
+SpectralSVR/problems/burgers.py core/AddNot 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 182fd90585d648639c6312f48fd35bb5
+SpectralSVR/problems/burgers.py core/AddNot 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8517d13f91164c1f95e1e597fda3ce90
+SpectralSVR/problems/burgers.py core/AddNot 27
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 651436cd6e174fedb1d716bd76529deb
+SpectralSVR/problems/burgers.py core/AddNot 28
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 31fcad8fca05469aa2c38777d8c37fd4
+SpectralSVR/problems/burgers.py core/AddNot 29
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a99de343c7d143f3b77d0866b8d9df49
+SpectralSVR/problems/burgers.py core/AddNot 30
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 396b6fd8c45f4a6da3dad25cf7b99d01
+SpectralSVR/problems/burgers.py core/AddNot 31
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1a2b5835dbd94f0e9791f7f72d7d5cb4
+SpectralSVR/problems/burgers.py core/AddNot 32
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] efe96c0acad34252923de7a7f4efbca5
+SpectralSVR/problems/burgers.py core/AddNot 33
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f72183c6e48548d5b3cdb7b70b7a9bb5
+SpectralSVR/problems/burgers.py core/AddNot 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a20db413d0cf47978be63a5e30669189
+SpectralSVR/problems/burgers.py core/AddNot 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6212fb0846be48579a5389ca0b327ce3
+SpectralSVR/problems/burgers.py core/AddNot 36
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 84e77e5f80d8488e9da05220b6a195d8
+SpectralSVR/problems/burgers.py core/AddNot 37
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4499a32181bd426aad268105e90dc23c
+SpectralSVR/problems/burgers.py core/AddNot 38
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5df12dd2ed03413289f89c7ca9513892
+SpectralSVR/problems/burgers.py core/AddNot 39
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e4d4adb34f734bd28ec80c63589c9c3d
+SpectralSVR/problems/burgers.py core/AddNot 40
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 84d6a6ac9c1f45fc86f5f4814cf6d928
+SpectralSVR/problems/burgers.py core/AddNot 41
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 34a2a94df2394e468b55cdffbc52f796
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0b2256373c4047b299b54c4416d3f453
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ae52a6d40f6e44849262cd493afdaa17
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 92e580ecb43d4b3fbdf13f3d7d3c33d5
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e9ce3cc769e4403d9b7e06e338d46ecd
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 38b432dd608d4f6a994c7dce9416b915
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 045590bdef924390854ef1305bdb54c2
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1bd9e95151ea4a76a6a37bf56ce6f115
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 118e586775804063a1db403671c6f29b
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a61df7abe85f4da5bd6f4cb068a93c0b
+SpectralSVR/problems/burgers.py core/ReplaceTrueWithFalse 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 523605c399224d79a36b94f07862acc1
+SpectralSVR/problems/burgers.py core/ReplaceFalseWithTrue 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 23359b640a7446838c3db8cefd029980
+SpectralSVR/problems/burgers.py core/ReplaceFalseWithTrue 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 83350a4aa4db4db48ed3de325bbf6be1
+SpectralSVR/problems/burgers.py core/ReplaceFalseWithTrue 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f110a7c797ee44b5828edfcb4f07f4bb
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3708d778d5d1406f99740fa25e8da792
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6575368f0cc24ce9836ce4a672d719f1
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c46e600fa2be4426a8476ea4dac8394f
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 793528c54fee4443afaa419d78f25186
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6f6576e493454a66a3a2eb4b16d4c3fb
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 12d0bf525ece4150b485fd1c32fa2c1d
+SpectralSVR/problems/burgers.py core/ReplaceAndWithOr 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8a245c094071405fab0ebc40c17f234e
+SpectralSVR/problems/burgers.py core/ReplaceOrWithAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9bd0efb92e204bc4b48bb95df44381fc
+SpectralSVR/problems/burgers.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 24675b6db0db4fb894f8070aca6a0022
+SpectralSVR/problems/burgers.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8007c1f4c66944b0b1a5249005c4b3f0
+SpectralSVR/problems/burgers.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ffb720d4d30b490b937bea6b859f5e23
+SpectralSVR/problems/burgers.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bf329954ad6447be8777656694b5ce6e
+SpectralSVR/problems/burgers.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ed07f195f26643a397677ddad3f42593
+SpectralSVR/problems/burgers.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a80879cf6c3147929af153fefaf72e4b
+SpectralSVR/problems/burgers.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9b72b45a1c8f485c87902f25ae827606
+SpectralSVR/problems/burgers.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3baa352230004ef6a917fcf7bef8c5a0
+SpectralSVR/problems/burgers.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8bdf7de759e4414b9c79c99c121ad0bb
+SpectralSVR/problems/burgers.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c2ae2e00e12d4465b0085597d485a61a
+SpectralSVR/problems/burgers.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9e8b20a620a741a1ab1861ef7502b1fe
+SpectralSVR/problems/burgers.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a5976913b3654899979d63176b6a7892
+SpectralSVR/problems/burgers.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 225312789ae74a39a246efe0fc4d5b91
+SpectralSVR/problems/burgers.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6862a8d80f9f4d818bef9b7a1ca70d53
+SpectralSVR/problems/burgers.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3c05abbecb82422d8f06e561e798a4fb
+SpectralSVR/problems/burgers.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d5ae1acb2d8a4903bedc70728fdd94dc
+SpectralSVR/problems/burgers.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4082da5b2a0c484c963ca94473f4222c
+SpectralSVR/problems/burgers.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 97ff3e8ffa7145099382d1482294b32f
+SpectralSVR/problems/burgers.py core/NumberReplacer 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 62d2ed36f9924c2eb07d38d168c9f73b
+SpectralSVR/problems/burgers.py core/NumberReplacer 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bbbe318e002b41b6b09810253defdb83
+SpectralSVR/problems/burgers.py core/NumberReplacer 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fb131c08fa2e44ae96516eed408b1dbc
+SpectralSVR/problems/burgers.py core/NumberReplacer 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ab1b05872c1e48eb9b0aa63a9e7bfd00
+SpectralSVR/problems/burgers.py core/NumberReplacer 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6f6ae4418bf74023aff2a114455d8063
+SpectralSVR/problems/burgers.py core/NumberReplacer 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 45fd9a6d8ac34e1aa028eef98e54cb09
+SpectralSVR/problems/burgers.py core/NumberReplacer 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6d704253219d4dc8900b5e6060ff3791
+SpectralSVR/problems/burgers.py core/NumberReplacer 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 20c23d1ee638495b820a1c93dcf15464
+SpectralSVR/problems/burgers.py core/NumberReplacer 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 92a4c61534a5434aa8a51a5f879ef184
+SpectralSVR/problems/burgers.py core/NumberReplacer 27
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 50103074095b4c65882761241398ebd6
+SpectralSVR/problems/burgers.py core/NumberReplacer 28
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fcea663232a44ed2a36f4d99e67bc393
+SpectralSVR/problems/burgers.py core/NumberReplacer 29
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0ab46ead976e4d638bdffe4e14165023
+SpectralSVR/problems/burgers.py core/NumberReplacer 30
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e43baef964d8468c97c7ba903f4088fc
+SpectralSVR/problems/burgers.py core/NumberReplacer 31
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f88d69ef1f2a44bb8e8586ef5a568444
+SpectralSVR/problems/burgers.py core/NumberReplacer 32
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a085c073d3bd4f8fbc3d7888fd3f9c37
+SpectralSVR/problems/burgers.py core/NumberReplacer 33
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0a8114f42bc6439399b36c6ba0ae43e7
+SpectralSVR/problems/burgers.py core/NumberReplacer 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ee2d71e5f813405ebb21b78fbb8bc603
+SpectralSVR/problems/burgers.py core/NumberReplacer 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1a5672edb48c4718932ff1c0a50cde29
+SpectralSVR/problems/burgers.py core/NumberReplacer 36
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 445c7be5cc614ca6b10b7ca7e0ed3d8e
+SpectralSVR/problems/burgers.py core/NumberReplacer 37
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] da9fa03b36504d12b7c40f62edc9d47c
+SpectralSVR/problems/burgers.py core/NumberReplacer 38
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e88c099c8929445fb7d4172011246860
+SpectralSVR/problems/burgers.py core/NumberReplacer 39
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c49837815ef848588d902dad2ff73162
+SpectralSVR/problems/burgers.py core/NumberReplacer 40
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 11a5af0975a94b289eb69ee8e96c714d
+SpectralSVR/problems/burgers.py core/NumberReplacer 41
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fe292b9111494262beb15e60ea7004e5
+SpectralSVR/problems/burgers.py core/NumberReplacer 42
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c843b1606991448cb3e987afeee9c425
+SpectralSVR/problems/burgers.py core/NumberReplacer 43
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7d4c167193ae4b3bb8b8396efda85602
+SpectralSVR/problems/burgers.py core/NumberReplacer 44
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5f21ddc3f2e04b9d9cfe63c85a5c351f
+SpectralSVR/problems/burgers.py core/NumberReplacer 45
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 290211c7a8f14a3a8118133c4c193779
+SpectralSVR/problems/burgers.py core/NumberReplacer 46
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cab5324026d34d6c90184f184dfeb4af
+SpectralSVR/problems/burgers.py core/NumberReplacer 47
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4d631a897fc24081a5a48b7347d59895
+SpectralSVR/problems/burgers.py core/NumberReplacer 48
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6f8921b5c99f41afb0ffe054a1509906
+SpectralSVR/problems/burgers.py core/NumberReplacer 49
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4e30aaa8727c466a8b18dd1379f2ff77
+SpectralSVR/problems/burgers.py core/NumberReplacer 50
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0ba925422fa74ff0a70f47a16362fb97
+SpectralSVR/problems/burgers.py core/NumberReplacer 51
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 36ed7cce6e8e44688017f8c56cbc4a86
+SpectralSVR/problems/burgers.py core/NumberReplacer 52
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f267d4f791d64f3cbca64ff7008bd6a1
+SpectralSVR/problems/burgers.py core/NumberReplacer 53
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f8700984b5b6439c9f48243b78f7198a
+SpectralSVR/problems/burgers.py core/NumberReplacer 54
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fc4109fa08374f2caadc44ccde9cb2f5
+SpectralSVR/problems/burgers.py core/NumberReplacer 55
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d855d282a1264531a2468a409c5bf2e7
+SpectralSVR/problems/burgers.py core/NumberReplacer 56
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c8a0fff1620047dc91825575c44f062d
+SpectralSVR/problems/burgers.py core/NumberReplacer 57
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 793633cce0ad457cb42570dae266c603
+SpectralSVR/problems/burgers.py core/NumberReplacer 58
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cfea6609e09e49d1ad9a8e00940f1a25
+SpectralSVR/problems/burgers.py core/NumberReplacer 59
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6522ecfe9e1c4e4396c84620c1a14d7e
+SpectralSVR/problems/burgers.py core/NumberReplacer 60
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9ae5ec2911384cb8972046cf2a20cb5d
+SpectralSVR/problems/burgers.py core/NumberReplacer 61
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4e4e6b7a0a064c8ca4a5811e25776570
+SpectralSVR/problems/burgers.py core/NumberReplacer 62
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9a1cffc91c4c40c39065544a3d9ee9ba
+SpectralSVR/problems/burgers.py core/NumberReplacer 63
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 34284f9f2f5343fc93b8eab72552362a
+SpectralSVR/problems/burgers.py core/NumberReplacer 64
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 61dc9520f9804752b3db01e7e831a444
+SpectralSVR/problems/burgers.py core/NumberReplacer 65
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fb827120b59e4d60a991aba0ebcbc291
+SpectralSVR/problems/burgers.py core/NumberReplacer 66
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a7a86fa310f2455f8239100bcdf19ad3
+SpectralSVR/problems/burgers.py core/NumberReplacer 67
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9071c2d5fa1841a9afc939012448d06d
+SpectralSVR/problems/burgers.py core/NumberReplacer 68
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 344f701c7ab64b5197502cc964cc6e93
+SpectralSVR/problems/burgers.py core/NumberReplacer 69
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3cca9b6b91254e99869fc7d5eebde588
+SpectralSVR/problems/burgers.py core/NumberReplacer 70
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 491e9590b448491cb6cb090a2c6e9068
+SpectralSVR/problems/burgers.py core/NumberReplacer 71
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 903220e6f0c5445ab0245bf05cc759a2
+SpectralSVR/problems/burgers.py core/NumberReplacer 72
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 02a974d28bbd4b24ab1da9bcba593440
+SpectralSVR/problems/burgers.py core/NumberReplacer 73
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 50571501b8544110a1845192ddcb95d4
+SpectralSVR/problems/burgers.py core/NumberReplacer 74
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e81863d9b28b42bfafe1dcb3b3d0a4cc
+SpectralSVR/problems/burgers.py core/NumberReplacer 75
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6f3ced3802cb47f3bf2ffadbc415fef9
+SpectralSVR/problems/burgers.py core/NumberReplacer 76
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ca88fe156de94a539ebb4933c7330f18
+SpectralSVR/problems/burgers.py core/NumberReplacer 77
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4c1d5818b7ef41509bde7b55d9aa6d7e
+SpectralSVR/problems/burgers.py core/NumberReplacer 78
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f9a289939a8245dca9953aac3bfaf665
+SpectralSVR/problems/burgers.py core/NumberReplacer 79
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e4980b5677ee418e94c10238c738cc7e
+SpectralSVR/problems/burgers.py core/NumberReplacer 80
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2f5a561f9da34d9dacd2f947ee2c97f1
+SpectralSVR/problems/burgers.py core/NumberReplacer 81
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f56bb3aab381463aa5b729e13a1315b8
+SpectralSVR/problems/burgers.py core/NumberReplacer 82
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1ff2ed0d65354658b027d4ecbe9d0724
+SpectralSVR/problems/burgers.py core/NumberReplacer 83
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 89fd0caf34bb42d8bfe100bf84d976e8
+SpectralSVR/problems/burgers.py core/NumberReplacer 84
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d481598b86cc426685579995e43de0ec
+SpectralSVR/problems/burgers.py core/NumberReplacer 85
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 62ef7d6018884b48af7bb5f9649cac36
+SpectralSVR/problems/burgers.py core/NumberReplacer 86
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c2f640867949421bace6b2518497f152
+SpectralSVR/problems/burgers.py core/NumberReplacer 87
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c3cfcd2090cd467786d835fc85439404
+SpectralSVR/problems/burgers.py core/NumberReplacer 88
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 43d8f15c400e4f09a183524e3f4dc1fc
+SpectralSVR/problems/burgers.py core/NumberReplacer 89
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] dc5138d901f14b3e990d34e38c4348a2
+SpectralSVR/problems/burgers.py core/NumberReplacer 90
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 14c4f3ccb540493ea94540e4050a206a
+SpectralSVR/problems/burgers.py core/NumberReplacer 91
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fcd6ebc3cd524249ba0fe20fb7cbf6fc
+SpectralSVR/problems/burgers.py core/NumberReplacer 92
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7f0862a4207e45528b9346e506010cf2
+SpectralSVR/problems/burgers.py core/NumberReplacer 93
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f487d891b57f4a9dac981b3d64261a6b
+SpectralSVR/problems/burgers.py core/NumberReplacer 94
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0505f10555ef46ed97a4e21c24929dc4
+SpectralSVR/problems/burgers.py core/NumberReplacer 95
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6e5a8aea1c4c45f181efe308830ee504
+SpectralSVR/problems/burgers.py core/NumberReplacer 96
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c3165bc23eb746b5b8a620b7d759ffab
+SpectralSVR/problems/burgers.py core/NumberReplacer 97
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bbe21ca53b104ac4a57fb629a4cbc8cc
+SpectralSVR/problems/burgers.py core/NumberReplacer 98
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c001fef20f4c49369461eae3394a0ba8
+SpectralSVR/problems/burgers.py core/NumberReplacer 99
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e1c20a0776ff49fc9a4f22aa31ba2839
+SpectralSVR/problems/burgers.py core/NumberReplacer 100
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cff8f7d4f75c412993fd86a54887aeb0
+SpectralSVR/problems/burgers.py core/NumberReplacer 101
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c01e6c65a6cc407d80e93bb6eb10eaaf
+SpectralSVR/problems/burgers.py core/NumberReplacer 102
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a8cfe27e3c0244e3a1fde7402c55b1d6
+SpectralSVR/problems/burgers.py core/NumberReplacer 103
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 40cfeeb0ec1f454d85d6e845d35b30a5
+SpectralSVR/problems/burgers.py core/NumberReplacer 104
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 563022a39c15479ea994d3c9a00dd3a2
+SpectralSVR/problems/burgers.py core/NumberReplacer 105
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d46dc4d0b38548478fd5f4888363b7ba
+SpectralSVR/problems/burgers.py core/NumberReplacer 106
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] dca4b371a82c4755877c281fee3ef3bb
+SpectralSVR/problems/burgers.py core/NumberReplacer 107
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6db557e9fee947758a83a7b60b8c384f
+SpectralSVR/problems/burgers.py core/NumberReplacer 108
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] dc2d5b12abdd4c97a411214c2af7ec0f
+SpectralSVR/problems/burgers.py core/NumberReplacer 109
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 360fd31ac7de40cbbc52d560ce2b8168
+SpectralSVR/problems/burgers.py core/NumberReplacer 110
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cdc2883d251d4b72af7724638627971d
+SpectralSVR/problems/burgers.py core/NumberReplacer 111
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 04f0b7dc16d749cd85a1a00532cafde0
+SpectralSVR/problems/burgers.py core/NumberReplacer 112
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b71265c893704a5eb76614df4772efa0
+SpectralSVR/problems/burgers.py core/NumberReplacer 113
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1e7d6645140447a4bde5c0c26839d041
+SpectralSVR/problems/burgers.py core/NumberReplacer 114
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e47c8cfe6f224968901a9472c20e3d73
+SpectralSVR/problems/burgers.py core/NumberReplacer 115
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5a80c431c01942c1b02148d2e1e75a39
+SpectralSVR/problems/burgers.py core/NumberReplacer 116
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3ecc1be1ba1c482090b4d8544bce2596
+SpectralSVR/problems/burgers.py core/NumberReplacer 117
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f45398cfc4134757ac03c3804072b37b
+SpectralSVR/problems/burgers.py core/NumberReplacer 118
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ddae2f2e38d745a685cab829c5a27f6c
+SpectralSVR/problems/burgers.py core/NumberReplacer 119
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c6012e9abe974b17920124f92025c2a6
+SpectralSVR/problems/burgers.py core/NumberReplacer 120
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fee96509db0843dd809a74ed572023d4
+SpectralSVR/problems/burgers.py core/NumberReplacer 121
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 70663297549e400997c11166a7ef8969
+SpectralSVR/problems/burgers.py core/NumberReplacer 122
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e7aee0cf7daf4f9ca4a7cde210389aea
+SpectralSVR/problems/burgers.py core/NumberReplacer 123
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 89a64e9ae94d4d2d8386af89c1a49391
+SpectralSVR/problems/burgers.py core/NumberReplacer 124
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 93c6c8113bac46a7b72a0ddd9a790def
+SpectralSVR/problems/burgers.py core/NumberReplacer 125
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 64a03472919f4abebbb3d8e3534cea18
+SpectralSVR/problems/burgers.py core/NumberReplacer 126
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d8503f509aa4a4ab1df8ef9b6c4ba93
+SpectralSVR/problems/burgers.py core/NumberReplacer 127
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5b1a56e431594893bb3a76ffb8314a4f
+SpectralSVR/problems/burgers.py core/NumberReplacer 128
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8d09153240874ad58365af86cd0664a1
+SpectralSVR/problems/burgers.py core/NumberReplacer 129
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 21afd3fdcd7645eab6f64c2fe38eb4fe
+SpectralSVR/problems/burgers.py core/NumberReplacer 130
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a2a31ef9c049478e97e32d3b1b4124d4
+SpectralSVR/problems/burgers.py core/NumberReplacer 131
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f0f4bd9689b04f5cbffe94b4b1d3952f
+SpectralSVR/problems/burgers.py core/NumberReplacer 132
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 519c442c20994a86b36b63a0c0c8395c
+SpectralSVR/problems/burgers.py core/NumberReplacer 133
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8cab4c4b35a24b26b6007b09c986aedc
+SpectralSVR/problems/burgers.py core/NumberReplacer 134
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0a7da31c726444c188b275baa9cbf011
+SpectralSVR/problems/burgers.py core/NumberReplacer 135
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 135d3bfeb2cf4f97b2b622d16e2423cf
+SpectralSVR/problems/burgers.py core/NumberReplacer 136
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cc6bd2aad95e49a89052dd3d26f32914
+SpectralSVR/problems/burgers.py core/NumberReplacer 137
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5079fa2ae981478b8d768a925ba2a66a
+SpectralSVR/problems/burgers.py core/NumberReplacer 138
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a653f918ce654ec2b4ea410861c89f2d
+SpectralSVR/problems/burgers.py core/NumberReplacer 139
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7e477f9f4af1465b80690abcfde0f9fd
+SpectralSVR/problems/burgers.py core/NumberReplacer 140
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 45f4db59c909401e9f4af12ab3562fbd
+SpectralSVR/problems/burgers.py core/NumberReplacer 141
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 763d8711b4654e2ba0007748b6c4b321
+SpectralSVR/problems/burgers.py core/NumberReplacer 142
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e760a8ad07074ea5a7892e8281eaf8d0
+SpectralSVR/problems/burgers.py core/NumberReplacer 143
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c577d74bd1fd450cab66f24a745b41e9
+SpectralSVR/problems/burgers.py core/NumberReplacer 144
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 27d4ec9db0f74814ae3163c8ba27951d
+SpectralSVR/problems/burgers.py core/NumberReplacer 145
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9054f4ee5f124e33ae2f9df1c75f4463
+SpectralSVR/problems/burgers.py core/NumberReplacer 146
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b79dcde8fe104616ae064f9ed855323f
+SpectralSVR/problems/burgers.py core/NumberReplacer 147
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 63ab35b2d1344d63a1b44f0d12564719
+SpectralSVR/problems/burgers.py core/NumberReplacer 148
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 78eb73f67af14bbb9d76fa9bf252cd42
+SpectralSVR/problems/burgers.py core/NumberReplacer 149
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0d4b3eab83cb4269851cbe4a46130215
+SpectralSVR/problems/burgers.py core/NumberReplacer 150
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f0afdea4589a48e89344d8da2369cec1
+SpectralSVR/problems/burgers.py core/NumberReplacer 151
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2cbb00599ae54dc98e95ee1deb90ee0a
+SpectralSVR/problems/burgers.py core/NumberReplacer 152
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3faa41d3090343d993a9d9c26caf0a1f
+SpectralSVR/problems/burgers.py core/NumberReplacer 153
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1f13b465585d451e98d76a4ada048c4b
+SpectralSVR/problems/burgers.py core/NumberReplacer 154
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c0c07e655c4e4315bfeff7bf5a830192
+SpectralSVR/problems/burgers.py core/NumberReplacer 155
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fa0310baf26d40ca8143844c25fa72bb
+SpectralSVR/problems/burgers.py core/NumberReplacer 156
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 22ad892ed2aa4728b579d0ec100e2998
+SpectralSVR/problems/burgers.py core/NumberReplacer 157
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 07e22b4699974f909a003f6eb0c87344
+SpectralSVR/problems/burgers.py core/NumberReplacer 158
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 81a0ab9d34a04286a42c155b6b5b2f15
+SpectralSVR/problems/burgers.py core/NumberReplacer 159
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f575fd5969ae4e798fcda93577c294c3
+SpectralSVR/problems/burgers.py core/NumberReplacer 160
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0827ccf41ae448538dcd9e40a81a12c4
+SpectralSVR/problems/burgers.py core/NumberReplacer 161
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0bbecb0175e440b889997f5f2c77f617
+SpectralSVR/problems/burgers.py core/NumberReplacer 162
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4526975c66c248b782e0326cdf2c9dcf
+SpectralSVR/problems/burgers.py core/NumberReplacer 163
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e506d6290eee4d518caff2adf46563ca
+SpectralSVR/problems/burgers.py core/NumberReplacer 164
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 95d030a5057646bf8b68fbba30051e66
+SpectralSVR/problems/burgers.py core/NumberReplacer 165
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 70dcab7b0c6a4533886495fb5c449246
+SpectralSVR/problems/burgers.py core/NumberReplacer 166
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 644f45502ad94af2933034a814c515aa
+SpectralSVR/problems/burgers.py core/NumberReplacer 167
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 26523293d1ef4790b498228fa352706b
+SpectralSVR/problems/burgers.py core/NumberReplacer 168
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 04170cc2c65c491094697caa000c04ab
+SpectralSVR/problems/burgers.py core/NumberReplacer 169
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d0493a9ba98a4f43980f3be22be2d73c
+SpectralSVR/problems/burgers.py core/NumberReplacer 170
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 496731e4ff59406f97cadcbdb7d1185f
+SpectralSVR/problems/burgers.py core/NumberReplacer 171
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a1622b681511454b8b71cb342f7f8259
+SpectralSVR/problems/burgers.py core/NumberReplacer 172
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1d52ef719a7e42dfb5fe61522217dee3
+SpectralSVR/problems/burgers.py core/NumberReplacer 173
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e8dafba1ed724c809829cf6d0ccb34e2
+SpectralSVR/problems/burgers.py core/NumberReplacer 174
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f0bee28a656241dca8ac3985b5b1ca21
+SpectralSVR/problems/burgers.py core/NumberReplacer 175
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5ab423607ac74d5586ed6919ce48b2fc
+SpectralSVR/problems/burgers.py core/NumberReplacer 176
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bbedaae4a060493695ce43f962dc2444
+SpectralSVR/problems/burgers.py core/NumberReplacer 177
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f17606dec36e4cb49b84dccc40c08a65
+SpectralSVR/problems/burgers.py core/NumberReplacer 178
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 057cd6d62fc9409ca2bfddfccb9f9282
+SpectralSVR/problems/burgers.py core/NumberReplacer 179
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0ace5c85b5554e9b80811335ea96ebb4
+SpectralSVR/problems/burgers.py core/NumberReplacer 180
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 61d2a69bf35f4db0879af57d94aef341
+SpectralSVR/problems/burgers.py core/NumberReplacer 181
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 462567387e4f4756960becf13665a4f4
+SpectralSVR/problems/burgers.py core/NumberReplacer 182
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] f8b6e0901639405faf0c93337fff065a
+SpectralSVR/problems/burgers.py core/NumberReplacer 183
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d2ab69aa59a24aaa906ed1a8212ed66f
+SpectralSVR/problems/burgers.py core/NumberReplacer 184
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 008ce368736c4abcb974957289576697
+SpectralSVR/problems/burgers.py core/NumberReplacer 185
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c21f27882cc64bd0b6b9363813f1f974
+SpectralSVR/problems/burgers.py core/NumberReplacer 186
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2555641a0a374c7c89a22bd8c2d5d4a8
+SpectralSVR/problems/burgers.py core/NumberReplacer 187
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 901aaf6e4b2c43ef8cc3865e6de1437c
+SpectralSVR/problems/burgers.py core/NumberReplacer 188
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ca25058d9f644354ba7e388b57a9d6d5
+SpectralSVR/problems/burgers.py core/NumberReplacer 189
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 87f48e3c1c3e497c9961cbc0d94fc94f
+SpectralSVR/problems/burgers.py core/NumberReplacer 190
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9d040785668645a39b42047c1186bfbd
+SpectralSVR/problems/burgers.py core/NumberReplacer 191
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 0ce41e8863bf44e1a2b117c69d7b15a8
+SpectralSVR/problems/burgers.py core/NumberReplacer 192
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8e1ac6d38ca14f689ecb712a53fb8649
+SpectralSVR/problems/burgers.py core/NumberReplacer 193
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ab7c7edc9a6e494db073a177f1645594
+SpectralSVR/problems/burgers.py core/NumberReplacer 194
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e388f54ed9a146a3a5bb9cb8cac6ebf0
+SpectralSVR/problems/burgers.py core/NumberReplacer 195
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 42cb806935254a33b085c2e70120752a
+SpectralSVR/problems/burgers.py core/NumberReplacer 196
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5b6145d4a10348298cdfcb78d50a18a9
+SpectralSVR/problems/burgers.py core/NumberReplacer 197
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d1b86b5d7e6344f2888e6e972c11429f
+SpectralSVR/problems/burgers.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 312d3106cffb476e938a88085fa3c869
+SpectralSVR/problems/burgers.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 9eb460770a494cff9422a80376ef1b8e
+SpectralSVR/problems/burgers.py core/RemoveDecorator 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] b396384231314aaf98c5df04a9edb939
+SpectralSVR/problems/burgers.py core/RemoveDecorator 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2a773ee829714593b18b680d68f2585e
+SpectralSVR/problems/burgers.py core/RemoveDecorator 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 043739da24c8497f893b358f20183371
+SpectralSVR/problems/burgers.py core/RemoveDecorator 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 05ac6b6b94e54e9d911a87314dc22d2e
+SpectralSVR/problems/burgers.py core/RemoveDecorator 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 33167da9f1f346979deec82b64824d8e
+SpectralSVR/problems/burgers.py core/RemoveDecorator 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 04dac32b0f094cb19e981f4584d2a20c
+SpectralSVR/problems/burgers.py core/RemoveDecorator 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 10d4b0b0c47c4f8ab64f52b44e684b16
+SpectralSVR/problems/burgers.py core/RemoveDecorator 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 93e80d70189b4b6d9fd459e59e01156e
+SpectralSVR/problems/burgers.py core/RemoveDecorator 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] cb0f609394fb41a2a3584d3b9da988ca
+SpectralSVR/problems/burgers.py core/RemoveDecorator 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 79d1e2d9c24d4be293f43459b4380102
+SpectralSVR/problems/burgers.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] fcc5ec79799f4f34bf51aa9ceba24fad
+SpectralSVR/problems/burgers.py core/ZeroIterationForLoop 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 1049
+complete: 1049 (100.00%)
+surviving mutants: 495 (47.19%)

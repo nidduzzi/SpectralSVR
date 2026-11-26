@@ -5,6 +5,7 @@ import math
 import pathlib
 import shutil
 import statistics
+import string
 import subprocess
 import tempfile
 
@@ -254,40 +255,48 @@ TestBenchmarkRecord = pytest.mark.scenario("Every stage runs where the run says"
 )
 
 
-@pytest.mark.no_fuzz
+DIRTINESS = ["none", "modified", "untracked", "staged"]
+FILE_CONTENT = st.text(string.ascii_letters + string.digits + " ", min_size=1)
+
+
 @pytest.mark.oracle_analytic
-def test_provenance_reports_a_dirty_tree_and_a_clean_one(tmp_path):
-    def git(*args):
-        subprocess.run(
-            ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
-        )
+@settings(deadline=None, max_examples=12)
+@given(kind=st.sampled_from(DIRTINESS), content=FILE_CONTENT)
+@example(kind="untracked", content="a number from uncommitted code")
+@example(kind="none", content="a")
+@example(kind="modified", content="a")
+@example(kind="staged", content="a")
+def test_provenance_reports_a_dirty_tree_and_a_clean_one(kind, content):
+    with tempfile.TemporaryDirectory() as directory:
+        root = pathlib.Path(directory)
 
-    git("init", "-q")
-    git(
-        "-c",
-        "user.name=t",
-        "-c",
-        "user.email=t@t",
-        "commit",
-        "-q",
-        "--allow-empty",
-        "-m",
-        "base",
-    )
-    head = subprocess.run(
-        ["git", "-C", str(tmp_path), "rev-parse", "HEAD"],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+        def git(*args):
+            return subprocess.run(
+                ["git", "-C", directory, *args],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
 
-    clean = SCRIPT.RunProvenance.of_repository(tmp_path)
-    (tmp_path / "uncommitted.txt").write_text("a number from uncommitted code")
-    dirty = SCRIPT.RunProvenance.of_repository(tmp_path)
+        git("init", "-q")
+        (root / "tracked.txt").write_text("committed")
+        git("add", "tracked.txt")
+        git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base")
+        head = git("rev-parse", "HEAD")
 
-    assert clean.tree_clean and not dirty.tree_clean
-    assert clean.revision == dirty.revision == head
-    assert dirty._replace(tree_clean=True) == clean
+        clean = SCRIPT.RunProvenance.of_repository(root)
+        if kind == "modified":
+            (root / "tracked.txt").write_text("committed" + content)
+        elif kind in ("untracked", "staged"):
+            (root / "uncommitted.txt").write_text(content)
+        if kind == "staged":
+            git("add", "uncommitted.txt")
+        after = SCRIPT.RunProvenance.of_repository(root)
+
+        assert clean.tree_clean
+        assert after.tree_clean == (kind == "none")
+        assert clean.revision == after.revision == head
+        assert after._replace(tree_clean=True) == clean
 
 
 @pytest.mark.no_fuzz

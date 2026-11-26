@@ -24,6 +24,8 @@ independent/analytic/invariant anchor, so consistency tests can never be a
 module's only line of defense.
 """
 
+import os
+
 import matplotlib
 import pytest
 import torch
@@ -47,7 +49,10 @@ ACCELERATOR_MEMORY_FRACTION = 0.25
 
 def pytest_configure(config: pytest.Config):
     if torch.cuda.is_available():
-        torch.cuda.set_per_process_memory_fraction(ACCELERATOR_MEMORY_FRACTION)
+        torch.cuda.set_per_process_memory_fraction(
+            ACCELERATOR_MEMORY_FRACTION
+            / int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1"))
+        )
     config.addinivalue_line(
         "markers", "no_fuzz: test is intentionally not fuzzed with Hypothesis"
     )

@@ -1,0 +1,5 @@
+problems___base: before 11, after 11, survivors after but not before 0, before but not after 0
+problems_antiderivative: before 79, after 77, survivors after but not before 0, before but not after 2
+problems_burgers: before 495, after 476, survivors after but not before 0, before but not after 19
+problems_exact: before 619, after 618, survivors after but not before 0, before but not after 1
+burgers.py at f1989e8 (phase4b-after2, after narrowing the Adams comparison): before 495, after 476, survivors after but not before 0

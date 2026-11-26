@@ -1,0 +1,4 @@
+utils: before 73, after 70, survivors after but not before 0, before but not after 3
+metrics: before 3, after 3, survivors after but not before 0, before but not after 0
+metrics at aaa2fae (phase4a5-metrics): before 3, after 3, survivors after but not before 0
+independent test alone at aaa2fae (phase4a4-independent): 5 of 112 survive, as at 8aba09d

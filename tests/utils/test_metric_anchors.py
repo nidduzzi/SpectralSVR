@@ -8,14 +8,63 @@ benchmark (rrse ~1.2e5 alongside r2 0.987).
 
 import math
 
+import numpy
 import pytest
 import torch
+from hypothesis import HealthCheck, assume, example, given, settings
+from hypothesis import strategies as st
+from hypothesis.extra import numpy as hnp
 
 from SpectralSVR.utils import get_metrics
 
-pytestmark = [pytest.mark.no_fuzz, pytest.mark.oracle_analytic]
+SETTINGS = settings(
+    deadline=None, max_examples=60, suppress_health_check=[HealthCheck.too_slow]
+)
+INDEPENDENT_TOLERANCE = 1e-10
+NEAR_CONSTANT_RTOL = 1e-6
+DEGENERATE_SPREAD = 1e-1
+TARGET_RAMP = 0.5
+MINIMUM_ERROR = 0.25
 
 
+@st.composite
+def predictions_and_targets(draw):
+    rows, columns = draw(st.integers(2, 20)), draw(st.integers(1, 5))
+    shape = (rows, columns)
+    elements = st.floats(-10.0, 10.0, allow_nan=False, allow_infinity=False)
+    ramp = TARGET_RAMP * numpy.arange(1, rows + 1)[:, None]
+    targets = draw(hnp.arrays(numpy.float64, shape, elements=elements)) + ramp
+    magnitudes = draw(
+        hnp.arrays(numpy.float64, shape, elements=st.floats(MINIMUM_ERROR, 10.0))
+    )
+    signs = draw(hnp.arrays(numpy.bool_, shape))
+    return targets + numpy.where(signs, magnitudes, -magnitudes), targets
+
+
+def metrics_by_numpy(p, t):
+    error = p - t
+    sse = (error**2).sum()
+    sst = ((t - t.mean()) ** 2).sum()
+    per_column = 1 - (error**2).sum(0) / ((t - t.mean(0)) ** 2).sum(0)
+    error_rows = error.reshape(len(error), -1)
+    target_rows = t.reshape(len(t), -1)
+    return {
+        "mse": (error**2).mean(),
+        "rmse": math.sqrt((error**2).mean()),
+        "mae": numpy.abs(error).mean(),
+        "rse": sse / sst,
+        "rrse": math.sqrt(sse / sst),
+        "smape": (2 * numpy.abs(error) / (numpy.abs(p) + numpy.abs(t))).mean(),
+        "r2": per_column.mean(),
+        "mean_per_sample_relative_l2": (
+            numpy.linalg.norm(error_rows, axis=1)
+            / numpy.linalg.norm(target_rows, axis=1)
+        ).mean(),
+    }
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
 @pytest.mark.scenario("Neither replaces the other")
 def test_get_metrics_hand_computed_values():
     # preds/targets chosen so every sum is exact in float64:
@@ -48,31 +97,60 @@ def test_get_metrics_hand_computed_values():
     assert m["pred_nan_sum"] == 0
 
 
-def test_get_metrics_rrse_near_constant_column():
+@pytest.mark.oracle_independent
+@pytest.mark.scenario("Neither replaces the other")
+@SETTINGS
+@given(pair=predictions_and_targets())
+@example(
+    pair=(
+        numpy.array([[2.0, 1.0], [5.0, 4.0]]),
+        numpy.array([[1.0, 2.0], [3.0, 4.0]]),
+    )
+)
+def test_get_metrics_match_independent_numpy_formulas(pair):
+    p, t = pair
+    assume(((t - t.mean(0)) ** 2).sum(0).min() > DEGENERATE_SPREAD)
+    assume(numpy.linalg.norm(t, axis=1).min() > DEGENERATE_SPREAD)
+    measured = get_metrics(torch.from_numpy(p), torch.from_numpy(t))
+    for name, expected in metrics_by_numpy(p, t).items():
+        assert abs(measured[name] - expected) <= INDEPENDENT_TOLERANCE * (
+            1 + abs(expected)
+        ), name
+    assert measured["pred_nan_sum"] == 0
+
+
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(
+    spread=st.floats(0.0, 1e-6),
+    offset=st.floats(1e-3, 1e-1),
+)
+@example(spread=1e-9, offset=0.01)
+def test_get_metrics_rrse_near_constant_column(spread, offset):
     # Regression for the benchmark anomaly: one target column nearly constant.
     # Global-definition rrse must stay small when predictions are accurate --
     # the per-column torchmetrics formula exploded here (column SST ~ 0).
     t = torch.tensor(
-        [[1.0, 0.0], [1.0 + 1e-9, 2.0], [1.0 - 1e-9, 4.0]], dtype=torch.float64
+        [[1.0, 0.0], [1.0 + spread, 2.0], [1.0 - spread, 4.0]], dtype=torch.float64
     )
-    p = t + 0.01
-    m = get_metrics(p, t)
-    # SSE = 6 * 1e-4 ; global mean = 8/6 -> SST dominated by column 1 (=8+2/3+...)
-    sse = 6 * 1e-4
+    m = get_metrics(t + offset, t)
+    sse = 6 * offset**2
     sst = ((t - t.mean()) ** 2).sum().item()
-    assert math.isclose(m["rse"], sse / sst, rel_tol=1e-6)
-    assert math.isclose(m["rrse"], math.sqrt(sse / sst), rel_tol=1e-6)
-    assert m["rrse"] < 0.02  # sanity: no blow-up
+    assert math.isclose(m["rse"], sse / sst, rel_tol=NEAR_CONSTANT_RTOL)
+    assert math.isclose(m["rrse"], math.sqrt(sse / sst), rel_tol=NEAR_CONSTANT_RTOL)
+    assert m["rrse"] < offset
 
 
-def test_get_metrics_rse_consistent_with_definition_rrse_squared():
-    p = torch.tensor([[0.5, 1.5, -0.25]], dtype=torch.float64).T
-    t = torch.tensor([[0.0, 2.0, 1.0]], dtype=torch.float64).T
-    m = get_metrics(p, t)
-    assert math.isclose(m["rrse"] ** 2, m["rse"], rel_tol=1e-9)
-
-
-def test_get_metrics_nan_count():
-    p = torch.tensor([[float("nan"), 1.0], [2.0, float("nan")]])
-    t = torch.zeros(2, 2)
-    assert get_metrics(p, t)["pred_nan_sum"] == 2
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(
+    mask=hnp.arrays(numpy.bool_, st.tuples(st.integers(1, 6), st.integers(1, 4))),
+    seed=st.integers(0, 10_000),
+)
+@example(mask=numpy.array([[True, False], [False, True]]), seed=0)
+def test_get_metrics_nan_count(mask, seed):
+    values = numpy.random.default_rng(seed).standard_normal(mask.shape)
+    predictions = torch.from_numpy(numpy.where(mask, numpy.nan, values))
+    assert get_metrics(predictions, torch.zeros_like(predictions))[
+        "pred_nan_sum"
+    ] == int(mask.sum())

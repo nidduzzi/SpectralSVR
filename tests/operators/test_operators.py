@@ -10,13 +10,16 @@ import time
 
 import pytest
 import torch
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, rule
 
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import (
+    FittedDeepONet,
+    Lu2021DeepxdeExample,
+    Lu2022Burgers,
     OperatorDataset,
     FittedOperator,
     Operator,
@@ -25,7 +28,8 @@ from SpectralSVR.operators import (
     benchmark,
     sensor_grid,
 )
-from tests._devices import DEVICES_PRESENT, HOST
+from SpectralSVR.operators.deeponet import PointwiseOutputScale
+from tests._devices import ACCELERATOR, DEVICES_PRESENT, HOST
 from tests._anchors import half_open_grid
 
 
@@ -48,6 +52,8 @@ SETTINGS = settings(deadline=None, max_examples=15)
 # worst relative L2 measured over seeds 0-9 was 0.539; the bound sits above it
 # with headroom rather than being tightened until the test passed
 CLOSED_FORM_TOLERANCE = 0.70
+MEASURED_SEEDS = 600
+MEASURED_TRAIN_SIZES = (120, 200)
 
 
 def _split(seed, n_train, n_test, modes):
@@ -65,6 +71,9 @@ def _antiderivative_split(seed, n_train=120, n_test=30, modes=SENSORS):
         FourierBasis, n_train + n_test, modes, generator=g, u0=0
     )
     return Split.partition(ut, u, n_train, n_sensors=modes)
+
+
+SMALL_SPLIT = _antiderivative_split(0, n_train=20, n_test=5)
 
 
 class SensorsAndDatasets(RuleBasedStateMachine):
@@ -88,6 +97,13 @@ class SensorsAndDatasets(RuleBasedStateMachine):
             self.build_a_dataset(sensors=1)
             self.hand_build_a_dataset(sensors=1)
         self.input_device = self.output_device = HOST
+        drawn = self.coeff, self.domain
+        self.domain = ((0.0, 1.0),)
+        self.coeff = FourierBasis.generate_coeff(
+            120, (16,), generator=generator, device=HOST
+        )
+        self.build_a_dataset(sensors=16)
+        self.coeff, self.domain = drawn
 
     @rule(
         n=st.integers(-8, 8),
@@ -142,10 +158,21 @@ class SensorsAndDatasets(RuleBasedStateMachine):
             dataset = OperatorDataset.from_fields(
                 input_field, output_field, n_sensors=sensors
             )
+            dimensions = len(self.domain)
+            queries = torch.linspace(0, 1, 25, device=self.input_device)
             assert dataset.sensors.device == self.input_device
             assert dataset.f.device == self.input_device
             assert torch.equal(
                 dataset.f, input_field(dataset.sensors).real.to(torch.float64)
+            )
+            assert dataset.sensors.shape == (sensors**dimensions, dimensions)
+            assert dataset.f.shape == (len(self.coeff), sensors**dimensions)
+            assert dataset.n_functions == len(self.coeff)
+            assert dataset.targets(
+                queries.unsqueeze(-1).repeat(1, dimensions)
+            ).shape == (
+                len(self.coeff),
+                25,
             )
 
     @rule(sensors=st.integers(1, 8))
@@ -174,28 +201,27 @@ TestSensorsAndDatasets = pytest.mark.scenario(
     "Sensors are sampled where their field is"
 )(
     pytest.mark.scenario("A dataset whose parts sit on different devices is refused")(
-        pytest.mark.oracle_smoke(SensorsAndDatasets.TestCase)
+        pytest.mark.scenario("Targets are evaluated, not pre-sampled")(
+            pytest.mark.oracle_smoke(SensorsAndDatasets.TestCase)
+        )
     )
 )
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("Targets are evaluated, not pre-sampled")
-def test_operator_dataset_shapes():
-    train = _antiderivative_split(0).train
-    assert train.sensors.shape == (16, 1)
-    assert train.f.shape == (120, 16)
-    assert train.n_functions == 120
-    x = torch.linspace(0, 1, 25).unsqueeze(-1)
-    assert train.targets(x).shape == (120, 25)
-
-
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_analytic
 @pytest.mark.scenario("Predict after fit")
 @pytest.mark.scenario("Query points are not restricted to the training grid")
-def test_spectralsvr_operator_learns_antiderivative():
+@SETTINGS
+@given(
+    seed=st.integers(0, MEASURED_SEEDS - 1),
+    n_train=st.integers(*MEASURED_TRAIN_SIZES),
+)
+@example(seed=0, n_train=120)
+@example(seed=1, n_train=120)
+@example(seed=2, n_train=120)
+@example(seed=3, n_train=120)
+@example(seed=4, n_train=120)
+def test_spectralsvr_operator_learns_antiderivative(seed, n_train):
     # A*cos(2*pi*m*x) integrates to A/(2*pi*m)*sin(2*pi*m*x), which is zero-mean
     # and so is the antiderivative this operator is trained to produce. The probe
     # amplitude follows the training set's own scale: an RBF kernel extrapolates
@@ -203,37 +229,34 @@ def test_spectralsvr_operator_learns_antiderivative():
     x_sensors = half_open_grid(SENSORS)
     x_query = QUERY.squeeze(-1)
     unit = torch.cos(2 * math.pi * x_sensors).norm()
-    for seed in range(5):
-        train = _antiderivative_split(seed).train
-        fitted = SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)).fit(
-            train
-        )
-        amp = float(train.f.norm(dim=1).mean() / unit)
+    train = _antiderivative_split(seed, n_train=n_train).train
+    fitted = SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)).fit(train)
+    amp = float(train.f.norm(dim=1).mean() / unit)
 
-        probes = torch.stack(
-            [amp * torch.cos(2 * math.pi * m * x_sensors) for m in PROBE_MODES]
-        )
-        exact = torch.stack(
-            [
-                amp / (2 * math.pi * m) * torch.sin(2 * math.pi * m * x_query)
-                for m in PROBE_MODES
-            ]
-        )
-        pred = fitted.predict(probes, QUERY).cpu().to(torch.float64)
-        assert pred.shape == exact.shape
+    probes = torch.stack(
+        [amp * torch.cos(2 * math.pi * m * x_sensors) for m in PROBE_MODES]
+    )
+    exact = torch.stack(
+        [
+            amp / (2 * math.pi * m) * torch.sin(2 * math.pi * m * x_query)
+            for m in PROBE_MODES
+        ]
+    )
+    pred = fitted.predict(probes, QUERY).cpu().to(torch.float64)
+    assert pred.shape == exact.shape
 
-        rel = (pred - exact).norm(dim=1) / exact.norm(dim=1)
-        assert float(rel.max()) < CLOSED_FORM_TOLERANCE, (
-            f"seed={seed}: {[f'{v:.3f}' for v in rel.tolist()]}"
-        )
+    rel = (pred - exact).norm(dim=1) / exact.norm(dim=1)
+    assert float(rel.max()) < CLOSED_FORM_TOLERANCE, (
+        f"seed={seed}: {[f'{v:.3f}' for v in rel.tolist()]}"
+    )
 
-        # discriminating: against the same closed form with its 1/(2*pi*m)
-        # amplitude dropped, every probe misses the bound by a wide margin
-        perturbed = torch.stack(
-            [amp * torch.sin(2 * math.pi * m * x_query) for m in PROBE_MODES]
-        )
-        off = (pred - perturbed).norm(dim=1) / perturbed.norm(dim=1)
-        assert float(off.min()) > CLOSED_FORM_TOLERANCE
+    # discriminating: against the same closed form with its 1/(2*pi*m)
+    # amplitude dropped, every probe misses the bound by a wide margin
+    perturbed = torch.stack(
+        [amp * torch.sin(2 * math.pi * m * x_query) for m in PROBE_MODES]
+    )
+    off = (pred - perturbed).norm(dim=1) / perturbed.norm(dim=1)
+    assert float(off.min()) > CLOSED_FORM_TOLERANCE
 
 
 @pytest.mark.no_fuzz
@@ -251,23 +274,6 @@ def test_an_unfitted_operator_cannot_predict():
     fitted = op.fit(_antiderivative_split(0, n_train=20, n_test=5).train)
     assert isinstance(fitted, FittedOperator)
     assert not isinstance(fitted, Operator)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.scenario("One row per operator, same metrics")
-def test_benchmark_returns_metric_table():
-    split = _antiderivative_split(1)
-    query = torch.linspace(0, 1, 40).unsqueeze(-1)
-    df = benchmark(
-        [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0))],
-        split,
-        query,
-    )
-    assert list(df.index) == ["SpectralSVR"]
-    for col in ("fit_seconds", "rmse", "r2", "rrse"):
-        assert col in df.columns
-    assert df.loc["SpectralSVR", "r2"] > 0.5
 
 
 class _Exploding:
@@ -318,38 +324,6 @@ class _Constant:
 
     def fit(self, dataset):
         return _FittedConstant(float(dataset.targets(QUERY).mean()))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_benchmark_propagates_a_failing_operator():
-    split = _antiderivative_split(0, n_train=20, n_test=5)
-    with pytest.raises(RuntimeError, match="fit blew up"):
-        benchmark([_Exploding()], split, QUERY)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-@pytest.mark.scenario("Shared inputs and targets")
-@pytest.mark.scenario("Each method takes the view it needs")
-def test_benchmark_scores_two_operators_against_the_same_targets():
-    split = _antiderivative_split(1, n_train=40, n_test=10)
-    df = benchmark(
-        [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0)), _Constant()],
-        split,
-        QUERY,
-    )
-    assert list(df.index) == ["SpectralSVR", "Constant"]
-
-    # the constant row's error is computable by hand, so it pins which targets
-    # the benchmark scored against: test.targets(QUERY), not anything per
-    # operator. Self-referential by construction -- the check is which library
-    # output was used, so the library supplies both sides
-    target = split.test.targets(QUERY)
-    expected_mse = float(
-        ((target - float(split.train.targets(QUERY).mean())) ** 2).mean()
-    )
-    assert df.loc["Constant", "mse"] == pytest.approx(expected_mse, rel=1e-9)
 
 
 def _flat(text):
@@ -440,10 +414,30 @@ def test_a_split_partitions_its_source_exactly_once(total, modes, seed, data):
             Split.partition(ut, u, refused, n_sensors=modes)
 
 
+REQUESTED_OPERATORS = [(), ("spectralsvr",), ("deeponet",), ("spectralsvr", "deeponet")]
+OPERATOR_REQUESTS = [
+    pytest.param(
+        requested,
+        extra_present,
+        allow_missing,
+        id=f"{'+'.join(requested) or 'nothing'}-{'extra present' if extra_present else 'extra missing'}-{'allowed' if allow_missing else 'refused'}",
+    )
+    for requested, extra_present, allow_missing in itertools.product(
+        REQUESTED_OPERATORS, (True, False), (False, True)
+    )
+]
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A short table requires an explicit opt-in")
-def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
+@pytest.mark.parametrize("requested, extra_present, allow_missing", OPERATOR_REQUESTS)
+def test_a_missing_operator_extra_refuses_by_default(
+    monkeypatch, requested, extra_present, allow_missing
+):
+    wants_deeponet = "deeponet" in requested
+    if wants_deeponet and extra_present and ACCELERATOR == HOST:
+        pytest.skip("DeepONet is built only against an accelerator")
     spec = importlib.util.spec_from_file_location(
         "_run_benchmark",
         pathlib.Path(__file__).resolve().parents[2] / "scripts" / "run_benchmark.py",
@@ -452,20 +446,26 @@ def test_a_missing_operator_extra_refuses_by_default(monkeypatch):
     spec.loader.exec_module(script)
 
     real = importlib.util.find_spec
+    deepxde_found = object() if extra_present else None
     monkeypatch.setattr(
         importlib.util,
         "find_spec",
-        lambda name, *a, **k: None if name == "deepxde" else real(name, *a, **k),
+        lambda name, *a, **k: (
+            deepxde_found if name == "deepxde" else real(name, *a, **k)
+        ),
     )
     query = torch.linspace(0, 1, 5, dtype=torch.float64).unsqueeze(-1)
     plan = script.DATASETS["antiderivative"].deeponet
-    with pytest.raises(script.MissingOperatorDependency, match="deepxde"):
-        script.build_operators(["spectralsvr", "deeponet"], query, plan, 0, HOST)
-
-    opted_in = script.build_operators(
-        ["spectralsvr", "deeponet"], query, plan, 0, HOST, allow_missing=True
+    arguments = (list(requested), query, plan, 0, ACCELERATOR)
+    if wants_deeponet and not extra_present and not allow_missing:
+        with pytest.raises(script.MissingOperatorDependency, match="deepxde"):
+            script.build_operators(*arguments, allow_missing=allow_missing)
+        return
+    expected = ["SpectralSVR"] * ("spectralsvr" in requested) + ["DeepONet"] * (
+        wants_deeponet and extra_present
     )
-    assert [op.name for op in opted_in] == ["SpectralSVR"]
+    built = script.build_operators(*arguments, allow_missing=allow_missing)
+    assert [op.name for op in built] == expected
 
 
 class _FittedSlow:
@@ -514,20 +514,37 @@ def test_fit_seconds_measures_the_fit_and_not_the_prediction():
     assert measured <= wall
 
 
+IMMUTABLE_VALUES = [
+    pytest.param(lambda: SMALL_SPLIT, "train", id="Split"),
+    pytest.param(lambda: SMALL_SPLIT.train, "f", id="OperatorDataset"),
+    pytest.param(
+        lambda: SpectralSVROperator(FourierBasis(), LSSVR()).fit(SMALL_SPLIT.train),
+        "model",
+        id="FittedSpectralSVR",
+    ),
+    pytest.param(lambda: Lu2022Burgers(periods=(1.0,)), "periods", id="Lu2022Burgers"),
+    pytest.param(
+        lambda: Lu2021DeepxdeExample(), "branch_widths", id="Lu2021DeepxdeExample"
+    ),
+    pytest.param(
+        lambda: PointwiseOutputScale(mean=torch.zeros(1), std=torch.ones(1)),
+        "mean",
+        id="PointwiseOutputScale",
+    ),
+    pytest.param(
+        lambda: FittedDeepONet("DeepONet", None, Lu2022Burgers(periods=(1.0,)), QUERY),
+        "recipe",
+        id="FittedDeepONet",
+    ),
+]
+
+
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_the_value_types_are_immutable():
-    # a dataset, a split and a fitted operator are values: rebinding a field
-    # would let a caller change what a benchmark already scored against
-    split = _antiderivative_split(0, n_train=20, n_test=5)
-    fitted = SpectralSVROperator(FourierBasis(), LSSVR()).fit(split.train)
-    for value, field in (
-        (split, "train"),
-        (split.train, "f"),
-        (fitted, "model"),
-    ):
-        with pytest.raises(dataclasses.FrozenInstanceError):
-            setattr(value, field, None)
+@pytest.mark.parametrize("make, field", IMMUTABLE_VALUES)
+def test_the_value_types_are_immutable(make, field):
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        setattr(make(), field, None)
 
 
 class BenchmarkRuns(RuleBasedStateMachine):
@@ -543,7 +560,7 @@ class BenchmarkRuns(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
         self.split = _split(0, n_train=12, n_test=4, modes=self.MODES)
-        self.query = torch.linspace(0, 1, 12, dtype=torch.float64).unsqueeze(-1)
+        self.query = QUERY
         self.first_target = self.split.test.targets(self.query).clone()
         self.operators = []
         self.ran_with = []
@@ -552,6 +569,14 @@ class BenchmarkRuns(RuleBasedStateMachine):
     @rule()
     def add_zero(self):
         self.operators.append(_Zero())
+
+    @rule()
+    def add_constant(self):
+        self.operators.append(_Constant())
+
+    @rule()
+    def add_exploding(self):
+        self.operators.append(_Exploding())
 
     @rule()
     def add_spectralsvr(self):
@@ -568,8 +593,33 @@ class BenchmarkRuns(RuleBasedStateMachine):
     def run(self):
         if not self.operators:
             return
+        if any(isinstance(operator, _Exploding) for operator in self.operators):
+            with pytest.raises(RuntimeError, match="fit blew up"):
+                benchmark(self.operators, self.split, self.query)
+            return
         self.ran_with = list(self.operators)
         self.last = benchmark(self.operators, self.split, self.query)
+
+    @initialize()
+    def reproduce_every_pinned_run(self):
+        table = benchmark(
+            [SpectralSVROperator(FourierBasis(), LSSVR(kernel="rbf", C=50.0))],
+            _antiderivative_split(1),
+            torch.linspace(0, 1, 40).unsqueeze(-1),
+        )
+        assert list(table.index) == ["SpectralSVR"]
+        assert table.loc["SpectralSVR", "r2"] > 0.5
+        self.add_spectralsvr()
+        self.run()
+        self.drop_one()
+        self.add_exploding()
+        self.run()
+        self.drop_one()
+        self.add_spectralsvr()
+        self.add_constant()
+        self.run()
+        self.drop_one()
+        self.drop_one()
 
     @invariant()
     def the_target_never_drifts(self):
@@ -581,6 +631,13 @@ class BenchmarkRuns(RuleBasedStateMachine):
             return
         assert len(self.last.index) == len(self.ran_with)
         assert list(self.last.index) == [op.name for op in self.ran_with]
+
+    @invariant()
+    def every_row_carries_the_same_metrics(self):
+        if self.last is None:
+            return
+        for column in ("fit_seconds", "rmse", "r2", "rrse"):
+            assert column in self.last.columns
 
     @invariant()
     def fit_seconds_never_absorbs_a_prediction(self):
@@ -602,12 +659,27 @@ class BenchmarkRuns(RuleBasedStateMachine):
         for value in scored:
             assert value == pytest.approx(expected, rel=1e-9)
 
+    @invariant()
+    def the_constant_row_is_the_error_of_the_training_mean(self):
+        if self.last is None or "Constant" not in self.last.index:
+            return
+        training_mean = float(self.split.train.targets(self.query).mean())
+        expected = float(((self.first_target - training_mean) ** 2).mean())
+        for value in self.last.loc[self.last.index == "Constant", "mse"]:
+            assert value == pytest.approx(expected, rel=1e-9)
+
 
 BenchmarkRuns.TestCase.settings = settings(
     deadline=None, max_examples=25, stateful_step_count=10
 )
 TestBenchmarkRuns = pytest.mark.oracle_invariant(
     pytest.mark.scenario("A sequence of operations is modelled as one")(
-        BenchmarkRuns.TestCase
+        pytest.mark.scenario("One row per operator, same metrics")(
+            pytest.mark.scenario("Shared inputs and targets")(
+                pytest.mark.scenario("Each method takes the view it needs")(
+                    BenchmarkRuns.TestCase
+                )
+            )
+        )
     )
 )

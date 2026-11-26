@@ -85,6 +85,22 @@ def hermitian_spectrum(n: int, seed: int) -> torch.Tensor:
     return 0.5 * (raw + raw.index_select(1, (-torch.arange(n)) % n).conj())
 
 
+def resized_by_frequency(x: numpy.ndarray, target: int) -> numpy.ndarray:
+    rows, n = x.shape
+    resized = numpy.zeros((rows, target), dtype=x.dtype)
+    lowest, highest = -(target // 2), (target - 1) // 2
+    for j in range(n):
+        frequency = j if j <= (n - 1) // 2 else j - n
+        if n % 2 == 0 and frequency == -(n // 2) and target > n:
+            resized[:, frequency % target] += x[:, j] / 2
+            resized[:, (-frequency) % target] += x[:, j] / 2
+        elif lowest <= frequency <= highest:
+            resized[:, frequency % target] += x[:, j]
+        elif target % 2 == 0 and frequency == target // 2:
+            resized[:, (-frequency) % target] += x[:, j]
+    return resized
+
+
 def separable_time_field(
     g_coeffs: torch.Tensor,
     t: torch.Tensor,

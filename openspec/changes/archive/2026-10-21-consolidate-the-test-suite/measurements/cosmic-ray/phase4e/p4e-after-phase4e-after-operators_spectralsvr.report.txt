@@ -1,0 +1,18 @@
+[job-id] a953b938b43f424ca732e916b4200376
+SpectralSVR/operators/spectralsvr.py core/ReplaceTrueWithFalse 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] efc6da26537041c08ef62aead30c4e35
+SpectralSVR/operators/spectralsvr.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff0674f5003a4cb999cfe807058c90e3
+SpectralSVR/operators/spectralsvr.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 12fd6a37a1394ab4bdaf30011a6c2dfa
+SpectralSVR/operators/spectralsvr.py core/RemoveDecorator 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] ca30234f189b4867884a7f298b7a1851
+SpectralSVR/operators/spectralsvr.py core/RemoveDecorator 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 5
+complete: 5 (100.00%)
+surviving mutants: 2 (40.00%)

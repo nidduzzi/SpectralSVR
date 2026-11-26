@@ -20,6 +20,13 @@ import torch
 from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    invariant,
+    precondition,
+    rule,
+)
 
 from SpectralSVR import (
     FourierBasis,
@@ -418,295 +425,297 @@ def test_fuzz_getitem_selects_rows(rows, stop):
 # =========================================================================== #
 # Structural / error-path tests: explicitly not fuzzed, no MMS
 # =========================================================================== #
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_transform_requires_2d():
-    with pytest.raises(AssertionError):
-        FourierBasis.transform(torch.randn(8) + 0j)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_inv_transform_requires_2d():
-    with pytest.raises(AssertionError):
-        FourierBasis.inv_transform(torch.randn(8) + 0j)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_transform_casts_real_to_complex():
-    assert FourierBasis.transform(torch.randn(1, 8)).is_complex()
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_inv_transform_casts_real_input():
-    assert FourierBasis.inv_transform(torch.randn(1, 8)).is_complex()
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_transform_res_int_and_slice():
-    f = torch.randn(1, 8) + 0j
-    assert FourierBasis.transform(f, res=8).shape == (1, 8)
-    assert FourierBasis.transform(f, res=slice(0, 1, 8)).shape == (1, 8)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_fn_requires_modes():
-    with pytest.raises(ValueError):
-        FourierBasis.fn(torch.zeros(2, 1))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_fn_dimension_mismatch():
-    with pytest.raises(AssertionError):
-        FourierBasis.fn(torch.zeros(2, 1), modes=(4, 4))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_fn_casts_integer_input():
-    basis = FourierBasis.fn(torch.arange(4).view(-1, 1), modes=4)
-    assert basis.shape == (4, 4) and basis.is_complex()
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_fn_transpose_matches_shape():
-    x = torch.linspace(0, 1, 4).view(-1, 1)
-    assert FourierBasis.fn(x, 4, transpose=True).shape == FourierBasis.fn(x, 4).shape
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_coeff_setter_rejects_non_complex():
-    with pytest.raises(AssertionError):
-        FourierBasis(torch.randn(1, 8))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_empty_basis_modes_and_len():
-    basis = FourierBasis()
-    assert basis.coeff.numel() == 0
-    assert basis.modes == (0,)
-    assert len(basis) == 0
-    assert basis.ndim == 0
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_modes_ndim_domain_time_size():
-    basis = FourierBasis(
-        FourierBasis.generate_empty(2, (8, 4)), domain=((0.0, 2.0), (0.0, 3.0))
-    )
-    assert basis.modes == (8, 4)
-    assert basis.ndim == 2
-    assert basis.domain == ((0.0, 2.0), (0.0, 3.0))
-    assert basis.lengths == (2.0, 3.0)
-    assert basis.time_size == 0  # not time dependent
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_len_matches_first_dim():
-    assert len(FourierBasis(FourierBasis.generate_empty(7, 8))) == 7
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_call_requires_coeff():
-    with pytest.raises(AssertionError):
-        FourierBasis()(torch.linspace(0, 1, 10))
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_consistency
-def test_evaluate_accepts_real_coeff():
-    coeff = FourierBasis.transform(torch.randn(1, 16) + 0j)
-    x = torch.linspace(0, 1, 20)
-    out_c = FourierBasis.evaluate(coeff, x)
-    out_r = FourierBasis.evaluate(to_real_coeff(coeff), x)  # real coeff path
-    assert torch.allclose(out_c, out_r, atol=1e-4)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_res_slice():
-    basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
-    vals = basis.get_values(res=slice(0, 1, 20), device=CPU)
-    assert vals.shape[0] == 1
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_res_tuple():
-    basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
-    vals = basis.get_values(res=(slice(0, 1, 20),), device=CPU)
-    assert vals.shape[0] == 1
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_evaluate_i_n_selection():
-    coeff = FourierBasis.transform(torch.randn(4, 16) + 0j)
-    out = FourierBasis.evaluate(coeff, torch.linspace(0, 1, 20), i=1, n=2)
-    assert out.shape[0] == 2
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_evaluate_time_dependent():
-    coeff = FourierBasis.transform(torch.randn(2, 8, 8) + 0j)
-    out = FourierBasis.evaluate(
-        coeff,
-        torch.linspace(0, 1, 10).view(-1, 1),
-        t=torch.linspace(0, 1, 5),
-        time_dependent=True,
-        domain=((0.0, 1.0), (0.0, 1.0)),
-    )
-    assert out.shape == (2, 5, 10)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_evaluate_time_dependent_requires_t():
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    with pytest.raises(AssertionError):
-        FourierBasis.evaluate(
-            coeff,
-            torch.linspace(0, 1, 5).view(-1, 1),
+REFUSALS = {
+    "transform of a one-dimensional tensor": (
+        AssertionError,
+        "needs to have at least two dimensions",
+        lambda size: FourierBasis.transform(torch.randn(size) + 0j),
+    ),
+    "inverse transform of a one-dimensional tensor": (
+        AssertionError,
+        "needs to have at least two dimensions",
+        lambda size: FourierBasis.inv_transform(torch.randn(size) + 0j),
+    ),
+    "basis functions without modes": (
+        ValueError,
+        "modes should not be None",
+        lambda size: FourierBasis.fn(torch.zeros(size, 1)),
+    ),
+    "basis functions with modes of another dimension": (
+        AssertionError,
+        r"both need to have the same dimensions \(modes",
+        lambda size: FourierBasis.fn(torch.zeros(size, 1), modes=(4, 4)),
+    ),
+    "real coefficients": (
+        AssertionError,
+        "need to be complex",
+        lambda size: FourierBasis(torch.randn(1, size)),
+    ),
+    "evaluation without coefficients": (
+        AssertionError,
+        "basis has no coefficients",
+        lambda size: FourierBasis()(torch.linspace(0, 1, size)),
+    ),
+    "time-dependent evaluation without times": (
+        AssertionError,
+        "t must not be none",
+        lambda size: FourierBasis.evaluate(
+            FourierBasis.transform(torch.randn(1, size, size) + 0j),
+            torch.linspace(0, 1, size).view(-1, 1),
             time_dependent=True,
             domain=((0.0, 1.0), (0.0, 1.0)),
-        )
+        ),
+    ),
+    "an unknown value type": (
+        RuntimeError,
+        "expects value_type random or zero",
+        lambda size: FourierBasis.generate(2, size, value_type=f"bogus{size}"),  # type: ignore[arg-type]
+    ),
+    "adding a number": (
+        TypeError,
+        "unsupported operand",
+        lambda size: FourierBasis(FourierBasis.generate_empty(1, size)) + size,  # type: ignore[operator]
+    ),
+    "subtracting a number": (
+        TypeError,
+        "unsupported operand",
+        lambda size: FourierBasis(FourierBasis.generate_empty(1, size)) - size,  # type: ignore[operator]
+    ),
+    "plotting past the last function": (
+        AssertionError,
+        "out of bounds",
+        lambda size: FourierBasis(FourierBasis.generate_empty(1, size)).plot(
+            i=0, n=2, device=CPU
+        ),
+    ),
+    "plotting a time-dependent spectrum": (
+        NotImplementedError,
+        "not implemented for time-dependent bases",
+        lambda size: (
+            FourierBasis(FourierBasis.transform(torch.randn(1, size, size) + 0j))
+            .to_time_dependent(nt=size)
+            .plot_coefficients()
+        ),
+    ),
+}
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_generate_returns_basis():
-    basis = FourierBasis.generate(2, 8, generator=torch.Generator().manual_seed(0))
-    assert isinstance(basis, FourierBasis) and basis.modes == (8,) and len(basis) == 2
+@pytest.mark.parametrize("kind", tuple(REFUSALS))
+@SETTINGS
+@given(size=st.integers(2, 16))
+@example(size=8)
+def test_a_refused_call_raises_its_error(kind, size):
+    error, message, call = REFUSALS[kind]
+    with pytest.raises(error, match=message):
+        call(size)
+    plt.close("all")
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_generate_zero_value_type():
+@SETTINGS
+@given(functions=st.integers(1, 3), size=st.integers(2, 16))
+@example(functions=1, size=8)
+def test_the_transforms_take_real_values_and_a_resolution_as_count_or_slice(
+    functions, size
+):
+    values = torch.randn(functions, size)
+    assert FourierBasis.transform(values).is_complex()
+    assert FourierBasis.inv_transform(values).is_complex()
+    for res in (size, slice(0, 1, size)):
+        assert FourierBasis.transform(values + 0j, res=res).shape == (functions, size)
+
+
+@pytest.mark.oracle_smoke
+@SETTINGS
+@given(points=st.integers(1, 12), modes=st.integers(1, 12))
+@example(points=4, modes=4)
+def test_basis_functions_take_integer_points_in_either_orientation(points, modes):
+    at_integers = FourierBasis.fn(torch.arange(points).view(-1, 1), modes=modes)
+    assert at_integers.shape == (points, modes) and at_integers.is_complex()
+    x = torch.linspace(0, 1, points).view(-1, 1)
     assert (
-        torch.count_nonzero(FourierBasis.generate(2, 8, value_type="zero").coeff) == 0
+        FourierBasis.fn(x, modes, transpose=True).shape
+        == FourierBasis.fn(x, modes).shape
     )
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_generate_empty_shape():
-    coeff = FourierBasis.generate_empty(3, (8, 4))
-    assert coeff.shape == (3, 8, 4) and coeff.is_complex()
-    assert torch.count_nonzero(coeff) == 0
+@SETTINGS
+@given(functions=st.integers(1, 4), modes=st.integers(1, 16))
+@example(functions=2, modes=8)
+def test_a_zero_value_type_generates_no_nonzero_coefficient(functions, modes):
+    generated = FourierBasis.generate(functions, modes, value_type="zero")
+    assert generated.coeff.shape == (functions, modes)
+    assert torch.count_nonzero(generated.coeff) == 0
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_generate_complex_funcs_true():
-    basis = FourierBasis.generate(
-        1, 16, complex_funcs=True, generator=torch.Generator().manual_seed(1)
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(
+    starts=st.tuples(st.floats(-2.0, 2.0), st.floats(-2.0, 2.0)),
+    spans=st.tuples(st.floats(0.5, 4.0), st.floats(0.5, 4.0)),
+    points=st.tuples(st.integers(2, 12), st.integers(2, 12)),
+)
+@example(starts=(0.0, 0.0), spans=(1.0, 2.0), points=(4, 6))
+def test_a_grid_spans_each_stated_interval_end_to_end(starts, spans, points):
+    stated = tuple(
+        slice(start, start + span, count)
+        for start, span, count in zip(starts, spans, points, strict=True)
     )
-    assert basis.coeff.is_complex()
-    vals = FourierBasis.inv_transform(basis.coeff)
-    assert vals.imag.abs().sum() > 0
+    line = FourierBasis.grid(stated[0])
+    assert line.shape == (points[0], 1)
+    assert torch.isclose(line[0, 0], torch.tensor(starts[0]))
+    assert torch.isclose(line[-1, 0], torch.tensor(starts[0] + spans[0]))
+    plane = FourierBasis.grid(stated)
+    assert plane.shape == (*points, 2)
+    assert torch.isclose(plane[-1, 0, 0], torch.tensor(starts[0] + spans[0]))
+    assert torch.isclose(plane[0, -1, 1], torch.tensor(starts[1] + spans[1]))
+    unit = FourierBasis.grid(points[0])
+    assert unit.shape == (points[0], 1)
+    assert unit[0, 0] == 0 and unit[-1, 0] == 1
+
+
+@pytest.mark.oracle_consistency
+@SETTINGS
+@given(
+    functions=st.integers(1, 3),
+    modes=st.integers(2, 32),
+    points=st.integers(1, 40),
+    seed=st.integers(0, 10_000),
+)
+@example(functions=1, modes=16, points=20, seed=0)
+def test_evaluation_reads_real_and_complex_coefficients_alike(
+    functions, modes, points, seed
+):
+    generator = torch.Generator().manual_seed(seed)
+    coeff = FourierBasis.transform(
+        torch.randn(functions, modes, generator=generator) + 0j
+    )
+    x = torch.rand(points, generator=generator)
+    assert torch.equal(
+        FourierBasis.evaluate(coeff, x),
+        FourierBasis.evaluate(to_real_coeff(coeff), x),
+    )
+
+
+PERIODIC_CONTINUATION_RMS_PER_AMPLITUDE = 1e-4
+LEGACY_CONTINUATION_L2 = 1e-3
+
+
+def sum_of_sines(components, t):
+    return sum(
+        amplitude * torch.sin(2 * torch.pi * frequency * t)
+        for frequency, amplitude in components
+    )
+
+
+def continued_error(samples, components, first_period, last_period, steps):
+    sample_times = torch.arange(samples) / samples
+    coeff = FourierBasis.transform((sum_of_sines(components, sample_times) + 0j)[None])
+    queried = torch.arange(first_period, last_period, 1.0 / steps)
+    return FourierBasis(coeff)(queried)[0].real - sum_of_sines(components, queried)
+
+
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(
+    samples=st.integers(30, 128),
+    components=st.lists(
+        st.tuples(st.integers(1, 14), st.floats(0.3, 4.0)),
+        min_size=1,
+        max_size=3,
+        unique_by=lambda component: component[0],
+    ),
+    first_period=st.integers(-3, 0),
+    periods=st.integers(1, 3),
+    steps=st.integers(20, 200),
+)
+@example(
+    samples=100,
+    components=[(1, 3.0), (4, 1.0), (7, 0.5)],
+    first_period=-1,
+    periods=2,
+    steps=150,
+)
+def test_a_band_limited_field_continues_periodically_beyond_its_domain(
+    samples, components, first_period, periods, steps
+):
+    error = continued_error(
+        samples, components, first_period, first_period + periods, steps
+    )
+    total_amplitude = sum(amplitude for _, amplitude in components)
+    rms = float(error.square().mean().sqrt())
+    assert rms < PERIODIC_CONTINUATION_RMS_PER_AMPLITUDE * total_amplitude
+
+
+@pytest.mark.no_fuzz
+@pytest.mark.oracle_analytic
+def test_the_legacy_sum_of_sines_continues_over_two_periods():
+    error = continued_error(100, [(1, 3.0), (4, 1.0), (7, 0.5)], -1, 1, 150)
+    assert error.shape == (300,)
+    assert torch.norm(error, 2) < LEGACY_CONTINUATION_L2
+
+
+@pytest.mark.oracle_analytic
+@SETTINGS
+@given(modes=st.integers(1, 64))
+@example(modes=12)
+def test_the_dealias_mask_keeps_the_lowest_two_thirds_of_wavenumbers(modes):
+    wavenumbers = torch.from_numpy(np.fft.fftfreq(modes, 1 / modes))
+    mask = FourierBasis.dealias_mask(modes)
+    assert bool(mask[0])
+    assert torch.equal(mask, wavenumbers.abs() <= (2.0 / 3.0) * (modes / 2))
+
+
+PLOT_FIELDS = {
+    ("1d", "real"): lambda: _real_1d(),
+    ("1d", "complex"): lambda: _complex_1d(),
+    ("2d", "real"): lambda: FourierBasis(
+        FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
+    ),
+    ("2d", "complex"): lambda: _complex_2d(),
+}
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_generate_invalid_value_type():
-    with pytest.raises(RuntimeError):
-        FourierBasis.generate(2, 8, value_type="bogus")  # type: ignore[arg-type]
+@pytest.mark.parametrize("field", tuple(PLOT_FIELDS))
+@pytest.mark.parametrize("component", [None, "real", "imag"])
+@pytest.mark.parametrize("scatter", [False, True])
+@pytest.mark.parametrize("on_axes", [False, True])
+def test_every_plot_of_a_field_draws(field, component, scatter, on_axes, caplog):
+    figure, axes = plt.subplots()
+    with caplog.at_level("WARNING", logger="SpectralSVR.basis._plot"):
+        PLOT_FIELDS[field]().plot(
+            plot_component=component,
+            complex_scatter=scatter,
+            plt=axes if on_axes else None,
+            device=CPU,
+        )
+    plt.close("all")
+    dims, values = field
+    warns = dims == "2d" and values == "complex" and component is None and not scatter
+    assert ("plotting only real component" in caplog.text) == warns
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
-def test_add_type_error():
-    with pytest.raises(TypeError):
-        _ = FourierBasis(FourierBasis.generate_empty(1, 8)) + 5  # type: ignore[operator]
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_sub_type_error():
-    with pytest.raises(TypeError):
-        _ = FourierBasis(FourierBasis.generate_empty(1, 8)) - 5  # type: ignore[operator]
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_copy_is_independent():
-    coeff = FourierBasis.transform(torch.randn(1, 16) + 0j)
-    a = FourierBasis(coeff)
-    b = a.copy()
-    b.coeff = b.coeff * 2
-    assert not torch.allclose(a.coeff, b.coeff)
+@pytest.mark.parametrize("field", tuple(PLOT_FIELDS))
+@pytest.mark.parametrize("component", ["magnitude", "real", "imag"])
+@pytest.mark.parametrize("on_axes", [False, True])
+def test_every_spectrum_plot_of_a_field_draws(field, component, on_axes):
+    figure, axes = plt.subplots()
+    PLOT_FIELDS[field]().plot_coefficients(
+        component=component, plt=axes if on_axes else None
+    )
+    plt.close("all")
 
 
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 def test_prefered_evaluation_mode():
     assert FourierBasis.prefered_evaluation_mode() == "inverse transform"
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_grid_1d_and_2d():
-    g1 = FourierBasis.grid(slice(0, 1, 10))
-    assert g1.shape == (10, 1)
-    assert torch.isclose(g1[0, 0], torch.tensor(0.0))
-    assert torch.isclose(g1[-1, 0], torch.tensor(1.0))
-    assert FourierBasis.grid((slice(0, 1, 4), slice(0, 2, 6))).shape == (4, 6, 2)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_grid_int_arg():
-    assert FourierBasis.grid(10).shape == (10, 1)
-
-
-# --------------------------------------------------------------------------- #
-# get_values / evaluation modes (inverse-transform and basis-eval)
-# --------------------------------------------------------------------------- #
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_and_grid_shapes():
-    basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
-    vals, grid = basis.get_values_and_grid(res=50, device=CPU)
-    assert vals.shape[0] == 1 and grid.shape[-1] == 1
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_basis_eval_1d():
-    basis = FourierBasis(FourierBasis.transform(torch.randn(1, 16) + 0j))
-    assert basis.get_values(res=16, evaluation_mode="basis", device=CPU).shape == (
-        1,
-        16,
-    )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_basis_eval_2d():
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    vals = FourierBasis(coeff).get_values(res=8, evaluation_mode="basis", device=CPU)
-    assert vals.ndim == 3 and vals.shape[0] == 1
-
-
-# --------------------------------------------------------------------------- #
-# time-dependent conversion, grad, integral, resize
-# --------------------------------------------------------------------------- #
-def _time_dependent_basis(modes=8, nt=8):
-    torch.manual_seed(0)
-    coeff = FourierBasis.transform(torch.randn(2, modes, modes) + 0j)
-    return FourierBasis(coeff).to_time_dependent(nt=nt)
 
 
 DOUBLE_PRECISION_ROUNDING = 1e-12
@@ -759,64 +768,6 @@ def test_to_time_dependent_preserves_values(m, seed, starts, spans):
     )
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_dependent_idempotent_when_already_time_dependent():
-    td = _time_dependent_basis()
-    again = td.to_time_dependent()  # early-return branch
-    assert again.time_dependent
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_independent_noop_when_not_time_dependent():
-    basis = FourierBasis(FourierBasis.transform(torch.randn(1, 8) + 0j))
-    out = basis.to_time_independent()  # early-return branch
-    assert not out.time_dependent
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_time_dependent_grad_time_and_space():
-    td = _time_dependent_basis()
-    assert td.grad(dim=0).coeff.shape == td.coeff.shape  # finite-diff in time
-    assert td.grad(dim=1).coeff.shape == td.coeff.shape  # spectral in space
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_time_dependent_integral_time_and_space():
-    td = _time_dependent_basis()
-    assert td.integral(dim=0).coeff.shape == td.coeff.shape
-    assert td.integral(dim=1).coeff.shape == td.coeff.shape
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_get_values_time_dependent_inverse_and_basis():
-    td = _time_dependent_basis()
-    assert td.get_values(device=CPU).shape == (2, 8, 8)
-    basis_eval = td.get_values(
-        res=(slice(0, 1, 8), slice(0, 1, 8)), evaluation_mode="basis", device=CPU
-    )
-    assert basis_eval.shape[0] == 2
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_resize_time_dependent_to_basis_interpolates_time():
-    td = _time_dependent_basis(modes=8, nt=8)
-    other = FourierBasis(
-        FourierBasis.transform(torch.randn(1, 4, 4) + 0j)
-    ).to_time_dependent(nt=4)
-    resized = td.resize_modes(other)
-    assert resized.modes == (4,)
-    assert resized.time_size == 4
-
-
-# --------------------------------------------------------------------------- #
-# plot (headless Agg smoke tests across every branch)
-# --------------------------------------------------------------------------- #
 def _real_1d():
     x = torch.arange(0, 1, 1.0 / 32)
     sig = (torch.sin(2 * torch.pi * x) + 0j).unsqueeze(0)
@@ -833,98 +784,6 @@ def _complex_2d():
     return FourierBasis(
         FourierBasis.generate_coeff(1, (8, 8), complex_funcs=True), complex_funcs=True
     )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_1d_real():
-    _real_1d().plot(device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_1d_complex_both_components():
-    _complex_1d().plot(device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.parametrize("component", ["real", "imag"])
-def test_plot_1d_complex_single_component(component):
-    _complex_1d().plot(plot_component=component, device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_1d_complex_scatter():
-    _complex_1d().plot(complex_scatter=True, device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_2d_real():
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    FourierBasis(coeff).plot(device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_2d_complex_default_component_warns():
-    # complex 2D with no component defaults to real and logs a warning.
-    _complex_2d().plot(device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.parametrize("component", ["real", "imag"])
-def test_plot_2d_component_on_axes(component):
-    _fig, ax = plt.subplots()
-    _complex_2d().plot(plot_component=component, plt=ax, device=CPU)
-    plt.close(_fig)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_2d_complex_scatter():
-    _complex_2d().plot(complex_scatter=True, device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_out_of_bounds():
-    with pytest.raises(AssertionError):
-        FourierBasis(FourierBasis.generate_empty(1, 8)).plot(i=0, n=5, device=CPU)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-@pytest.mark.parametrize("component", ["magnitude", "real", "imag"])
-def test_plot_coefficients_1d(component):
-    _real_1d().plot_coefficients(n=1, component=component)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_coefficients_2d():
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    FourierBasis(coeff).plot_coefficients()
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_coefficients_on_axes():
-    _fig, ax = plt.subplots()
-    _complex_1d().plot_coefficients(plt=ax)
-    plt.close(_fig)
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_plot_coefficients_time_dependent_raises():
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    td = FourierBasis(coeff).to_time_dependent(nt=8)
-    with pytest.raises(NotImplementedError):
-        td.plot_coefficients()
 
 
 _EXACT = EvaluationStrategy(allow_approximate=False)
@@ -1050,15 +909,6 @@ def test_separable_evaluate_chunking_is_exact(n, npts, seed):
     assert torch.allclose(whole, chunked, atol=1e-12)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_analytic
-def test_dealias_mask_keeps_low_frequencies():
-    mask = FourierBasis.dealias_mask(12)
-    k = FourierBasis.wave_number(12).flatten()
-    assert bool(mask[0])  # DC kept
-    assert torch.equal(mask, k.abs() <= (2.0 / 3.0) * 6)
-
-
 @SETTINGS
 @given(
     budget_mb=st.floats(1e-4, 64.0),
@@ -1120,12 +970,6 @@ def test_basis_diagonal_hooks_default_to_none():
     assert Basis.dealias_mask(8) is None
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_math_import_smoke():
-    assert math.isclose(float(torch.pi), math.pi, rel_tol=1e-6)
-
-
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Generating coefficients can be directed")
 @settings(deadline=None, max_examples=15)
@@ -1177,3 +1021,443 @@ def test_how_a_device_is_stated_does_not_change_the_draw(rows, modes, seed):
     followed_the_process = drawn_on_the_host(False)
 
     assert torch.equal(stated_at_the_call, followed_the_process)
+
+
+LIFECYCLE_MODES = st.integers(2, 8)
+LIFECYCLE_FUNCTIONS = st.integers(1, 4)
+NOT_AN_INTEGER = "not an integer"
+ACCEPTED_INTEGER_TYPES = (int, np.int64, np.array, torch.tensor)
+SLICE_COUNTS = st.one_of(
+    st.just((None, None)),
+    st.integers(-2, 12).flatmap(
+        lambda count: st.sampled_from(ACCEPTED_INTEGER_TYPES).map(
+            lambda integer_type: (integer_type(count), count)
+        )
+    ),
+    st.sampled_from(
+        (
+            2.0,
+            True,
+            False,
+            np.True_,
+            torch.tensor(True),
+            torch.tensor(2.0),
+            torch.tensor([3]),
+            np.array([3]),
+        )
+    ).map(lambda value: (value, NOT_AN_INTEGER)),
+)
+REFUSED_SLICE_COUNTS = (
+    (1, 1),
+    (0, 0),
+    (2.0, NOT_AN_INTEGER),
+    (True, NOT_AN_INTEGER),
+    (False, NOT_AN_INTEGER),
+    (4.0, NOT_AN_INTEGER),
+    (np.True_, NOT_AN_INTEGER),
+    (torch.tensor(True), NOT_AN_INTEGER),
+    (torch.tensor([3]), NOT_AN_INTEGER),
+    (np.array([3]), NOT_AN_INTEGER),
+)
+
+
+class BasisLifecycle(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.basis = FourierBasis()
+        self.stated_domain = None
+
+    def sampling_fits(self):
+        sampling = self.basis.config.sampling
+        return not isinstance(sampling, tuple) or len(sampling) == self.basis.ndim
+
+    def placeable(self):
+        basis = self.basis
+        if basis.coeff.numel() == 0 or not self.sampling_fits():
+            return False
+        if basis.time_dependent:
+            return basis.ndim >= 1 and basis.time_size >= 2
+        return True
+
+    @initialize()
+    def reproduce_every_pinned_case(self):
+        self.start_empty(functions=2, modes=(8, 4))
+        self.set_domain(spans=(2.0, 3.0))
+        self.start_empty(functions=7, modes=(8,))
+        self.generate(functions=1, modes=(16,), complex_funcs=True, seed=1)
+        self.read_values_at_a_resolution(points=20)
+        self.read_a_selection_of_functions(start=0, count=1, points=20)
+        self.read_values_with_their_grid(points=50)
+        self.generate(functions=4, modes=(16,), complex_funcs=False, seed=0)
+        self.read_a_selection_of_functions(start=1, count=2, points=20)
+        self.generate(functions=2, modes=(8, 8), complex_funcs=False, seed=0)
+        self.read_values_at_a_resolution(points=8)
+        self.convert_to_time_dependent(slices=(None, None))
+        self.convert_again_and_mutate_the_result()
+        self.read_native_values()
+        self.read_values_at_a_resolution(points=8)
+        self.differentiate(axis=0)
+        self.differentiate(axis=1)
+        self.integrate(axis=0)
+        self.integrate(axis=1)
+        self.evaluate_through_time(times=5, points=10)
+        self.resize_through_time(modes=4, slices=4)
+        self.convert_to_time_independent()
+        self.convert_again_and_mutate_the_result()
+        for time_dependent in (False, True):
+            self.start_from_a_two_axis_field(time_dependent=time_dependent)
+            for slices in REFUSED_SLICE_COUNTS:
+                self.convert_to_time_dependent(slices=slices)
+        self.start_from_a_two_axis_field(time_dependent=True)
+        for value, requested in (
+            (None, None),
+            (4, 4),
+            (np.int64(4), 4),
+            (np.array(4), 4),
+            (torch.tensor(4), 4),
+            (5, 5),
+            (torch.tensor(1), 1),
+            (np.array(6), 6),
+        ):
+            self.convert_to_time_dependent(slices=(value, requested))
+        self.start_from_a_two_axis_field(time_dependent=False)
+        self.convert_to_time_independent()
+        for time_dependent, slices in ((False, (None, None)), (True, (3, 3))):
+            self.start_without_coefficients(time_dependent=time_dependent)
+            self.convert_to_time_dependent(slices=slices)
+        self.start_without_coefficients(time_dependent=True)
+        self.convert_to_time_independent()
+        self.start_empty(functions=1, modes=(8,))
+        self.convert_to_time_dependent(slices=(None, None))
+        for spatial_modes, source_slices, slices in (
+            ((4,), 1, (None, None)),
+            ((4,), 1, (1, 1)),
+            ((4,), 1, (3, 3)),
+            ((4,), 2, (None, None)),
+            ((4,), 2, (2, 2)),
+            ((), 4, (None, None)),
+        ):
+            self.start_time_dependent(
+                functions=1,
+                slices=source_slices,
+                spatial_modes=spatial_modes,
+                seed=0,
+            )
+            self.convert_to_time_dependent(slices=slices)
+            self.convert_to_time_independent()
+        self.start_empty(functions=1, modes=(8, 4))
+        for length in (1, 3):
+            self.restate_the_sampling(length=length)
+            self.convert_to_time_dependent(slices=(None, None))
+        self.basis = FourierBasis()
+        self.stated_domain = None
+
+    @rule(
+        functions=LIFECYCLE_FUNCTIONS,
+        modes=st.lists(LIFECYCLE_MODES, min_size=1, max_size=2).map(tuple),
+    )
+    def start_empty(self, functions, modes):
+        coeff = FourierBasis.generate_empty(functions, modes)
+        assert coeff.is_complex() and torch.count_nonzero(coeff) == 0
+        self.basis = FourierBasis(coeff)
+        self.stated_domain = None
+
+    @rule(
+        functions=LIFECYCLE_FUNCTIONS,
+        modes=st.lists(LIFECYCLE_MODES, min_size=1, max_size=2).map(tuple),
+        complex_funcs=st.booleans(),
+        seed=st.integers(0, 1000),
+    )
+    def generate(self, functions, modes, complex_funcs, seed):
+        self.basis = FourierBasis.generate(
+            functions,
+            modes,
+            complex_funcs=complex_funcs,
+            generator=torch.Generator().manual_seed(seed),
+        )
+        self.stated_domain = None
+        if complex_funcs:
+            assert FourierBasis.inv_transform(self.basis.coeff).imag.abs().sum() > 0
+
+    @rule(time_dependent=st.booleans())
+    def start_without_coefficients(self, time_dependent):
+        self.basis = FourierBasis(time_dependent=time_dependent)
+        self.stated_domain = None
+
+    @rule(time_dependent=st.booleans())
+    def start_from_a_two_axis_field(self, time_dependent):
+        self.basis = FourierBasis(
+            FourierBasis.transform(torch.randn(1, 8, 4, dtype=torch.float64) + 0j),
+            coeff_dtype=torch.complex128,
+        )
+        if time_dependent:
+            self.basis = self.basis.to_time_dependent(nt=4)
+        self.stated_domain = None
+
+    @rule(
+        functions=st.integers(1, 3),
+        slices=st.integers(1, 4),
+        spatial_modes=st.lists(LIFECYCLE_MODES, max_size=2).map(tuple),
+        seed=st.integers(0, 1000),
+    )
+    def start_time_dependent(self, functions, slices, spatial_modes, seed):
+        generator = torch.Generator().manual_seed(seed)
+        coeff = torch.randn(
+            functions,
+            slices,
+            *spatial_modes,
+            generator=generator,
+            dtype=torch.complex128,
+        )
+        self.basis = FourierBasis(
+            coeff, time_dependent=True, coeff_dtype=torch.complex128
+        )
+        self.stated_domain = None
+
+    @precondition(lambda self: self.basis.coeff.numel() > 0)
+    @rule(length=st.integers(0, 3))
+    def restate_the_sampling(self, length):
+        self.basis = FourierBasis(
+            self.basis.coeff,
+            time_dependent=self.basis.time_dependent,
+            domain=self.basis.config.domain,
+            sampling=(PeriodicUniform(),) * length,
+        )
+
+    @precondition(lambda self: self.basis.coeff.numel() > 0)
+    @rule(spans=st.lists(st.floats(0.5, 4.0), min_size=1, max_size=3).map(tuple))
+    def set_domain(self, spans):
+        axes = self.basis.coeff.ndim - 1
+        stated = tuple((0.0, span) for span in (spans * axes)[:axes])
+        self.basis.domain = stated
+        self.stated_domain = stated
+
+    @precondition(lambda self: self.basis.coeff.numel() > 0)
+    @rule()
+    def copy_and_mutate_the_copy(self):
+        before = self.basis.coeff.clone()
+        duplicate = self.basis.copy()
+        duplicate.coeff = duplicate.coeff * 2 + 1
+        assert torch.equal(self.basis.coeff, before)
+
+    @rule(slices=SLICE_COUNTS)
+    def convert_to_time_dependent(self, slices):
+        value, requested = slices
+        source = self.basis
+        if requested == NOT_AN_INTEGER:
+            with pytest.raises(
+                TypeError, match="a slice count is a zero-dimensional integer"
+            ):
+                source.to_time_dependent(nt=value)
+            return
+        if source.coeff.numel() == 0:
+            with pytest.raises(ValueError, match="holding no coefficients"):
+                source.to_time_dependent(nt=value)
+            return
+        if source.time_dependent:
+            if requested is not None and requested != source.time_size:
+                refusal = (
+                    f"of {source.time_size} slices converts only to its own slice "
+                    f"count; got {requested}$"
+                )
+            elif source.ndim < 1:
+                refusal = "a spatial axis beside time; got 0 spatial axes$"
+            elif source.time_size < 2:
+                refusal = f"at least two slices; got {source.time_size}$"
+            else:
+                again = source.to_time_dependent(nt=value)
+                assert again is not source and again.config == source.config
+                assert again.coeff.data_ptr() == source.coeff.data_ptr()
+                return
+            with pytest.raises(ValueError, match=refusal):
+                source.to_time_dependent(nt=value)
+            return
+        slices_expected = source.modes[0] if requested is None else requested
+        if source.ndim < 2:
+            refusal = f"a spatial axis beside time; got {source.ndim - 1} spatial axes$"
+        elif slices_expected < 2:
+            refusal = f"at least two slices; got {slices_expected}$"
+        elif not self.sampling_fits():
+            refusal = f"schemes for {source.ndim} axes$"
+        else:
+            self.basis = source.to_time_dependent(nt=value)
+            assert self.basis.time_dependent
+            assert self.basis.time_size == slices_expected
+            assert len(self.basis) == len(source)
+            assert self.basis.modes == source.modes[1:]
+            return
+        with pytest.raises(ValueError, match=refusal):
+            source.to_time_dependent(nt=value)
+
+    @rule()
+    def convert_to_time_independent(self):
+        source = self.basis
+        if not source.time_dependent:
+            unchanged = source.to_time_independent()
+            assert unchanged is not source and unchanged.config == source.config
+            assert unchanged.coeff.data_ptr() == source.coeff.data_ptr()
+            return
+        if source.coeff.numel() == 0:
+            refusal = "holding no coefficients"
+        elif source.ndim < 1:
+            refusal = "a spatial axis beside time; got 0 spatial axes$"
+        elif source.time_size < 2:
+            refusal = f"at least two slices; got {source.time_size}$"
+        elif not self.sampling_fits():
+            refusal = f"schemes for {source.ndim} axes$"
+        else:
+            self.basis = source.to_time_independent()
+            assert not self.basis.time_dependent
+            assert self.basis.coeff.shape == source.coeff.shape
+            return
+        with pytest.raises(ValueError, match=refusal):
+            source.to_time_independent()
+
+    @precondition(lambda self: self.placeable())
+    @rule()
+    def convert_again_and_mutate_the_result(self):
+        before = self.basis.coeff.clone()
+        unchanged = (
+            self.basis.to_time_dependent()
+            if self.basis.time_dependent
+            else self.basis.to_time_independent()
+        )
+        assert unchanged.time_dependent == self.basis.time_dependent
+        unchanged.coeff = unchanged.coeff * 2 + 1
+        assert torch.equal(self.basis.coeff, before)
+
+    @precondition(lambda self: self.placeable())
+    @rule(axis=st.integers(0, 2))
+    def differentiate(self, axis):
+        axis = axis % (self.basis.coeff.ndim - 1)
+        assert self.basis.grad(dim=axis).coeff.shape == self.basis.coeff.shape
+
+    @precondition(lambda self: self.placeable())
+    @rule(axis=st.integers(0, 2))
+    def integrate(self, axis):
+        axis = axis % (self.basis.coeff.ndim - 1)
+        assert self.basis.integral(dim=axis).coeff.shape == self.basis.coeff.shape
+
+    @precondition(lambda self: self.placeable())
+    @rule()
+    def read_native_values(self):
+        assert self.basis.get_values(device=CPU).shape == self.basis.coeff.shape
+
+    @precondition(lambda self: self.placeable())
+    @rule(points=st.integers(2, 20))
+    def read_values_at_a_resolution(self, points):
+        axes = self.basis.coeff.ndim - 1
+        by_slices = tuple(
+            slice(start, stop, points) for start, stop in self.basis.domain
+        )
+        expected = (len(self.basis), *(points,) * axes)
+        for mode in ("auto", "basis"):
+            assert (
+                self.basis.get_values(
+                    res=by_slices, evaluation_mode=mode, device=CPU
+                ).shape
+                == expected
+            )
+        if axes == 1 and not self.basis.time_dependent:
+            assert self.basis.get_values(res=points, device=CPU).shape == expected
+            assert self.basis.get_values(res=by_slices[0], device=CPU).shape == expected
+
+    @precondition(lambda self: self.placeable() and not self.basis.time_dependent)
+    @rule(start=st.integers(0, 3), count=st.integers(1, 4), points=st.integers(2, 20))
+    def read_a_selection_of_functions(self, start, count, points):
+        start = start % len(self.basis)
+        count = min(count, len(self.basis) - start)
+        values = self.basis.get_values(i=start, n=count, res=points, device=CPU)
+        assert values.shape[0] == count
+        if self.basis.ndim == 1:
+            x = torch.linspace(0, 1, points)
+            selected = FourierBasis.evaluate(self.basis.coeff, x, i=start, n=count)
+            assert torch.equal(
+                selected,
+                FourierBasis.evaluate(self.basis.coeff[start : start + count], x),
+            )
+
+    @precondition(lambda self: self.placeable() and not self.basis.time_dependent)
+    @rule(points=st.integers(2, 50))
+    def read_values_with_their_grid(self, points):
+        values, grid = self.basis.get_values_and_grid(res=points, device=CPU)
+        assert values.shape[0] == len(self.basis)
+        assert grid.shape[-1] == self.basis.ndim
+
+    @precondition(
+        lambda self: (
+            self.placeable() and self.basis.time_dependent and self.basis.ndim == 1
+        )
+    )
+    @rule(times=st.integers(1, 6), points=st.integers(1, 12))
+    def evaluate_through_time(self, times, points):
+        out = FourierBasis.evaluate(
+            self.basis.coeff,
+            torch.linspace(0, 1, points).view(-1, 1),
+            t=torch.linspace(0, 1, times),
+            time_dependent=True,
+            domain=self.basis.domain,
+        )
+        assert out.shape == (len(self.basis), times, points)
+
+    @precondition(
+        lambda self: (
+            self.placeable() and self.basis.time_dependent and self.basis.ndim == 1
+        )
+    )
+    @rule(modes=st.integers(2, 6), slices=st.integers(2, 6))
+    def resize_through_time(self, modes, slices):
+        target = FourierBasis(
+            FourierBasis.transform(torch.randn(1, modes, modes) + 0j)
+        ).to_time_dependent(nt=slices)
+        resized = self.basis.resize_modes(target)
+        assert resized.modes == (modes,)
+        assert resized.time_size == slices
+
+    @invariant()
+    def the_shape_properties_follow_the_coefficients(self):
+        coeff = self.basis.coeff
+        assert len(self.basis) == (coeff.shape[0] if coeff.ndim else 0)
+        if coeff.numel() == 0 and coeff.ndim < 2:
+            assert self.basis.modes == (0,)
+            if not self.basis.time_dependent:
+                assert self.basis.ndim == 0
+            return
+        if self.basis.time_dependent and coeff.ndim < 3:
+            return
+        spatial = coeff.shape[2:] if self.basis.time_dependent else coeff.shape[1:]
+        assert self.basis.modes == tuple(spatial)
+        assert self.basis.ndim == len(spatial)
+        assert self.basis.time_size == (
+            coeff.shape[1] if self.basis.time_dependent else 0
+        )
+
+    @invariant()
+    def a_stated_domain_is_kept(self):
+        if (
+            self.stated_domain is None
+            or len(self.stated_domain) != self.basis.coeff.ndim - 1
+        ):
+            return
+        assert self.basis.domain == self.stated_domain
+        assert self.basis.lengths == tuple(
+            stop - start for start, stop in self.stated_domain
+        )
+
+
+BasisLifecycle.TestCase.settings = settings(
+    deadline=None,
+    max_examples=40,
+    stateful_step_count=10,
+    suppress_health_check=[HealthCheck.too_slow],
+)
+TestBasisLifecycle = BasisLifecycle.TestCase
+for mark in (
+    pytest.mark.oracle_invariant,
+    pytest.mark.scenario("A conversion that cannot be placed in time is refused"),
+    pytest.mark.scenario(
+        "A time-independent conversion that cannot be placed is refused"
+    ),
+    pytest.mark.scenario("A time-dependent field converts only to its own slice count"),
+):
+    TestBasisLifecycle = mark(TestBasisLifecycle)

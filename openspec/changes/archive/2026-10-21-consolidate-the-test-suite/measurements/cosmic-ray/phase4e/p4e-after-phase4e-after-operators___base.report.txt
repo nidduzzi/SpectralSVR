@@ -1,0 +1,24 @@
+[job-id] ad2fe868a29543b58beae5b83c8c7812
+SpectralSVR/operators/__base.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 27771c5a40b942ef953fc7e6bf79461d
+SpectralSVR/operators/__base.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 13af7ee200634f8284e18375be6f4dc3
+SpectralSVR/operators/__base.py core/RemoveDecorator 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 67c5d20ffa8a48ea954b4a44f602c0d5
+SpectralSVR/operators/__base.py core/RemoveDecorator 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4c7d34b341f9415282a454854263531a
+SpectralSVR/operators/__base.py core/RemoveDecorator 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 09e9b09226e24d91a678ac5ef21c9c74
+SpectralSVR/operators/__base.py core/RemoveDecorator 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 903c495c505e4df5be103329b08f4b44
+SpectralSVR/operators/__base.py core/RemoveDecorator 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+total jobs: 7
+complete: 7 (100.00%)
+surviving mutants: 7 (100.00%)

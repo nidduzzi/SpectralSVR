@@ -1,0 +1,606 @@
+[job-id] 68e94208fe8647ca8ceadf0e56e40aaf
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7d7d1911075a474082206efd8b35368c
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] acd1341e4a504580becb7fbe62fce42f
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 623a09dcfe2848ebbbab54c46046c956
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e313e86937674f0d89ed725d7e6e0fa7
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 551ae0663c9a413ca76f3a9c433a782b
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 20c3c77449444f2d85f9301c6109ab49
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 45d3ed65849741bba3a4609ce55aada3
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 900e8933b6b045c0b656414eb59bd15d
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_BitOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a308b141e70d4775b60db3b0f975e72c
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 92b52a2292944d778b27366b5aca8420
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_Mul_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0dc3236bca164080b3210d0200d14dad
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Add 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 02f56e6781cb4a3fb02164f43d84ff59
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Add 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 30ccc4bd9b934370891fca3dcc15360e
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Sub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fb6eebcdf75849a0a70ae7c21d546b70
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Sub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] aeeb1612f9354df4a4174afde69fb7c6
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Mul 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 23191e3104634498836d144420a913d2
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Mul 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7f5c2653a77543ebb1f1a916d92dfd6c
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Div 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 78a74382371f481b8959e818ed3eead0
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Div 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1ca0e419ffb747b59670ba53468be4b7
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_FloorDiv 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5e8bf15a335541c280c6f4784e46e04a
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_FloorDiv 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0df40b8f3fe440539490794d32eeaad4
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Mod 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fe89d342155c4bd29642edf3e4e2f34b
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Mod 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d3b608d55d514781b97d618b3b99f3cf
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Pow 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 12b57bb1d6654b51b155ada7f0f0b897
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_Pow 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 38a8bb48be5e469a990c1c06e55fd2f4
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_RShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e5cb2f940a064d868f71aa3b279b839b
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_RShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6446a95400364e93b804ae91a6d08cae
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_LShift 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b802e58f278a4b77a0731c02ae995219
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_LShift 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 19d609dba2f044a28572aa1067b229f7
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_BitAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 679016f012ea4d56b68ef3a6798afa1e
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_BitAnd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9fa278027b454f77974e29b165af6646
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_BitXor 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c4c4b90ba5ef47b3b831aaa32e5120c6
+SpectralSVR/model/SpectralSVR.py core/ReplaceBinaryOperator_BitOr_BitXor 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c854a42af2024500838d57a5d5a25900
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5abffa833fa3474c8cc0c8616952b236
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_NotEq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f087fb78d0e14b3c854ce3dd7af40ae6
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d07d1208ecde461d95e08beb13055e1d
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 729103f94b3b4d53a225e3f25cc0c127
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 5bbd44ffd56e4068a324eccfd4de51bc
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a1a799d567c64753a1549117999e2942
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cf0088d481924f589c97349d46f4ad85
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e57d8bf8fab3497f8811fd2263387843
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a3112fb68e24470bb5ad070a49130108
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4ee4c737c6464777aad2a8d8b50f9912
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] c1655072ceb842f29af44be465017a8a
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Eq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 82e85a0303984a768efed8bf9da8b3e3
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a126b5bae2e34cd18523d31cfe5201f3
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Eq 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bb386e1af1d445f6b25de8c98b89f527
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Eq 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8d3f2e97bee14772b9e4899fe9a022db
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cc7c295fda3c44cc81279831904cf343
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Lt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] a7b6452f51584debaf98b9f7a185a2dc
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Lt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 619079d0c44d4ce1ae923c1f7021b662
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4cd38fdc8862495286c6f6feb39ff26b
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_LtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f4b016f494214cd298c0e33b2c36e2fb
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_LtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 49830c4781064252b78ae76432219c5d
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Gt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 089978c376664cdcb5b853df885b4fc9
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Gt 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 94518fa4f2f946ef8a20038b194c9d02
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Gt 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2fd3b2eb74064c4e82e4a9ed988902ff
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0d5a4ad7f25b4ef9ac3e71f9323e805f
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_GtE 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fc2ee746171e4862b4d6eb30f8defbc7
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_GtE 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 35dac9d2b2ac4dcb81ec476395c7ec02
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 981d19c5cbec4f2bb128d9db72f4f7f0
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Is 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e89b62bc3b224d2988c82825613de478
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_Is 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9210d409a84c486f9b01e3c8b4d325b9
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] bcae81e9a3394082b68028024fa76ccd
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 69832883b2f24f07831fd6beaa1cd9ac
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_NotEq_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 206dd868d2f149efb1ea294df0b7084d
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_Eq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 807ca81217d64e268fc24de9b6ca8418
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_NotEq 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 68021c1791f044a489af8e3561902f7b
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_Lt 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4fd4bc0cb5934f6d8a514d47f781ce99
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_LtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 8fea9490ad8f4eb89aef9c9c3bf4b85a
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_GtE 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e1df17a8d104479db59adaca765e4a3a
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 341aaa9f3e1c4a2fb077421eb718e1d6
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Gt_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 26cb0451163448bbb2f57568bd74557e
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Is_IsNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d609f28b4d040c082645d716e09f22c
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Is_IsNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1034447ce18c4e3bbc94fb8f675c433f
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Is_IsNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 1a4cd97e4ee84f53bfa9118d7f522f77
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Is_IsNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ba62d3a436374d448a5ab9c5c357eff3
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_Is_IsNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 67aec2d9bb9d41aaae8213053fbc670f
+SpectralSVR/model/SpectralSVR.py core/ReplaceComparisonOperator_IsNot_Is 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 68dfcf90a4e548ad8cf2b3ad6416f67e
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_UAdd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d9a7dc03eb89419d8d28f1c0ac869eee
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_UAdd 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1087e05448244a0a982bac57c0c4a932
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_UAdd 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 093c8a9f89a740899ae1a0cf4d119005
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Invert 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f6d0d6039b9f48dbac4f96ac5f852423
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Invert 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 432cd4d7d6084a8bbd8d8e8595324d77
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Invert 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 545742ac69794095b3f4c775948653b9
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1f7debbf877e43ae9c092a9c5e30b5bd
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a10f8435c79f4f40ad9c1a427df5db98
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_USub_Not 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1b3fc372a2514baca4245ff6012f558b
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_Delete_USub 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e9439191c099418da8f26989a4c4868c
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_Delete_USub 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5a79ef003dca4b49b397bd0f33952334
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_Delete_USub 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5fe8b88ae8234e6abcc44d33432a1b28
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_Delete_Not 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d66eb2fa76fc4f74bc6cf4b2183ce5c6
+SpectralSVR/model/SpectralSVR.py core/ReplaceUnaryOperator_Delete_Not 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c9d37a48d4104f52858546f92c5bcc70
+SpectralSVR/model/SpectralSVR.py core/AddNot 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1ba5dc98978748be9ef71a877423ef6b
+SpectralSVR/model/SpectralSVR.py core/AddNot 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6177d4d4d1bb40a4a6c0bf7f9086a8d7
+SpectralSVR/model/SpectralSVR.py core/AddNot 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 94eabe611456471e9c8bbcc7f800d54c
+SpectralSVR/model/SpectralSVR.py core/AddNot 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c2519644022545f3b876dc06876e16a5
+SpectralSVR/model/SpectralSVR.py core/AddNot 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 07b532eb504d4af88135d233a7190e37
+SpectralSVR/model/SpectralSVR.py core/AddNot 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 59d11fc923e441ee85c79bb33a02c5fa
+SpectralSVR/model/SpectralSVR.py core/AddNot 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c28176eb87d9423cb7153a68f3c04b81
+SpectralSVR/model/SpectralSVR.py core/AddNot 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 00fe198cf1484efa812acb2a8ce2524f
+SpectralSVR/model/SpectralSVR.py core/AddNot 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 826da90edc0d4884a553391bf0f09559
+SpectralSVR/model/SpectralSVR.py core/AddNot 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 38fb539a66e448bdadbd1de26946f7a5
+SpectralSVR/model/SpectralSVR.py core/AddNot 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 289bd766851647aeaf44feb07b85111b
+SpectralSVR/model/SpectralSVR.py core/AddNot 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 24128356b3a44a0aa88b227ef2113ef3
+SpectralSVR/model/SpectralSVR.py core/AddNot 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ed8d73b5e83d419cb66a97603159e3dc
+SpectralSVR/model/SpectralSVR.py core/AddNot 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 926a71e832e5466297493bf15c561dab
+SpectralSVR/model/SpectralSVR.py core/AddNot 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 90da5cc58a1c424184b4b5750b9ee9f6
+SpectralSVR/model/SpectralSVR.py core/AddNot 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 592717f8a7474c1d8bb4d0d2fe895fd1
+SpectralSVR/model/SpectralSVR.py core/AddNot 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1f376481e7cb4008b45f037ab8bdef10
+SpectralSVR/model/SpectralSVR.py core/AddNot 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] e1546812c7e74260a4e2300938eb3c9d
+SpectralSVR/model/SpectralSVR.py core/AddNot 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 49a462a68eaa4795a576f94248b672d4
+SpectralSVR/model/SpectralSVR.py core/AddNot 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cb2b9887879044e5b6cde731e41147a7
+SpectralSVR/model/SpectralSVR.py core/AddNot 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 893b093cc74547c298d3eb007e471bfe
+SpectralSVR/model/SpectralSVR.py core/AddNot 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 68e4d2b38f6f4528943a00474eca2897
+SpectralSVR/model/SpectralSVR.py core/AddNot 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 137fb064d21f485ba3d47d18bde9812f
+SpectralSVR/model/SpectralSVR.py core/AddNot 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c5f99b8ef07d4358828fc1f04706b62d
+SpectralSVR/model/SpectralSVR.py core/AddNot 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ecd4bda71ad04144b8a74620c7aad162
+SpectralSVR/model/SpectralSVR.py core/AddNot 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 6bc2d25958e24df2ab03afde08c61780
+SpectralSVR/model/SpectralSVR.py core/AddNot 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 441c5c99773347a4ad9690a52b52d1ca
+SpectralSVR/model/SpectralSVR.py core/ReplaceFalseWithTrue 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 895c34acaf2e4203bea0f9ce58561e2d
+SpectralSVR/model/SpectralSVR.py core/ReplaceFalseWithTrue 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c1233e380df464a8a8b31e0a329f42a
+SpectralSVR/model/SpectralSVR.py core/ReplaceFalseWithTrue 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 2123a8e3760c4d29bc61d27621c22a29
+SpectralSVR/model/SpectralSVR.py core/ReplaceAndWithOr 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5e9960a5d8d34857afd9d6ec2364f5a9
+SpectralSVR/model/SpectralSVR.py core/ReplaceAndWithOr 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1ce48d0516c64bbb9d71c0811ec6826e
+SpectralSVR/model/SpectralSVR.py core/ReplaceOrWithAnd 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d8a8d4f4cbd0402693fba73959c713b3
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 4fb87fefda744381a7239c12c0059c4e
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 773ba39f125e46c1a2f983ec40176a80
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 2
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff54349c2423451c9e3a6f3106c23954
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 3
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a9dd3112f95943a18ef0d4ffd16cdd56
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 4
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a57464b3fb6245cbaca4a91d0246d908
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 5
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b7dc64ff59f24c82b2142d722e927d1e
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 6
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c12ace667e274a549fa0f691ad292b61
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 7
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4a3b645e2c224d9fbc13caa4f75dab70
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 8
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3c5bd3421db44a3fa33c17bef73836d9
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 9
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] cde8c7f6b8884f14ad039b9f92205523
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 10
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9c34d6e66590463aab2df22e6d883880
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 11
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 561a0d6ba0c24049bdea9b0e6b7b02eb
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 12
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] aa29cdb0b1cb45dcb377128d9b2d06d4
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 13
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2296dc2d02164bd4adaebaa1aa0d558d
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 14
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 44ada9a349924045aafd40617353570c
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 15
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 65139310f8f94501b1f57229aff80f31
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 16
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ae572db2ce1d4702b28ece7d66defc79
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 17
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1ccfd1cc757448be86f62cb60d360da0
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 18
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6c9656f6d9d04d37b6a7f56560ce4870
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 19
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a3aa83b0c96242a487fb5c51f4ea426c
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 20
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff9cca07efd64f7e860f5a9d03f9770e
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 21
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6171637273cf45cdadade8af878da961
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 22
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] edc45c7f65a14973bb53d1d798ff8f30
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 23
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 3319a2e70eee4726a8861ea1f082ea49
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 24
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ee12b2b318764766bdd58457f99d6b12
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 25
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 474ffd308c9a40298ab24e4db2d44712
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 26
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b70a6939bb104456bd58449f01ef139a
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 27
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 32c0f6de7bbd48128d7bbd9bb45df872
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 28
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fbc1108a6d28421983de60811ecb69dc
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 29
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9285983f339d4bc8b7daa40abd51ca77
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 30
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e4db8996d9f1421fae881688984ba3ee
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 31
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c92f921b944a44289246f08a354d1a23
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 32
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 872e3668d93744a9aca464ac106bd0fa
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 33
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 320e4ac268d64396b18d4f9673923030
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 34
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 2b02a29a6b50461ca28ca6f7fd2c0290
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 35
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 4aa71c56e04e4221a5ae289a1d03350c
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 36
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 5e111c8147f546aea5d83c2b4e08a730
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 37
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] d401b359ec0742789943ae25ceca48d2
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 38
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f0e113b2777a4e9aaace7c9ed7a8e9ae
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 39
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 64c0bc5524514bb381c2595252d71e84
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 40
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9ad76c65affc47af9630a52fc903d8f6
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 41
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] c102397eb0e6419e88645ee34e95498b
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 42
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 54c3e9eb5d6944d29b305b0f6ee33268
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 43
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a15284bf171c4b848b11ad038d1f3412
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 44
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 6ca6373ba37c4c039f6b219df543f8bb
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 45
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] b19e83148e014032a7cc5acdaaad8a60
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 46
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0b62a6e056a645c9b7c3e000774d6560
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 47
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 055df5092d564be49f5b23e0b2131417
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 48
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] e0cc5e3bbaf74020bc56eedb1da82e82
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 49
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] f5ef388aff634e8caf37ee15861e0626
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 50
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a8592b29787a43559399fcb2aa4592f4
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 51
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 7e2cb2ef15b54d1cba93f819349d014d
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 52
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 79cc1a718df34aff9f438055da4e4ee3
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 53
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 0feaf86e3436487eb0dd3b49e3516a6e
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 54
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ae6f6139ecaf434abead51c460d78b1d
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 55
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 61ff8a9086a44371aa45b4ec9a1418e3
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 56
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 8fda9446910447a4ac9c912e99fe1fb9
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 57
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 81f4ac385ee74989baa6905d4a7f5ced
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 58
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 96660613cd6844ebbfaf083b863ab568
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 59
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 879cd94cf2e44b7ba6a9650a71cffdfe
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 60
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 3d2a1b550ff54d7ba33bd8e828171849
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 61
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 7b21be655c9b4b0daa9a80d629233334
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 62
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] ff572caab1304622b91ea72b9cac13af
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 63
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 406583449fe241908aa5eed9cdf833d7
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 64
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] a4a82b39e79a47939def045cf0a20ac6
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 65
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 653f60c4defa46a2858c8f4ddc4435b4
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 66
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 9a6f1a57d55e4bc6b13304ad4d45564c
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 67
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] bde7e8bb3269449fa0a82654d68a0ac6
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 68
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] d1d8d6a8231d42b6afeede45eafc1464
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 69
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.SURVIVED
+[job-id] 54a2200e0db94a908683ccf07852bc2c
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 70
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] fd6036f41a8d41b6a5bcf2739b2af7fb
+SpectralSVR/model/SpectralSVR.py core/NumberReplacer 71
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 630dc964f04740119984539d584e1571
+SpectralSVR/model/SpectralSVR.py core/RemoveDecorator 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 141d6f3a45d5461bbc45c6e3b703ced8
+SpectralSVR/model/SpectralSVR.py core/RemoveDecorator 1
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+[job-id] 1d0318cc45744a3b9bd955efd7c2a736
+SpectralSVR/model/SpectralSVR.py core/ZeroIterationForLoop 0
+worker outcome: WorkerOutcome.NORMAL, test outcome: TestOutcome.KILLED
+total jobs: 201
+complete: 201 (100.00%)
+surviving mutants: 32 (15.92%)

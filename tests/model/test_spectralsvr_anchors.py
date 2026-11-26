@@ -11,10 +11,10 @@ import math
 
 import pytest
 import torch
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from SpectralSVR import LSSVR, FourierBasis, SpectralSVR
+from SpectralSVR import LSSVR, FourierBasis, SpectralSVR, to_real_coeff
 from tests._anchors import half_open_grid
 
 SETTINGS = settings(deadline=None, max_examples=10)
@@ -76,21 +76,27 @@ def test_forward_matches_closed_form_antiderivative(seed):
     )
 
 
-@pytest.mark.no_fuzz
 @pytest.mark.oracle_analytic
-def test_inverse_recovers_known_input():
+@SETTINGS
+@given(
+    train_seed=st.integers(0, 10_000),
+    inverse_seed=st.integers(0, 10_000),
+    n_train=st.integers(20, 100),
+)
+@example(train_seed=0, inverse_seed=1, n_train=60)
+def test_inverse_recovers_known_input(train_seed, inverse_seed, n_train):
     # inverse_coeff recovers the model's input features; with a complex-output
     # basis it interprets them as interleaved real/imag coefficient pairs, so
     # train this model on f SPECTRA (torch.fft of the closed-form values) and
     # anchor the recovered spectrum against the analytic one.
-    from SpectralSVR import to_real_coeff
-
-    gen = torch.Generator().manual_seed(0)
+    gen = torch.Generator().manual_seed(train_seed)
     x_s = half_open_grid(N_SENSORS)
-    a = torch.randn(60, MAX_M, generator=gen, dtype=torch.float64)
-    b = torch.randn(60, MAX_M, generator=gen, dtype=torch.float64)
+    a = torch.randn(n_train, MAX_M, generator=gen, dtype=torch.float64)
+    b = torch.randn(n_train, MAX_M, generator=gen, dtype=torch.float64)
     f_train, u_train = _fields(a, b, x_s)
-    f_feat = to_real_coeff(torch.fft.fft(f_train.to(torch.complex128)).to(torch.complex64))
+    f_feat = to_real_coeff(
+        torch.fft.fft(f_train.to(torch.complex128)).to(torch.complex64)
+    )
     u_coeff = torch.fft.fft(u_train.to(torch.complex128)).to(torch.complex64)
     model = SpectralSVR(
         FourierBasis(domain=(0.0, 1.0)),
@@ -109,7 +115,7 @@ def test_inverse_recovers_known_input():
     f_rec = model.inverse_coeff(
         u_coeff0,
         epochs=800,
-        generator=torch.Generator().manual_seed(1),
+        generator=torch.Generator().manual_seed(inverse_seed),
         lr=0.5,
     )
     # error asserted against the analytic input spectrum, not a loss value;

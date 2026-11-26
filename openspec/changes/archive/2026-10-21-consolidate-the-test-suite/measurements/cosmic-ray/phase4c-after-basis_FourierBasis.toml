@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/basis/FourierBasis.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "/home/migi/Documents/projects/SpectralSVR/openspec/changes/consolidate-the-test-suite/measurements/cosmic-ray/timed_pytest.sh -x -q -p no:cacheprovider --hypothesis-seed=0 tests/basis/test_config.py::test_config_resolve_domain_broadcasts_single_pair tests/basis/test_config.py::test_config_lengths tests/basis/test_config.py::test_config_with_domain_is_immutable_copy tests/basis/test_config.py::test_domain_malformed_pair_raises tests/basis/test_nufft.py::test_evaluate_switches_to_nufft_above_threshold tests/basis/test_nufft.py::test_nufft_evaluate_shape tests/basis/test_fourier_basis.py::test_a_band_limited_field_continues_periodically_beyond_its_domain tests/basis/test_fourier_basis.py::test_the_legacy_sum_of_sines_continues_over_two_periods"
+
+[cosmic-ray.distributor]
+name = "local"

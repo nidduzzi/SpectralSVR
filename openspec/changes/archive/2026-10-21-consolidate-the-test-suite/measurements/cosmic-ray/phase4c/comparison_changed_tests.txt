@@ -1,0 +1,257 @@
+basis___base: before 641, after 720, survivors after but not before 81, before but not after 2
+  only after x1: AddNot: assert len(res) == len(modes), (
+  only after x1: AddNot: if isinstance(other, self.__class__):
+  only after x1: AddNot: if isinstance(res, int):
+  only after x1: AddNot: if isinstance(target_modes, int):
+  only after x1: AddNot: if self.coeff.numel() == 0:
+  only after x1: AddNot: if self.ndim < 1:
+  only after x3: AddNot: if self.time_dependent:
+  only after x2: NumberReplacer: i=0,
+  only after x2: NumberReplacer: idx = torch.arange(len(copy), device=copy.coeff.device)[indices].reshape(-1)
+  only after x1: NumberReplacer: if self.ndim < 1:
+  only after x1: NumberReplacer: n=1,
+  only after x2: NumberReplacer: return coeff_ndim - 1
+  only after x1: NumberReplacer: return self._config.resolve_domain(self.coeff.shape[1:])
+  only after x6: RemoveDecorator: @property
+  only after x1: RemoveDecorator: @staticmethod
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_BitOr: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_BitOr: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_BitXor: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_BitXor: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_Div: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_LShift: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_LShift: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_LShift: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_Mod: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_Mod: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Mod: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_Mul: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_Pow: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_RShift: + rand_func(
+  only after x1: ReplaceBinaryOperator_Add_RShift: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Add_RShift: result.coeff = result.coeff + other.coeff
+  only after x1: ReplaceBinaryOperator_Add_Sub: coeff = self.coeff[i : i + n]
+  only after x1: ReplaceBinaryOperator_Mul_BitAnd: * std_ratio
+  only after x1: ReplaceBinaryOperator_Mul_BitAnd: * values.std()
+  only after x1: ReplaceBinaryOperator_Mul_BitOr: * std_ratio
+  only after x1: ReplaceBinaryOperator_Mul_BitOr: * values.std()
+  only after x1: ReplaceBinaryOperator_Mul_BitXor: * std_ratio
+  only after x1: ReplaceBinaryOperator_Mul_BitXor: * values.std()
+  only after x1: ReplaceBinaryOperator_Mul_LShift: * std_ratio
+  only after x1: ReplaceBinaryOperator_Mul_LShift: * values.std()
+  only after x1: ReplaceBinaryOperator_Mul_RShift: * std_ratio
+  only after x1: ReplaceBinaryOperator_Mul_RShift: * values.std()
+  only after x1: ReplaceBinaryOperator_Sub_Add: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_BitAnd: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_BitOr: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_BitXor: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_Div: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_FloorDiv: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_LShift: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_Mod: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_Mul: return coeff_ndim - 1
+  only after x1: ReplaceBinaryOperator_Sub_Pow: return coeff_ndim - 1
+  only after x1: ReplaceComparisonOperator_Eq_Gt: assert len(res) == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_Gt: if self.coeff.numel() == 0:
+  only after x1: ReplaceComparisonOperator_Eq_GtE: if self.coeff.numel() == 0:
+  only after x1: ReplaceComparisonOperator_Eq_IsNot: assert len(res) == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_Lt: assert len(res) == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: assert len(res) == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: if self.coeff.numel() == 0:
+  only after x1: ReplaceComparisonOperator_Lt_Eq: if self.ndim < 1:
+  only after x1: ReplaceComparisonOperator_Lt_GtE: if self.ndim < 1:
+  only after x1: ReplaceComparisonOperator_Lt_LtE: if self.ndim < 1:
+  only after x1: ReplaceUnaryOperator_USub_Invert: idx = torch.arange(len(copy), device=copy.coeff.device)[indices].reshape(-1)
+  only after x1: ReplaceUnaryOperator_USub_Not: idx = torch.arange(len(copy), device=copy.coeff.device)[indices].reshape(-1)
+  only after x1: ReplaceUnaryOperator_USub_Not: return torch.stack(meshgrid, dim=-1)
+basis_config: before 29, after 29, survivors after but not before 0, before but not after 0
+basis_domain: before 20, after 19, survivors after but not before 0, before but not after 1
+basis_FourierBasis: before 761, after 1013, survivors after but not before 271, before but not after 19
+  only after x1: AddNot: 1 if i != dim else self.modes[i] for i in range(self.ndim)
+  only after x1: AddNot: assert len(x.shape) > 1, (
+  only after x1: AddNot: assert ndims >= 2, (
+  only after x1: AddNot: assert x.shape[0] > 0, (
+  only after x1: AddNot: assert x.shape[1] == len(domain), (
+  only after x1: AddNot: assert x.shape[1] == len(modes), (
+  only after x1: AddNot: if isinstance(modes, int):
+  only after x1: AddNot: if modes is None:
+  only after x1: AddNot: if self.time_dependent:
+  only after x1: AddNot: if target is None:
+  only after x2: NumberReplacer: F = torch.fft.ifft(f, dim=1, n=res.step, norm="forward")
+  only after x1: NumberReplacer: assert len(x.shape) > 1, (
+  only after x1: NumberReplacer: assert ndims >= 2, (
+  only after x2: NumberReplacer: assert x.shape[1] == len(domain), (
+  only after x2: NumberReplacer: assert x.shape[1] == len(modes), (
+  only after x4: NumberReplacer: def grad(self, dim: int = 0, ord: int = 1) -> Self:
+  only after x2: NumberReplacer: dim = 0
+  only after x4: NumberReplacer: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x8: NumberReplacer: dim_basis_shape[0] = x.shape[0]
+  only after x4: NumberReplacer: dim_basis_shape[dim + 1] = num_modes
+  only after x1: NumberReplacer: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x2: NumberReplacer: domain = domainInputType_to_tuple(domain, f.shape[1:])
+  only after x1: NumberReplacer: domain=domain[cdim - 1],
+  only after x1: NumberReplacer: for cdim in range(1, ndims):
+  only after x2: NumberReplacer: k = torch.concat([k1, k2], dim=0).unsqueeze(-1).to(target)
+  only after x3: NumberReplacer: kx = torch.zeros((x.shape[0], modes[0])).reshape(dim_basis_shape).to(x)
+  only after x2: NumberReplacer: modes = tuple(f.shape[1:])
+  only after x4: NumberReplacer: n.to(f).view(-1, 1),  # match coeff dtype for the matmul
+  only after x2: NumberReplacer: ndims = x.shape[1]
+  only after x1: NumberReplacer: res=res[cdim - 1],
+  only after x4: NumberReplacer: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: NumberReplacer: sampling=sampling_axes[cdim - 1],
+  only after x2: NumberReplacer: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x4: RemoveDecorator: @staticmethod
+  only after x1: ReplaceAndWithOr: if dim == 0 and self.time_dependent:
+  only after x1: ReplaceAndWithOr: if not x.is_floating_point() and not x.is_complex():
+  only after x2: ReplaceBinaryOperator_Add_BitAnd: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_BitAnd: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Add_BitAnd: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_BitOr: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x1: ReplaceBinaryOperator_Add_BitOr: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_BitXor: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x1: ReplaceBinaryOperator_Add_BitXor: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_Div: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_Div: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_Div: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x2: ReplaceBinaryOperator_Add_FloorDiv: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_FloorDiv: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Add_FloorDiv: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_LShift: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_LShift: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Add_LShift: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_Mod: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_Mod: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_Mod: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Add_Mod: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_Mul: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_Mul: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_Mul: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x2: ReplaceBinaryOperator_Add_Pow: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_Pow: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_Pow: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x2: ReplaceBinaryOperator_Add_RShift: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x2: ReplaceBinaryOperator_Add_RShift: dim_basis_shape[dim + 1] = num_modes
+  only after x1: ReplaceBinaryOperator_Add_RShift: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Add_RShift: kx = kx + dim_kx
+  only after x2: ReplaceBinaryOperator_Add_Sub: dim_basis_shape = [1 for i in range(ndims + 1)]
+  only after x1: ReplaceBinaryOperator_Add_Sub: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Div_Add: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_BitAnd: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_BitOr: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_BitXor: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_FloorDiv: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_LShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_Mod: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_RShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Div_Sub: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x3: ReplaceBinaryOperator_Mul_Add: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_BitAnd: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_BitAnd: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_BitOr: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_BitOr: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_BitXor: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_BitXor: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x3: ReplaceBinaryOperator_Mul_Div: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_FloorDiv: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_FloorDiv: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_LShift: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_LShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_Mod: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_Mod: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x3: ReplaceBinaryOperator_Mul_Pow: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x2: ReplaceBinaryOperator_Mul_RShift: constant=sign * 2j * torch.pi,
+  only after x3: ReplaceBinaryOperator_Mul_RShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x3: ReplaceBinaryOperator_Mul_Sub: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_Add: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_BitAnd: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_BitOr: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_BitXor: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_FloorDiv: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_LShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_Mod: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_RShift: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Pow_Sub: return (2 * torch.pi * 1j * k / length) ** ord
+  only after x1: ReplaceBinaryOperator_Sub_Add: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Add: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Add: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Add: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_BitAnd: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_BitAnd: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitAnd: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitAnd: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitAnd: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_BitOr: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_BitOr: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitOr: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitOr: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_BitOr: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_BitXor: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_BitXor: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x1: ReplaceBinaryOperator_Sub_Div: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_Div: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Div: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Div: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Div: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_FloorDiv: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_FloorDiv: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_FloorDiv: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_FloorDiv: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_FloorDiv: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_LShift: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_LShift: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_LShift: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_LShift: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_LShift: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_Mod: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceBinaryOperator_Sub_Mod: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x1: ReplaceBinaryOperator_Sub_Mul: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Mul: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Mul: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Mul: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x1: ReplaceBinaryOperator_Sub_Pow: domain=domain[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Pow: res=res[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Pow: sampling=sampling_axes[cdim - 1],
+  only after x1: ReplaceBinaryOperator_Sub_Pow: sampling_axes = samplings_to_tuple(sampling, ndims - 1, PeriodicUniform())
+  only after x2: ReplaceBinaryOperator_Sub_RShift: dim_x = (x[:, dim : dim + 1] - start_d).div(stop_d - start_d)
+  only after x1: ReplaceComparisonOperator_Eq_Gt: assert x.shape[1] == len(domain), (
+  only after x1: ReplaceComparisonOperator_Eq_Gt: assert x.shape[1] == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_Gt: elif func == "inverse":
+  only after x1: ReplaceComparisonOperator_Eq_IsNot: assert x.shape[1] == len(domain), (
+  only after x1: ReplaceComparisonOperator_Eq_IsNot: assert x.shape[1] == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_Lt: assert x.shape[1] == len(domain), (
+  only after x1: ReplaceComparisonOperator_Eq_Lt: assert x.shape[1] == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_Lt: elif func == "inverse":
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: assert x.shape[1] == len(domain), (
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: assert x.shape[1] == len(modes), (
+  only after x1: ReplaceComparisonOperator_Eq_NotEq: elif func == "inverse":
+  only after x1: ReplaceComparisonOperator_GtE_Gt: assert ndims >= 2, (
+  only after x1: ReplaceComparisonOperator_GtE_Lt: assert ndims >= 2, (
+  only after x1: ReplaceComparisonOperator_GtE_NotEq: assert ndims >= 2, (
+  only after x1: ReplaceComparisonOperator_Gt_Eq: assert len(x.shape) > 1, (
+  only after x1: ReplaceComparisonOperator_Gt_Eq: assert x.shape[0] > 0, (
+  only after x1: ReplaceComparisonOperator_Gt_Lt: assert len(x.shape) > 1, (
+  only after x1: ReplaceComparisonOperator_Gt_Lt: assert x.shape[0] > 0, (
+  only after x1: ReplaceComparisonOperator_Gt_LtE: assert len(x.shape) > 1, (
+  only after x1: ReplaceComparisonOperator_Gt_LtE: assert x.shape[0] > 0, (
+  only after x1: ReplaceComparisonOperator_Is_IsNot: if modes is None:
+  only after x1: ReplaceComparisonOperator_Is_IsNot: if target is None:
+  only after x1: ReplaceComparisonOperator_NotEq_Eq: 1 if i != dim else self.modes[i] for i in range(self.ndim)
+  only after x1: ReplaceComparisonOperator_NotEq_GtE: 1 if i != dim else self.modes[i] for i in range(self.ndim)
+  only after x1: ReplaceComparisonOperator_NotEq_Is: 1 if i != dim else self.modes[i] for i in range(self.ndim)
+  only after x1: ReplaceComparisonOperator_NotEq_LtE: 1 if i != dim else self.modes[i] for i in range(self.ndim)
+  only after x1: ReplaceUnaryOperator_Delete_Not: if not x.is_floating_point() and not x.is_complex():
+  only after x1: ReplaceUnaryOperator_Delete_USub: n.to(f).view(-1, 1),  # match coeff dtype for the matmul
+  only after x1: ReplaceUnaryOperator_USub_Invert: k = torch.concat([k1, k2], dim=0).unsqueeze(-1).to(target)
+  only after x1: ReplaceUnaryOperator_USub_Invert: n.to(f).view(-1, 1),  # match coeff dtype for the matmul
+  only after x1: ReplaceUnaryOperator_USub_Not: n.to(f).view(-1, 1),  # match coeff dtype for the matmul
+  only after x1: ReplaceUnaryOperator_USub_UAdd: n.to(f).view(-1, 1),  # match coeff dtype for the matmul
+  only after x1: ZeroIterationForLoop: for cdim in range(1, ndims):
+basis__nufft: before 11, after 10, survivors after but not before 0, before but not after 1

@@ -1,4 +1,3 @@
-import dataclasses
 import importlib.util
 import itertools
 import math
@@ -13,7 +12,6 @@ from hypothesis.stateful import RuleBasedStateMachine, initialize, rule
 from SpectralSVR import Antiderivative, FourierBasis
 from SpectralSVR.operators import (
     DeepONetOperator,
-    FittedDeepONet,
     Lu2021DeepxdeExample,
     Lu2022Burgers,
     Split,
@@ -340,17 +338,3 @@ def test_the_output_scale_is_the_per_point_mean_and_deviation(functions, points,
             assert math.isclose(
                 scaled[row, column].item(), expected, rel_tol=1e-5, abs_tol=1e-5
             )
-
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_the_deeponet_value_types_are_immutable():
-    recipe = Lu2022Burgers(periods=(1.0,))
-    for value, field in (
-        (recipe, "periods"),
-        (Lu2021DeepxdeExample(), "branch_widths"),
-        (PointwiseOutputScale(mean=torch.zeros(1), std=torch.ones(1)), "mean"),
-        (FittedDeepONet("DeepONet", None, recipe, QUERY), "recipe"),
-    ):
-        with pytest.raises(dataclasses.FrozenInstanceError):
-            setattr(value, field, None)
