@@ -1,5 +1,6 @@
 import torch
 import abc
+import operator
 from typing_extensions import TYPE_CHECKING, Self, Literal, TypeVar, overload
 import logging
 from ..utils import resize_modes, interpolate_tensor, resolve_device, DeviceInput
@@ -12,9 +13,9 @@ from .domain import (
 )
 from .sampling import (
     ClosedUniform,
+    PeriodicUniform,
     SamplingInputType,
     SamplingScheme,
-    samplings_to_tuple,
 )
 from .strategy import DEFAULT_EVALUATION_STRATEGY, EvaluationStrategy
 
@@ -201,6 +202,13 @@ class Basis(abc.ABC):
         A single scheme (broadcast to every axis) or one per axis.
         """
         return self._config.sampling
+
+    @property
+    def axis_sampling(self) -> tuple[SamplingScheme, ...]:
+        """One scheme per mode axis, the time axis of a time-dependent field excluded."""
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no axes to sample")
+        return self._config.resolve_sampling(self.ndim, self.default_sampling())
 
     @property
     def strategy(self) -> EvaluationStrategy:
@@ -394,9 +402,7 @@ class Basis(abc.ABC):
         if evaluation_mode == "auto":
             evaluation_mode = self.prefered_evaluation_mode()
         fin_res = self._get_res_tuple(res)
-        # sample on the basis's own per-axis scheme (resolved like domain), not a
-        # silently-substituted ClosedUniform
-        sampling = samplings_to_tuple(self.sampling, self.ndim, self.default_sampling())
+        sampling = self.axis_sampling
 
         if evaluation_mode == "inverse transform":
             values, grid = self._get_values_from_inverse_transform(
@@ -951,45 +957,154 @@ class Basis(abc.ABC):
         copy.coeff = copy.coeff[idx, ...]
         return copy
 
-    def to_time_dependent(self, nt: int | None = None):
-        copy = self.copy()
-        if self.time_dependent:
-            return copy
+    def to_time_dependent(self, nt: int | None = None) -> Self:
+        """Convert the field to ``nt`` time slices spanning its time interval inclusively.
 
-        res_modes = tuple(
+        Parameters
+        ----------
+        nt : int or None
+            Slice count, by default the time axis's mode count.
+
+        Returns
+        -------
+        Self
+            A new time-dependent field, or a copy of one already time-dependent.
+
+        Raises
+        ------
+        TypeError
+            If ``nt`` is a boolean, has more than zero dimensions, or is not an integer.
+        ValueError
+            If ``nt`` is below two or differs from a time-dependent field's own, the field has fewer than two slices or no spatial axis, or the basis holds no coefficients.
+        """
+        is_boolean = isinstance(nt, bool) or getattr(nt, "dtype", None) is torch.bool
+        if is_boolean or getattr(nt, "ndim", 0) != 0:
+            raise TypeError(f"a slice count is a zero-dimensional integer; got {nt!r}")
+        try:
+            requested = None if nt is None else operator.index(nt)
+        except TypeError as error:
+            raise TypeError(
+                f"a slice count is a zero-dimensional integer; got {nt!r}"
+            ) from error
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no field to convert")
+        if self.time_dependent:
+            if requested is not None and requested != self.time_size:
+                raise ValueError(
+                    f"a time-dependent field of {self.time_size} slices converts "
+                    f"only to its own slice count; got {requested}"
+                )
+            if self.ndim < 1:
+                raise ValueError(
+                    f"a field converts through time only with a spatial axis beside "
+                    f"time; got {self.ndim} spatial axes"
+                )
+            if self.time_size < 2:
+                raise ValueError(
+                    f"a time-dependent field spans its time interval with at least "
+                    f"two slices; got {self.time_size}"
+                )
+            return self.from_config(
+                self.coeff,
+                self.config,
+                time_dependent=True,
+                complex_funcs=self.complex_funcs,
+            )
+        spatial_axes = self.ndim - 1
+        if spatial_axes < 1:
+            raise ValueError(
+                f"a field converts through time only with a spatial axis beside "
+                f"time; got {spatial_axes} spatial axes"
+            )
+        slices = self.modes[0] if requested is None else requested
+        if slices < 2:
+            raise ValueError(
+                f"a time-dependent field spans its time interval with at least two "
+                f"slices; got {slices}"
+            )
+        t_start, t_stop = self.domain[0]
+        spatial_res = tuple(
             slice(start, stop, mode)
             for mode, (start, stop) in zip(self.modes[1:], self.domain[1:], strict=True)
         )
-        if nt is None:
-            nt = self.modes[0]
-        t_start, t_stop = self.domain[0]
-        res_modes = (slice(t_start, t_stop, nt), *res_modes)
-
-        val = self.get_values(res=res_modes)
-        time_dependent_coeff = self.transform(val.flatten(0, 1)).reshape(
-            (len(self), *self.modes)
+        spatial_sampling = self.axis_sampling[1:]
+        values_at_slice_times = self.inv_transform(
+            self.coeff,
+            res=(slice(t_start, t_stop, slices), *spatial_res),
+            sampling=(ClosedUniform(), *spatial_sampling),
+            strategy=self.strategy,
+            domain=self.domain,
         )
-        copy.time_dependent = True
-        copy.coeff = time_dependent_coeff
-        return copy
+        slice_coeff = self.transform(
+            values_at_slice_times.flatten(0, 1),
+            sampling=spatial_sampling,
+            strategy=self.strategy,
+            domain=self.domain[1:],
+        ).unflatten(0, (len(self), slices))
+        return self.from_config(
+            slice_coeff,
+            self.config.with_sampling(spatial_sampling),
+            time_dependent=True,
+            complex_funcs=self.complex_funcs,
+        )
 
-    def to_time_independent(self):
-        copy = self.copy()
+    def to_time_independent(self) -> Self:
+        """Sample the field at the periodic times of its time interval, one per slice.
+
+        Returns
+        -------
+        Self
+            A new time-independent field, or a copy of one already time-independent.
+
+        Raises
+        ------
+        ValueError
+            If the basis holds no coefficients, the field has no spatial axis, or fewer than two slices.
+        """
         if not self.time_dependent:
-            return copy
-
-        # since domain combines time interval with spatial intervals, get only the spatial ones with index [1:]
-        res_modes = tuple(
-            slice(start, stop, mode)
-            for mode, (start, stop) in zip(self.modes, self.domain[1:], strict=True)
+            return self.from_config(
+                self.coeff, self.config, complex_funcs=self.complex_funcs
+            )
+        if self.coeff.numel() == 0:
+            raise ValueError("a basis holding no coefficients has no field to convert")
+        if self.ndim < 1:
+            raise ValueError(
+                f"a field converts through time only with a spatial axis beside "
+                f"time; got {self.ndim} spatial axes"
+            )
+        if self.time_size < 2:
+            raise ValueError(
+                f"a time-dependent field spans its time interval with at least two "
+                f"slices; got {self.time_size}"
+            )
+        time_interval = self.domain[0]
+        spatial_sampling = self.axis_sampling
+        slice_values = self.inv_transform(
+            self.coeff.flatten(0, 1),
+            sampling=spatial_sampling,
+            strategy=self.strategy,
+            domain=self.domain[1:],
+        ).unflatten(0, self.coeff.shape[:2])
+        time_sampling = PeriodicUniform()
+        node_times = time_sampling.nodes(self.time_size, *time_interval).to(
+            device=self.coeff.device, dtype=self.coeff.real.dtype
         )
-        t_start, t_stop = self.domain[0]
-        res_modes = (slice(t_start, t_stop, self.time_size), *res_modes)
-        val = self.get_values(res=res_modes)
-        time_dependent_coeff = self.transform(val)
-        copy.time_dependent = False
-        copy.coeff = time_dependent_coeff
-        return copy
+        values_at_node_times = self.interpolate_time_tensor(
+            slice_values,
+            self.fractional_slice_index(node_times, time_interval, self.time_size),
+        )
+        node_sampling = (time_sampling, *spatial_sampling)
+        node_coeff = self.transform(
+            values_at_node_times,
+            sampling=node_sampling,
+            strategy=self.strategy,
+            domain=self.domain,
+        )
+        return self.from_config(
+            node_coeff,
+            self.config.with_sampling(node_sampling),
+            complex_funcs=self.complex_funcs,
+        )
 
     @staticmethod
     def fractional_slice_index(

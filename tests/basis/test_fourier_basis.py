@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import torch
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hnp
 
@@ -30,6 +30,7 @@ from SpectralSVR import (
 from SpectralSVR.basis import Basis
 from SpectralSVR.basis.sampling import PeriodicUniform
 from SpectralSVR.basis.strategy import EvaluationStrategy
+from tests._anchors import fourier_series_at
 
 CPU = torch.device("cpu")
 
@@ -708,43 +709,54 @@ def _time_dependent_basis(modes=8, nt=8):
     return FourierBasis(coeff).to_time_dependent(nt=nt)
 
 
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_dependent_and_back():
-    td = _time_dependent_basis()
-    assert td.time_dependent and td.time_size == 8
-    ti = td.to_time_independent()
-    assert not ti.time_dependent
+DOUBLE_PRECISION_ROUNDING = 1e-12
 
 
-@pytest.mark.oracle_consistency
+@pytest.mark.oracle_independent
 @SETTINGS
-@given(m=st.integers(2, 8), seed=st.integers(0, 10_000))
-def test_to_time_dependent_preserves_values(m, seed):
-    # Independent anchor (not just flag flips): converting a 2D field to a
-    # time-dependent representation must not change the function it evaluates to.
-    # Ground truth is the original field's own values, so to_time_dependent is
-    # pinned independently; to_time_independent is then pinned by the round trip.
+@given(
+    m=st.integers(2, 8),
+    seed=st.integers(0, 10_000),
+    starts=st.tuples(st.floats(-2.0, 2.0), st.floats(-2.0, 2.0)),
+    spans=st.tuples(st.floats(0.5, 4.0), st.floats(0.5, 4.0)),
+)
+@example(m=8, seed=0, starts=(0.0, 0.0), spans=(1.0, 1.0))
+@example(m=5, seed=1, starts=(1.0, -2.0), spans=(2.0, 3.5))
+def test_to_time_dependent_preserves_values(m, seed, starts, spans):
     g = torch.Generator().manual_seed(seed)
     u = FourierBasis(
-        FourierBasis.transform(torch.randn(2, m, m, generator=g) + 0j),
-        domain=((0.0, 1.0), (0.0, 1.0)),
+        FourierBasis.transform(
+            torch.randn(2, m, m, generator=g, dtype=torch.float64) + 0j
+        ),
+        domain=tuple(
+            (start, start + span) for start, span in zip(starts, spans, strict=True)
+        ),
     )
-    uv, _ = u.get_values_and_grid(res=m, device=CPU)
-    td = u.to_time_dependent()  # nt defaults to modes[0] = m
-    tdv, _ = td.get_values_and_grid(res=m, device=CPU)
-    assert torch.allclose(tdv, uv, atol=1e-6)
-    tiv, _ = td.to_time_independent().get_values_and_grid(res=m, device=CPU)
-    assert torch.allclose(tiv, uv, atol=1e-6)
+    td = u.to_time_dependent()
+    tdv, td_grid = td.get_values_and_grid(res=m, device=CPU)
+    source_at_slices = fourier_series_at(
+        u.coeff, td_grid.flatten(0, -2), u.domain
+    ).reshape(tdv.shape)
+    assert np.abs(tdv.numpy() - source_at_slices).max() <= DOUBLE_PRECISION_ROUNDING
 
-
-@pytest.mark.no_fuzz
-@pytest.mark.oracle_smoke
-def test_to_time_dependent_default_nt():
-    torch.manual_seed(0)
-    coeff = FourierBasis.transform(torch.randn(1, 8, 8) + 0j)
-    td = FourierBasis(coeff).to_time_dependent()  # nt defaults to modes[0]
-    assert td.time_dependent and td.time_size == 8
+    tiv, ti_grid = td.to_time_independent().get_values_and_grid(res=m, device=CPU)
+    time_wavenumbers = np.abs(np.fft.fftfreq(m, 1 / m)).reshape(1, m, 1)
+    largest_second_time_derivative = (
+        (
+            u.coeff.abs().numpy()
+            / m**2
+            * (2 * math.pi * time_wavenumbers / spans[0]) ** 2
+        )
+        .sum(axis=(1, 2))
+        .max()
+    )
+    interpolation_bound = (spans[0] / (m - 1)) ** 2 / 8 * largest_second_time_derivative
+    source_at_nodes = fourier_series_at(
+        u.coeff, ti_grid.flatten(0, -2), u.domain
+    ).reshape(tiv.shape)
+    assert np.abs(tiv.numpy() - source_at_nodes).max() <= (
+        interpolation_bound + DOUBLE_PRECISION_ROUNDING
+    )
 
 
 @pytest.mark.no_fuzz
