@@ -48,14 +48,14 @@ mutate:
     uv run --extra mutation cosmic-ray exec cosmic-ray.toml mutation.sqlite
     uv run --extra mutation cr-report mutation.sqlite
 
-# mutation-test lines of scripts/run_benchmark.py changed since base (slow)
-mutate-scripts base:
-    uv run --extra mutation cosmic-ray baseline cosmic-ray-scripts.toml
-    rm -f mutation-scripts.sqlite
-    uv run --extra mutation cosmic-ray init cosmic-ray-scripts.toml mutation-scripts.sqlite
-    printf '[cosmic-ray.filters.git-filter]\nbranch = "{{base}}"\n' | uv run --extra mutation cr-filter-git --config - mutation-scripts.sqlite
-    uv run --extra mutation cosmic-ray exec cosmic-ray-scripts.toml mutation-scripts.sqlite
-    uv run --extra mutation cr-report mutation-scripts.sqlite
+# mutation-test the lines of config's module changed since base (slow)
+mutate-changed config base:
+    uv run --extra mutation cosmic-ray baseline {{config}}
+    rm -f mutation-{{file_stem(config)}}.sqlite
+    uv run --extra mutation cosmic-ray init {{config}} mutation-{{file_stem(config)}}.sqlite
+    printf '[cosmic-ray.filters.git-filter]\nbranch = "{{base}}"\n' | uv run --extra mutation cr-filter-git --config - mutation-{{file_stem(config)}}.sqlite
+    uv run --extra mutation cosmic-ray exec {{config}} mutation-{{file_stem(config)}}.sqlite
+    uv run --extra mutation cr-report mutation-{{file_stem(config)}}.sqlite
 
 # everything CI should gate on
 check: lint test

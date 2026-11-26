@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "SpectralSVR/model/SpectralSVR.py"
+timeout = 600.0
+excluded-modules = []
+test-command = "systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 --quiet uv run --extra test --extra baselines pytest -x -q --hypothesis-seed=0 tests/model tests/operators/test_time_varying_scoring.py"
+
+[cosmic-ray.distributor]
+name = "local"

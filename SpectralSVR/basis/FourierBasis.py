@@ -31,7 +31,6 @@ from typing_extensions import Self, Literal, Callable
 from functools import partial
 
 
-## Fourier basis
 class FourierBasis(Basis):
     coeff_dtype = ResolvedCoeffDtype()
 
@@ -134,12 +133,9 @@ class FourierBasis(Basis):
                 f"domain given for time dependent evaluation must at least be of dimension 2, got {len(domain_t)}"
             )
             basis = cls.fn(x, modes, domain=domain_t[1:])
-            # evaluate
             sum_coeff_x_basis = cls.sum_mul(coeff.flatten(2), basis)
-            # interpolate onto the time axis, mapping t through its domain interval
-            t_start, t_stop = domain_t[0]
-            index_float = (
-                (t.flatten().real - t_start) / (t_stop - t_start) * (coeff.shape[1] - 1)
+            index_float = cls.fractional_slice_index(
+                t.flatten().real, domain_t[0], coeff.shape[1]
             )
             sum_coeff_x_basis = cls.interpolate_time_tensor(
                 sum_coeff_x_basis, index_float
@@ -159,6 +155,56 @@ class FourierBasis(Basis):
 
         scaling = 1.0 / math.prod(modes)
         return scaling * sum_coeff_x_basis
+
+    @classmethod
+    def evaluate_time_dependent_at(
+        cls,
+        coeff: torch.Tensor,
+        points: torch.Tensor,
+        domain: DomainInputType = None,
+    ) -> torch.Tensor:
+        if not coeff.is_complex():
+            coeff = to_complex_coeff(coeff)
+        points = points.to(coeff.device)
+        modes = cls.get_modes(coeff, time_dependent=True)
+        if points.ndim != 2 or len(points) == 0 or points.shape[1] != 1 + len(modes):
+            raise ValueError(
+                f"points for a time-dependent field are one or more rows (t, x_1, "
+                f"..., x_{len(modes)}) with time first; got shape "
+                f"{tuple(points.shape)}"
+            )
+        domain_t = domainInputType_to_tuple(domain, tuple(coeff.shape[1:]))
+        if len(domain_t) != 1 + len(modes):
+            raise ValueError(
+                f"the domain of a time-dependent field is (time, x_1, ..., "
+                f"x_{len(modes)}) with the time interval first; got {domain_t}"
+            )
+        t_start, t_stop = domain_t[0]
+        times = points[:, 0].real
+        if (
+            not torch.isfinite(times).all()
+            or ((times < t_start) | (times > t_stop)).any()
+        ):
+            raise ValueError(
+                f"every time must lie in the field's time interval "
+                f"[{t_start}, {t_stop}]; got {times.min().item()} to "
+                f"{times.max().item()}"
+            )
+        per_slice = cls.sum_mul(
+            coeff.flatten(2), cls.fn(points[:, 1:], modes, domain=domain_t[1:])
+        )
+        index_float = cls.fractional_slice_index(times, domain_t[0], coeff.shape[1])
+        index_floor = index_float.floor().to(torch.int)
+        index_ceil = index_float.ceil().to(torch.int)
+        weight = ((index_float - index_floor) / (index_ceil - index_floor)).nan_to_num()
+        rows = torch.arange(len(points), device=per_slice.device)
+        at_points = torch.lerp(
+            per_slice[:, index_floor, rows],
+            per_slice[:, index_ceil, rows],
+            weight.to(per_slice),
+        )
+        scaling = 1.0 / math.prod(modes)
+        return scaling * at_points
 
     @classmethod
     def _dense_evaluate(
