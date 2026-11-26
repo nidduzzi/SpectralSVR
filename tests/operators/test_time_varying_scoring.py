@@ -4,16 +4,15 @@ from hypothesis import example, given, settings
 from hypothesis import strategies as st
 from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
 
-from SpectralSVR import FourierBasis, SpectralSVR, accelerator
+from SpectralSVR import FourierBasis, SpectralSVR
 from SpectralSVR.model import LSSVR
 from SpectralSVR.operators import OperatorDataset, SpectralSVROperator
 from SpectralSVR.utils import to_complex_coeff
 
+from tests._devices import DEVICES_PRESENT, HOST
 from tests._time_varying import grid_points, rows, slice_times, time_varying_field
 
 DOMAIN = ((0.0, 1.0), (0.0, 1.0))
-HOST = torch.device("cpu")
-DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
 ROUNDOFF_RTOL = 1e-6
 INTERPOLATING_C = 1e6
 PREDICTION_RTOL = 5e-4

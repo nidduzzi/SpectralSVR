@@ -12,6 +12,7 @@ from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, ru
 from SpectralSVR import LSSVR, accelerator
 from SpectralSVR.model.FNN import FNN
 
+from tests._devices import ACCELERATOR, DEVICES_PRESENT, HOST, needs_an_accelerator
 from _model_data import SETTINGS, linear_dataset
 
 EVERY_KIND = [
@@ -20,16 +21,9 @@ EVERY_KIND = [
     partial(FNN, MAX_EPOCH=1, w_hidden=4, n_hidden=1, batch_size=8),
 ]
 X, Y = linear_dataset(16, 3, 2, seed=0)
-HOST = torch.device("cpu")
-DEVICES_PRESENT = [HOST] + ([accelerator()] if torch.accelerator.is_available() else [])
-ACCELERATOR_BY_INDEX = (
-    torch.device(accelerator().type, torch.accelerator.current_device_index())
-    if torch.accelerator.is_available()
-    else None
-)
 SPELLINGS_OF_ONE_MEMORY = [(HOST, HOST)] + (
-    [(accelerator(), ACCELERATOR_BY_INDEX), (ACCELERATOR_BY_INDEX, accelerator())]
-    if ACCELERATOR_BY_INDEX is not None
+    [(accelerator(), ACCELERATOR), (ACCELERATOR, accelerator())]
+    if ACCELERATOR != HOST
     else []
 )
 LOADED_ACROSS_DEVICES_ATOL = 1e-6
@@ -38,13 +32,8 @@ INPUTS_NO_MODEL_CAN_USE = torch.randn(
     16, 3, 2, generator=torch.Generator().manual_seed(0)
 )
 
-needs_a_second_device = pytest.mark.skipif(
-    not torch.accelerator.is_available(),
-    reason="naming both devices needs a device other than the host to move to",
-)
 
-
-@needs_a_second_device
+@needs_an_accelerator
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("A fitted model refuses to be moved")
 @SETTINGS
@@ -64,7 +53,7 @@ def test_a_fitted_model_refuses_to_be_moved(kind):
     assert model.device == HOST
 
 
-@needs_a_second_device
+@needs_an_accelerator
 @pytest.mark.no_fuzz
 @pytest.mark.oracle_smoke
 @pytest.mark.scenario("Every kind of model refuses alike")
